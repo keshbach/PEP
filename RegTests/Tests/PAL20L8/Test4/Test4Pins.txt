@@ -1,0 +1,22 @@
+1 "Not Used"
+2 "Not Used"
+3 "Not Used"
+4 Input
+5 "Not Used"
+6 "Not Used"
+7 "Not Used"
+8 "Not Used"
+9 "Not Used"
+10 Input
+11 Input
+13 "Not Used"
+14 Input
+15 Output
+16 Input
+17 Output
+18 Input
+19 Output
+20 Output
+21 Input
+22 Output
+23 Input

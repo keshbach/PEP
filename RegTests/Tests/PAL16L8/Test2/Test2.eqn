@@ -1,0 +1,44 @@
+chip 2000 PAL16L8
+
+i1=1 i2=2 i3=3 i4=4 i5=5 i6=6 i7=7 i8=8 i9=9 GND=10 i10=11
+o1=12 o2=13 o3=14 o4=15 o5=16 o6=17 o7=18 o8=19 VCC=20
+
+equations
+
+/o1 = /i1 & i2 & /i3 & i4 +
+      /i1 & i2 & /i3 & /i5 +
+      /i1 & i2 & /i3 & i6 +
+      /i1 & i2 & /i3 & /i7 +
+      /i1 & i2 & /i3 & i8 +
+      /i1 & i2 & /i3 & /i9 +
+      /i1 & i2 & /i3 & i10
+o1.oe = vcc
+
+/o2 = i1 & /i2 & i3 & /i4 & i5 & /i6 & i7 & /i8 & i9 +
+      i1 & /i2 & i3 & /i4 & i5 & /i6 & i7 & /i8 & /i9
+o2.oe = vcc
+
+/o3 = /i1 & /i2 & /i3 & i4 & i5 & /i6 & /i7 & /i8 & i9 & /i10
+o3.oe = vcc
+
+/o4 = i1 & i2 & i3 & /i4 & /i5 & /i6 & i7 & i8 & i9 & i10
+o4.oe = vcc
+
+/o5 = i8 & /i10 & /o6 +
+      i9 & /i10 & /o6
+o5.oe = vcc
+
+/o6 = /i1 +
+      /i2 +
+      /i3 +
+      /i4 +
+      /i5 +
+      /i6 +
+      /i7
+o6.oe = vcc
+
+/o7 = i1 & i8
+o7.oe = vcc
+
+/o8 = i1 & /i8
+o8.oe = vcc

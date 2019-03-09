@@ -1,0 +1,565 @@
+<?xml version="1.0"?>
+<package>
+    <job id="TestPals"><?job debug="true" error="true"?>
+        <runtime>
+            <description>Test Pals Script v2.00
+Copyright (C) 2012-2016 Kevin Eshbach
+All Rights Reserved
+
+This script runs regresion tests on the various test pals.
+            </description>
+
+            <named name="verbose"
+                   type="boolean"
+                   helpstring="Generate a detailed log"
+                   required="false"/>
+            <named name="generatebatonly"
+                   type="boolean"
+                   helpstring="Generate test device batch files only"
+                   required="false"/>
+            <named name="ignoreerrors"
+                   type="boolean"
+                   helpstring="Ignore any errors and keep running the tests"
+                   required="false"/>
+            <named name="device"
+                   type="string"
+                   helpstring="Device tests to run"
+                   required="false" />
+            <named name="test"
+                   type="string"
+                   helpstring="Test to only run"
+                   required="false" />
+        </runtime>
+
+        <resource id="DebuggerCommand">start wdexpress /debugexe</resource>
+        <resource id="TestDeviceApp">C:\temp\PEP\OpenSourceWindows\Current\Source\Driver\i386\TestPALDevice.exe</resource>
+        <resource id="DiffApp">C:\msys64\win32\msysgit\bin\diff.exe</resource>
+
+        <script language="VBScript">
+            <![CDATA[
+                ' OpenTextFile IO Mode constants
+                const ForReading   = 1 ' Open a file for reading only. You can't write to this file.
+                const ForWriting   = 2
+                const ForAppending = 8 ' Open a file and write to the end of the file.
+
+               ' OpenTextFile Format constants
+               const TristateUseDefault = 2 ' Opens the file using the system default.
+               const TristateTrue       = 1 ' Opens the file as Unicode.
+               const TristateFalse      = 0 ' Opens the file as ASCII.
+            ]]>
+        </script>
+
+        <script language="JScript">
+            <![CDATA[
+                var g_Verbose = false;
+                var g_GenerateBatOnly = false;
+                var g_IgnoreErrors = false;
+                var g_DeviceRun = undefined;
+                var g_TestRun = undefined;
+
+                function runAndCaptureOutput(command, outputFile)
+                {
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var WshShell = WScript.CreateObject("WScript.Shell");
+                    var file, oExec;
+
+                    if (g_Verbose)
+                    {
+                        WScript.Echo("Command:     " + command);
+                        WScript.Echo("Output File: " + outputFile);
+                        WScript.Echo();
+                    }
+
+                    file = fso.CreateTextFile(outputFile, false, false);
+
+                    oExec = WshShell.Exec(command);
+
+                    if (!oExec.StdOut.AtEndOfStream)
+                    {
+                        file.Write(oExec.StdOut.ReadAll());
+                    }
+
+                    if (!oExec.StdErr.AtEndOfStream)
+                    {
+                        file.Write(oExec.StdErr.ReadAll());
+                    }
+
+                    file.Close();
+
+                    while (!oExec.Status)
+                    {
+                        WScript.Sleep(100);
+                    }
+
+                    return oExec.ExitCode;
+                }
+
+                function diffFiles(file1, file2, outputFile)
+                {
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var command;
+
+                    if (g_Verbose)
+                    {
+                        WScript.Echo("Diff File 1: " + file1);
+                        WScript.Echo("Diff File 2: " + file2);
+                        WScript.Echo("Output File: " + outputFile);
+                        WScript.Echo();
+                    }
+
+                    if (!fso.FileExists(file1))
+                    {
+                        if (g_Verbose)
+                        {
+                            WScript.Echo("Diff File 1 does not exist.");
+                            WScript.Echo();
+                        }
+
+                        return false;
+                    }
+
+                    if (!fso.FileExists(file2))
+                    {
+                        if (g_Verbose)
+                        {
+                            WScript.Echo("Diff File 2 does not exist.");
+                            WScript.Echo();
+                        }
+                    
+                        return false;
+                    }
+                    
+                    command = getResource("DiffApp") + " \"" + file1 + "\" \"" + file2 + "\"";
+
+                    if (!runAndCaptureOutput(command, outputFile))
+                    {
+                        return true;
+                    }
+                    
+                    return false;
+                }
+
+                function readDevicePinsCfgFile(pinCfgFile)
+                {
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var pinsCfg = "";
+                    var file, pinCfg;
+
+                    if (g_Verbose)
+                    {
+                        WScript.Echo("Pins Cfg File: " + pinCfgFile);
+                        WScript.Echo();
+                    }
+
+                    file = fso.OpenTextFile(pinCfgFile, ForReading, false, TristateFalse);
+
+                    while (!file.AtEndOfStream)
+                    {
+                        pinCfg = file.ReadLine();
+
+                        if (g_Verbose)
+                        {
+                            WScript.Echo("    " + pinCfg);
+                        }
+
+                        if (pinsCfg.length > 0)
+                        {
+                            pinsCfg = pinsCfg + " ";
+                        }
+
+                        pinsCfg = pinsCfg + pinCfg;
+                    }
+
+                    if (g_Verbose)
+                    {
+                        WScript.Echo();
+                    }
+
+                    file.Close();
+
+                    return pinsCfg;
+                }
+
+                function readOverrideDeviceFile(overrideDeviceFile)
+                {
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var file, overrideDevice;
+                
+                    overrideDevice = null;
+                    
+                    if (g_Verbose)
+                    {
+                        WScript.Echo("Override Device File: " + overrideDeviceFile);
+                        WScript.Echo();
+                    }
+                    
+                    if (fso.FileExists(overrideDeviceFile))
+                    {
+                        file = fso.OpenTextFile(overrideDeviceFile, ForReading, false, TristateFalse);
+                    
+                        if (!file.AtEndOfStream)
+                        {
+                            overrideDevice = file.ReadLine();
+                        }
+
+                        file.Close();
+                    }
+
+                    return overrideDevice;
+                }
+
+                function findDevices(testsPath, outputPath)
+                {
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var folder = fso.GetFolder(testsPath)
+                    var folderCollection = new Enumerator(folder.Subfolders);
+                    var devicesArray = new Array();
+                    var deviceName, deviceTestPath, deviceOutputPath;
+
+                    while (!folderCollection.atEnd())
+                    {
+                        deviceName = folderCollection.item().name;
+                        deviceTestPath = folderCollection.item().path;
+                        deviceOutputPath = fso.BuildPath(outputPath, deviceName);
+                    
+                        if (g_Verbose)
+                        {                    
+                            WScript.Echo("Device Name:        " + deviceName);
+                            WScript.Echo("Device Test Path:   " + deviceTestPath);
+                            WScript.Echo("Device Output Path: " + deviceOutputPath);
+                            WScript.Echo();
+                        }
+
+                        ++devicesArray.length;
+
+                        devicesArray[devicesArray.length - 1] = new Object();
+
+                        devicesArray[devicesArray.length - 1].name = deviceName;
+                        devicesArray[devicesArray.length - 1].testPath = deviceTestPath;
+                        devicesArray[devicesArray.length - 1].outputPath = deviceOutputPath;
+                        devicesArray[devicesArray.length - 1].tests =
+                           findDeviceTests(deviceTestPath, deviceOutputPath);
+                        
+                        folderCollection.moveNext();
+                    }
+
+                    return devicesArray;
+                }
+
+                function findDeviceTests(deviceTestPath, deviceOutputPath)
+                {
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var folder = fso.GetFolder(deviceTestPath)
+                    var folderCollection = new Enumerator(folder.Subfolders);
+                    var testsArray = new Array();
+                    var name, testPath, testOutputPath, baselineJedFile;
+                    var testBatchFile, testPinsCfgFile, testOverrideDeviceFile;
+                    var outputJedFile, outputDiffJedFile;
+
+                    while (!folderCollection.atEnd())
+                    {
+                        name = folderCollection.item().name;
+                        testPath = folderCollection.item().path;
+                        testOutputPath = fso.BuildPath(deviceOutputPath, name);
+                        testPinsCfgFile = fso.BuildPath(testPath, name + "Pins.txt");
+                        testOverrideDeviceFile = fso.BuildPath(testPath, name + "OverrideDevice.txt");
+                        baselineJedFile = fso.BuildPath(testPath, name + "Baseline.jed");
+                        outputJedFile = fso.BuildPath(testOutputPath, name + "Output.jed");
+                        testBatchFile = fso.BuildPath(testOutputPath, name + ".bat");
+                        outputDiffJedFile = fso.BuildPath(testOutputPath, name + "DiffJed.txt");
+
+                        if (g_Verbose)
+                        {                    
+                            WScript.Echo("Test Name:                    " + name);
+                            WScript.Echo("Test Path:                    " + testPath);
+                            WScript.Echo("Test Output Path:             " + testOutputPath);
+                            WScript.Echo("Test Baseline Jed File:       " + baselineJedFile);
+                            WScript.Echo("Test Output Jed File:         " + outputJedFile);
+                            WScript.Echo("Test Batch File:              " + testBatchFile);
+                            WScript.Echo("Test Pins Configuration File: " + testPinsCfgFile);
+                            WScript.Echo("Test Override Device File:    " + testOverrideDeviceFile);
+                            WScript.Echo("Test Diff Output Jed File:    " + outputDiffJedFile);
+                            
+                            WScript.Echo();
+                        }
+                        
+                        ++testsArray.length;
+
+                        testsArray[testsArray.length - 1] = new Object();
+
+                        testsArray[testsArray.length - 1].name = name;
+                        testsArray[testsArray.length - 1].testPath = testPath;
+                        testsArray[testsArray.length - 1].outputPath = testOutputPath;
+                        testsArray[testsArray.length - 1].baselineJedFile = baselineJedFile;
+                        testsArray[testsArray.length - 1].outputJedFile = outputJedFile;
+                        testsArray[testsArray.length - 1].testBatchFile = testBatchFile;
+                        testsArray[testsArray.length - 1].testPinsCfgFile = testPinsCfgFile;
+                        testsArray[testsArray.length - 1].testOverrideDeviceFile = testOverrideDeviceFile;
+                        testsArray[testsArray.length - 1].outputDiffJedFile = outputDiffJedFile;
+
+                        folderCollection.moveNext();
+                    }
+
+                    return testsArray;
+                }
+
+                function createDeviceOutputFolders(devicesArray)
+                {
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var outputPath;
+                    
+                    for (index = 0; index < devicesArray.length; ++index)
+                    {
+                        outputPath =  devicesArray[index].outputPath;
+                    
+                        if (g_Verbose)
+                        {                    
+                            WScript.Echo("Creating the device output folder: " + outputPath);
+                            WScript.Echo();
+                        }
+                    
+                        fso.CreateFolder(outputPath);
+                    }
+                }
+
+                function createTestBatchFile(testBatchFile, testPinsCfgFile, outputJedFile, deviceName, testOverrideDeviceFile, testName)
+                {
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var overrideDeviceName, file;
+                    
+                    if (g_Verbose)
+                    {
+                        WScript.Echo("Creating the batch file: " + testBatchFile);
+                        WScript.Echo();
+                    }
+
+                    overrideDeviceName = readOverrideDeviceFile(testOverrideDeviceFile);
+
+                    file = fso.CreateTextFile(testBatchFile, false, false);
+                    
+                    file.WriteLine("@echo off");
+                    file.WriteLine();
+                    file.WriteLine("set PinsCfg=" + readDevicePinsCfgFile(testPinsCfgFile));
+                    file.WriteLine("set OutputJedFile=" + outputJedFile);
+                    file.WriteLine("set TestDeviceApp=" + getResource("TestDeviceApp"));
+
+                    if (overrideDeviceName == null)
+                    {
+                        file.WriteLine("set DeviceName=" + deviceName);
+                    }
+                    else
+                    {
+                        file.WriteLine("set DeviceName=" + overrideDeviceName);
+                    }
+                    
+                    file.WriteLine("set Debugger=");
+                    file.WriteLine();
+
+                    if (overrideDeviceName == null)
+                    {
+                        file.WriteLine("if not \"%1\" == \"Debug\" title %DeviceName% - " + testName);
+                    }
+                    else
+                    {
+                        file.WriteLine("if not \"%1\" == \"Debug\" title %DeviceName% (" + deviceName + ") - " + testName);
+                    }
+
+                    file.WriteLine("if \"%1\" == \"Debug\" set Debugger=" + getResource("DebuggerCommand"));
+                    file.WriteLine();
+                    file.WriteLine("%Debugger% %TestDeviceApp% /read %DeviceName% %OutputJedFile% %PinsCfg%");
+                    file.WriteLine();
+                    file.WriteLine("if not \"%1\" == \"Debug\" pause");
+
+                    file.Close();
+                }
+
+                function runDeviceTest(deviceName, deviceTest)
+                {
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var WshShell = WScript.CreateObject("WScript.Shell");
+                    
+                    WScript.Echo("    " + deviceTest.name);
+                    
+                    if (g_Verbose)
+                    {                    
+                        WScript.Echo("Creating the test output folder: " + deviceTest.outputPath);
+                        WScript.Echo();
+                    }
+                
+                    fso.CreateFolder(deviceTest.outputPath);
+                    
+                    createTestBatchFile(deviceTest.testBatchFile,
+                                        deviceTest.testPinsCfgFile,
+                                        deviceTest.outputJedFile,
+                                        deviceName,
+                                        deviceTest.testOverrideDeviceFile,
+                                        deviceTest.name);
+
+                    if (!g_GenerateBatOnly)
+                    {
+                        WshShell.Run(deviceTest.testBatchFile, 1, true);
+                    
+                        if (!diffFiles(deviceTest.baselineJedFile,
+                                       deviceTest.outputJedFile,
+                                       deviceTest.outputDiffJedFile))
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+
+                function runDeviceTests(deviceName, deviceTests)
+                {
+                    var runTest;
+
+                    for (index = 0; index < deviceTests.length; ++index)
+                    {
+                        runTest = true;
+
+                        if (g_TestRun != undefined &&
+                            g_TestRun != deviceTests[index].name)
+                        {
+                            runTest = false;
+                        }
+
+                        if (runTest)
+                        {
+                            if (!runDeviceTest(deviceName, deviceTests[index]))
+                            {
+                                WScript.Echo("Test failed.");
+
+                                if (!g_IgnoreErrors)
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+
+                function parseArgs()
+                {
+                    if (WScript.Arguments.Named.Item("verbose") == "+" ||
+                        WScript.Arguments.Named.Item("verbose"))
+                    {
+                        g_Verbose = true;
+                    }
+
+                    if (WScript.Arguments.Named.Item("generatebatonly") == "+" ||
+                        WScript.Arguments.Named.Item("generatebatonly"))
+                    {
+                        g_GenerateBatOnly = true;
+                    }
+
+                    if (WScript.Arguments.Named.Item("ignoreerrors") == "+" ||
+                        WScript.Arguments.Named.Item("ignoreerrors"))
+                    {
+                        g_IgnoreErrors = true;
+                    }
+
+                    g_DeviceRun = WScript.Arguments.Named.Item("device");
+                    g_TestRun = WScript.Arguments.Named.Item("test");
+                }
+
+                function main()
+                {
+                    var WshShell = WScript.CreateObject("WScript.Shell");
+                    var fso = new ActiveXObject("Scripting.FileSystemObject");
+                    var testsPath = WshShell.CurrentDirectory + "\\tests";
+                    var outputPath = WshShell.CurrentDirectory + "\\output";
+                    var devicesArray, index, quit, runDevice;
+
+                    parseArgs();
+                    
+                    if (g_Verbose)
+                    {
+                        WScript.Echo("Tests Path:  " + testsPath);
+                        WScript.Echo("Output Path: " + outputPath);
+                        WScript.Echo();
+                    }
+                    
+                    if (fso.FolderExists(outputPath))
+                    {
+                        if (g_Verbose)
+                        {
+                            WScript.Echo("Removing the existing the output directory");
+                            WScript.Echo();
+                        }
+
+                        fso.DeleteFolder(outputPath);
+                    }
+
+                    if (g_Verbose)
+                    {
+                        WScript.Echo("Creating the output directory");
+                        WScript.Echo();
+                    }
+
+                    fso.CreateFolder(outputPath);
+
+                    devicesArray = findDevices(testsPath, outputPath)
+
+                    createDeviceOutputFolders(devicesArray);
+                    
+                    quit = false;
+                    
+                    for (index = 0; quit == false && index < devicesArray.length; ++index)
+                    {
+                        runDevice = true;
+                    
+                        if (g_DeviceRun != undefined)
+                        {
+                            if (g_DeviceRun != devicesArray[index].name)
+                            {
+                                runDevice = false;
+                            }
+                        }
+                        
+                        if (runDevice)
+                        {
+                            WScript.Echo("Running the tests for " + devicesArray[index].name);
+
+                            if (!runDeviceTests(devicesArray[index].name, devicesArray[index].tests))
+                            {
+                                quit = true;
+                            }
+                        
+                            WScript.Echo();
+                        }
+                    }
+
+                    if (!quit)
+                    {
+                        WScript.Echo("All tests ran successfully.");
+                        
+                        return 0;
+                    }
+
+                    return 1;
+                }
+
+                try
+                {
+                    var result = main();
+
+                    WScript.Quit(result);
+                }
+                catch (e)
+                {
+                    WScript.Echo("Error Occurred");
+                    WScript.Echo("");
+                    WScript.Echo("Name:        " + e.name);
+                    WScript.Echo("Message:     " + e.message);
+                    WScript.Echo("Number:      " + e.number);
+                    WScript.Echo("Description: " + e.description);
+
+                    WScript.Quit(1);
+                }
+            ]]>
+        </script>
+    </job>
+</package>
