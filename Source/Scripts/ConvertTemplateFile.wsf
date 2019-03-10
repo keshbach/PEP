@@ -1,0 +1,202 @@
+<?xml version="1.0"?>
+<package>
+  <job id="Build">
+    <?job debug="true" error="true"?>
+    <runtime>
+      <description>
+        Convert Template File Script v1.00
+        Copyright (C) 2018 Kevin Eshbach
+        All Rights Reserved
+
+        This script takes a template file and performs a search and replace on it
+        to generate a new file.
+      </description>
+
+      <named name="templateFile"
+             type="string"
+             helpstring="Template file"
+             required="true" />
+      <named name="parameterFile"
+             type="string"
+             helpstring="File with the template replacement variables"
+             required="true" />
+      <named name="outputFile"
+             type="string"
+             helpstring="Destination file"
+             required="true" />
+      <named name="verbose"
+             type="boolean"
+             helpstring="Dump all output"
+             required="false" />
+    </runtime>
+
+    <script language="VBScript">
+      <![CDATA[
+        ' OpenTextFile IO Mode constants
+        const ForReading   = 1 ' Open a file for reading only. You can't write to this file.
+        const ForWriting   = 2
+        const ForAppending = 8 ' Open a file and write to the end of the file.
+
+        ' OpenTextFile Format constants
+        const TristateUseDefault = 2 ' Opens the file using the system default.
+        const TristateTrue       = 1 ' Opens the file as Unicode.
+        const TristateFalse      = 0 ' Opens the file as ASCII.
+
+        ' GetSpecialFolder constants
+        Const WindowsFolder   = 0
+        Const SystemFolder    = 1
+        Const TemporaryFolder = 2
+      ]]>
+    </script>
+
+    <script language="JScript">
+      <![CDATA[
+        var g_TemplateFile = "";
+        var g_ParameterFile = "";
+        var g_OutputFile = "";
+        var g_Verbose = false;
+
+        function parseParameterFile(parameterFile)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var file = fso.OpenTextFile(parameterFile, ForReading, false, TristateFalse);
+            var parameterArray = new Array();
+            var parameters, lineRead;
+
+            while (!file.AtEndOfStream)
+            {
+                lineRead = file.ReadLine();
+
+                parameters = lineRead.split(/(\r\n)|(=)/);
+
+                if (g_Verbose)
+                {
+                    WScript.Echo("Line Read: " + lineRead);
+                }
+
+                parameterArray.push({key:parameters[0], value:parameters[1]});
+            }
+
+            file.Close();
+
+            if (g_Verbose)
+            {
+                WScript.Echo();
+            }
+
+            return parameterArray;
+        }
+
+        function generateOutputFile(templateFile, parameterArray, outputFile)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var inFile = fso.OpenTextFile(templateFile, ForReading, false, TristateFalse);
+            var outFile = fso.CreateTextFile(outputFile, false, false);
+            var lineRead;
+
+            while (!inFile.AtEndOfStream)
+            {
+                lineRead = inFile.ReadLine();
+
+                if (g_Verbose)
+                {
+                    WScript.Echo("Line Read: " + lineRead);
+                }
+
+                for (index = 0; index < parameterArray.length; ++index)
+                {
+                    lineRead = lineRead.replace(parameterArray[index].key, parameterArray[index].value);
+                }
+
+                outFile.WriteLine(lineRead);
+            }
+
+            inFile.Close();
+            outFile.Close();
+
+            if (g_Verbose)
+            {
+                WScript.Echo();
+            }
+        }
+
+        function parseArgs()
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+
+            g_TemplateFile = WScript.Arguments.Named.Item("templateFile");
+            g_ParameterFile = WScript.Arguments.Named.Item("parameterFile");
+            g_OutputFile = WScript.Arguments.Named.Item("OutputFile");
+
+            if (WScript.Arguments.Named.Item("verbose") == "+")
+            {
+                g_Verbose = true;
+            }
+
+            if (!fso.FileExists(g_TemplateFile))
+            {
+                throw new Error("The template file \"" + g_TemplateFile + "\" does not exist.");
+            }
+
+            if (!fso.FileExists(g_ParameterFile))
+            {
+                throw new Error("The parameter file \"" + g_ParameterFile + "\" does not exist.");
+            }
+
+            if (fso.FileExists(g_OutputFile))
+            {
+               throw new Error("The output file \"" + g_OutputFile + "\" already exists.");
+            }
+
+            return 1;
+        }
+
+        function main()
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var WshShell = WScript.CreateObject("WScript.Shell");
+            var parameterArray;
+
+            if (!parseArgs())
+            {
+                WScript.Echo("Invalid command line arguments");
+
+                return 1;
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Template File:  " + g_TemplateFile);
+                WScript.Echo("Parameter File: " + g_ParameterFile);
+                WScript.Echo("Output File:    " + g_OutputFile);
+                WScript.Echo();
+            }
+
+            parameterArray = parseParameterFile(g_ParameterFile);
+
+            generateOutputFile(g_TemplateFile, parameterArray, g_OutputFile);
+
+            return 0;
+        }
+
+        try
+        {
+            var result = main();
+
+            WScript.Quit(result);
+        }
+        catch (e)
+        {
+            WScript.Echo("Error Occurred");
+            WScript.Echo();
+            WScript.Echo("Name:        " + e.name);
+            WScript.Echo("Message:     " + e.message);
+            WScript.Echo("Number:      " + e.number);
+            WScript.Echo("Description: " + e.description);
+
+            WScript.Quit(1);
+        }
+      ]]>
+    </script>
+  </job>
+</package>

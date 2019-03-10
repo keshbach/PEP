@@ -1,0 +1,39 @@
+;
+;  Copyright (C) 2008-2013 Kevin Eshbach
+;
+
+LIBRARY UtPAL BASE=0x400370000
+EXPORTS
+    UtPALInitialize @ 1
+    UtPALUninitialize @ 2
+    UtPALClearFuseMap @ 3
+    UtPALGetFuseMapSize @ 4
+    UtPALBlowFuse @ 5
+    UtPALBlowFuseRange @ 6
+    UtPALBlowFuseRow @ 7
+    UtPALBlowFuseRows @ 8
+    UtPALBlowFuseColumn @ 9
+    UtPALBlowFuseColumns @ 10
+    UtPALRestoreFuse @ 11
+    UtPALRestoreFuseRow @ 12
+    UtPALFuseNumberToFuseRow @ 13
+    UtPALFuseColumnFromPin @ 14
+    UtPALIsFuseColumnPresent @ 15
+    UtPALTermCount @ 16
+    UtPALTermRowToFuseRow @ 17
+    UtPALIsOutputEnablePresent @ 18
+    UtPALOutputEnableFuseRow @ 19
+    UtPALWriteFuseMapToJEDFile @ 20
+    UtPALFuseMapText @ 21
+    UtPALFuseMapSampleText @ 22
+    UtPALDevicePinConfigToPinDefined @ 23
+    UtPALVerifyDevicePinConfig @ 24
+    UtPALAllocMinimizedTerms @ 25
+    UtPALFreeMinimizedTerms @ 26
+    UtPALAreSimiliarTermsPresent @ 27
+    UtPALAllocMergedTerms @ 28
+    UtPALFreeMergedTerms @ 29
+
+;
+;  Copyright (C) 2008-2013 Kevin Eshbach
+;

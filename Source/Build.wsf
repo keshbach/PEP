@@ -1,0 +1,439 @@
+<?xml version="1.0"?>
+<package>
+  <job id="Build">
+    <?job debug="true" error="true"?>
+    <runtime>
+      <description>
+        Build Script v1.00
+        Copyright (C) 2018-2018 Kevin Eshbach
+        All Rights Reserved
+
+        This script builds the debug and release configuration for x86 and x64.
+      </description>
+
+      <named name="binaryType"
+             type="string"
+             helpstring="Binary configuration to build (Debug or Release)"
+             required="true" />
+      <named name="verbose"
+             type="boolean"
+             helpstring="Dump all output"
+             required="false" />
+    </runtime>
+
+    <resource id="3rdPartyProjects">
+        zlib
+    </resource>
+
+    <resource id="Projects">
+        Utils
+        UtilsDevice
+        Drivers
+        Config
+        Devices
+        UtilsNet
+        UtilsPepNet
+        Forms
+        Apps
+        AppsNet
+        SetupPep
+    </resource>
+
+    <resource id="Platforms">
+        x64
+        x86
+    </resource>
+
+    <resource id="VcVarsAllFile">C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat</resource>
+
+    <script language="VBScript">
+      <![CDATA[
+        ' OpenTextFile IO Mode constants
+        const ForReading   = 1 ' Open a file for reading only. You can't write to this file.
+        const ForWriting   = 2
+        const ForAppending = 8 ' Open a file and write to the end of the file.
+
+        ' OpenTextFile Format constants
+        const TristateUseDefault = 2 ' Opens the file using the system default.
+        const TristateTrue       = 1 ' Opens the file as Unicode.
+        const TristateFalse      = 0 ' Opens the file as ASCII.
+
+        ' GetSpecialFolder constants
+        Const WindowsFolder   = 0
+        Const SystemFolder    = 1
+        Const TemporaryFolder = 2
+      ]]>
+    </script>
+
+    <script language="JScript">
+      <![CDATA[
+        var g_Verbose = false;
+        var g_BinaryType = "";
+
+        function getNamesFromResource(resourceName)
+        {
+            var files = getResource(resourceName).split(/(\r\n)|( )/);
+            var names = new Array();
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Read in the resource named " + resourceName + ".");
+                WScript.Echo();
+            }
+
+            for (var index = 0; index < files.length; ++index)
+            {
+                if (files[index].substr(0, 1) != "#")
+                {
+                    names.push(files[index].replace(/_/g, " "));
+                }
+            }
+
+            return names;
+        }
+
+        function generate3rdPartyBuildFile(rootPath, project, platform, logFile)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var buildFile = fso.BuildPath(fso.GetSpecialFolder(TemporaryFolder), "TempBuild3rdParty.bat");
+            var file;
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Generating the temporary build file.");
+                WScript.Echo();
+                WScript.Echo("Build File: " + buildFile);
+                WScript.Echo();
+            }
+
+            if (fso.FileExists(buildFile))
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Deleting existing temporary build file.");
+                    WScript.Echo();
+                }
+
+                fso.DeleteFile(buildFile);
+            }
+
+            file = fso.CreateTextFile(buildFile, false, false);
+
+            file.WriteLine("@echo off");
+            file.WriteLine();
+            file.WriteLine("call \"" + getResource("VcVarsAllFile") + "\" " + platform);
+            file.WriteLine();
+            file.writeline("pushd \"" + fso.BuildPath(fso.BuildPath(rootPath, project), "Current") + "\"");
+            file.WriteLine();
+            file.WriteLine("call build.bat > \"" + logFile + "\" 2>&1");
+
+            file.Close();
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Finished generating the temporary build file.");
+                WScript.Echo();
+            }
+
+            return buildFile;
+        }
+
+        function generateBuildFile(solutionFile, project, binaryType, platform, logFile)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var buildFile = fso.BuildPath(fso.GetSpecialFolder(TemporaryFolder), "TempBuildSolution.bat");
+            var file;
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Generating the temporary build file.");
+                WScript.Echo();
+                WScript.Echo("Build File: " + buildFile);
+                WScript.Echo();
+            }
+
+            if (fso.FileExists(buildFile))
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Deleting existing temporary build file.");
+                    WScript.Echo();
+                }
+
+                fso.DeleteFile(buildFile);
+            }
+
+            file = fso.CreateTextFile(buildFile, false, false);
+
+            file.WriteLine("@echo off");
+            file.WriteLine();
+            file.WriteLine("call \"" + getResource("VcVarsAllFile") + "\" " + platform);
+            file.WriteLine();
+            file.WriteLine("msbuild \"" + solutionFile + "\" /t:" + project + " /p:Configuration=" + binaryType + " /p:Platform=" + platform + " > \"" + logFile + "\" 2>&1");
+
+            file.Close();
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Finished generating the temporary build file.");
+                WScript.Echo();
+            }
+
+            return buildFile;
+        }
+
+        function build3rdPartyProject(rootPath, projectName, platform)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var WshShell = WScript.CreateObject("WScript.Shell");
+            var logFile = fso.BuildPath(fso.GetSpecialFolder(TemporaryFolder), "3rdPartyBuild.log");
+            var buildFile, file, lineRead;
+            var result;
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Building the 3rd party project.");
+                WScript.Echo();
+                WScript.Echo("Project:  " + projectName);
+                WScript.Echo("Platform: " + platform)
+                WScript.Echo();
+            }
+
+            buildFile = generate3rdPartyBuildFile(rootPath, projectName, platform, logFile)
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Executing the build script.");
+            }
+
+            result = WshShell.Run(buildFile, 0, true);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Finished executing the build script.");
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("------------------------------------------------------------");
+
+                file = fso.OpenTextFile(logFile, ForReading, false, TristateFalse);
+
+                while (!file.AtEndOfStream)
+                {
+                    lineRead = file.ReadLine();
+
+                    WScript.Echo(lineRead);
+                }
+
+                file.Close();
+
+                WScript.Echo("------------------------------------------------------------");
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Deleting the generated build file.");
+            }
+
+            fso.DeleteFile(buildFile);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Deleting the build log file.");
+            }
+
+            if (fso.FileExists(logFile))
+            {
+                fso.DeleteFile(logFile);
+            }
+
+            return (result == 0) ? true : false;
+        }
+
+        function buildProject(projectPath, projectName, binaryType, platform)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var WshShell = WScript.CreateObject("WScript.Shell");
+            var solutionFile = fso.BuildPath(projectPath, projectName + ".sln");
+            var project = projectName + "Builder";
+            var logFile = fso.BuildPath(fso.GetSpecialFolder(TemporaryFolder), "Build.log");
+            var buildFile, file, lineRead;
+            var result;
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Building the project.");
+                WScript.Echo();
+                WScript.Echo("Solution File:  " + solutionFile);
+                WScript.Echo("Project:        " + project);
+                WScript.Echo("Binary Type:    " + binaryType);
+                WScript.Echo("Platform:       " + platform)
+                WScript.Echo();
+            }
+
+            buildFile = generateBuildFile(solutionFile, project, binaryType, platform, logFile);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Executing the build script.");
+            }
+
+            result = WshShell.Run(buildFile, 0, true);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Finished executing the build script.");
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("------------------------------------------------------------");
+
+                file = fso.OpenTextFile(logFile, ForReading, false, TristateFalse);
+
+                while (!file.AtEndOfStream)
+                {
+                    lineRead = file.ReadLine();
+
+                    WScript.Echo(lineRead);
+                }
+
+                file.Close();
+
+                WScript.Echo("------------------------------------------------------------");
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Deleting the generated build file.");
+            }
+
+            fso.DeleteFile(buildFile);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Deleting the build log file.");
+            }
+
+            if (fso.FileExists(logFile))
+            {
+                fso.DeleteFile(logFile);
+            }
+
+            return (result == 0) ? true : false;
+        }
+            
+        function buildConfiguration(rootPath, binaryType)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var thirdPartyProjects, projects, platforms, projectPath;
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Building the binary type \"" + binaryType + "\" type.");
+                WScript.Echo();
+            }
+
+            thirdPartyProjects = getNamesFromResource("3rdPartyProjects");
+            projects = getNamesFromResource("Projects");
+            platforms = getNamesFromResource("Platforms");
+
+            for (var indexPlatform = 0; indexPlatform < platforms.length; ++indexPlatform)
+            {
+                for (var indexProject = 0; indexProject < thirdPartyProjects.length; ++indexProject)
+                {
+                    projectPath = fso.BuildPath(rootPath, "ThirdParty");
+
+                    if (false == build3rdPartyProject(projectPath, thirdPartyProjects[indexProject], platforms[indexPlatform]))
+                    {
+                        if (g_Verbose)
+                        {
+                            WScript.Echo("Failed to build the 3rd Party Project \"" + thirdPartyProjects[indexProject] + "\"");
+                        }
+
+                        return false;
+                    }
+                }
+
+                for (var indexProject = 0; indexProject < projects.length; ++indexProject)
+                {
+                    projectPath = fso.BuildPath(rootPath, projects[indexProject]);
+
+                    if (false == buildProject(projectPath, projects[indexProject], binaryType, platforms[indexPlatform]))
+                    {
+                        if (g_Verbose)
+                        {
+                            WScript.Echo("Failed to build the Project \"" + projects[indexProject] + "\"");
+                        }
+
+                        return false;
+                    }
+                }
+            }
+        }
+
+        function parseArgs()
+        {
+            g_BinaryType = WScript.Arguments.Named.Item("binaryType");
+                    
+            if (WScript.Arguments.Named.Item("verbose") == "+")
+            {
+                g_Verbose = true;
+            }
+            
+            if (g_BinaryType != "Debug" && g_BinaryType != "Release")
+            {
+                throw new Error("Unknown binary type command line option");
+            }
+
+            return 1;
+        }
+        
+        function main()
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var WshShell = WScript.CreateObject("WScript.Shell");
+
+            if (!parseArgs())
+            {
+                WScript.Echo("Invalid command line arguments");
+
+                return 1;
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Current Path: " + WshShell.CurrentDirectory);
+                WScript.Echo();
+            }
+
+            if (false != buildConfiguration(WshShell.CurrentDirectory, g_BinaryType))
+            {
+                return 1;
+            }
+
+            return 0;
+        }
+
+        try
+        {
+            var result = main();
+
+            WScript.Quit(result);
+        }
+        catch (e)
+        {
+            WScript.Echo("Error Occurred");
+            WScript.Echo();
+            WScript.Echo("Name:        " + e.name);
+            WScript.Echo("Message:     " + e.message);
+            WScript.Echo("Number:      " + e.number);
+            WScript.Echo("Description: " + e.description);
+
+            WScript.Quit(1);
+        }
+      ]]>
+    </script>
+  </job>
+</package>

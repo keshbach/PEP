@@ -1,0 +1,18 @@
+;
+;  Copyright (C) 2014-2014 Kevin Eshbach
+;
+
+LIBRARY PepCustomActions BASE=0x20000000
+EXPORTS
+    InstallDriverCustomAction @ 1
+    InstallCommitDriverCustomAction @ 2
+    InstallRollbackDriverCustomAction @ 3
+    RemoveDriverCustomAction @ 4
+    RemoveCommitDriverCustomAction @ 5
+    RemoveRollbackDriverCustomAction @ 6
+
+;
+;  Copyright (C) 2014-2014 Kevin Eshbach
+;
+
+

@@ -1,0 +1,51 @@
+Property	Value
+s72	l0
+Property	Property
+ALLUSERS	1
+ARPNOMODIFY	1
+ARPNOREPAIR	1
+BannerBitmap	bannrbmp
+ButtonText_Back	< &Back
+ButtonText_Browse	Br&owse
+ButtonText_Cancel	Cancel
+ButtonText_Exit	&Exit
+ButtonText_Finish	&Finish
+ButtonText_Ignore	&Ignore
+ButtonText_Install	&Install
+ButtonText_Next	&Next >
+ButtonText_No	&No
+ButtonText_OK	OK
+ButtonText_Remove	&Remove
+ButtonText_Repair	&Repair
+ButtonText_Reset	&Reset
+ButtonText_Resume	&Resume
+ButtonText_Retry	&Retry
+ButtonText_Return	&Return
+ButtonText_Yes	&Yes
+CompleteSetupIcon	completi
+CustomSetupIcon	custicon
+DefaultUIFont	DlgFont8
+DialogBitmap	dlgbmp
+DlgTitleFont	{&DlgFontBold8}
+ErrorDialog	ErrorDlg
+ExclamationIcon	exclamic
+IAgree	No
+INSTALLLEVEL	5
+InfoIcon	info
+InstallMode	Typical
+InstallerIcon	insticon
+Manufacturer	Kevin Eshbach
+PROMPTROLLBACKCOST	P
+ParallelPortConfigText	Parallel Port Sample Text
+ParallelPortDevObjName	\Device\ParallelPort2
+ProductCode	{8A2BA0CA-C82B-4B66-B7F5-CFEDACAE3035}
+ProductLanguage	:1033
+ProductName	Pep Application
+ProductVersion	3.1.0000
+RemoveIcon	removico
+RepairIcon	repairic
+Setup	Setup
+TotalParallelPorts	1
+UpgradeCode	{C5C79143-3863-44CF-829E-941DD061D432}
+Wizard	Setup Wizard
+_BrowseProperty	PRODUCTDIRECTORY

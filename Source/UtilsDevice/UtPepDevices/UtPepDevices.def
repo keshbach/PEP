@@ -1,0 +1,23 @@
+;
+;  Copyright (C) 2006-2013 Kevin Eshbach
+;
+
+LIBRARY UtPepDevices BASE=0x202d0000
+EXPORTS
+    UtPepDevicesInitialize @ 1
+    UtPepDevicesUninitialize @ 2
+    UtPepDevicesGetDeviceCount @ 3
+    UtPepDevicesGetDevice @ 4
+    UtPepDevicesFindDevice @ 5
+    UtPepDevicesGetPluginCount @ 6
+    UtPepDevicesGetPluginName @ 7
+    UtPepDevicesGetPluginVersion @ 8
+    UtPepDevicesGetDeviceTypeName @ 9
+	UtPepDevicesGetDevicePackageName @ 10
+    UtPepDevicesGetDeviceVppName @ 11
+    UtPepDevicesAllocPinDiagram @ 12
+    UtPepDevicesFreePinDiagram @ 13
+
+;
+;  Copyright (C) 2006-2013 Kevin Eshbach
+;

@@ -1,0 +1,79 @@
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2006-2014 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////
+
+#include <windows.h>
+
+#include <Includes/UtVersion.h>
+
+#include "resource.h"
+
+#if defined(NDEBUG)
+
+#if defined(x86)
+IDE_CONSOLEHELPER RT_EXECUTABLE "../../bin/Release/x86/ConsoleHelper.exe"
+#elif defined(x64)
+IDE_CONSOLEHELPER RT_EXECUTABLE "../../bin/Release/x64/ConsoleHelper.exe"
+#else
+#error Unsupported architecture
+#endif
+#else
+
+#if defined(x86)
+IDE_CONSOLEHELPER RT_EXECUTABLE "../../bin/Debug/x86/ConsoleHelper.exe"
+#elif defined(x64)
+IDE_CONSOLEHELPER RT_EXECUTABLE "../../bin/Debug/x64/ConsoleHelper.exe"
+#else
+#error Unsupported architecture
+#endif
+
+#endif
+
+#ifdef RC_INVOKED
+
+#if DBG
+#define VER_DBG VS_FF_DEBUG
+#else
+#define VER_DBG 0
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    CUtMajorVersion, CUtMinorVersion, 0, 0
+PRODUCTVERSION CUtMajorVersion, CUtMinorVersion, 0, 0
+FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+FILEFLAGS      VER_DBG
+FILEOS         VOS_NT
+FILETYPE       VFT_DLL
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "Comments",         "Utilities .Net v" CUtVersionString
+            VALUE "CompanyName",      "Kevin Eshbach"
+            VALUE "FileDescription",  "Utilities .Net"
+            VALUE "FileVersion",      CUtVersionString
+            VALUE "InternalName",     "UtilNet.dll"
+            VALUE "LegalCopyright",   CUtCopyrightString
+            VALUE "OriginalFilename", "UtilNet.dll"
+            VALUE "ProductName",      "Utilities .Net"
+            VALUE "ProductVersion",   "v" CUtVersionString
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif /* end of RC_INVOKED */
+
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2006-2014 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////

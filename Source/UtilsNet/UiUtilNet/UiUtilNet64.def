@@ -1,0 +1,9 @@
+;
+;  Copyright (C) 2007-2017 Kevin Eshbach
+;
+
+LIBRARY UiUtilNet BASE=0x400090000
+
+;
+;  Copyright (C) 2007-2017 Kevin Eshbach
+;

@@ -1,0 +1,167 @@
+Table	Column	Nullable	MinValue	MaxValue	KeyTable	KeyColumn	Category	Set	Description
+s32	s32	s4	I4	I4	S255	I2	S32	S255	S255
+_Validation	Table	Column
+ActionText	Action	N					Identifier		
+ActionText	Description	Y					Text		
+ActionText	Template	Y					Template		
+AdminExecuteSequence	Action	N					Identifier		Name of action to invoke, either in the engine or the handler DLL.
+AdminExecuteSequence	Condition	Y					Condition		Optional expression which skips the action if evaluates to expFalse.If the expression syntax is invalid, the engine will terminate, returning iesBadActionData.
+AdminExecuteSequence	Sequence	Y	-4	32767					Number that determines the sort order in which the actions are to be executed.  Leave blank to suppress action.
+AdminUISequence	Action	N					Identifier		Name of action to invoke, either in the engine or the handler DLL.
+AdminUISequence	Condition	Y					Condition		Optional expression which skips the action if evaluates to expFalse.If the expression syntax is invalid, the engine will terminate, returning iesBadActionData.
+AdminUISequence	Sequence	Y	-4	32767					Number that determines the sort order in which the actions are to be executed.  Leave blank to suppress action.
+Binary	Data	N					Binary		
+Binary	Name	N					Identifier		
+BindImage	File_	N			File	1	Identifier		
+BindImage	Path	Y					Paths		
+CheckBox	Property	N					Identifier		A named property to be tied to the item.
+CheckBox	Value	Y					Formatted		The value string associated with the item.
+ComboBox	Order	N	1	32767					A positive integer used to determine the ordering of the items within one list.The integers do not have to be consecutive.
+ComboBox	Property	N					Identifier		A named property to be tied to this item. All the items tied to the same property become part of the same combobox.
+ComboBox	Text	Y					Formatted		The visible text to be assigned to the item. Optional. If this entry or the entire column is missing, the text is the same as the value.
+ComboBox	Value	N					Formatted		The value string associated with this item. Selecting the line will set the associated property to this value.
+Component	Attributes	N							
+Component	Component	N					Identifier		
+Component	ComponentId	Y					Guid		
+Component	Condition	Y					Condition		
+Component	Directory_	N			Directory	1	Identifier		
+Component	KeyPath	Y			File;Registry;ODBCDataSource	1	Identifier		
+Control	Attributes	Y	0	2147483647					
+Control	Control	N					Identifier		
+Control	Control_Next	Y			Control	2	Identifier		
+Control	Dialog_	N			Dialog	1	Identifier		
+Control	Height	N	0	32767					
+Control	Help	Y					Text		
+Control	Property	Y					Identifier		
+Control	Text	Y					Formatted		
+Control	Type	N					Identifier		
+Control	Width	N	0	32767					
+Control	X	N	0	32767					
+Control	Y	N	0	32767					
+ControlCondition	Action	N							
+ControlCondition	Condition	N					Condition	Default;Disable;Enable;Hide;Show	
+ControlCondition	Control_	N			Control	2	Identifier		
+ControlCondition	Dialog_	N			Dialog	1	Identifier		
+ControlEvent	Argument	N					Formatted		
+ControlEvent	Condition	Y					Condition		
+ControlEvent	Control_	N			Control	2	Identifier		
+ControlEvent	Dialog_	N			Dialog	1	Identifier		
+ControlEvent	Event	N					Formatted		
+ControlEvent	Ordering	Y	0	2147483647					
+CreateFolder	Component_	N					Identifier		
+CreateFolder	Directory_	N					Identifier		
+CustomAction	Action	N					Identifier		
+CustomAction	ExtendedType	Y					DoubleInteger		
+CustomAction	Source	Y					CustomSource		
+CustomAction	Target	Y					Formatted		
+CustomAction	Type	N	-32767	32767			Integer		
+Dialog	Attributes	Y	0	2147483647					
+Dialog	Control_Cancel	Y			Control	2	Identifier		
+Dialog	Control_Default	Y			Control	2	Identifier		
+Dialog	Control_First	N			Control	2	Identifier		
+Dialog	Dialog	N					Identifier		
+Dialog	HCentering	N	0	100					
+Dialog	Height	N	0	32767					
+Dialog	Title	Y					Formatted		
+Dialog	VCentering	N	0	100					
+Dialog	Width	N	0	32767					
+Directory	DefaultDir	N					DefaultDir		
+Directory	Directory	N					Identifier		
+Directory	Directory_Parent	Y			Directory	1	Identifier		
+Error	Error	N	0	32767					
+Error	Message	Y					Template		
+EventMapping	Attribute	N					Identifier		The name of the control attribute, that is set when this event is received.
+EventMapping	Control_	N			Control	2	Identifier		A foreign key to the Control table, name of the control.
+EventMapping	Dialog_	N			Dialog	1	Identifier		A foreign key to the Dialog table, name of the Dialog.
+EventMapping	Event	N					Identifier		An identifier that specifies the type of the event that the control subscribes to.
+Feature	Attributes	N						0;1;2;4;5;6;8;9;10;16;17;18;20;21;22;24;25;26;32;33;34;36;37;38;48;49;50;52;53;54	
+Feature	Description	Y					Text		
+Feature	Directory_	Y			Directory	1	UpperCase		
+Feature	Display	Y	0	32767					
+Feature	Feature	N					Identifier		
+Feature	Feature_Parent	Y			Feature	1	Identifier		
+Feature	Level	N	0	32767					
+Feature	Title	Y					Text		
+FeatureComponents	Component_	N			Component	1	Identifier		
+FeatureComponents	Feature_	N			Feature	1	Identifier		
+File	Attributes	Y	0	32767					
+File	Component_	N			Component	1	Identifier		
+File	File	N					Identifier		
+File	FileName	N					Filename		
+File	FileSize	N	0	2147483647					
+File	Language	Y					Language		
+File	Sequence	N	1	32767					
+File	Version	Y			File	1	Version		
+Icon	Data	N					Binary		
+Icon	Name	N					Identifier		
+InstallExecuteSequence	Action	N					Identifier		
+InstallExecuteSequence	Condition	Y					Condition		
+InstallExecuteSequence	Sequence	Y	-4	32767					
+InstallUISequence	Action	N					Identifier		
+InstallUISequence	Condition	Y					Condition		
+InstallUISequence	Sequence	Y	-4	32767					
+ListBox	Order	N	1	32767					
+ListBox	Property	N					Identifier		
+ListBox	Text	Y					Text		
+ListBox	Value	N					Formatted		
+ListView	Binary_	Y			Binary	1	Identifier		
+ListView	Order	N	0	32767			Integer		
+ListView	Property	N					Identifier		
+ListView	Text	Y					Formatted		
+ListView	Value	N					Formatted		
+Media	Cabinet	Y					Cabinet		
+Media	DiskId	N	1	32767					
+Media	DiskPrompt	Y					Text		
+Media	LastSequence	N	0	32767					
+Media	Source	Y					Property		
+Media	VolumeLabel	Y					Text		
+MsiEmbeddedUI	Attributes	N	0	32767			Integer		
+MsiEmbeddedUI	Data	N					Binary		
+MsiEmbeddedUI	FileName	N					Text		
+MsiEmbeddedUI	MessageFilter	Y					DoubleInteger		
+MsiEmbeddedUI	MsiEmbeddedUI	N					Identifier		
+Property	Property	N					Identifier		
+Property	Value	N					Text		
+RadioButton	Height	N	0	32767					The height of the button.
+RadioButton	Help	Y					Text		The help strings used with the button. The text is optional.
+RadioButton	Order	N	1	32767					A positive integer used to determine the ordering of the items within one list..The integers do not have to be consecutive.
+RadioButton	Property	N					Identifier		A named property to be tied to this radio button. All the buttons tied to the same property become part of the same group.
+RadioButton	Text	Y					Text		The visible title to be assigned to the radio button.
+RadioButton	Value	N					Formatted		The value string associated with this button. Selecting the button will set the associated property to this value.
+RadioButton	Width	N	0	32767					The width of the button.
+RadioButton	X	N	0	32767					The horizontal coordinate of the upper left corner of the bounding rectangle of the radio button.
+RadioButton	Y	N	0	32767					The vertical coordinate of the upper left corner of the bounding rectangle of the radio button.
+Registry	Component_	N					Identifier		
+Registry	Key	N					RegPath		
+Registry	Name	Y					Formatted		
+Registry	Registry	N					Identifier		
+Registry	Root	N					Integer		
+Registry	Value	Y					Formatted		
+RemoveFile	Component_	N					Identifier		
+RemoveFile	DirProperty	N					Identifier		
+RemoveFile	FileKey	N					Identifier		
+RemoveFile	FileName	Y					WildCardFilename		
+RemoveFile	InstallMode	N					Integer		
+Shortcut	Arguments	Y					Formatted		
+Shortcut	Component_	N					Identifier		
+Shortcut	Description	Y					Text		
+Shortcut	DescriptionResourceDLL	Y					Formatted		
+Shortcut	DescriptionResourceId	Y					Integer		
+Shortcut	Directory_	N					Identifier		
+Shortcut	DisplayResourceDLL	Y					Formatted		
+Shortcut	DisplayResourceId	Y					Integer		
+Shortcut	Hotkey	Y					Integer		
+Shortcut	IconIndex	Y					Integer		
+Shortcut	Icon_	Y					Identifier		
+Shortcut	Name	N					Filename		
+Shortcut	Shortcut	N					Identifier		
+Shortcut	ShowCmd	Y					Integer		
+Shortcut	Target	N					Shortcut		
+Shortcut	WkDir	Y					Identifier		
+TextStyle	Color	Y	0	16777215					
+TextStyle	FaceName	N					Text		
+TextStyle	Size	N	0	32767					
+TextStyle	StyleBits	Y	0	15					
+TextStyle	TextStyle	N					Identifier		
+UIText	Key	N					Identifier		A unique key that identifies the particular string.
+UIText	Text	Y					Text		The localized version of the string.

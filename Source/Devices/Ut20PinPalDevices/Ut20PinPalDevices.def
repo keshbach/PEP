@@ -1,0 +1,12 @@
+;
+;  Copyright (C) 2007-2011 Kevin Eshbach
+;
+
+LIBRARY Ut20PinPalDevices BASE=0x200b0000
+EXPORTS
+    GetDeviceCount @ 1
+    GetDevice @ 2
+
+;
+;  Copyright (C) 2007-2011 Kevin Eshbach
+;

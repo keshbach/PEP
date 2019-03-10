@@ -1,0 +1,56 @@
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2011-2014 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////
+
+#include <windows.h>
+
+#include <Includes/UtVersion.h>
+
+#ifdef RC_INVOKED
+
+#if DBG
+#define VER_DBG VS_FF_DEBUG
+#else
+#define VER_DBG 0
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    CUtMajorVersion, CUtMinorVersion, 0, 0
+PRODUCTVERSION CUtMajorVersion, CUtMinorVersion, 0, 0
+FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+FILEFLAGS      VER_DBG
+FILEOS         VOS_NT
+FILETYPE       VFT_DLL
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "Comments",         "Console Helper v" CUtVersionString
+            VALUE "CompanyName",      "Kevin Eshbach"
+            VALUE "FileDescription",  "Console Helper"
+            VALUE "FileVersion",      CUtVersionString
+            VALUE "InternalName",     "ConsoleHelper.exe"
+            VALUE "LegalCopyright",   CUtCopyrightString
+            VALUE "OriginalFilename", "ConsoleHelper.exe"
+            VALUE "ProductName",      "Console Helper v" CUtVersionString
+            VALUE "ProductVersion",   "v" CUtVersionString
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif /* end of RC_INVOKED */
+
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2011-2014 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////

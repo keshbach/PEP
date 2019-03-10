@@ -1,0 +1,9 @@
+;
+;  Copyright (C) 2007-2014 Kevin Eshbach
+;
+
+LIBRARY UiCtrlsNet BASE=0x400020000
+
+;
+;  Copyright (C) 2007-2014 Kevin Eshbach
+;

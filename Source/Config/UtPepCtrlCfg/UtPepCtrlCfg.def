@@ -1,0 +1,19 @@
+;
+;  Copyright (C) 2007-2014 Kevin Eshbach
+;
+
+LIBRARY UtPepCtrlCfg BASE=0x202c0000
+EXPORTS
+    UtPepCtrlCfgInitialize @ 1
+    UtPepCtrlCfgUninitialize @ 2
+    UtPepCtrlCfgInstallDriver @ 3
+    UtPepCtrlCfgUninstallDriver @ 4
+    UtPepCtrlCfgStartDriver @ 5
+    UtPepCtrlCfgStopDriver @ 6
+    UtPepCtrlCfgSetPortSettings @ 7
+    UtPepCtrlCfgGetPortType @ 8
+    UtPepCtrlCfgGetPortDeviceName @ 9
+
+;
+;  Copyright (C) 2007-2014 Kevin Eshbach
+;

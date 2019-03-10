@@ -1,0 +1,12 @@
+;
+;  Copyright (C) 2009-2009 Kevin Eshbach
+;
+
+LIBRARY Ut20PinPromDevices BASE=0x200d0000
+EXPORTS
+    GetDeviceCount @ 1
+    GetDevice @ 2
+
+;
+;  Copyright (C) 2009-2009 Kevin Eshbach
+;

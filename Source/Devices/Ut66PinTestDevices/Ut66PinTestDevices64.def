@@ -1,0 +1,12 @@
+;
+;  Copyright (C) 2016-2016 Kevin Eshbach
+;
+
+LIBRARY Ut66PinTestDevices BASE=0x400220000
+EXPORTS
+    GetDeviceCount @ 1
+    GetDevice @ 2
+
+;
+;  Copyright (C) 2016-2016 Kevin Eshbach
+;

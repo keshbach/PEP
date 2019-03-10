@@ -1,0 +1,309 @@
+<?xml version="1.0"?>
+<package>
+  <job id="Build">
+    <?job debug="true" error="true"?>
+    <runtime>
+      <description>
+        Generate Manifest File Script v1.00
+        Copyright (C) 2018 Kevin Eshbach
+        All Rights Reserved
+
+        This script generates a new manifest file.
+      </description>
+
+      <named name="appType"
+             type="string"
+             helpstring="Application type (console or windows)"
+             required="true" />
+      <named name="assemblyName"
+             type="string"
+             helpstring="Assembly name"
+             required="true" />
+      <named name="assemblyDescription"
+             type="string"
+             helpstring="Assembly description"
+             required="true" />
+      <named name="assemblyVersion"
+             type="string"
+             helpstring="Assembly version"
+             required="true" />
+      <named name="processorArchitecture"
+             type="string"
+             helpstring="Processor architecture (x86 or ia64)"
+             required="true" />
+      <named name="executionLevel"
+             type="string"
+             helpstring="Execution level (asInvoker or requireAdministrator)"
+             required="true" />
+      <named name="assemblyFile"
+             type="string"
+             helpstring="Name to give the parameter file and manifest file (extension will automatically be appended)"
+             required="true" />
+      <named name="outputPath"
+             type="string"
+             helpstring="Destination path for the parameter file and manifest file"
+             required="true" />
+      <named name="verbose"
+             type="boolean"
+             helpstring="Dump all output"
+             required="false" />
+    </runtime>
+
+    <script language="VBScript">
+      <![CDATA[
+        ' OpenTextFile IO Mode constants
+        const ForReading   = 1 ' Open a file for reading only. You can't write to this file.
+        const ForWriting   = 2
+        const ForAppending = 8 ' Open a file and write to the end of the file.
+
+        ' OpenTextFile Format constants
+        const TristateUseDefault = 2 ' Opens the file using the system default.
+        const TristateTrue       = 1 ' Opens the file as Unicode.
+        const TristateFalse      = 0 ' Opens the file as ASCII.
+
+        ' GetSpecialFolder constants
+        Const WindowsFolder   = 0
+        Const SystemFolder    = 1
+        Const TemporaryFolder = 2
+      ]]>
+    </script>
+
+    <script language="JScript">
+      <![CDATA[
+		var g_AppType = "";
+		var g_AssemblyName = "";
+		var g_AssemblyDescription = "";
+		var g_AssemblyVersion = "";
+		var g_ProcessorArchitecture = "";
+		var g_ExecutionLevel = "";
+		var g_AssemblyFile = "";
+		var g_OutputPath = "";
+        var g_Verbose = false;
+
+        function getScriptPath()
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var file = fso.GetFile(Wscript.ScriptFullName);
+
+            return fso.GetParentFolderName(file);
+        }
+
+        function findTemplateFile()
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var templatePath = fso.BuildPath(getScriptPath(), "templates");
+
+            return fso.BuildPath(templatePath, g_AppType + ".manifest");
+        }
+
+        function generateParametersFile(parameterFile)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var file = fso.CreateTextFile(parameterFile, false, false);
+
+            file.WriteLine("ASSEMBLY_NAME=" + g_AssemblyName);
+            file.WriteLine("ASSEMBLY_DESCRIPTION=" + g_AssemblyDescription);
+            file.WriteLine("ASSEMBLY_VERSION=" + g_AssemblyVersion);
+            file.WriteLine("PROCESSOR_ARCHITECTURE=" + g_ProcessorArchitecture);
+            file.WriteLine("EXECUTION_LEVEL=" + g_ExecutionLevel);
+
+            file.Close();
+        }
+
+        function generateManifestFile(parameterFile, templateFile, manifestFile)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var WshShell = WScript.CreateObject("WScript.Shell");
+            var command, oExec;
+
+            command = "cscript ConvertTemplateFile.wsf ";
+            command += "/templateFile:\"" + templateFile + "\" ";
+            command += "/parameterFile:\"" + parameterFile + "\" ";;
+            command += "/outputFile:\"" + manifestFile + "\" ";
+
+            if (g_Verbose)
+            {
+                command += "/verbose:+";
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Command: " + command);
+                WScript.Echo();
+            }
+
+            oExec = WshShell.Exec(command);
+
+            if (!oExec.StdOut.AtEndOfStream)
+            {
+                WScript.Echo(oExec.StdOut.ReadAll());
+            }
+
+            if (!oExec.StdErr.AtEndOfStream)
+            {
+                WScript.Echo(oExec.StdErr.ReadAll());
+            }
+
+            while (!oExec.Status)
+            {
+                WScript.Sleep(100);
+            }
+
+            return oExec.ExitCode;
+        }
+
+        function parseArgs()
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+
+		    g_AppType = WScript.Arguments.Named.Item("appType");
+		    g_AssemblyName = WScript.Arguments.Named.Item("assemblyName");
+		    g_AssemblyDescription = WScript.Arguments.Named.Item("assemblyDescription");
+		    g_AssemblyVersion = WScript.Arguments.Named.Item("assemblyVersion");
+		    g_ProcessorArchitecture = WScript.Arguments.Named.Item("processorArchitecture");
+		    g_ExecutionLevel = WScript.Arguments.Named.Item("executionLevel");
+		    g_AssemblyFile = WScript.Arguments.Named.Item("assemblyFile");
+		    g_OutputPath = WScript.Arguments.Named.Item("outputPath");
+
+            // The manifest file uses amd64 to indicate the x64 architecture.
+
+		    if (g_ProcessorArchitecture == "x64")
+		    {
+		        g_ProcessorArchitecture = "amd64";
+		    }
+
+            if (WScript.Arguments.Named.Item("verbose") == "+")
+            {
+                g_Verbose = true;
+            }
+
+            return 1;
+        }
+
+        function main()
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var WshShell = WScript.CreateObject("WScript.Shell");
+            var parameterFile, manifestFile, templateFile;
+
+            if (!parseArgs())
+            {
+                WScript.Echo("Invalid command line arguments");
+
+                return 1;
+            }
+
+            parameterFile = fso.BuildPath(g_OutputPath, g_AssemblyFile + ".parameters");
+            manifestFile = fso.BuildPath(g_OutputPath, g_AssemblyFile + ".manifest");
+            templateFile = findTemplateFile();
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Parameter File: " + parameterFile);
+                WScript.Echo("Manifest File:  " + manifestFile);
+                WScript.Echo("Template File:  " + templateFile);
+                WScript.Echo();
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Checking if the output path exists.");
+                WScript.Echo();
+            }
+
+            if (!fso.FolderExists(g_OutputPath))
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Creating the output path.");
+                    WScript.Echo();
+                }
+
+                if (!fso.CreateFolder(g_OutputPath))
+                {
+                    throw new Error("Failed to create the output path.");
+                }
+            }
+            else
+            {
+                WScript.Echo("Output path already exists.");
+                WScript.Echo();
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Checking if the parameter file exists.");
+                WScript.Echo();
+            }
+
+            if (!fso.FileExists(parameterFile))
+            {
+	            if (g_Verbose)
+    	        {
+        	        WScript.Echo("Generating the parameters file.");
+            	    WScript.Echo();
+	            }
+
+    	        generateParametersFile(parameterFile);
+            }
+            else
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("The parameter file already exists.");
+                    WScript.Echo();
+                }
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Checking if the manifest file exists.");
+                WScript.Echo();
+            }
+
+            if (!fso.FileExists(manifestFile))
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Generating the manifest file.");
+                    WScript.Echo();
+                }
+
+                if (generateManifestFile(parameterFile, templateFile, manifestFile) != 0)
+                {
+                    throw new Error("Failed to create the manifest file.");
+                }
+            }
+            else
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("The manifest file already exists.");
+                    WScript.Echo();
+                }
+            }
+
+            return 0;
+        }
+
+        try
+        {
+            var result = main();
+
+            WScript.Quit(result);
+        }
+        catch (e)
+        {
+            WScript.Echo("Error Occurred");
+            WScript.Echo();
+            WScript.Echo("Name:        " + e.name);
+            WScript.Echo("Message:     " + e.message);
+            WScript.Echo("Number:      " + e.number);
+            WScript.Echo("Description: " + e.description);
+
+            WScript.Quit(1);
+        }
+      ]]>
+    </script>
+  </job>
+</package>

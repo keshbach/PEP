@@ -1,0 +1,11 @@
+;
+;  Copyright (C) 2014-2014 Kevin Eshbach
+;
+
+LIBRARY ZipNet BASE=0x400440000
+
+;
+;  Copyright (C) 2014-2014 Kevin Eshbach
+;
+
+

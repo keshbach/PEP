@@ -1,0 +1,16 @@
+;
+;  Copyright (C) 2007-2007 Kevin Eshbach
+;
+
+LIBRARY UtListPorts BASE=0x400260000
+EXPORTS
+    UtListPortsInitialize @ 1
+    UtListPortsUninitialize @ 2
+    UtListPortsGetLptPortCount @ 3
+    UtListPortsGetLptPortData @ 4
+    UtListPortsGetUsbPrintPortCount @ 5
+    UtListPortsGetUsbPrintPortData @ 6
+
+;
+;  Copyright (C) 2007-2007 Kevin Eshbach
+;

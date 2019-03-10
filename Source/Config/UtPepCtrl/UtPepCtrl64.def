@@ -1,0 +1,22 @@
+;
+;  Copyright (C) 2006-2013 Kevin Eshbach
+;
+
+LIBRARY UtPepCtrl BASE=0x4003c0000
+EXPORTS
+    UtPepCtrlInitialize @ 1
+    UtPepCtrlUninitialize @ 2
+    UtPepCtrlIsDevicePresent @ 3
+    UtPepCtrlReset @ 4
+    UtPepCtrlSetProgrammerMode @ 5
+    UtPepCtrlSetVccMode @ 6
+    UtPepCtrlSetPinPulseMode @ 7
+    UtPepCtrlSetVppMode @ 8
+    UtPepCtrlReadData @ 9
+    UtPepCtrlReadUserData @ 10
+    UtPepCtrlProgramData @ 11
+    UtPepCtrlProgramUserData @ 12
+
+;
+;  Copyright (C) 2006-2013 Kevin Eshbach
+;

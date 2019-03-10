@@ -1,0 +1,54 @@
+/***************************************************************************/
+/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/***************************************************************************/
+
+#include <winver.h>
+#include <ntdef.h>
+
+#include <Includes/UtVersion.h>
+
+#ifdef RC_INVOKED
+
+#if DBG
+#define VER_DBG VS_FF_DEBUG
+#else
+#define VER_DBG 0
+#endif
+
+/* Version Information */
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    CUtMajorVersion, CUtMinorVersion, 0, 0
+PRODUCTVERSION CUtMajorVersion, CUtMinorVersion, 0, 0
+FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+FILEFLAGS      VER_DBG
+FILEOS         VOS_NT
+FILETYPE       VFT_APP
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments",         "Test RAM Devices v" CUtVersionString
+            VALUE "CompanyName",      "Kevin Eshbach"
+            VALUE "FileDescription",  "Test RAM PEP Devices"
+            VALUE "FileVersion",      CUtVersionString
+            VALUE "InternalName",     "TestRAMDevices.exe"
+            VALUE "LegalCopyright",   CUtCopyrightString
+            VALUE "OriginalFilename", "TestRAMDevices.exe"
+            VALUE "ProductName",      "Test RAM Devices v" CUtVersionString
+            VALUE "ProductVersion",   "v" CUtVersionString
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 0x04b0
+    END
+END
+
+#endif /* end of RC_INVOKED */
+
+/***************************************************************************/
+/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/***************************************************************************/

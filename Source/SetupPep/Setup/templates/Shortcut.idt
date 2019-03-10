@@ -1,0 +1,13 @@
+Shortcut	Directory_	Name	Component_	Target	Arguments	Description	Hotkey	Icon_	IconIndex	ShowCmd	WkDir	DisplayResourceDLL	DisplayResourceId	DescriptionResourceDLL	DescriptionResourceId
+s72	s72	l128	s72	s72	S255	L255	I2	S72	I2	I2	S72	S100	I4	S100	I4
+Shortcut	Shortcut
+PepAppShortcut	PEPProgramMenuFolder	PEP	ApplicationComponent	ApplicationFeature				PepAppNet.exe	0						
+AdapterSchematicShortcut1	PEPAdaptersMenuFolder	2532AD~1|2532 ADAPTER SCHEMATIC	AdapterSchematicsComponent	[#_2532_ADAPTER_SCHEMATIC.pdf]											
+AdapterSchematicShortcut2	PEPAdaptersMenuFolder	2564AD~1|2564 ADAPTER SCHEMATIC	AdapterSchematicsComponent	[#_2564_ADAPTER_SCHEMATIC.pdf]											
+AdapterSchematicShortcut3	PEPAdaptersMenuFolder	74S288~1|74S288 Adapter Schematics	AdapterSchematicsComponent	[#_74S288_Adapter_Schematics.pdf]											
+AdapterSchematicShortcut4	PEPAdaptersMenuFolder	74S472~1|74S472 and 74LS471 Adapter Schematics	AdapterSchematicsComponent	[#_74S472_and_74LS471_Adapter_Schematics.pdf]											
+AdapterSchematicShortcut5	PEPAdaptersMenuFolder	82S114~1|82S114 and 82S115 Adapter Schematics	AdapterSchematicsComponent	[#_82S114_and_82S115_Adapter_Schematics.pdf]											
+AdapterSchematicShortcut6	PEPAdaptersMenuFolder	82S125~1|82S125 and 74S573 Adapter Schematics	AdapterSchematicsComponent	[#_82S125_and_74S573_Adapter_Schematics.pdf]											
+AdapterSchematicShortcut7	PEPAdaptersMenuFolder	82S13X~1|82S13x and 74S287 Adapter Schematics	AdapterSchematicsComponent	[#_82S13x_and_74S287_Adapter_Schematics.pdf]											
+AdapterSchematicShortcut8	PEPAdaptersMenuFolder	MB8310~1|MB831000 Adapter Schematic	AdapterSchematicsComponent	[#_MB831000_Adapter_Schematic.pdf]											
+AdapterSchematicShortcut9	PEPAdaptersMenuFolder	PROM24~1|PROM24 Adapter Schematic	AdapterSchematicsComponent	[#_PROM24_Adapter_Schematic.pdf]											

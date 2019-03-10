@@ -1,0 +1,10 @@
+;
+;  Copyright (C) 2009-2014 Kevin Eshbach
+;
+
+LIBRARY RebaserNet BASE=0x10060000
+VERSION 0.0
+
+;
+;  Copyright (C) 2009-2014 Kevin Eshbach
+;

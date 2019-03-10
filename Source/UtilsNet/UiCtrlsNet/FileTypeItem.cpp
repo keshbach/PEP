@@ -1,0 +1,28 @@
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2013-2014 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////
+
+#include "stdafx.h"
+#include "FileTypeItem.h"
+
+Common::Forms::FileTypeItem::FileTypeItem(
+  System::String^ sName,
+  System::String^ sFilters) :
+  m_sName(sName),
+  m_sFilters(sFilters)
+{
+}
+
+Common::Forms::FileTypeItem::FileTypeItem()
+{
+}
+
+Common::Forms::FileTypeItem::~FileTypeItem()
+{
+    m_sName = nullptr;
+    m_sFilters = nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2013-2014 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////

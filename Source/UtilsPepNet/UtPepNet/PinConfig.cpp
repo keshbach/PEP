@@ -1,0 +1,31 @@
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2009-2014 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////
+
+#include "StdAfx.h"
+
+#include "PinConfig.h"
+
+Pep::Programmer::PinConfig::PinConfig()
+{
+}
+
+Pep::Programmer::PinConfig::PinConfig(
+  System::UInt32 nPin,
+  System::String^ sType,
+  System::String^ sPolarity)
+{
+	m_nPin = nPin;
+	m_sType = sType;
+    m_sPolarity = sPolarity;
+}
+
+Pep::Programmer::PinConfig::~PinConfig()
+{
+    m_sType = nullptr;
+    m_sPolarity = nullptr;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2009-2014 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////

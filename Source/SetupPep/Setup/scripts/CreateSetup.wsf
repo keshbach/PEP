@@ -1,0 +1,696 @@
+<?xml version="1.0"?>
+<package>
+  <job id="CreateSetup">
+    <?job debug="true" error="true"?>
+    <runtime>
+      <description>
+        Create PEP Setup File Script v1.00
+        Copyright (C) 2014-2018 Kevin Eshbach
+        All Rights Reserved
+
+        This script creates the setup file for the application.
+      </description>
+
+      <named name="binaryType"
+             type="string"
+             helpstring="Binaries to copy (Debug or Release)"
+             required="true" />
+      <named name="verbose"
+             type="boolean"
+             helpstring="Dump all output"
+             required="false" />
+    </runtime>
+
+    <resource id="SetupScriptPath">PepSetup\Setup\scripts</resource>
+    <resource id="TemplatePath">SetupPep\Setup\templates</resource>
+    <resource id="AdapterSchematicPath">..\Docs\Adapters</resource>
+
+    <resource id="SetupBinaryFiles">
+        PepCustomActions
+    </resource>
+    
+    <resource id="AppFiles">
+        PepAppNet.exe
+        OpenZipForms.dll
+        PepForms.dll
+        UiCtrlsNet.dll
+        UiPepCtrls.dll
+        UiPepCtrlsNet.dll
+        UiUtilNet.dll
+        UtilNet.dll
+        UtPAL.dll
+        UtPepCtrl.dll
+        UtPepCtrlCfg.dll
+        UtPepDevices.dll
+        UtPepNet.dll
+        ZipNet.dll
+    </resource>
+
+    <resource id="PluginFiles">
+        Ut16PinPromDevices.dll
+        Ut18PinPromDevices.dll
+        #Ut20PinPalDevices.dll
+        Ut20PinPromDevices.dll
+        Ut24PinEpromDevices.dll
+        #Ut24PinPalDevices.dll
+        Ut24PinPromDevices.dll
+        #Ut24PinSramDevices.dll
+        Ut28PinEpromDevices.dll
+        Ut32PinEpromDevices.dll
+        #Ut40PinEpromDevices.dll
+        #Ut40PinEpromIODevices.dll
+        #Ut42PinEpromDevices.dll
+    </resource>
+
+    <resource id="AdapterSchematicFiles">
+      2532_ADAPTER_SCHEMATIC.pdf
+      2564_ADAPTER_SCHEMATIC.pdf
+      74S288_Adapter_Schematics.pdf
+      74S472_and_74LS471_Adapter_Schematics.pdf
+      82S114_and_82S115_Adapter_Schematics.pdf
+      82S125_and_74S573_Adapter_Schematics.pdf
+      82S13x_and_74S287_Adapter_Schematics.pdf
+      MB831000_Adapter_Schematic.pdf
+      PROM24_Adapter_Schematic.pdf
+    </resource>
+    
+    <script language="JScript" src="CreateCabFile.js" />
+    <script language="JScript" src="UpdateTableFile.js" />
+    <script language="VBScript" src="Constants.vbs" />
+    <script language="VBScript" src="AddFileStream.vbs" />
+
+    <script language="VBScript">
+      <![CDATA[
+        Sub updateSummaryInformation(database)
+            dim summaryInfo
+            
+            if g_Verbose then
+                WScript.Echo "Opening the database's summary information."
+                WScript.Echo
+            end if
+            
+            set summaryInfo = database.SummaryInformation(20)
+            
+            if g_Verbose then
+                WScript.Echo "Adding the summary information properties."
+                WScript.Echo
+            end if
+
+            summaryInfo.Property(1) = 1252
+            summaryInfo.Property(2) = "PEP Installation Database"
+            summaryInfo.Property(4) = "Kevin Eshbach"
+            summaryInfo.Property(5) = "Install,MSI"
+            summaryInfo.Property(6) = "This installer database contains the logic and data required to install PEP."
+            summaryInfo.Property(7) = "Intel;0"
+            summaryInfo.Property(8) = "Kevin Eshbach"
+            summaryInfo.Property(9) = "{CE888CC4-BE36-4D61-81B2-B26E1F7C6A8A}"
+            summaryInfo.Property(12) = Now
+            summaryInfo.Property(14) = 400
+            summaryInfo.Property(15) = 0
+            summaryInfo.Property(18) = "Windows Installer"
+            summaryInfo.Property(19) = 0            
+            
+            if g_Verbose then
+                WScript.Echo "Saving the summary information."
+                WScript.Echo
+            end if
+
+            summaryInfo.Persist
+        End Sub      
+      ]]>
+    </script>
+    
+    <script language="JScript">
+      <![CDATA[
+        var g_Verbose = false;
+        var g_BinaryType = "";
+
+        function initializeData(binaryPath, adapterSchematicPath)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var dataArray = new Array();
+            var object, names, fileData;
+
+            // Application cabinet
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Initializing the application data object.");
+                WScript.Echo();
+            }
+            
+            object = new Object();
+            
+            object.name = "app";
+            object.componentName = "ApplicationComponent";
+            object.filesPath = binaryPath;
+            object.filesArray = new Array();
+            
+            names = getNamesFromResource("AppFiles");
+
+            for (var index = 0; index < names.length; ++index)
+            {
+                fileData = new Object()
+
+                if (g_Verbose)
+                {
+                    WScript.Echo(fso.BuildPath(object.filesPath, names[index]));
+                }
+
+                fileData.name = names[index];
+                fileData.size = fso.GetFile(fso.BuildPath(object.filesPath, names[index])).size;
+                fileData.nameId = "_" + names[index].replace(/ /g, "_");
+
+                object.filesArray.push(fileData);
+            }
+            
+            dataArray.push(object);
+
+            if (g_Verbose)
+            {
+                WScript.Echo();
+            }
+
+            // Plugins cabinet
+            
+            if (g_Verbose)
+            {
+                WScript.Echo("Initializing the plugins data object.");
+                WScript.Echo();
+            }
+
+            object = new Object();
+            
+            object.name = "plugins";
+            object.componentName = "PluginsComponent";
+            object.filesPath = binaryPath;
+            object.filesArray = new Array();
+
+            names = getNamesFromResource("PluginFiles");
+            
+            for (var index = 0; index < names.length; ++index)
+            {
+                fileData = new Object()
+
+                if (g_Verbose)
+                {
+                    WScript.Echo(fso.BuildPath(object.filesPath, names[index]));
+                }
+                
+                fileData.name = names[index];
+                fileData.size = fso.GetFile(fso.BuildPath(object.filesPath, names[index])).size;
+                fileData.nameId = "_" + names[index].replace(/ /g, "_");
+
+                object.filesArray.push(fileData);
+            }
+            
+            dataArray.push(object);
+
+            if (g_Verbose)
+            {
+                WScript.Echo();
+            }
+
+            // Adapter schematics cabinet
+            
+            if (g_Verbose)
+            {
+                WScript.Echo("Initializing the adapter schematics data object.");
+                WScript.Echo();
+            }
+            
+            object = new Object();
+            
+            object.name = "adapterSchematics";
+            object.componentName = "AdapterSchematicsComponent";
+            object.filesPath = adapterSchematicPath;
+            object.filesArray = new Array();
+
+            names = getNamesFromResource("AdapterSchematicFiles");
+            
+            for (var index = 0; index < names.length; ++index)
+            {
+                fileData = new Object()
+
+                if (g_Verbose)
+                {
+                    WScript.Echo(fso.BuildPath(object.filesPath, names[index]));
+                }
+                
+                fileData.name = names[index];
+                fileData.size = fso.GetFile(fso.BuildPath(object.filesPath, names[index])).size;
+                fileData.nameId = "_" + names[index].replace(/ /g, "_");
+
+                object.filesArray.push(fileData);
+            }
+            
+            dataArray.push(object);
+
+            if (g_Verbose)
+            {
+                WScript.Echo();
+            }
+
+            return dataArray;
+        }
+
+        function initializeSummaryInformation()
+        {
+            var summaryInfoArray = new Array();
+            var object;
+
+            object = new Object();
+
+            object.index = 1;
+            object.value = 1252;
+
+            summaryInfoArray.push(object);
+/*
+            summaryInfo.Property(2) = "PEP Installation Database"
+            summaryInfo.Property(4) = "Kevin Eshbach"
+            summaryInfo.Property(5) = "Install,MSI"
+            summaryInfo.Property(6) = "This installer database contains the logic and data required to install PEP."
+            summaryInfo.Property(7) = "Intel;0"
+            summaryInfo.Property(8) = "Kevin Eshbach"
+            summaryInfo.Property(9) = "{CE888CC4-BE36-4D61-81B2-B26E1F7C6A8A}"
+            summaryInfo.Property(12) = Now
+            summaryInfo.Property(14) = 400
+            summaryInfo.Property(15) = 0
+            summaryInfo.Property(18) = "Windows Installer"
+            summaryInfo.Property(19) = 0            
+*/
+            return summaryInfoArray;
+        }
+
+        function getNamesFromResource(resourceName)
+        {
+            var files = getResource(resourceName).split(/(\r\n)|( )/);
+            var names = new Array();
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Read in the resource named " + resourceName + ".");
+                WScript.Echo();
+            }
+
+            for (var index = 0; index < files.length; ++index)
+            {
+                if (files[index].substr(0, 1) != "#")
+                {
+                    names.push(files[index].replace(/_/g, " "));
+                }
+            }
+
+            if (g_Verbose)
+            {
+                for (var index = 0; index < names.length; ++index)
+                {
+                    WScript.Echo("    File: " + names[index]);
+                }
+
+                WScript.Echo();
+            }
+
+            return names;
+        }
+
+        function getNamesWithExtension(libraryPath, extension)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var f = fso.GetFolder(libraryPath);
+            var filesCollection = new Enumerator(f.Files);
+            var namesArray = new Array();
+            var pattern = new RegExp("\." + extension + "$");
+
+            while (!filesCollection.atEnd())
+            {
+                if (filesCollection.item().name.match(pattern))
+                {
+                    namesArray.push(filesCollection.item().name);
+                }
+            
+                filesCollection.moveNext();
+            }
+
+            return namesArray;
+        }
+
+        function createDatabase(msiFile, templatePath)
+        {
+            var installer = new ActiveXObject("WindowsInstaller.Installer");
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var f = fso.GetFolder(templatePath);
+            var filesCollection = new Enumerator(f.Files);
+            var database;
+            
+            if (g_Verbose)
+            {
+                WScript.Echo("Creating the msi database file.");
+                WScript.Echo();
+            }
+            
+            database = installer.OpenDatabase(msiFile, msiOpenDatabaseModeCreate);
+            
+            while (!filesCollection.atEnd())
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Importing the table file: " + filesCollection.item().Path);
+                    WScript.Echo();
+                }
+
+                database.Import(templatePath, filesCollection.item().Name)
+
+                filesCollection.moveNext();
+            }
+
+            return database
+        }
+        
+        function closeDatabase(database)
+        {
+            if (g_Verbose)
+            {
+                WScript.Echo("Committing the changes to the setup database.");
+                WScript.Echo();
+            }
+            
+            database.Commit();
+        }
+
+        function importTableIntoDatabase(database, libraryPath, tableFile)
+        {
+            if (g_Verbose)
+            {
+                WScript.Echo("Importing the data from \"" + tableFile + "\" into the database.");
+                WScript.Echo();
+            }
+
+            database.Import(libraryPath, tableFile);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Data sucessfully imported into the database.");
+                WScript.Echo();
+            }
+        }
+
+        function importMediaTable(cabinetPath, templatePath, dataArray)
+        {
+            appendMediaTable(cabinetPath, templatePath, dataArray)
+        }
+
+        function importFileTable(cabinetPath, templatePath, dataArray)
+        {
+            appendFileTable(cabinetPath, templatePath, dataArray)
+        }
+
+        function importFileStreams(database, cabinetPath, dataArray)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var cabFile;
+            
+            for (var index = 0; index < dataArray.length; ++index)
+            {
+                cabFile = fso.BuildPath(cabinetPath, dataArray[index].name + ".cab");
+
+                if (g_Verbose)
+                {
+                    WScript.Echo("Cabinet File: " + cabFile);
+                    WScript.Echo();
+                }
+                
+                addFileStream(database, cabFile, dataArray[index].name + ".cab");
+            }
+        }
+
+        function createCabFiles(dataArray, libraryPath, binaryPath)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            
+            if (g_Verbose)
+            {
+                WScript.Echo("Creating the cabinet output directory.");
+                WScript.Echo()
+            }
+            
+            fso.CreateFolder(libraryPath);        
+        
+            for (var index = 0; index < dataArray.length; ++index)
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Creating the " + dataArray[index].name + " cabinet file.");
+                    WScript.Echo();
+                }
+            
+                createCabinetFile(dataArray[index].name, libraryPath,
+                                  dataArray[index].filesPath,
+                                  dataArray[index].filesArray);
+            }
+        }
+        
+        function importBinaryFiles(libraryTemplatePath, binaryPath)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var binaryFiles = getNamesFromResource("SetupBinaryFiles");
+            var srcFile, destFile;
+            
+            if (g_Verbose)
+            {
+                WScript.Echo("Importing the binary files into the setup directory.");
+                WScript.Echo()
+            }
+            
+            for (var index = 0; index < binaryFiles.length; ++index)
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Binary File: " + binaryFiles[index]);
+                    WScript.Echo()
+                }
+                
+                srcFile = fso.BuildPath(binaryPath, binaryFiles[index] + ".dll");
+                
+                destFile = fso.BuildPath(libraryTemplatePath, "Binary");
+                destFile = fso.BuildPath(destFile, binaryFiles[index] + ".ibd");
+                
+                fso.CopyFile(srcFile, destFile, false);
+            }
+        }
+
+        function copyTemplateFiles(srcTemplatePath, destTemplatePath)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var f = fso.GetFolder(srcTemplatePath);
+            var filesCollection = new Enumerator(f.Files);
+            var folder = fso.GetFolder(srcTemplatePath)
+            var foldersCollection = new Enumerator(folder.Subfolders);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Creating the template output directory.");
+                WScript.Echo()
+            }
+            
+            fso.CreateFolder(destTemplatePath);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Copying the template files.");
+                WScript.Echo()
+            }
+
+            while (!filesCollection.atEnd())
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Copying the file: " + filesCollection.item().path);
+                }
+
+                fso.CopyFile(filesCollection.item().path,
+                             fso.BuildPath(destTemplatePath, filesCollection.item().name), false);
+            
+                filesCollection.moveNext();
+            }
+            
+            if (g_Verbose)
+            {
+                WScript.Echo()
+                WScript.Echo("Copying the template directories.");
+                WScript.Echo()
+            }
+
+            while (!foldersCollection.atEnd())
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Copying the directory: " + foldersCollection.item().path);
+                }
+                
+                fso.CopyFolder(foldersCollection.item().path,
+                               fso.BuildPath(destTemplatePath, foldersCollection.item().name), false);
+
+                foldersCollection.moveNext();
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo()
+            }
+        }
+
+        function deleteLibraryPath(libraryPath)
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Checking if there is an existing setup library directory.");
+                WScript.Echo();
+            }
+
+            if (fso.FolderExists(libraryPath))
+            {
+                if (g_Verbose)
+                {
+                    WScript.Echo("Removing the existing setup library directory. (" + libraryPath + ")");
+                    WScript.Echo();
+                }
+
+                fso.DeleteFolder(libraryPath);
+
+                if (g_Verbose)
+                {
+                    WScript.Echo("Setup library directory successfully removed. (" + libraryPath + ")");
+                    WScript.Echo();
+                }
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Creating the setup library directory. (" + libraryPath + ")");
+                WScript.Echo();
+            }
+
+            fso.CreateFolder(libraryPath);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Setup library directory successfully created.");
+                WScript.Echo();
+            }
+        }
+
+        function parseArgs()
+        {
+            g_BinaryType = WScript.Arguments.Named.Item("binaryType");
+                    
+            if (WScript.Arguments.Named.Item("verbose") == "+")
+            {
+                g_Verbose = true;
+            }
+            
+            if (g_BinaryType != "Debug" && g_BinaryType != "Release")
+            {
+                throw new Error("Unknown binary type command line option");
+            }
+
+            return 1;
+        }
+        
+        function main()
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var WshShell = WScript.CreateObject("WScript.Shell");
+            var libraryPath, libraryTemplatePath, libraryCabinetPath;
+            var binaryPath, templatePath, adapterSchematicPath;
+            var msiFile, database, dataArray;
+
+            if (!parseArgs())
+            {
+                WScript.Echo("Invalid command line arguments");
+
+                return 1;
+            }
+
+            libraryPath = fso.BuildPath(WshShell.CurrentDirectory, "lib");
+            libraryPath = fso.BuildPath(libraryPath, g_BinaryType);
+            libraryPath = fso.BuildPath(libraryPath, "x86")
+            libraryPath = fso.BuildPath(libraryPath, "Setup");
+
+            libraryTemplatePath = fso.BuildPath(libraryPath, "Templates");
+            libraryCabinetPath = fso.BuildPath(libraryPath, "Cabinets");
+            
+            binaryPath = fso.BuildPath(WshShell.CurrentDirectory, "bin");
+            binaryPath = fso.BuildPath(binaryPath, g_BinaryType);
+            binaryPath = fso.BuildPath(binaryPath, "x86");
+            
+            templatePath = fso.BuildPath(WshShell.CurrentDirectory, getResource("TemplatePath"));
+
+            adapterSchematicPath = fso.BuildPath(WshShell.CurrentDirectory, getResource("AdapterSchematicPath"));
+
+            msiFile = fso.BuildPath(libraryPath, "PepSetup.msi");
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Library Path:            " + libraryPath);
+                WScript.Echo("Library Template Path:   " + libraryTemplatePath);
+                WScript.Echo("Library Cabinet Path:    " + libraryCabinetPath);
+                WScript.Echo("Binary Path:             " + binaryPath);
+                WScript.Echo("Template Path:           " + templatePath);
+                WScript.Echo("Adapter Schematics Path: " + adapterSchematicPath);
+                WScript.Echo("MSI File:                " + msiFile);
+                WScript.Echo();
+            }
+
+            dataArray = initializeData(binaryPath, adapterSchematicPath);
+
+            deleteLibraryPath(libraryPath);
+
+            copyTemplateFiles(templatePath, libraryTemplatePath);
+
+            createCabFiles(dataArray, libraryCabinetPath, binaryPath);
+
+            importBinaryFiles(libraryTemplatePath, binaryPath);
+            importMediaTable(libraryCabinetPath, libraryTemplatePath, dataArray);
+            importFileTable(libraryCabinetPath, libraryTemplatePath, dataArray);
+
+            database = createDatabase(msiFile, libraryTemplatePath)
+
+            // The summary information must be added first before any tables
+            // or streams are added or else the summary information cannot be
+            // added.
+            
+            updateSummaryInformation(database);
+
+            initializeSummaryInformation();
+
+            importFileStreams(database, libraryCabinetPath, dataArray);
+
+            closeDatabase(database);
+
+            return 0;
+        }
+
+        try
+        {
+            var result = main();
+
+            WScript.Quit(result);
+        }
+        catch (e)
+        {
+            WScript.Echo("Error Occurred");
+            WScript.Echo();
+            WScript.Echo("Name:        " + e.name);
+            WScript.Echo("Message:     " + e.message);
+            WScript.Echo("Number:      " + e.number);
+            WScript.Echo("Description: " + e.description);
+
+            WScript.Quit(1);
+        }
+      ]]>
+    </script>
+  </job>
+</package>

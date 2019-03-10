@@ -1,0 +1,13 @@
+Directory	Directory_Parent	DefaultDir
+s72	S72	l255
+Directory	Directory
+APPDIRECTORY	PRODUCTDIRECTORY	App
+PEPProgramMenuFolder	ProgramMenuFolder	PEP
+PLUGINSDIRECTORY	APPDIRECTORY	Plugins
+PRODUCTDIRECTORY	ProgramFilesFolder	PEP
+ProgramFilesFolder	TARGETDIR	.
+ProgramMenuFolder	TARGETDIR	.
+TARGETDIR		SourceDir
+TOOLSDIRECTORY	PRODUCTDIRECTORY	Tools
+ADAPTERSCHEMATICSDIRECTORY	PRODUCTDIRECTORY	Adapter Schematics
+PEPAdaptersMenuFolder	PEPProgramMenuFolder	Adapter Schematics
