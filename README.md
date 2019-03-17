@@ -15,3 +15,7 @@ The application currently only works with a real parallel port.  A USB to Parall
 - Install Visual Studio 2017
 - Launch a Command Prompt and go to the 'Source' directory
 - Run the command 'cscript build.wsf /verbose:+ /binaryType:Release' to build the release configuration (to build the debug configuration replace 'Release' with 'Debug'
+
+## Programming Languages
+
+The application is a combination of C, Managed C++ and C#.
