@@ -1,0 +1,17 @@
+# Compiler Output Directories
+
+/Source/lib/
+/Source/bin/
+/Source/Drivers/.vs/
+
+# .NET Compiler Output Directories
+
+Source/AppsNet/PepAppNet/obj/
+Source/AppsNet/RebaserAppNet/obj/
+Source/Forms/OpenZipForms/obj/
+Source/Forms/PepForms/obj/
+
+
+# 3rd Party Output Directories
+
+Source/ThirdParty/zlib/*
