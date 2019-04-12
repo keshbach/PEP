@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -12,13 +12,14 @@
 
 #include "PepCtrlPortData.h"
 #include "PepCtrlLogic.h"
+#include "PepCtrlLog.h"
 
 /*
     Byte Reversal Macro
 */
 
 #define MSwapByte(data) \
-    (UCHAR)( ((data & 0x80) >> 7) | ((data & 0x40) >> 5) | ((data & 0x20) >> 3) | ((data & 0x10) >> 1) | \
+    (UINT8)( ((data & 0x80) >> 7) | ((data & 0x40) >> 5) | ((data & 0x20) >> 3) | ((data & 0x10) >> 1) | \
              ((data & 0x08) << 1) | ((data & 0x04) << 3) | ((data & 0x02) << 5) | ((data & 0x01) << 7) )
 
 /*
@@ -32,7 +33,7 @@
 */
 
 #define MPortData(data, unit, enable) \
-    (UCHAR)((data & 0x0F) | ((unit & 0x07) << 4) | ((enable & 0x01) << 7))
+    (UINT8)((data & 0x0F) | ((unit & 0x07) << 4) | ((enable & 0x01) << 7))
 
 /*
    Unit to select
@@ -106,16 +107,16 @@
   Local Function Prototypes
 */
 
-static VOID lWritePortData(IN TPepCtrlPortData* pPortData, IN UCHAR ucData, IN UCHAR ucUnit);
-static UCHAR lReadByteFromProgrammer(IN TPepCtrlPortData* pPortData);
-static VOID lWriteByteToProgrammer(IN TPepCtrlPortData* pPortData, IN UCHAR ucByte);
-static VOID lSetProgrammerAddress(IN TPepCtrlPortData* pPortData, IN UINT32 ulAddress);
-static VOID lSetProgrammerVppMode(IN TPepCtrlPortData* pPortData);
-static UCHAR lPinPulseModeToData(IN UINT32 nPinPulseMode);
-static UCHAR lVppModeToData(IN UINT32 nVppMode);
-static VOID lResetProgrammerState(IN TPepCtrlPortData* pPortData);
-static VOID lEnableProgrammerReadMode(IN TPepCtrlPortData* pPortData);
-static VOID lEnableProgrammerWriteMode(IN TPepCtrlPortData* pPortData);
+static BOOLEAN lWritePortData(IN TPepCtrlPortData* pPortData, IN UINT8 ucData, IN UINT8 ucUnit);
+static BOOLEAN lReadByteFromProgrammer(IN TPepCtrlPortData* pPortData, UINT8* pByte);
+static BOOLEAN lWriteByteToProgrammer(IN TPepCtrlPortData* pPortData, IN UINT8 ucByte);
+static BOOLEAN lSetProgrammerAddress(IN TPepCtrlPortData* pPortData, IN UINT32 ulAddress);
+static BOOLEAN lSetProgrammerVppMode(IN TPepCtrlPortData* pPortData);
+static UINT8 lPinPulseModeToData(IN UINT32 nPinPulseMode);
+static UINT8 lVppModeToData(IN UINT32 nVppMode);
+static BOOLEAN lResetProgrammerState(IN TPepCtrlPortData* pPortData);
+static BOOLEAN lEnableProgrammerReadMode(IN TPepCtrlPortData* pPortData);
+static BOOLEAN lEnableProgrammerWriteMode(IN TPepCtrlPortData* pPortData);
 static BOOLEAN lWaitForProgramPulse(IN TPepCtrlPortData* pPortData);
 
 #if defined(ALLOC_PRAGMA)
@@ -148,131 +149,137 @@ static BOOLEAN lWaitForProgramPulse(IN TPepCtrlPortData* pPortData);
   Local Functions
 */
 
-static VOID lWritePortData(
+static BOOLEAN lWritePortData(
   IN TPepCtrlPortData* pPortData,
-  IN UCHAR ucData,
-  IN UCHAR ucUnit)
+  IN UINT8 nData,
+  IN UINT8 nUnit)
 {
-    UCHAR ucTmpData[3];
+    BOOLEAN bResult = FALSE;
+    UINT8 nTmpData[3];
 
     PAGED_CODE()
 
 #if defined(PEPCTRL_ALL_MESSAGES)
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lWritePortData called.\n") );
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Writing Data: 0x%X, Unit: 0x%X\n", (ULONG)ucData,
-               (ULONG)ucUnit) );
+    PepCtrlLog("lWritePortData called.\n");
+    PepCtrlLog("lWritePortData - Writing Data: 0x%X, Unit: 0x%X\n", (ULONG)nData, (ULONG)nUnit);
 #endif
 
     if (!pPortData->bPortEjected)
     {
-        ucTmpData[0] = MPortData(ucData, ucUnit, CUnitOff);
-        ucTmpData[1] = MPortData(ucData, ucUnit, CUnitOn);
-        ucTmpData[2] = MPortData(ucData, ucUnit, CUnitOff);
+        nTmpData[0] = MPortData(nData, nUnit, CUnitOff);
+        nTmpData[1] = MPortData(nData, nUnit, CUnitOn);
+        nTmpData[2] = MPortData(nData, nUnit, CUnitOff);
 
-        pPortData->Funcs.pWritePortFunc(&pPortData->Object, ucTmpData,
-                                        MArrayLen(ucTmpData));
+        bResult = pPortData->Funcs.pWritePortFunc(&pPortData->Object, nTmpData,
+                                                  MArrayLen(nTmpData));
     }
     else
     {
 #if defined(PEPCTRL_ALL_MESSAGES)
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		           "PepCtrl: No data written because the port was ejected.\n") );
+        PepCtrlLog("lWritePortData - No data written because the port was ejected.\n");
 #endif
     }
+
+    return bResult;
 }
 
-static UCHAR lReadByteFromProgrammer(
-  IN TPepCtrlPortData* pPortData)
+static BOOLEAN lReadByteFromProgrammer(
+  IN TPepCtrlPortData* pPortData,
+  UINT8* pnByte)
 {
-    UCHAR ucBitPosition = 0;
-    UCHAR ucData = 0;
-    UCHAR ucTmpData, ucPortOutput;
+    UINT8 nBitPosition = 0;
+    UINT8 nData = 0;
+    UINT8 nTmpData, nPortOutput;
     BOOLEAN bValue;
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		       "PepCtrl: lReadByteFromProgrammer called.\n") );
+    PepCtrlLog("lReadByteFromProgrammer called.\n");
+
+    *pnByte = 0;
 
     if (pPortData->bPortEjected)
     {
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		           "PepCtrl: No data read because port was ejected.\n") );
+        PepCtrlLog("lReadByteFromProgrammer - No data read because port was ejected.\n");
 
-        return 0;
+        return FALSE;
     }
 
-    while (ucBitPosition < 8)
+    while (nBitPosition < 8)
     {
-        ucTmpData = MPortData(ucBitPosition, CUnit_DontCare, CUnitOff);
+        nTmpData = MPortData(nBitPosition, CUnit_DontCare, CUnitOff);
 
-        pPortData->Funcs.pWritePortFunc(&pPortData->Object, &ucTmpData,
-                                        sizeof(ucTmpData));
+        if (!pPortData->Funcs.pWritePortFunc(&pPortData->Object, &nTmpData,
+                                            sizeof(nTmpData)) ||
+            !pPortData->Funcs.pReadBitPortFunc(&pPortData->Object, &bValue))
+        {
+            return FALSE;
+        }
 
-        pPortData->Funcs.pReadBitPortFunc(&pPortData->Object, &bValue);
+        nPortOutput = (bValue == TRUE) ? 0x01 : 0x00;
 
-        ucPortOutput = (bValue == TRUE) ? 0x01 : 0x00;
+        nPortOutput <<= nBitPosition;
 
-        ucPortOutput <<= ucBitPosition;
+        nData |= nPortOutput;
 
-        ucData |= ucPortOutput;
-
-        ++ucBitPosition;
+        ++nBitPosition;
     }
 
-    ucData = ~ucData;
+    nData = ~nData;
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Retrieved the byte 0x%X\n", (ULONG)ucData) );
+    PepCtrlLog("lReadByteFromProgrammer - Retrieved the byte 0x%X\n", (ULONG)nData);
 
-    return ucData;
+    *pnByte = nData;
+
+    return TRUE;
 }
 
-static VOID lWriteByteToProgrammer(
+static BOOLEAN lWriteByteToProgrammer(
   IN TPepCtrlPortData* pPortData,
-  IN UCHAR ucByte)
+  IN UINT8 nByte)
 {
-    UCHAR ucDataLow = ucByte & 0x0F;
-    UCHAR ucDataHigh = ucByte >> 4;
+    UINT8 nDataLow = nByte & 0x0F;
+    UINT8 nDataHigh = nByte >> 4;
 
     PAGED_CODE()
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		       "PepCtrl: lWriteByteToProgrammer called.\n") );
+    PepCtrlLog("lWriteByteToProgrammer called.\n");
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Writing the byte 0x%X\n", (ULONG)ucByte) );
+    PepCtrlLog("lWriteByteToProgrammer - Writing the byte 0x%X\n", (ULONG)nByte);
 
-    lWritePortData(pPortData, ucDataLow, CUnit0_DataBits0To3);
-    lWritePortData(pPortData, ucDataHigh, CUnit1_DataBits4To7);
+    if (lWritePortData(pPortData, nDataLow, CUnit0_DataBits0To3) &&
+        lWritePortData(pPortData, nDataHigh, CUnit1_DataBits4To7))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
-static VOID lSetProgrammerAddress(
+static BOOLEAN lSetProgrammerAddress(
   IN TPepCtrlPortData* pPortData,
   IN UINT32 nAddress)
 {
     UINT32 nLastAddress = pPortData->nLastAddress;
 	UINT32 nIndex;
-    UCHAR ucEnable, ucData;
+    UINT8 nEnable, nData;
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lSetProgrammerAddress called.\n") );
+    PepCtrlLog("lSetProgrammerAddress called.\n");
 
     pPortData->nLastAddress = nAddress;
     
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Setting Programmer Address to 0x%X\n", nAddress) );
+    PepCtrlLog("lSetProgrammerAddress - Setting Programmer Address to 0x%X\n", nAddress);
 
     if ((nLastAddress & 0x0F) != (nAddress & 0x0F))
     {
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Setting Address lines 0 - 3\n") );
+        PepCtrlLog("lSetProgrammerAddress - Setting Address lines 0 - 3\n");
 
-        lWritePortData(pPortData, (UCHAR)nAddress, CUnit2_AddressLines0To3);
+        if (!lWritePortData(pPortData, (UINT8)nAddress, CUnit2_AddressLines0To3))
+        {
+            return FALSE;
+        }
     }
 
     nLastAddress >>= 4;
@@ -280,10 +287,12 @@ static VOID lSetProgrammerAddress(
 
     if ((nLastAddress & 0x0F) != (nAddress & 0x0F))
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Setting Address lines 4 - 7\n") );
+        PepCtrlLog("lSetProgrammerAddress - Setting Address lines 4 - 7\n");
 
-        lWritePortData(pPortData, (UCHAR)nAddress, CUnit3_AddressLines4To7);
+        if (!lWritePortData(pPortData, (UINT8)nAddress, CUnit3_AddressLines4To7))
+        {
+            return FALSE;
+        }
     }
 
     nLastAddress >>= 4;
@@ -291,10 +300,12 @@ static VOID lSetProgrammerAddress(
 
     if ((nLastAddress & 0x0F) != (nAddress & 0x0F))
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Setting Address lines 8 - 11\n") );
+        PepCtrlLog("lSetProgrammerAddress - Setting Address lines 8 - 11\n");
 
-        lWritePortData(pPortData, (UCHAR)nAddress, CUnit4_AddressLines8To11);
+        if (!lWritePortData(pPortData, (UINT8)nAddress, CUnit4_AddressLines8To11))
+        {
+            return FALSE;
+        }
     }
 
     nLastAddress >>= 4;
@@ -303,51 +314,52 @@ static VOID lSetProgrammerAddress(
     if (nLastAddress != nAddress)
     {
         nAddress = MSwapByte(nAddress);
-        ucData = lVppModeToData(pPortData->Modes.nVppMode);
+        nData = lVppModeToData(pPortData->Modes.nVppMode);
 
 	    for (nIndex = 0; nIndex < 8; ++nIndex)
 	    {
-		    ucEnable = (nAddress & 1) ? CAddressLines12To19On : CAddressLines12To19Off;
+		    nEnable = (nAddress & 1) ? CAddressLines12To19On : CAddressLines12To19Off;
 
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Setting Address line %d\n", nIndex + 12) );
+            PepCtrlLog("lSetProgrammerAddress - Setting Address line %d\n", nIndex + 12);
 
-            lWritePortData(pPortData,
-                           CDisableAddressLines12To19Unit | ucEnable | ucData,
-                           CUnit5_AddressLines12To19AndVppMode);
-
-            lWritePortData(pPortData,
-                           CEnableAddressLines12To19Unit | ucEnable | ucData,
-                           CUnit5_AddressLines12To19AndVppMode);
+            if (!lWritePortData(pPortData,
+                                CDisableAddressLines12To19Unit | nEnable | nData,
+                                CUnit5_AddressLines12To19AndVppMode) ||
+                !lWritePortData(pPortData,
+                                CEnableAddressLines12To19Unit | nEnable | nData,
+                                CUnit5_AddressLines12To19AndVppMode))
+            {
+                return FALSE;
+            }
 
             nAddress >>= 1;
 	    }
     }
+
+    return TRUE;
 }
 
-static VOID lSetProgrammerVppMode(
+static BOOLEAN lSetProgrammerVppMode(
   IN TPepCtrlPortData* pPortData)
 {
-    UCHAR ucData;
+    UINT8 nData;
 
     PAGED_CODE()
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lSetProgrammerVppMode called.\n") );
+    PepCtrlLog("lSetProgrammerVppMode called.\n");
 
-    ucData = lVppModeToData(pPortData->Modes.nVppMode);
+    nData = lVppModeToData(pPortData->Modes.nVppMode);
 
-    lWritePortData(pPortData, CDisableAddressLines12To19Unit | ucData,
-                   CUnit5_AddressLines12To19AndVppMode);
+    return lWritePortData(pPortData, CDisableAddressLines12To19Unit | nData,
+                          CUnit5_AddressLines12To19AndVppMode);
 }
 
-static UCHAR lPinPulseModeToData(
+static UINT8 lPinPulseModeToData(
   IN UINT32 nPinPulseMode)
 {
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lPinPulseModeToData called.\n") );
+    PepCtrlLog("lPinPulseModeToData called.\n");
 
     switch (nPinPulseMode)
     {
@@ -363,13 +375,12 @@ static UCHAR lPinPulseModeToData(
     }
 }
 
-static UCHAR lVppModeToData(
+static UINT8 lVppModeToData(
   IN UINT32 nVppMode)
 {
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lVppModeToData called.\n") );
+    PepCtrlLog("lVppModeToData called.\n");
 
     switch (nVppMode)
     {
@@ -381,67 +392,75 @@ static UCHAR lVppModeToData(
             return CEnable25Vpp;
     }
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: Unknown Vpp mode - defaulting to +12VDC.\n") );
+    PepCtrlLog("lVppModeToData - Unknown Vpp mode - defaulting to +12VDC.\n");
 
     return CPepCtrl12VDCVppMode;
 }
 
-static VOID lResetProgrammerState(
+static BOOLEAN lResetProgrammerState(
   IN TPepCtrlPortData* pPortData)
 {
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lResetProgrammerState called.\n") );
+    PepCtrlLog("lResetProgrammerState called.\n");
 
-    lWritePortData(pPortData,
-                   MEnableTriggerProgramPulse(FALSE) |
-                       MEnableResetProgramPulse(TRUE) |
-                       MSelectVccMode(CPepCtrl5VDCMode) |
-                       MEnableVpp(FALSE),
-                   CUnit7_Programmer);
+    if (lWritePortData(pPortData,
+                       MEnableTriggerProgramPulse(FALSE) |
+                           MEnableResetProgramPulse(TRUE) |
+                           MSelectVccMode(CPepCtrl5VDCMode) |
+                           MEnableVpp(FALSE),
+                       CUnit7_Programmer) &&
+        lWritePortData(pPortData, lPinPulseModeToData(pPortData->Modes.nPinPulseMode),
+                       CUnit6_LedAndVpp))
+    {
+        return TRUE;
+    }
 
-    lWritePortData(pPortData, lPinPulseModeToData(pPortData->Modes.nPinPulseMode),
-                   CUnit6_LedAndVpp);
+    return FALSE;
 }
 
-static VOID lEnableProgrammerReadMode(
+static BOOLEAN lEnableProgrammerReadMode(
   IN TPepCtrlPortData* pPortData)
 {
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lEnableProgrammerReadMode called.\n") );
+    PepCtrlLog("lEnableProgrammerReadMode called.\n");
 
-    lWritePortData(pPortData, lPinPulseModeToData(pPortData->Modes.nPinPulseMode) | CN2,
-                   CUnit6_LedAndVpp);
+    if (lWritePortData(pPortData, lPinPulseModeToData(pPortData->Modes.nPinPulseMode) | CN2,
+                       CUnit6_LedAndVpp) &&
+        lWritePortData(pPortData,
+                       MEnableResetProgramPulse(TRUE) |
+                           MSelectVccMode(pPortData->Modes.nVccMode) |
+                           MEnableVpp(FALSE),
+                       CUnit7_Programmer))
+    {
+        return TRUE;
+    }
 
-    lWritePortData(pPortData,
-                   MEnableResetProgramPulse(TRUE) | 
-                       MSelectVccMode(pPortData->Modes.nVccMode) |
-                       MEnableVpp(FALSE),
-                   CUnit7_Programmer);
+    return FALSE;
 }
 
-static VOID lEnableProgrammerWriteMode(
+static BOOLEAN lEnableProgrammerWriteMode(
   IN TPepCtrlPortData* pPortData)
 {
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lEnableProgrammerWriteMode called.\n") );
+    PepCtrlLog("lEnableProgrammerWriteMode called.\n");
 
-    lWritePortData(pPortData,
-                   MEnableTriggerProgramPulse(FALSE) |
-                       MEnableResetProgramPulse(TRUE) |
-                       MSelectVccMode(pPortData->Modes.nVccMode) |
-                       MEnableVpp(TRUE),
-                   CUnit7_Programmer);
+    if (lWritePortData(pPortData,
+                       MEnableTriggerProgramPulse(FALSE) |
+                           MEnableResetProgramPulse(TRUE) |
+                           MSelectVccMode(pPortData->Modes.nVccMode) |
+                           MEnableVpp(TRUE),
+                       CUnit7_Programmer) &&
+        lWritePortData(pPortData,
+                       lPinPulseModeToData(pPortData->Modes.nPinPulseMode) | CN2 | CN3,
+                       CUnit6_LedAndVpp))
+    {
+        return TRUE;
+    }
 
-    lWritePortData(pPortData,
-                   lPinPulseModeToData(pPortData->Modes.nPinPulseMode) | CN2 | CN3,
-                   CUnit6_LedAndVpp);
+    return FALSE;
 }
 
 static BOOLEAN lWaitForProgramPulse(
@@ -449,13 +468,12 @@ static BOOLEAN lWaitForProgramPulse(
 {
     NTSTATUS status;
     LARGE_INTEGER Interval;
-    UCHAR ucData;
+    UINT8 nData;
     BOOLEAN bValue;
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lWaitForProgramPulse called.\n") );
+    PepCtrlLog("lWaitForProgramPulse called.\n");
 
     switch (pPortData->Modes.nPinPulseMode)
     {
@@ -471,16 +489,13 @@ static BOOLEAN lWaitForProgramPulse(
             return FALSE;
     }
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: Delaying thread execution.\n") );
+    PepCtrlLog("lWaitForProgramPulse - Delaying thread execution.\n");
 
     status = KeDelayExecutionThread(KernelMode, FALSE, &Interval);
 
     if (STATUS_SUCCESS != status)
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                    "PepCtrl: Thread execution delayed has failed.  (0x%X)\n",
-                    status) );
+        PepCtrlLog("lWaitForProgramPulse - Thread execution delayed has failed.  (0x%X)\n", status);
 
         return FALSE;
     }
@@ -488,38 +503,33 @@ static BOOLEAN lWaitForProgramPulse(
     switch (pPortData->Modes.nPinPulseMode)
     {
         case CPepCtrlPinPulse1Mode:
-            ucData = MPortData(PFIX, CUnit_DontCare, CUnitOff);
+            nData = MPortData(PFIX, CUnit_DontCare, CUnitOff);
             break;
         case CPepCtrlPinPulse2Mode:
         case CPepCtrlPinPulse3Mode:
         case CPepCtrlPinPulse4Mode:
-            ucData = MPortData(PVAR, CUnit_DontCare, CUnitOff);
+            nData = MPortData(PVAR, CUnit_DontCare, CUnitOff);
             break;
     }
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: Checking if program pulse finished.\n") );
+    PepCtrlLog("lWaitForProgramPulse - Checking if program pulse finished.\n");
 
-    pPortData->Funcs.pWritePortFunc(&pPortData->Object, &ucData,
-                                    sizeof(ucData));
-
-    if (pPortData->Funcs.pReadBitPortFunc(&pPortData->Object, &bValue))
+    if (pPortData->Funcs.pWritePortFunc(&pPortData->Object, &nData,
+                                        sizeof(nData)) &&
+        pPortData->Funcs.pReadBitPortFunc(&pPortData->Object, &bValue))
     {
         if (bValue)
         {
-	        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	                   "PepCtrl: Program pulse has finished.\n") );
+            PepCtrlLog("lWaitForProgramPulse - Program pulse has finished.\n");
 
             return TRUE;
         }
 
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	               "PepCtrl: Program pulse did not finish.\n") );
+        PepCtrlLog("lWaitForProgramPulse - Program pulse did not finish.\n");
     }
     else
     {
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	               "PepCtrl: Unable to retrieve program pulse status.\n") );
+        PepCtrlLog("lWaitForProgramPulse - Unable to retrieve program pulse status.\n");
     }
 
     return FALSE;
@@ -533,45 +543,33 @@ BOOLEAN PepCtrlSetProgrammerMode(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlSetProgrammerMode called.\n") );
+    PepCtrlLog("PepCtrlSetProgrammerMode called.\n");
 
     switch (nProgrammerMode)
 	{
 		case CPepCtrlProgrammerReadMode:
-        	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Setting the programmer to the read mode.\n") );
+            PepCtrlLog("PepCtrlSetProgrammerMode - Setting the programmer to the read mode.\n");
 
             pPortData->Modes.nProgrammerMode = nProgrammerMode;
 
-            lEnableProgrammerReadMode(pPortData);
-
-            bResult = TRUE;
+            bResult = lEnableProgrammerReadMode(pPortData);
             break;
 		case CPepCtrlProgrammerWriteMode:
-        	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Setting the programmer to the write mode.\n") );
+            PepCtrlLog("PepCtrlSetProgrammerMode - Setting the programmer to the write mode.\n");
 
             pPortData->Modes.nProgrammerMode = nProgrammerMode;
 
-            lEnableProgrammerWriteMode(pPortData);
-
-            bResult = TRUE;
+            bResult = lEnableProgrammerWriteMode(pPortData);
             break;
         case CPepCtrlProgrammerNoneMode:
-        	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Setting the programmer to the none mode.\n") );
+            PepCtrlLog("PepCtrlSetProgrammerMode - Setting the programmer to the none mode.\n");
 
-            PepCtrlInitModes(pPortData);
-
-            lResetProgrammerState(pPortData);
-            lSetProgrammerVppMode(pPortData);
-
-            bResult = TRUE;
+            bResult = PepCtrlInitModes(pPortData) &&
+                          lResetProgrammerState(pPortData) &&
+                          lSetProgrammerVppMode(pPortData);
             break;
         default:
-       	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Invalid programmer mode.\n") );
+            PepCtrlLog("PepCtrlSetProgrammerMode - Invalid programmer mode.\n");
             break;
 	}
 
@@ -586,14 +584,12 @@ BOOLEAN PepCtrlSetVccMode(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlSetVccMode called.\n") );
+    PepCtrlLog("PepCtrlSetVccMode called.\n");
 
     switch (nVccMode)
 	{
 		case CPepCtrl5VDCMode:
-        	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Trying to set the programmer to the +5VDC mode.\n") );
+            PepCtrlLog("PepCtrlSetVccMode - Trying to set the programmer to the +5VDC mode.\n");
 
             if (pPortData->Modes.nProgrammerMode == CPepCtrlProgrammerNoneMode)
             {
@@ -603,13 +599,11 @@ BOOLEAN PepCtrlSetVccMode(
             }
             else
             {
-            	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                           "PepCtrl: Programmer not in the none mode.\n") );
+                PepCtrlLog("PepCtrlSetVccMode - Programmer not in the none mode.\n");
             }
 			break;
 		case CPepCtrl625VDCMode:
-        	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Trying to set the programmer to the +6.25VDC mode.\n") );
+            PepCtrlLog("PepCtrlSetVccMode - Trying to set the programmer to the +6.25VDC mode.\n");
 
             if (pPortData->Modes.nProgrammerMode == CPepCtrlProgrammerNoneMode)
             {
@@ -619,13 +613,11 @@ BOOLEAN PepCtrlSetVccMode(
             }
             else
             {
-            	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                           "PepCtrl: Programmer not in the none mode.\n") );
+                PepCtrlLog("PepCtrlSetVccMode - Programmer not in the none mode.\n");
             }
 			break;
         default:
-       	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Invalid VCC mode.\n") );
+            PepCtrlLog("PepCtrlSetVccMode - Invalid VCC mode.\n");
             break;
 	}
 
@@ -640,14 +632,12 @@ BOOLEAN PepCtrlSetPinPulseMode(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlSetPinPulseMode called.\n") );
+    PepCtrlLog("PepCtrlSetPinPulseMode called.\n");
 
     switch (nPinPulseMode)
 	{
         case CPepCtrlPinPulse1Mode:
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Trying to set the programmer to the VEN08 and WE08 pin mode.\n") );
+            PepCtrlLog("PepCtrlSetPinPulseMode - Trying to set the programmer to the VEN08 and WE08 pin mode.\n");
 
             if (pPortData->Modes.nProgrammerMode == CPepCtrlProgrammerNoneMode)
             {
@@ -657,13 +647,11 @@ BOOLEAN PepCtrlSetPinPulseMode(
             }
             else
             {
-            	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                            "PepCtrl: Programmer not in the none mode.\n") );
+                PepCtrlLog("PepCtrlSetPinPulseMode - Programmer not in the none mode.\n");
             }
             break;
         case CPepCtrlPinPulse2Mode:
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Trying to set the programmer to the ~VP5 and Vpp16 pin mode.\n") );
+            PepCtrlLog("PepCtrlSetPinPulseMode - Trying to set the programmer to the ~VP5 and Vpp16 pin mode.\n");
 
             if (pPortData->Modes.nProgrammerMode == CPepCtrlProgrammerNoneMode)
             {
@@ -673,13 +661,11 @@ BOOLEAN PepCtrlSetPinPulseMode(
             }
             else
             {
-            	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                            "PepCtrl: Programmer not in the none mode.\n") );
+                PepCtrlLog("PepCtrlSetPinPulseMode - Programmer not in the none mode.\n");
             }
             break;
         case CPepCtrlPinPulse3Mode:
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Trying to set the programmer to the Vpp32 pin mode.\n") );
+            PepCtrlLog("PepCtrlSetPinPulseMode - Trying to set the programmer to the Vpp32 pin mode.\n");
 
             if (pPortData->Modes.nProgrammerMode == CPepCtrlProgrammerNoneMode)
             {
@@ -689,13 +675,11 @@ BOOLEAN PepCtrlSetPinPulseMode(
             }
             else
             {
-            	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                            "PepCtrl: Programmer not in the none mode.\n") );
+                PepCtrlLog("PepCtrlSetPinPulseMode - Programmer not in the none mode.\n");
             }
             break;
         case CPepCtrlPinPulse4Mode:
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Trying to set the programmer to the Vpp64 pin mode.\n") );
+            PepCtrlLog("PepCtrlSetPinPulseMode - Trying to set the programmer to the Vpp64 pin mode.\n");
 
             if (pPortData->Modes.nProgrammerMode == CPepCtrlProgrammerNoneMode)
             {
@@ -705,13 +689,11 @@ BOOLEAN PepCtrlSetPinPulseMode(
             }
             else
             {
-            	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                            "PepCtrl: Programmer not in the none mode.\n") );
+                PepCtrlLog("PepCtrlSetPinPulseMode - Programmer not in the none mode.\n");
             }
             break;
         default:
-       	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Invalid pin mode.\n") );
+            PepCtrlLog("PepCtrlSetPinPulseMode - Invalid pin mode.\n");
             break;
 	}
 
@@ -726,38 +708,33 @@ BOOLEAN PepCtrlSetVppMode(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlSetVppMode called.\n") );
+    PepCtrlLog("PepCtrlSetVppMode called.\n");
 
     switch (nVppMode)
 	{
         case CPepCtrl12VDCVppMode:
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Setting the programmer to the +12VDC Vpp mode.\n") );
+            PepCtrlLog("PepCtrlSetVppMode - Setting the programmer to the +12VDC Vpp mode.\n");
 
             pPortData->Modes.nVppMode = nVppMode;
 
 		    bResult = TRUE;
             break;
         case CPepCtrl21VDCVppMode:
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Setting the programmer to the +21VDC Vpp mode.\n") );
+            PepCtrlLog("PepCtrlSetVppMode - Setting the programmer to the +21VDC Vpp mode.\n");
 
             pPortData->Modes.nVppMode = nVppMode;
 
 		    bResult = TRUE;
             break;
         case CPepCtrl25VDCVppMode:
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Setting the programmer to the +25VDC Vpp mode.\n") );
+            PepCtrlLog("PepCtrlSetVppMode - Setting the programmer to the +25VDC Vpp mode.\n");
 
             pPortData->Modes.nVppMode = nVppMode;
 
 		    bResult = TRUE;
             break;
         default:
-       	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Invalid Vpp mode.\n") );
+            PepCtrlLog("PepCtrlSetVppMode - Invalid Vpp mode.\n");
             break;
 	}
 
@@ -773,58 +750,47 @@ BOOLEAN PepCtrlSetAddress(
   IN TPepCtrlPortData* pPortData,
   IN UINT32 nAddress)
 {
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlSetAddress called.\n") );
+    PepCtrlLog("PepCtrlSetAddress called.\n");
 
     PAGED_CODE()
 
-    lSetProgrammerAddress(pPortData, nAddress);
-
-    return TRUE;
+    return lSetProgrammerAddress(pPortData, nAddress);
 }
 
 BOOLEAN PepCtrlGetData(
   IN TPepCtrlPortData* pPortData,
-  OUT UCHAR* pucData)
+  OUT UINT8* pnData)
 {
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlGetData called.\n") );
+    PepCtrlLog("PepCtrlGetData called.\n");
 
     PAGED_CODE()
 
     if (pPortData->Modes.nProgrammerMode != CPepCtrlProgrammerReadMode)
     {
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	               "PepCtrl: Error not in programmer read mode.\n") );
+        PepCtrlLog("PepCtrlGetData - Error not in programmer read mode.\n");
 
         return FALSE;
     }
 
-    *pucData = lReadByteFromProgrammer(pPortData);
-
-    return TRUE;
+    return lReadByteFromProgrammer(pPortData, pnData);
 }
 
 BOOLEAN PepCtrlSetData(
   IN TPepCtrlPortData* pPortData,
-  IN UCHAR ucData)
+  IN UINT8 nData)
 {
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlSetData called.\n") );
+    PepCtrlLog("PepCtrlSetData called.\n");
 
     PAGED_CODE()
 
     if (pPortData->Modes.nProgrammerMode != CPepCtrlProgrammerWriteMode)
     {
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	               "PepCtrl: Error not in programmer write mode.\n") );
+        PepCtrlLog("PepCtrlSetData - Error not in programmer write mode.\n");
 
         return FALSE;
     }
 
-    lWriteByteToProgrammer(pPortData, ucData);
-
-    return TRUE;
+    return lWriteByteToProgrammer(pPortData, nData);
 }
 
 BOOLEAN PepCtrlTriggerProgram(
@@ -835,8 +801,7 @@ BOOLEAN PepCtrlTriggerProgram(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlTriggerProgram called.\n") );
+    PepCtrlLog("PepCtrlTriggerProgram called.\n");
 
     *pbSuccess = FALSE;
 
@@ -844,48 +809,59 @@ BOOLEAN PepCtrlTriggerProgram(
     {
         /* Disable reset program pulse */
 
-        lWritePortData(pPortData,
-                       MEnableTriggerProgramPulse(FALSE) |
-                           MEnableResetProgramPulse(FALSE) |
-                           MSelectVccMode(pPortData->Modes.nVccMode) |
-                           MEnableVpp(TRUE),
-                       CUnit7_Programmer);
+        if (!lWritePortData(pPortData,
+                            MEnableTriggerProgramPulse(FALSE) |
+                                MEnableResetProgramPulse(FALSE) |
+                                MSelectVccMode(pPortData->Modes.nVccMode) |
+                                MEnableVpp(TRUE),
+                            CUnit7_Programmer))
+        {
+            return FALSE;
+        }
 
         /* Enable trigger program pulse */
 
-        lWritePortData(pPortData,
-                       MEnableTriggerProgramPulse(TRUE) |
-                           MEnableResetProgramPulse(FALSE) |
-                           MSelectVccMode(pPortData->Modes.nVccMode) |
-                           MEnableVpp(TRUE),
-                       CUnit7_Programmer);
+        if (!lWritePortData(pPortData,
+                            MEnableTriggerProgramPulse(TRUE) |
+                                MEnableResetProgramPulse(FALSE) |
+                                MSelectVccMode(pPortData->Modes.nVccMode) |
+                                MEnableVpp(TRUE),
+                            CUnit7_Programmer))
+        {
+            return FALSE;
+        }
 
         /* Disable trigger program pulse */
 
-        lWritePortData(pPortData,
-                       MEnableTriggerProgramPulse(FALSE) |
-                           MEnableResetProgramPulse(FALSE) |
-                           MSelectVccMode(pPortData->Modes.nVccMode) |
-                           MEnableVpp(TRUE),
-                       CUnit7_Programmer);
+        if (!lWritePortData(pPortData,
+                            MEnableTriggerProgramPulse(FALSE) |
+                                MEnableResetProgramPulse(FALSE) |
+                                MSelectVccMode(pPortData->Modes.nVccMode) |
+                                MEnableVpp(TRUE),
+                            CUnit7_Programmer))
+        {
+            return FALSE;
+        }
 
         *pbSuccess = lWaitForProgramPulse(pPortData);
 
         /* Disable reset program pulse */
 
-        lWritePortData(pPortData,
-                       MEnableTriggerProgramPulse(FALSE) |
-                           MEnableResetProgramPulse(TRUE) |
-                           MSelectVccMode(pPortData->Modes.nVccMode) |
-                           MEnableVpp(TRUE),
-                       CUnit7_Programmer);
+        if (!lWritePortData(pPortData,
+                            MEnableTriggerProgramPulse(FALSE) |
+                                MEnableResetProgramPulse(TRUE) |
+                                MSelectVccMode(pPortData->Modes.nVccMode) |
+                                MEnableVpp(TRUE),
+                            CUnit7_Programmer))
+        {
+            return FALSE;
+        }
 
         bResult = TRUE;
     }
     else
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Programmer not in the write mode.\n") );
+        PepCtrlLog("PepCtrlTriggerProgram - Programmer not in the write mode.\n");
     }
 
     return bResult;
@@ -895,27 +871,23 @@ BOOLEAN PepCtrlSetOutputEnable(
   IN TPepCtrlPortData* pPortData,
   IN UINT32 nOutputEnable)
 {
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlSetOutputEnable called.\n") );
+    PepCtrlLog("PepCtrlSetOutputEnable called.\n");
 
     PAGED_CODE()
 
     if (pPortData->Modes.nProgrammerMode != CPepCtrlProgrammerReadMode)
     {
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	               "PepCtrl: Error not in programmer read mode.\n") );
+        PepCtrlLog("PepCtrlSetOutputEnable - Error not in programmer read mode.\n");
 
         return FALSE;
     }
 
-    lWritePortData(pPortData,
-                   MEnableTriggerProgramPulse(nOutputEnable) |
-                       MEnableResetProgramPulse(TRUE) |
-                       MSelectVccMode(pPortData->Modes.nVccMode) |
-                       MEnableVpp(FALSE),
-                   CUnit7_Programmer);
-
-    return TRUE;
+    return lWritePortData(pPortData,
+                          MEnableTriggerProgramPulse(nOutputEnable) |
+                              MEnableResetProgramPulse(TRUE) |
+                              MSelectVccMode(pPortData->Modes.nVccMode) |
+                              MEnableVpp(FALSE),
+                          CUnit7_Programmer);
 }
 
 BOOLEAN PepCtrlReset(
@@ -923,21 +895,20 @@ BOOLEAN PepCtrlReset(
 {
     PAGED_CODE()
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlReset called.\n") );
+    PepCtrlLog("PepCtrlReset called.\n");
 
     if (pPortData->Modes.nProgrammerMode != CPepCtrlProgrammerNoneMode)
     {
-        PepCtrlInitModes(pPortData);
-
-        lResetProgrammerState(pPortData);
-
-        lSetProgrammerAddress(pPortData, 0);
-
-        lSetProgrammerVppMode(pPortData);
+        if (PepCtrlInitModes(pPortData) &&
+            lResetProgrammerState(pPortData) &&
+            lSetProgrammerAddress(pPortData, 0) &&
+            lSetProgrammerVppMode(pPortData))
+        {
+            return TRUE;
+        }
     }
 
-    return TRUE;
+    return FALSE;
 }
 
 BOOLEAN PepCtrlInitModes(
@@ -945,8 +916,7 @@ BOOLEAN PepCtrlInitModes(
 {
     PAGED_CODE()
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlInitModes called.\n") );
+    PepCtrlLog("PepCtrlInitModes called.\n");
 
     pPortData->Modes.nProgrammerMode = CPepCtrlProgrammerNoneMode;
     pPortData->Modes.nVccMode = CPepCtrl5VDCMode;
@@ -957,5 +927,5 @@ BOOLEAN PepCtrlInitModes(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

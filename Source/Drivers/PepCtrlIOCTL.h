@@ -1,15 +1,9 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepCtrlIOCTL_H)
 #define PepCtrlIOCTL_H
-
-#if defined(_MSC_VER)
-#pragma pack(push, 4)
-#else
-#error Need to specify how to enable byte aligned structure padding
-#endif
 
 /*
   Programmer Modes
@@ -94,14 +88,14 @@
 #define IOCTL_PEPCTRL_DEVICE_NOTIFICATION \
     CTL_CODE(FILE_DEVICE_UNKNOWN, 0x80a, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-#if defined(_MSC_VER)
-#pragma pack(pop)
-#else
-#error Need to specify how to restore original structure padding
-#endif
+#define IOCTL_PEPCTRL_GET_SETTINGS \
+    CTL_CODE(FILE_DEVICE_UNKNOWN, 0x80b, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_PEPCTRL_SET_SETTINGS \
+    CTL_CODE(FILE_DEVICE_UNKNOWN, 0x80c, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #endif /* PepCtrlIOCTL_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

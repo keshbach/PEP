@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -11,6 +11,14 @@
 #include "PepCtrlUsbPort.h"
 #include "UsbPrintGuid.h"
 
+#include "PepCtrlLog.h"
+
+#define CTimeoutTicks 1000000 // 100 milliseconds
+
+/*
+   Local Functions
+*/
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text (PAGE, PepCtrlReadBitUsbPort)
 #pragma alloc_text (PAGE, PepCtrlWriteUsbPort)
@@ -21,78 +29,125 @@
 
 static GUID l_UsbPrintGuid = {0};
 
+static NTSTATUS lUsbPortIoCompletion(
+  IN PDEVICE_OBJECT pDeviceObject,
+  IN PIRP pIrp,
+  IN PVOID pvContext)
+{
+    PepCtrlLog("lUsbPortIoCompletion called.\n");
+
+    pDeviceObject;
+	pIrp;
+
+	KeSetEvent((PKEVENT)pvContext, IO_NO_INCREMENT, FALSE);
+
+	return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
 BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
   IN TPepCtrlObject* pObject,
   OUT PUCHAR pucStatus)
 {
+	BOOLEAN bResult = FALSE;
     NTSTATUS status;
     KEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
     PIRP pIrp;
+	LARGE_INTEGER TimeoutInteger;
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlReadBitUsbPort called.\n") );
+    PepCtrlLog("PepCtrlReadBitUsbPort called.\n");
 
- 	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Initializing event\n") );
+    PepCtrlLog("PepCtrlReadBitUsbPort - Initializing event\n");
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-			   "PepCtrl: Building IO Control Request\n") );
+    PepCtrlLog("PepCtrlReadBitUsbPort - Building Device IO Control Request\n");
 
     pIrp = IoBuildDeviceIoControlRequest(IOCTL_USBPRINT_GET_LPT_STATUS,
                                          pObject->pPortDeviceObject,
                                          NULL, 0, pucStatus, sizeof(*pucStatus),
-                                         FALSE, &Event, &IoStatusBlock);
+                                         TRUE, &Event, &IoStatusBlock);
 
-    if (pIrp)
+	if (!pIrp)
+	{
+        PepCtrlLog("PepCtrlReadBitUsbPort - IRP could not be allocated\n");
+
+		return FALSE;
+	}
+
+    PepCtrlLog("PepCtrlReadBitUsbPort - Setting the completion routine\n");
+
+	IoSetCompletionRoutine(pIrp, lUsbPortIoCompletion, &Event, TRUE, TRUE, TRUE);
+
+    PepCtrlLog("PepCtrlReadBitUsbPort - Calling the port device driver\n");
+
+    status = IoCallDriver(pObject->pPortDeviceObject, pIrp);
+
+    if (status == STATUS_PENDING)
     {
-      	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Calling the port device driver\n") );
+        PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver returned status pending\n");
 
-        status = IoCallDriver(pObject->pPortDeviceObject, pIrp);
+		TimeoutInteger.QuadPart = -CTimeoutTicks;
 
-        if (status == STATUS_PENDING)
-        {
-         	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Call to IoCallDriver returned status pending\n") );
+        status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
 
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+		if (status == STATUS_TIMEOUT)
+		{
+            PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver timed out\n");
 
-            status = STATUS_SUCCESS;
-        }
+            PepCtrlLog("PepCtrlReadBitUsbPort - Cancelling the IRP\n");
 
-        if (NT_ERROR(status))
-        {
-        	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Call to IoCallDriver failed.  (Error Code: 0x%X)\n",
-                       status) );
+			IoCancelIrp(pIrp);
 
-            return FALSE;
-        }
+            PepCtrlLog("PepCtrlReadBitUsbPort - Waiting for the IRP to be cancelled\n");
 
-    	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Call to IoCallDriver succeeded\n") );
-
-        if (NT_SUCCESS(IoStatusBlock.Status))
-        {
-            return TRUE;
-        }
-
-    	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: IO Status Block failed.  (Error Code: 0x%X)\n",
-                   IoStatusBlock.Status) );
-    }
-    else
-    {
-    	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: IRP could not be allocated\n") );
+			KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+		}
     }
 
-    return FALSE;
+	if (NT_SUCCESS(status))
+	{
+		if (status == STATUS_SUCCESS)
+		{
+            PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver succeeded\n");
+
+			if (NT_SUCCESS(IoStatusBlock.Status))
+			{
+                PepCtrlLog("PepCtrlReadBitUsbPort - IO Status Block succeeded.\n");
+
+				bResult = TRUE;
+			}
+			else
+			{
+                PepCtrlLog("PepCtrlReadBitUsbPort - IO Status Block failed.  (Error Code: 0x%X)\n",
+					       IoStatusBlock.Status);
+			}
+        }
+		else
+		{
+            PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver succeeded.  (Error Code: 0x%X)\n", status);
+		}
+	}
+	else
+	{
+        PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
+	}
+
+	KeClearEvent(&Event);
+
+    PepCtrlLog("PepCtrlReadBitUsbPort - Completing the IRP.\n");
+
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+    PepCtrlLog("PepCtrlReadBitUsbPort - Waiting for the IRP to complete.\n");
+
+	KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+
+    PepCtrlLog("PepCtrlReadBitUsbPort - Finished waiting for the IRP to complete.\n");
+
+    return bResult;
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
@@ -100,80 +155,108 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
   IN PUCHAR pucData,
   IN ULONG ulDataLen)
 {
+	BOOLEAN bResult = FALSE;
     NTSTATUS status;
     KEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
-    LARGE_INTEGER OffsetInteger;
+    LARGE_INTEGER OffsetInteger, TimeoutInteger;
     PIRP pIrp;
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlWriteUsbPort called.\n") );
+    PepCtrlLog("PepCtrlWriteUsbPort called.\n");
 
- 	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Initializing event\n") );
+    PepCtrlLog("PepCtrlWriteUsbPort - Initializing event\n");
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-			   "PepCtrl: Initializing offset large integer\n") );
+    PepCtrlLog("PepCtrlWriteUsbPort - Initializing offset large integer\n");
 
     OffsetInteger.QuadPart = 0;
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-			   "PepCtrl: Building IO Control Request\n") );
+    PepCtrlLog("PepCtrlWriteUsbPort - Building IO Control Request\n");
 
     pIrp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
                                         pObject->pPortDeviceObject,
                                         pucData, ulDataLen, &OffsetInteger,
                                         &Event, &IoStatusBlock);
 
-    if (pIrp)
+	if (!pIrp) 
+	{
+        PepCtrlLog("PepCtrlWriteUsbPort - IRP could not be allocated\n");
+
+		return FALSE;
+	}
+
+    PepCtrlLog("PepCtrlWriteUsbPort - Setting the completion routine\n");
+
+	IoSetCompletionRoutine(pIrp, lUsbPortIoCompletion, &Event, TRUE, TRUE, TRUE);
+
+    PepCtrlLog("PepCtrlWriteUsbPort - Calling the port device driver\n");
+
+    status = IoCallDriver(pObject->pPortDeviceObject, pIrp);
+
+    if (status == STATUS_PENDING)
     {
-      	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Calling the port device driver\n") );
+        PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver returned status pending\n");
 
-        status = IoCallDriver(pObject->pPortDeviceObject, pIrp);
+		TimeoutInteger.QuadPart = -CTimeoutTicks;
 
-        if (status == STATUS_PENDING)
-        {
-         	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Call to IoCallDriver returned status pending\n") );
+        status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
 
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+		if (status == STATUS_TIMEOUT)
+		{
+            PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver timed out\n");
 
-            status = STATUS_SUCCESS;
-        }
+            PepCtrlLog("PepCtrlWriteUsbPort - Cancelling the IRP\n");
 
-        if (NT_ERROR(status))
-        {
-        	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Call to IoCallDriver failed.  (Error Code: 0x%X)\n",
-                       status) );
+			IoCancelIrp(pIrp);
 
-            return FALSE;
-        }
+            PepCtrlLog("PepCtrlWriteUsbPort - Waiting for the IRP to be cancelled\n");
 
-    	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Call to IoCallDriver succeeded\n") );
+			KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+		}
+	}
 
-        if (NT_SUCCESS(IoStatusBlock.Status))
-        {
-            return TRUE;
-        }
+	if (NT_SUCCESS(status))
+	{
+		if (status == STATUS_SUCCESS)
+		{
+            PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver succeeded\n");
 
-    	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: IO Status Block failed.  (Error Code: 0x%X)\n",
-                   IoStatusBlock.Status) );
-    }
-    else
-    {
-    	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: IRP could not be allocated\n") );
-    }
+			if (NT_SUCCESS(IoStatusBlock.Status))
+			{
+                PepCtrlLog("PepCtrlWriteUsbPort - IO Status Block succeeded.\n");
 
-    return FALSE;
+				bResult = TRUE;
+			}
+			else
+			{
+                PepCtrlLog("PepCtrlWriteUsbPort - IO Status Block failed.  (Error Code: 0x%X)\n",
+					       IoStatusBlock.Status);
+			}
+		}
+		else
+		{
+            PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver succeeded.  (Error Code: 0x%X)\n", status);
+		}
+	}
+	else
+	{
+        PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
+	}
+
+	KeClearEvent(&Event);
+
+    PepCtrlLog("PepCtrlWriteUsbPort - Completing the IRP.\n");
+
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+    PepCtrlLog("PepCtrlWriteUsbPort - Waiting for the IRP to complete.\n");
+
+	KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+
+    return bResult;
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
@@ -187,8 +270,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlAllocUsbPort called.\n") );
+    PepCtrlLog("PepCtrlAllocUsbPort called.\n");
 
     RtlInitUnicodeString(&DeviceName, pszDeviceName);
 
@@ -196,8 +278,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
                                OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
                                NULL, NULL);
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Getting Device Object pointer to \"%ws\"\n", pszDeviceName) );
+    PepCtrlLog("PepCtrlAllocUsbPort - Getting Device Object pointer to \"%ws\"\n", pszDeviceName);
 
     status = IoGetDeviceObjectPointer(&DeviceName, GENERIC_ALL,
                                       &pObject->pPortFileObject,
@@ -205,17 +286,13 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
 
     if (NT_SUCCESS(status))
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Got Device Object pointer to \"%ws\"\n",
-                   pszDeviceName) );
+        PepCtrlLog("PepCtrlAllocUsbPort - Got Device Object pointer to \"%ws\"\n", pszDeviceName);
 
         bResult = TRUE;
     }
     else
     {
-    	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Result of calling get device object pointer  (Error Code: 0x%X)\n",
-                   status) );
+        PepCtrlLog("PepCtrlAllocUsbPort - Result of calling get device object pointer  (Error Code: 0x%X)\n", status);
     }
 
     return bResult;
@@ -226,11 +303,9 @@ BOOLEAN TPEPCTRLAPI PepCtrlFreeUsbPort(
 {
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlFreeUsbPort called.\n") );
+    PepCtrlLog("PepCtrlFreeUsbPort called.\n");
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: USB Printer port being released.\n") );
+    PepCtrlLog("PepCtrlFreeUsbPort - USB Printer port being released.\n");
 
     ObDereferenceObject(pObject->pPortFileObject);
 
@@ -241,8 +316,7 @@ LPGUID TPEPCTRLAPI PepCtrlGetUsbPortDevInterfaceGuid(VOID)
 {
     PAGED_CODE()
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlGetUsbPortDevInterfaceGuid called.\n") );
+    PepCtrlLog("PepCtrlGetUsbPortDevInterfaceGuid called.\n");
 
     RtlCopyBytes(&l_UsbPrintGuid, &GUID_DEVINTERFACE_USBPRINT,
                  sizeof(l_UsbPrintGuid));
@@ -251,5 +325,5 @@ LPGUID TPEPCTRLAPI PepCtrlGetUsbPortDevInterfaceGuid(VOID)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

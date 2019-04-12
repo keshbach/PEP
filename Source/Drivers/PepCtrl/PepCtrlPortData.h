@@ -1,12 +1,18 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepCtrlPortData_H)
 #define PepCtrlPortData_H
 
 #if defined(_MSC_VER)
+#if defined(_X86_)
 #pragma pack(push, 4)
+#elif defined(_WIN64)
+#pragma pack(push, 8)
+#else
+#error Need to specify cpu architecture to configure structure padding
+#endif
 #else
 #error Need to specify how to enable byte aligned structure padding
 #endif
@@ -49,16 +55,23 @@ typedef struct tagTPepCtrlObject
     PVOID pvObjectData; /* Port object specific data */
 } TPepCtrlObject;
 
+typedef struct tagTPepCtrlRegSettings
+{
+    LPWSTR pszRegistryPath;
+    UINT32 nPortType;
+    LPWSTR pszPortDeviceName;
+} TPepCtrlRegSettings;
+
 typedef struct tagTPepCtrlPortData
 {
     FAST_MUTEX FastMutex;
-    LPWSTR pszPortDeviceName;
     PVOID pvPnPNotificationEntry;
     HANDLE hPortArrivedThread;
     HANDLE hPortRemovedThread;
     PIRP pIrp; /* IRP used to indicate when port arrives/removed */
     BOOLEAN bPortEjected;
     UINT32 nLastAddress; /* Last address that was set */
+    TPepCtrlRegSettings RegSettings;
     TPepCtrlFuncs Funcs;
     TPepCtrlModes Modes;
     TPepCtrlObject Object;
@@ -73,5 +86,5 @@ typedef struct tagTPepCtrlPortData
 #endif /* !defined(PepCtrlPortData_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/

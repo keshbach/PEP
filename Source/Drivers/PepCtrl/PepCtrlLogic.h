@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepCtrlLogic_H)
@@ -16,9 +16,9 @@ BOOLEAN PepCtrlSetVppMode(IN TPepCtrlPortData* pPortData,
 BOOLEAN PepCtrlSetAddress(IN TPepCtrlPortData* pPortData,
                           IN UINT32 nAddress);
 BOOLEAN PepCtrlGetData(IN TPepCtrlPortData* pPortData,
-                       OUT UCHAR* pucData);
+                       OUT UINT8* pnData);
 BOOLEAN PepCtrlSetData(IN TPepCtrlPortData* pPortData,
-                       IN UCHAR ucData);
+                       IN UINT8 nData);
 BOOLEAN PepCtrlTriggerProgram(IN TPepCtrlPortData* pPortData,
                               OUT PBOOLEAN pbSuccess);
 BOOLEAN PepCtrlSetOutputEnable(IN TPepCtrlPortData* pPortData,
@@ -29,5 +29,5 @@ BOOLEAN PepCtrlInitModes(IN TPepCtrlPortData* pPortData);
 #endif /* !defined(PepCtrlLogic_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -11,6 +11,10 @@
 
 #include "PepCtrlPortData.h"
 #include "PepCtrlParallelPort.h"
+
+#include "PepCtrlLog.h"
+
+#define CTimeoutTicks 1000000 // 100 milliseconds
 
 #define CBusyStatusBit 0x80
 
@@ -28,12 +32,10 @@
 
 static BOOLEAN lSetParallelPortMode(IN PDEVICE_OBJECT pPortDeviceObject);
 static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(IN PDEVICE_OBJECT pDeviceObject);
-static BOOLEAN lAllocParallelPort(IN PDEVICE_OBJECT pDeviceObject);
 
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text (PAGE, lSetParallelPortMode)
 #pragma alloc_text (PAGE, lAllocParallelPortInfo)
-#pragma alloc_text (PAGE, lAllocParallelPort)
 
 #pragma alloc_text (PAGE, PepCtrlReadBitParallelPort)
 #pragma alloc_text (PAGE, PepCtrlWriteParallelPort)
@@ -44,26 +46,41 @@ static BOOLEAN lAllocParallelPort(IN PDEVICE_OBJECT pDeviceObject);
 
 static GUID l_ParallelGuid = {0};
 
+static NTSTATUS lParallelPortIoCompletion(
+  IN PDEVICE_OBJECT pDeviceObject,
+  IN PIRP pIrp,
+  IN PVOID pvContext)
+{
+    PepCtrlLog("lParallelPortIoCompletion called.\n");
+
+	pDeviceObject;
+	pIrp;
+
+	KeSetEvent((PKEVENT)pvContext, IO_NO_INCREMENT, FALSE);
+
+	return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
 static BOOLEAN lSetParallelPortMode(
   IN PDEVICE_OBJECT pPortDeviceObject)
 {
+	BOOLEAN bResult = FALSE;
     NTSTATUS status;
     PARALLEL_PNP_INFORMATION ParallelPnpInfo;
     KEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
     PIRP pIrp;
+	LARGE_INTEGER TimeoutInteger;
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lSetParallelPortMode called.\n") );
+    PepCtrlLog("lSetParallelPortMode called.\n");
 
     RtlZeroMemory(&ParallelPnpInfo, sizeof(ParallelPnpInfo));
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Building IO Control Request\n") );
+    PepCtrlLog("lSetParallelPortMode - Building IO Control Request\n");
 
     pIrp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_GET_PARALLEL_PNP_INFO,
                                          pPortDeviceObject, NULL, 0,
@@ -72,87 +89,114 @@ static BOOLEAN lSetParallelPortMode(
 
     if (!pIrp)
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: IRP could not be allocated\n") );
+        PepCtrlLog("lSetParallelPortMode - IRP could not be allocated\n");
 
         return FALSE;
     }
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Calling the port device driver to obtain PNP information\n") );
+    PepCtrlLog("lSetParallelPortMode - Setting the completion routine\n");
+
+	IoSetCompletionRoutine(pIrp, lParallelPortIoCompletion, &Event, TRUE, TRUE, TRUE);
+
+    PepCtrlLog("lSetParallelPortMode - Calling the port device driver to obtain PNP information\n");
 
     status = IoCallDriver(pPortDeviceObject, pIrp);
 
     if (status == STATUS_PENDING)
     {
-       	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Call to IoCallDriver returned status pending\n") );
+        PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver returned status pending\n");
 
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+		TimeoutInteger.QuadPart = -CTimeoutTicks;
 
-        status = STATUS_SUCCESS;
+		status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
+		
+		if (status == STATUS_TIMEOUT)
+		{
+            PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver timed out\n");
+
+            PepCtrlLog("lSetParallelPortMode - Cancelling the IRP\n");
+
+			IoCancelIrp(pIrp);
+
+            PepCtrlLog("lSetParallelPortMode - Waiting for the IRP to be cancelled\n");
+
+			KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+		}
     }
 
-    if (!NT_SUCCESS(status))
-    {
-     	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Call to IoCallDriver failed.  (Error Code: 0x%X)\n",
-                   status) );
+	if (NT_SUCCESS(status))
+	{
+		if (status == STATUS_SUCCESS)
+		{
+            PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver succeeded\n");
 
-        return FALSE;
-    }
+			if (NT_SUCCESS(IoStatusBlock.Status))
+			{
+                PepCtrlLog("lSetParallelPortMode - IO Status Block succeeded.\n");
 
-   	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Call to IoCallDriver succeeded\n") );
+				bResult = TRUE;
+			}
+			else
+			{
+                PepCtrlLog("lSetParallelPortMode - IO Status Block failed.  (Error Code: 0x%X)\n", IoStatusBlock.Status);
+			}
+		}
+		else
+		{
+            PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver succeeded.  (Error Code: 0x%X)\n", status);
+		}
+	}
+	else
+	{
+        PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
+	}
 
-    if (!NT_SUCCESS(IoStatusBlock.Status))
-    {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: IO Status Block failed.  (Error Code: 0x%X)\n",
-                   IoStatusBlock.Status) );
+	KeClearEvent(&Event);
 
-        return FALSE;
-    }
+    PepCtrlLog("lSetParallelPortMode - Completing the IRP.\n");
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Checking parallel port's hardware capabilities.\n") );
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+    PepCtrlLog("lSetParallelPortMode - Waiting for the IRP to complete.\n");
+
+	KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+
+	if (!bResult)
+	{
+		return FALSE;
+	}
+
+    PepCtrlLog("lSetParallelPortMode - Checking parallel port's hardware capabilities.\n");
 
     if (!(ParallelPnpInfo.HardwareCapabilities & PPT_BYTE_PRESENT))
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Parallel Port does not support byte mode.\n") );
+        PepCtrlLog("lSetParallelPortMode - Parallel Port does not support byte mode.\n");
 
         return FALSE;
     }
 
     if (ParallelPnpInfo.CurrentMode != ECR_SPP_MODE)
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Clearing the parallel port's chip mode.\n") );
+        PepCtrlLog("lSetParallelPortMode - Clearing the parallel port's chip mode.\n");
 
         status = ParallelPnpInfo.ClearChipMode(ParallelPnpInfo.Context,
                                                (UCHAR)ParallelPnpInfo.CurrentMode);
 
         if (!NT_SUCCESS(status))
         {
-         	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Clearing the chip mode failed.  (Error Code: 0x%X)\n",
-                       status) );
+            PepCtrlLog("lSetParallelPortMode - Clearing the chip mode failed.  (Error Code: 0x%X)\n", status);
 
             return FALSE;
         }
 
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Trying to set the parallel port's chip mode.\n") );
+        PepCtrlLog("lSetParallelPortMode - Trying to set the parallel port's chip mode.\n");
 
         status = ParallelPnpInfo.TrySetChipMode(ParallelPnpInfo.Context,
                                                 ECR_SPP_MODE);
 
         if (!NT_SUCCESS(status))
         {
-         	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                       "PepCtrl: Setting the chip mode failed.  (Error Code: 0x%X)\n",
-                       status) );
+            PepCtrlLog("lSetParallelPortMode - Setting the chip mode failed.  (Error Code: 0x%X)\n", status);
 
             return FALSE;
         }
@@ -164,27 +208,26 @@ static BOOLEAN lSetParallelPortMode(
 static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
   IN PDEVICE_OBJECT pDeviceObject)
 {
-    PPARALLEL_PORT_INFORMATION pParallelPortInfo;
+	BOOLEAN bResult = FALSE;
+	PPARALLEL_PORT_INFORMATION pParallelPortInfo;
     PIRP pIrp;
     NTSTATUS status;
     KEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
     ULONG ulParallelPortInfoLen;
+	LARGE_INTEGER TimeoutInteger;
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lAllocParallelPortInfo called.\n") );
+    PepCtrlLog("lAllocParallelPortInfo called.\n");
 
     RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                "PepCtrl: Initializing event\n") );
+    PepCtrlLog("lAllocParallelPortInfo - Initializing event\n");
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-				"PepCtrl: Building IO Control Request IOCTL_INTERNAL_GET_PARALLEL_PORT_INFO\n") );
+    PepCtrlLog("lAllocParallelPortInfo - Building IO Control Request IOCTL_INTERNAL_GET_PARALLEL_PORT_INFO\n");
 
     ulParallelPortInfoLen = sizeof(PARALLEL_PORT_INFORMATION);
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)UtAllocNonPagedMem(ulParallelPortInfoLen);
@@ -194,130 +237,92 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
                                          pParallelPortInfo, ulParallelPortInfoLen,
                                          TRUE, &Event, &IoStatusBlock);
 
-    if (pIrp)
+	if (!pIrp)
+	{
+        PepCtrlLog("lAllocParallelPortInfo - IRP could not be allocated\n");
+
+		UtFreeNonPagedMem(pParallelPortInfo);
+
+		return NULL;
+	}
+
+    PepCtrlLog("lAllocParallelPortInfo - Setting the completion routine\n");
+
+	IoSetCompletionRoutine(pIrp, lParallelPortIoCompletion, &Event, TRUE, TRUE, TRUE);
+
+    PepCtrlLog("lAllocParallelPortInfo - Calling the port device driver\n");
+
+    status = IoCallDriver(pDeviceObject, pIrp);
+
+    if (status == STATUS_PENDING)
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                    "PepCtrl: Calling the port device driver\n") );
+        PepCtrlLog("lAllocParallelPortInfo - Call to IoCallDriver returned status pending\n");
 
-        status = IoCallDriver(pDeviceObject, pIrp);
+		TimeoutInteger.QuadPart = -CTimeoutTicks;
 
-        if (status == STATUS_PENDING)
-        {
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Call to IoCallDriver returned status pending\n") );
+        status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
 
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+		if (status == STATUS_TIMEOUT)
+		{
+            PepCtrlLog("lAllocParallelPortInfo - Call to IoCallDriver timed out\n");
 
-            status = STATUS_SUCCESS;
-        }
+            PepCtrlLog("lAllocParallelPortInfo - Cancelling the IRP\n");
 
-        if (NT_ERROR(status))
-        {
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Call to IoCallDriver failed.  (Error Code: 0x%X)\n",
-                        status) );
+			IoCancelIrp(pIrp);
 
-            goto FreePort;
-        }
+            PepCtrlLog("lAllocParallelPortInfo - Waiting for the IRP to be cancelled\n");
 
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                    "PepCtrl: Call to IoCallDriver succeeded\n") );
-
-        if (!NT_SUCCESS(IoStatusBlock.Status))
-        {
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: IO Status Block failed.  (Error Code: 0x%X)\n",
-                        IoStatusBlock.Status) );
-
-            goto FreePort;
-        }
-
-        return pParallelPortInfo;
-    }
-    else
-    {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                    "PepCtrl: IRP could not be allocated\n") );
+			KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+		}
     }
 
-FreePort:
+	if (NT_SUCCESS(status))
+	{
+		if (status == STATUS_SUCCESS)
+		{
+            PepCtrlLog("lAllocParallelPortInfo - Call to IoCallDriver succeeded\n");
+
+			if (NT_SUCCESS(IoStatusBlock.Status))
+			{
+                PepCtrlLog("lAllocParallelPortInfo - IO Status Block succeeded.\n");
+
+				bResult = TRUE;
+			}
+			else
+			{
+                PepCtrlLog("lAllocParallelPortInfo - IO Status Block failed.  (Error Code: 0x%X)\n", IoStatusBlock.Status);
+			}
+		}
+		else
+		{
+            PepCtrlLog("lAllocParallelPortInfo - Call to IoCallDriver succeeded.  (Error Code: 0x%X)\n", status);
+		}
+	}
+	else
+	{
+        PepCtrlLog("lAllocParallelPortInfo - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
+	} 
+
+	KeClearEvent(&Event);
+
+    PepCtrlLog("lAllocParallelPortInfo - Completing the IRP.\n");
+
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+    PepCtrlLog("lAllocParallelPortInfo - Waiting for the IRP to complete.\n");
+
+	KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+
+    PepCtrlLog("lAllocParallelPortInfo - Finished waiting for the IRP to complete.\n");
+
+	if (bResult)
+	{
+		return pParallelPortInfo;
+	}
+
     UtFreeNonPagedMem(pParallelPortInfo);
 
     return NULL;
-}
-
-static BOOLEAN lAllocParallelPort(
-  IN PDEVICE_OBJECT pDeviceObject)
-{
-    PIRP pIrp;
-    NTSTATUS status;
-    KEVENT Event;
-    IO_STATUS_BLOCK IoStatusBlock;
-
-    PAGED_CODE()
-
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: lAllocParallelPort called.\n") );
-
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                "PepCtrl: Initializing event\n") );
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-				"PepCtrl: Building IO Control Request IOCTL_INTERNAL_PARALLEL_PORT_ALLOCATE\n") );
-
-    pIrp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_PARALLEL_PORT_ALLOCATE,
-                                         pDeviceObject, NULL, 0, NULL, 0,
-                                         TRUE, &Event, &IoStatusBlock);
-
-    if (pIrp)
-    {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                    "PepCtrl: Calling the port device driver\n") );
-
-        status = IoCallDriver(pDeviceObject, pIrp);
-
-        if (status == STATUS_PENDING)
-        {
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Call to IoCallDriver returned status pending\n") );
-
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-
-            status = STATUS_SUCCESS;
-        }
-
-        if (NT_ERROR(status))
-        {
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Call to IoCallDriver failed.  (Error Code: 0x%X)\n",
-                        status) );
-
-            return FALSE;
-        }
-
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                    "PepCtrl: Call to IoCallDriver succeeded\n") );
-
-        if (!NT_SUCCESS(IoStatusBlock.Status))
-        {
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: IO Status Block failed.  (Error Code: 0x%X)\n",
-                        IoStatusBlock.Status) );
-
-            return FALSE;
-        }
-
-        return TRUE;
-    }
-    else
-    {
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-				    "PepCtrl: IO Control Request failed.\n") );
-    }
-
-    return FALSE;
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlReadBitParallelPort(
@@ -329,8 +334,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitParallelPort(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		       "PepCtrl: PepCtrlReadBitParallelPort called.\n") );
+    PepCtrlLog("PepCtrlReadBitParallelPort called.\n");
 
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
@@ -351,8 +355,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		       "PepCtrl: PepCtrlWriteParallelPort called.\n") );
+    PepCtrlLog("PepCtrlWriteParallelPort called.\n");
 
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
@@ -375,13 +378,11 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlAllocParallelPort called.\n") );
+    PepCtrlLog("PepCtrlAllocParallelPort called.\n");
 
     RtlInitUnicodeString(&DeviceName, pszDeviceName);
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Getting Device Object pointer to \"%ws\"\n", pszDeviceName) );
+    PepCtrlLog("PepCtrlAllocParallelPort - Getting Device Object pointer to \"%ws\"\n", pszDeviceName);
 
     status = IoGetDeviceObjectPointer(&DeviceName, GENERIC_ALL,
                                       &pObject->pPortFileObject,
@@ -389,53 +390,44 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
 
     if (NT_SUCCESS(status))
     {
-        KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Got Device Object pointer to \"%ws\"\n",
-                   pszDeviceName) );
+        PepCtrlLog("PepCtrlAllocParallelPort - Got Device Object pointer to \"%ws\"\n", pszDeviceName);
 
         pObject->pvObjectData = lAllocParallelPortInfo(pObject->pPortDeviceObject);
 
         if (!pObject->pvObjectData)
         {
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Call to lAllocParallelPortInfo failed.\n") );
+            PepCtrlLog("PepCtrlAllocParallelPort - Call to lAllocParallelPortInfo failed.\n");
 
             goto FreeDevice;
         }
 
         pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                    "PepCtrl: Port Address:        0x%X.\n",
-                    pParallelPortInfo->OriginalController) );
-	    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                    "PepCtrl: System Port Address: 0x%X.\n",
-                    pParallelPortInfo->Controller) );
+        PepCtrlLog("Port Address:        0x%X.\n", pParallelPortInfo->OriginalController);
+        PepCtrlLog("System Port Address: 0x%X.\n", pParallelPortInfo->Controller);
 
-        if (lAllocParallelPort(pObject->pPortDeviceObject))
-        {
-        	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Parallel port allocated.\n") );
+        PepCtrlLog("PepCtrlAllocParallelPort - Trying to allocate the parallel port.\n");
+
+		if (pParallelPortInfo->TryAllocatePort(pObject->pPortDeviceObject->DeviceExtension))
+		{
+            PepCtrlLog("PepCtrlAllocParallelPort - Parallel port allocated.\n");
 
             if (lSetParallelPortMode(pObject->pPortDeviceObject))
             {
-                KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                            "PepCtrl: Parallel Port Mode set.\n") );
+                PepCtrlLog("PepCtrlAllocParallelPort - Parallel Port Mode set.\n");
 
                 return TRUE;
             }
             else
             {
-                KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                            "PepCtrl: Parallel Port Mode could not be changed - freeing the port.\n") );
+                PepCtrlLog("PepCtrlAllocParallelPort - Parallel Port Mode could not be changed - freeing the port.\n");
 
-                pParallelPortInfo->FreePort(pParallelPortInfo->Context);
+                pParallelPortInfo->FreePort(pObject->pPortDeviceObject->DeviceExtension);
             }
         }
         else
         {
-            KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                        "PepCtrl: Could not allocate the parallel port\n") );
+            PepCtrlLog("PepCtrlAllocParallelPort - Could not allocate the parallel port\n");
         }
 
         UtFreeNonPagedMem(pParallelPortInfo);
@@ -445,9 +437,7 @@ FreeDevice:
     }
     else
     {
-    	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-                   "PepCtrl: Result of calling get device object pointer  (Error Code: 0x%X)\n",
-                   status) );
+        PepCtrlLog("PepCtrlAllocParallelPort - Result of calling get device object pointer  (Error Code: 0x%X)\n", status);
     }
 
     pObject->pPortFileObject = NULL;
@@ -464,15 +454,13 @@ BOOLEAN TPEPCTRLAPI PepCtrlFreeParallelPort(
 
     PAGED_CODE()
 
-	KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlFreeParallelPort called.\n") );
+    PepCtrlLog("PepCtrlFreeParallelPort called.\n");
 
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-               "PepCtrl: Printer port being released.\n") );
+    PepCtrlLog("PepCtrlFreeParallelPort - Printer port being released.\n");
 
-    pParallelPortInfo->FreePort(pParallelPortInfo->Context);
+    pParallelPortInfo->FreePort(pObject->pPortDeviceObject->DeviceExtension);	
 
     UtFreeNonPagedMem(pParallelPortInfo);
 
@@ -487,8 +475,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlFreeParallelPort(
 
 LPGUID TPEPCTRLAPI PepCtrlGetParallelPortDevInterfaceGuid(VOID)
 {
-    KdPrintEx( (DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	           "PepCtrl: PepCtrlGetParallelPortDevInterfaceGuid called.\n") );
+    PepCtrlLog("PepCtrlGetParallelPortDevInterfaceGuid called.\n");
 
     PAGED_CODE()
 
@@ -499,5 +486,5 @@ LPGUID TPEPCTRLAPI PepCtrlGetParallelPortDevInterfaceGuid(VOID)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

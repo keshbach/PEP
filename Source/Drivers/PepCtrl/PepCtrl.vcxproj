@@ -329,9 +329,16 @@
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\PepCtrlDefs.h" />
+    <ClInclude Include="..\PepCtrlIOCTL.h" />
+    <ClInclude Include="PepCtrlInit.h" />
+    <ClInclude Include="PepCtrlLog.h" />
+    <ClInclude Include="PepCtrlDeviceControl.h" />
     <ClInclude Include="PepCtrlLogic.h" />
     <ClInclude Include="PepCtrlParallelPort.h" />
+    <ClInclude Include="PepCtrlPlugPlay.h" />
     <ClInclude Include="PepCtrlPortData.h" />
+    <ClInclude Include="PepCtrlReg.h" />
     <ClInclude Include="PepCtrlUsbPort.h" />
     <ClInclude Include="UsbPrintGuid.h" />
   </ItemGroup>
@@ -340,9 +347,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PepCtrl.c" />
+    <ClCompile Include="PepCtrlInit.c" />
+    <ClCompile Include="PepCtrlLog.c" />
+    <ClCompile Include="PepCtrlDeviceControl.c" />
     <ClCompile Include="PepCtrlInitGuids.c" />
     <ClCompile Include="PepCtrlLogic.c" />
     <ClCompile Include="PepCtrlParallelPort.c" />
+    <ClCompile Include="PepCtrlPlugPlay.c" />
+    <ClCompile Include="PepCtrlReg.c" />
     <ClCompile Include="PepCtrlUsbPort.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
