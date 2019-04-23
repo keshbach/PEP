@@ -30,11 +30,9 @@
    Local Functions
 */
 
-static BOOLEAN lSetParallelPortMode(IN PDEVICE_OBJECT pPortDeviceObject);
 static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(IN PDEVICE_OBJECT pDeviceObject);
 
 #if defined(ALLOC_PRAGMA)
-#pragma alloc_text (PAGE, lSetParallelPortMode)
 #pragma alloc_text (PAGE, lAllocParallelPortInfo)
 
 #pragma alloc_text (PAGE, PepCtrlReadBitParallelPort)
@@ -56,153 +54,15 @@ static NTSTATUS lParallelPortIoCompletion(
 	pDeviceObject;
 	pIrp;
 
+    PepCtrlLog("lParallelPortIoCompletion - setting the event.\n");
+
 	KeSetEvent((PKEVENT)pvContext, IO_NO_INCREMENT, FALSE);
 
+    PepCtrlLog("lParallelPortIoCompletion - finished setting the event.\n");
+
+    PepCtrlLog("lParallelPortIoCompletion finished.\n");
+
 	return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-static BOOLEAN lSetParallelPortMode(
-  IN PDEVICE_OBJECT pPortDeviceObject)
-{
-	BOOLEAN bResult = FALSE;
-    NTSTATUS status;
-    PARALLEL_PNP_INFORMATION ParallelPnpInfo;
-    KEVENT Event;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PIRP pIrp;
-	LARGE_INTEGER TimeoutInteger;
-
-    PAGED_CODE()
-
-    PepCtrlLog("lSetParallelPortMode called.\n");
-
-    RtlZeroMemory(&ParallelPnpInfo, sizeof(ParallelPnpInfo));
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    PepCtrlLog("lSetParallelPortMode - Building IO Control Request\n");
-
-    pIrp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_GET_PARALLEL_PNP_INFO,
-                                         pPortDeviceObject, NULL, 0,
-                                         &ParallelPnpInfo, sizeof(ParallelPnpInfo),
-                                         TRUE, &Event, &IoStatusBlock);
-
-    if (!pIrp)
-    {
-        PepCtrlLog("lSetParallelPortMode - IRP could not be allocated\n");
-
-        return FALSE;
-    }
-
-    PepCtrlLog("lSetParallelPortMode - Setting the completion routine\n");
-
-	IoSetCompletionRoutine(pIrp, lParallelPortIoCompletion, &Event, TRUE, TRUE, TRUE);
-
-    PepCtrlLog("lSetParallelPortMode - Calling the port device driver to obtain PNP information\n");
-
-    status = IoCallDriver(pPortDeviceObject, pIrp);
-
-    if (status == STATUS_PENDING)
-    {
-        PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver returned status pending\n");
-
-		TimeoutInteger.QuadPart = -CTimeoutTicks;
-
-		status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
-		
-		if (status == STATUS_TIMEOUT)
-		{
-            PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver timed out\n");
-
-            PepCtrlLog("lSetParallelPortMode - Cancelling the IRP\n");
-
-			IoCancelIrp(pIrp);
-
-            PepCtrlLog("lSetParallelPortMode - Waiting for the IRP to be cancelled\n");
-
-			KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-		}
-    }
-
-	if (NT_SUCCESS(status))
-	{
-		if (status == STATUS_SUCCESS)
-		{
-            PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver succeeded\n");
-
-			if (NT_SUCCESS(IoStatusBlock.Status))
-			{
-                PepCtrlLog("lSetParallelPortMode - IO Status Block succeeded.\n");
-
-				bResult = TRUE;
-			}
-			else
-			{
-                PepCtrlLog("lSetParallelPortMode - IO Status Block failed.  (Error Code: 0x%X)\n", IoStatusBlock.Status);
-			}
-		}
-		else
-		{
-            PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver succeeded.  (Error Code: 0x%X)\n", status);
-		}
-	}
-	else
-	{
-        PepCtrlLog("lSetParallelPortMode - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
-	}
-
-	KeClearEvent(&Event);
-
-    PepCtrlLog("lSetParallelPortMode - Completing the IRP.\n");
-
-	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
-
-    PepCtrlLog("lSetParallelPortMode - Waiting for the IRP to complete.\n");
-
-	KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-
-	if (!bResult)
-	{
-		return FALSE;
-	}
-
-    PepCtrlLog("lSetParallelPortMode - Checking parallel port's hardware capabilities.\n");
-
-    if (!(ParallelPnpInfo.HardwareCapabilities & PPT_BYTE_PRESENT))
-    {
-        PepCtrlLog("lSetParallelPortMode - Parallel Port does not support byte mode.\n");
-
-        return FALSE;
-    }
-
-    if (ParallelPnpInfo.CurrentMode != ECR_SPP_MODE)
-    {
-        PepCtrlLog("lSetParallelPortMode - Clearing the parallel port's chip mode.\n");
-
-        status = ParallelPnpInfo.ClearChipMode(ParallelPnpInfo.Context,
-                                               (UCHAR)ParallelPnpInfo.CurrentMode);
-
-        if (!NT_SUCCESS(status))
-        {
-            PepCtrlLog("lSetParallelPortMode - Clearing the chip mode failed.  (Error Code: 0x%X)\n", status);
-
-            return FALSE;
-        }
-
-        PepCtrlLog("lSetParallelPortMode - Trying to set the parallel port's chip mode.\n");
-
-        status = ParallelPnpInfo.TrySetChipMode(ParallelPnpInfo.Context,
-                                                ECR_SPP_MODE);
-
-        if (!NT_SUCCESS(status))
-        {
-            PepCtrlLog("lSetParallelPortMode - Setting the chip mode failed.  (Error Code: 0x%X)\n", status);
-
-            return FALSE;
-        }
-    }
-
-    return TRUE;
 }
 
 static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
@@ -272,8 +132,12 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
 
             PepCtrlLog("lAllocParallelPortInfo - Waiting for the IRP to be cancelled\n");
 
-			KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-		}
+			status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+
+            PepCtrlLog("lAllocParallelPortInfo - Finished waiting for the IRP to be cancelled  (Error Code: 0x%X)\n", status);
+
+            status = STATUS_UNSUCCESSFUL;
+        }
     }
 
 	if (NT_SUCCESS(status))
@@ -302,8 +166,6 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
 	{
         PepCtrlLog("lAllocParallelPortInfo - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
 	} 
-
-	KeClearEvent(&Event);
 
     PepCtrlLog("lAllocParallelPortInfo - Completing the IRP.\n");
 
@@ -388,6 +250,9 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
                                       &pObject->pPortFileObject,
                                       &pObject->pPortDeviceObject);
 
+    PepCtrlLog("PepCtrlAllocParallelPort - Finished getting Device Object pointer to \"%ws\" (Error Code: 0x%X)\n",
+               pszDeviceName, status);
+
     if (NT_SUCCESS(status))
     {
         PepCtrlLog("PepCtrlAllocParallelPort - Got Device Object pointer to \"%ws\"\n", pszDeviceName);
@@ -412,18 +277,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
 		{
             PepCtrlLog("PepCtrlAllocParallelPort - Parallel port allocated.\n");
 
-            if (lSetParallelPortMode(pObject->pPortDeviceObject))
-            {
-                PepCtrlLog("PepCtrlAllocParallelPort - Parallel Port Mode set.\n");
-
-                return TRUE;
-            }
-            else
-            {
-                PepCtrlLog("PepCtrlAllocParallelPort - Parallel Port Mode could not be changed - freeing the port.\n");
-
-                pParallelPortInfo->FreePort(pObject->pPortDeviceObject->DeviceExtension);
-            }
+            return TRUE;
         }
         else
         {
@@ -437,7 +291,7 @@ FreeDevice:
     }
     else
     {
-        PepCtrlLog("PepCtrlAllocParallelPort - Result of calling get device object pointer  (Error Code: 0x%X)\n", status);
+        PepCtrlLog("PepCtrlAllocParallelPort - Result of calling get device object pointer\n");
     }
 
     pObject->pPortFileObject = NULL;

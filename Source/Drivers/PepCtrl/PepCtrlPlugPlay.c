@@ -104,7 +104,7 @@ static VOID lPortArrivedThreadStart(
     {
         PepCtrlLog("lPortArrivedThreadStart - Port was acquired now saving the data.\n");
 
-        ExAcquireFastMutex(&pPortData->FastMutex);
+        ExAcquireFastMutexUnsafe(&pPortData->FastMutex);
 
         pPortData->bPortEjected = FALSE;
 
@@ -114,7 +114,7 @@ static VOID lPortArrivedThreadStart(
 
         RtlCopyMemory(&pPortData->Object, &TmpObject, sizeof(TmpObject));
 
-        ExReleaseFastMutex(&pPortData->FastMutex);
+        ExReleaseFastMutexUnsafe(&pPortData->FastMutex);
 
         PepCtrlLog("lPortArrivedThreadStart - Port data was successfully saved.\n");
     }
@@ -150,7 +150,7 @@ static VOID lPortRemovedThreadStart(
 
     PepCtrlLog("lPortRemovedThreadStart called.\n");
 
-    ExAcquireFastMutex(&pPortData->FastMutex);
+    ExAcquireFastMutexUnsafe(&pPortData->FastMutex);
 
     if (!pPortData->bPortEjected)
     {
@@ -163,7 +163,7 @@ static VOID lPortRemovedThreadStart(
         pPortData->pIrp = NULL;
     }
 
-    ExReleaseFastMutex(&pPortData->FastMutex);
+    ExReleaseFastMutexUnsafe(&pPortData->FastMutex);
 
     if (pIrp)
     {
@@ -296,7 +296,7 @@ VOID PepCtrlPlugPlayClosePortThreads(
 
     PepCtrlLog("PepCtrlClosePortThreads called.\n");
 
-    ExAcquireFastMutex(&pPortData->FastMutex);
+    ExAcquireFastMutexUnsafe(&pPortData->FastMutex);
 
     hPortArrivedThread = pPortData->hPortArrivedThread;
     hPortRemovedThread = pPortData->hPortRemovedThread;
@@ -304,7 +304,7 @@ VOID PepCtrlPlugPlayClosePortThreads(
     pPortData->hPortArrivedThread = NULL;
     pPortData->hPortRemovedThread = NULL;
 
-    ExReleaseFastMutex(&pPortData->FastMutex);
+    ExReleaseFastMutexUnsafe(&pPortData->FastMutex);
 
     if (hPortArrivedThread)
     {

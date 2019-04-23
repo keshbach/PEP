@@ -278,6 +278,8 @@ static BOOLEAN lSetProgrammerAddress(
 
         if (!lWritePortData(pPortData, (UINT8)nAddress, CUnit2_AddressLines0To3))
         {
+            PepCtrlLog("lSetProgrammerAddress failed.\n");
+
             return FALSE;
         }
     }
@@ -291,6 +293,8 @@ static BOOLEAN lSetProgrammerAddress(
 
         if (!lWritePortData(pPortData, (UINT8)nAddress, CUnit3_AddressLines4To7))
         {
+            PepCtrlLog("lSetProgrammerAddress failed.\n");
+
             return FALSE;
         }
     }
@@ -304,6 +308,8 @@ static BOOLEAN lSetProgrammerAddress(
 
         if (!lWritePortData(pPortData, (UINT8)nAddress, CUnit4_AddressLines8To11))
         {
+            PepCtrlLog("lSetProgrammerAddress failed.\n");
+
             return FALSE;
         }
     }
@@ -329,12 +335,16 @@ static BOOLEAN lSetProgrammerAddress(
                                 CEnableAddressLines12To19Unit | nEnable | nData,
                                 CUnit5_AddressLines12To19AndVppMode))
             {
+                PepCtrlLog("lSetProgrammerAddress failed.\n");
+
                 return FALSE;
             }
 
             nAddress >>= 1;
 	    }
     }
+
+    PepCtrlLog("lSetProgrammerAddress finished.\n");
 
     return TRUE;
 }

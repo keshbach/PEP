@@ -210,7 +210,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
     {
         if (l_DeviceControlFuncs[ulIndex].ulIOControlCode == pIrpSp->Parameters.DeviceIoControl.IoControlCode)
         {
-            ExAcquireFastMutex(&pPortData->FastMutex);
+            ExAcquireFastMutexUnsafe(&pPortData->FastMutex);
 
             bFuncFound = TRUE;
 
@@ -218,7 +218,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
                                                                      ulInBufLen, pvOutBuf,
                                                                      ulOutBufLen);
 
-            ExReleaseFastMutex(&pPortData->FastMutex);
+            ExReleaseFastMutexUnsafe(&pPortData->FastMutex);
         }
     }
 
