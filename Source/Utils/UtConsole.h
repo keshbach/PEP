@@ -1,18 +1,20 @@
 /***************************************************************************/
-/*  Copyright (C) 2009-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtConsole_H)
 #define UtConsole_H
 
+#include <Includes/UtExternC.h>
+
 #define UTCONSOLEAPI __stdcall
 
-BOOL UTCONSOLEAPI UtConsolePrintDipSwitches(LPBOOL pbDipSwitches, ULONG ulTotalDipSwitches);
+MExternC BOOL UTCONSOLEAPI UtConsolePrintDipSwitches(LPBOOL pbDipSwitches, ULONG ulTotalDipSwitches);
 
-BOOL UTCONSOLEAPI UtConsolePrintAppVersion(VOID);
+MExternC BOOL UTCONSOLEAPI UtConsolePrintAppVersion(VOID);
 
 #endif /* end of UtConsole_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2009-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2019 Kevin Eshbach                                  */
 /***************************************************************************/

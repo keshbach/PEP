@@ -37,6 +37,9 @@
   <ItemGroup>
     <ClCompile Include="UtHeapDriver.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\UtHeapDriver.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{63E791D7-F11A-4EF1-B8A6-D2E508FED51E}</ProjectGuid>
     <TemplateGuid>{0a049372-4c4d-4ea0-a64e-dc6ad88ceca1}</TemplateGuid>

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2009-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -11,6 +11,8 @@
 #include <Includes/UtMacros.h>
 
 #include <Utils/UtConsole.h>
+
+#pragma region "Structures"
 
 #pragma pack(push, r1, 1)
 
@@ -82,6 +84,10 @@ typedef struct tagVS_VERSIONINFO
 
 #pragma pack(pop, r1)
 
+#pragma endregion
+
+#pragma region "Local Functions"
+
 static LPWSTR lGetValueAfterKey(
   LPWSTR pszKey)
 {
@@ -97,6 +103,8 @@ static LPWSTR lGetValueAfterKey(
 
     return pszValue;
 }
+
+#pragma endregion
 
 BOOL UTCONSOLEAPI UtConsolePrintDipSwitches(
   LPBOOL pbDipSwitches,
@@ -262,5 +270,5 @@ BOOL UTCONSOLEAPI UtConsolePrintAppVersion(VOID)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2009-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2019 Kevin Eshbach                                  */
 /***************************************************************************/
