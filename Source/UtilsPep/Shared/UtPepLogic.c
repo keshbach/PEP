@@ -5,8 +5,7 @@
 #if defined(BUILD_USER_LIB)
 #include <windows.h>
 
-#define PAGED_CODE() NOP_FUNCTION;
-
+#include <Utils/UtHeapProcess.h>
 #elif defined(BUILD_DRIVER_LIB)
 #include <ntddk.h>
 
@@ -120,6 +119,12 @@
 
 #pragma region "Structures"
 
+#if defined(_MSC_VER)
+#pragma pack(push, 4)
+#else
+#error Need to specify how to enable byte aligned structure padding
+#endif
+
 typedef struct tagTPepInternalLogicModes
 {
     UINT32 nProgrammerMode;
@@ -134,22 +139,28 @@ typedef struct tagTPepInternalLogicData
     TPepInternalLogicModes Modes;
 } TPepInternalLogicData;
 
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#else
+#error Need to specify how to restore original structure padding
+#endif
+
 #pragma endregion
 
 #pragma region "Local Function Declarations"
 
-static BOOLEAN lWritePortData(IN TUtPepLogicData* pLogicData, IN UINT8 ucData, IN UINT8 ucUnit);
-static BOOLEAN lReadByteFromProgrammer(IN TUtPepLogicData* pLogicData, UINT8* pByte);
-static BOOLEAN lWriteByteToProgrammer(IN TUtPepLogicData* pLogicData, IN UINT8 ucByte);
-static BOOLEAN lSetProgrammerAddress(IN TUtPepLogicData* pLogicData, IN UINT32 ulAddress);
-static BOOLEAN lSetProgrammerVppMode(IN TUtPepLogicData* pLogicData);
-static UINT8 lPinPulseModeToData(IN TUtPepLogicData* pLogicData, IN UINT32 nPinPulseMode);
-static UINT8 lVppModeToData(IN TUtPepLogicData* pLogicData, IN UINT32 nVppMode);
-static BOOLEAN lResetProgrammerState(IN TUtPepLogicData* pLogicData);
-static BOOLEAN lEnableProgrammerReadMode(IN TUtPepLogicData* pLogicData);
-static BOOLEAN lEnableProgrammerWriteMode(IN TUtPepLogicData* pLogicData);
-static BOOLEAN lWaitForProgramPulse(IN TUtPepLogicData* pLogicData);
-static BOOLEAN lInitModes(IN TPepInternalLogicData* pInternalData);
+static BOOLEAN lWritePortData(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 ucData, _In_ UINT8 ucUnit);
+static BOOLEAN lReadByteFromProgrammer(_In_ TUtPepLogicData* pLogicData, _Out_ UINT8* pByte);
+static BOOLEAN lWriteByteToProgrammer(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 ucByte);
+static BOOLEAN lSetProgrammerAddress(_In_ TUtPepLogicData* pLogicData, _In_ UINT32 ulAddress);
+static BOOLEAN lSetProgrammerVppMode(_In_ TUtPepLogicData* pLogicData);
+static UINT8 lPinPulseModeToData(_In_ TUtPepLogicData* pLogicData, _In_ UINT32 nPinPulseMode);
+static UINT8 lVppModeToData(_In_ TUtPepLogicData* pLogicData, _In_ UINT32 nVppMode);
+static BOOLEAN lResetProgrammerState(_In_ TUtPepLogicData* pLogicData);
+static BOOLEAN lEnableProgrammerReadMode(_In_ TUtPepLogicData* pLogicData);
+static BOOLEAN lEnableProgrammerWriteMode(_In_ TUtPepLogicData* pLogicData);
+static BOOLEAN lWaitForProgramPulse(_In_ TUtPepLogicData* pLogicData);
+static BOOLEAN lInitModes(_In_ TPepInternalLogicData* pInternalData);
 
 #pragma endregion
 
@@ -190,14 +201,16 @@ static BOOLEAN lInitModes(IN TPepInternalLogicData* pInternalData);
 */
 
 static BOOLEAN lWritePortData(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT8 nData,
-  IN UINT8 nUnit)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT8 nData,
+  _In_ UINT8 nUnit)
 {
     BOOLEAN bResult = FALSE;
     UINT8 nTmpData[3];
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
 #if defined(PEPLOGIC_ALL_MESSAGES)
     pLogicData->pLogFunc("lWritePortData called.\n");
@@ -215,15 +228,17 @@ static BOOLEAN lWritePortData(
 }
 
 static BOOLEAN lReadByteFromProgrammer(
-  IN TUtPepLogicData* pLogicData,
-  UINT8* pnByte)
+  _In_ TUtPepLogicData* pLogicData,
+  _Out_ UINT8* pnByte)
 {
     UINT8 nBitPosition = 0;
     UINT8 nData = 0;
     UINT8 nTmpData, nPortOutput;
     BOOLEAN bValue;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lReadByteFromProgrammer called.\n");
 
@@ -259,13 +274,15 @@ static BOOLEAN lReadByteFromProgrammer(
 }
 
 static BOOLEAN lWriteByteToProgrammer(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT8 nByte)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT8 nByte)
 {
     UINT8 nDataLow = nByte & 0x0F;
     UINT8 nDataHigh = nByte >> 4;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lWriteByteToProgrammer called.\n");
 
@@ -281,15 +298,17 @@ static BOOLEAN lWriteByteToProgrammer(
 }
 
 static BOOLEAN lSetProgrammerAddress(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT32 nAddress)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nAddress)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     UINT32 nLastAddress = pData->nLastAddress;
 	UINT32 nIndex;
     UINT8 nEnable, nData;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lSetProgrammerAddress called.\n");
 
@@ -375,12 +394,14 @@ static BOOLEAN lSetProgrammerAddress(
 }
 
 static BOOLEAN lSetProgrammerVppMode(
-  IN TUtPepLogicData* pLogicData)
+  _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     UINT8 nData;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lSetProgrammerVppMode called.\n");
 
@@ -391,10 +412,12 @@ static BOOLEAN lSetProgrammerVppMode(
 }
 
 static UINT8 lPinPulseModeToData(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT32 nPinPulseMode)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nPinPulseMode)
 {
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lPinPulseModeToData called.\n");
 
@@ -413,10 +436,12 @@ static UINT8 lPinPulseModeToData(
 }
 
 static UINT8 lVppModeToData(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT32 nVppMode)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nVppMode)
 {
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lVppModeToData called.\n");
 
@@ -436,11 +461,13 @@ static UINT8 lVppModeToData(
 }
 
 static BOOLEAN lResetProgrammerState(
-  IN TUtPepLogicData* pLogicData)
+  _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lResetProgrammerState called.\n");
 
@@ -460,11 +487,13 @@ static BOOLEAN lResetProgrammerState(
 }
 
 static BOOLEAN lEnableProgrammerReadMode(
-  IN TUtPepLogicData* pLogicData)
+  _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lEnableProgrammerReadMode called.\n");
 
@@ -483,11 +512,13 @@ static BOOLEAN lEnableProgrammerReadMode(
 }
 
 static BOOLEAN lEnableProgrammerWriteMode(
-  IN TUtPepLogicData* pLogicData)
+  _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lEnableProgrammerWriteMode called.\n");
 
@@ -508,7 +539,7 @@ static BOOLEAN lEnableProgrammerWriteMode(
 }
 
 static BOOLEAN lWaitForProgramPulse(
-  IN TUtPepLogicData* pLogicData)
+  _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 #if defined(BUILD_USER_LIB)
@@ -520,7 +551,9 @@ static BOOLEAN lWaitForProgramPulse(
     UINT8 nData;
     BOOLEAN bValue;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("lWaitForProgramPulse called.\n");
 
@@ -602,9 +635,12 @@ static BOOLEAN lWaitForProgramPulse(
     return FALSE;
 }
 
-static BOOLEAN lInitModes(IN TPepInternalLogicData* pInternalData)
+static BOOLEAN lInitModes(
+  _In_ TPepInternalLogicData* pInternalData)
 {
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pInternalData->Modes.nProgrammerMode = CUtPepLogicProgrammerNoneMode;
     pInternalData->Modes.nVccMode = CUtPepLogic5VDCMode;
@@ -620,10 +656,12 @@ PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext()
 {
     TPepInternalLogicData* pLogicData;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
 #if defined(BUILD_USER_LIB)
-#error implement htis
+    pLogicData = (TPepInternalLogicData*)UtAllocMem(sizeof(TPepInternalLogicData));
 #elif defined(BUILD_DRIVER_LIB)
     pLogicData = (TPepInternalLogicData*)UtAllocPagedMem(sizeof(TPepInternalLogicData));
 #endif
@@ -636,25 +674,29 @@ PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext()
 }
 
 VOID TUTPEPLOGICAPI UtPepLogicFreeLogicContext(
-  IN PVOID pvLogicContext)
+  _In_ PVOID pvLogicContext)
 {
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
 #if defined(BUILD_USER_LIB)
-#error implement htis
+    UtFreeMem(pvLogicContext);
 #elif defined(BUILD_DRIVER_LIB)
     UtFreePagedMem(pvLogicContext);
 #endif
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetProgrammerMode(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT32 nProgrammerMode)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nProgrammerMode)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicSetProgrammerMode called.\n");
 
@@ -690,13 +732,15 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetProgrammerMode(
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVccMode(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT32 nVccMode)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nVccMode)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicSetVccMode called.\n");
 
@@ -739,13 +783,15 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVccMode(
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT32 nPinPulseMode)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nPinPulseMode)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicSetPinPulseMode called.\n");
 
@@ -817,13 +863,15 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVppMode(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT32 nVppMode)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nVppMode)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicSetVppMode called.\n");
 
@@ -864,10 +912,12 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVppMode(
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddress(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT32 nAddress)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nAddress)
 {
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicSetAddress called.\n");
 
@@ -875,12 +925,14 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddress(
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicGetData(
-  IN TUtPepLogicData* pLogicData,
-  OUT UINT8* pnData)
+  _In_ TUtPepLogicData* pLogicData,
+  _Out_ UINT8* pnData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicGetData called.\n");
 
@@ -895,12 +947,14 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicGetData(
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetData(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT8 nData)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT8 nData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicSetData called.\n");
 
@@ -915,13 +969,15 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetData(
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
-  IN TUtPepLogicData* pLogicData,
-  OUT PBOOLEAN pbSuccess)
+  _In_ TUtPepLogicData* pLogicData,
+  _Out_ PBOOLEAN pbSuccess)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicTriggerProgram called.\n");
 
@@ -990,12 +1046,14 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
-  IN TUtPepLogicData* pLogicData,
-  IN UINT32 nOutputEnable)
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nOutputEnable)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicSetOutputEnable called.\n");
 
@@ -1015,11 +1073,13 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
 }
 
 BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
-  IN TUtPepLogicData* pLogicData)
+  _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
+#if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
+#endif
 
     pLogicData->pLogFunc("UtPepLogicReset called.\n");
 
