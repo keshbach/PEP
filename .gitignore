@@ -1,8 +1,8 @@
 # Compiler Output Directories
 
-/Source/lib/
-/Source/bin/
-/Source/Drivers/.vs/
+Source/lib/
+Source/bin/
+
 
 # .NET Compiler Output Directories
 
@@ -15,3 +15,10 @@ Source/Forms/PepForms/obj/
 # 3rd Party Output Directories
 
 Source/ThirdParty/zlib/*
+
+
+# Microsoft Visual Studio generated project file
+
+Source/**/*.vcxproj.user
+Source/**/*.vcxproj.filters
+Source/**/.vs
