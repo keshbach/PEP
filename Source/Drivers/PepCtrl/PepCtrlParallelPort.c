@@ -30,7 +30,7 @@
    Local Functions
 */
 
-static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(IN PDEVICE_OBJECT pDeviceObject);
+static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(_In_ PDEVICE_OBJECT pDeviceObject);
 
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text (PAGE, lAllocParallelPortInfo)
@@ -45,9 +45,9 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(IN PDEVICE_OBJECT pDevi
 static GUID l_ParallelGuid = {0};
 
 static NTSTATUS lParallelPortIoCompletion(
-  IN PDEVICE_OBJECT pDeviceObject,
-  IN PIRP pIrp,
-  IN PVOID pvContext)
+  _In_ PDEVICE_OBJECT pDeviceObject,
+  _In_ PIRP pIrp,
+  _In_ PVOID pvContext)
 {
     PepCtrlLog("lParallelPortIoCompletion called.\n");
 
@@ -66,7 +66,7 @@ static NTSTATUS lParallelPortIoCompletion(
 }
 
 static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
-  IN PDEVICE_OBJECT pDeviceObject)
+  _In_ PDEVICE_OBJECT pDeviceObject)
 {
 	BOOLEAN bResult = FALSE;
 	PPARALLEL_PORT_INFORMATION pParallelPortInfo;
@@ -188,8 +188,8 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlReadBitParallelPort(
-  IN TPepCtrlObject* pObject,
-  OUT PBOOLEAN pbValue)
+  _In_ TPepCtrlObject* pObject,
+  _Out_ PBOOLEAN pbValue)
 {
     PPARALLEL_PORT_INFORMATION pParallelPortInfo;
     UCHAR ucStatus;
@@ -208,9 +208,9 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitParallelPort(
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(
-  IN TPepCtrlObject* pObject,
-  IN PUCHAR pucData,
-  IN ULONG ulDataLen)
+  _In_ TPepCtrlObject* pObject,
+  _In_ PUCHAR pucData,
+  _In_ ULONG ulDataLen)
 {
     PPARALLEL_PORT_INFORMATION pParallelPortInfo;
     ULONG ulIndex;
@@ -231,8 +231,8 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
-  IN TPepCtrlObject* pObject,
-  IN LPCWSTR pszDeviceName)
+  _In_ TPepCtrlObject* pObject,
+  _In_ LPCWSTR pszDeviceName)
 {
     NTSTATUS status;
     UNICODE_STRING DeviceName;
@@ -302,7 +302,7 @@ FreeDevice:
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlFreeParallelPort(
-  IN TPepCtrlObject* pObject)
+  _In_ TPepCtrlObject* pObject)
 {
     PPARALLEL_PORT_INFORMATION pParallelPortInfo;
 

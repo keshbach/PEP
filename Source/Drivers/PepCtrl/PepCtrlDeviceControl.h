@@ -5,19 +5,19 @@
 #if !defined(PepCtrlDeviceControl_H)
 #define PepCtrlDeviceControl_H
 
-NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_SetVccMode(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_SetVppMode(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_SetAddress(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_GetData(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_SetData(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_TriggerProgram(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_SetOutputEnable(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_DeviceNotification(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_GetSettings(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
-NTSTATUS PepCtrlDeviceControl_SetSettings(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetVccMode(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetVppMode(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetAddress(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_GetData(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetData(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_TriggerProgram(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetOutputEnable(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_DeviceNotification(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_GetSettings(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetSettings(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
 
 #endif /* !defined(PepCtrlDeviceControl_H) */
 

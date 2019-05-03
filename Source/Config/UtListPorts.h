@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtListPorts_H)
@@ -23,10 +23,10 @@ typedef enum EPortData
 
 MExternC BOOL UTLISTPORTSAPI UtListPortsInitialize(VOID);
 MExternC BOOL UTLISTPORTSAPI UtListPortsUninitialize(VOID);
-MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortCount(LPINT pnCount);
-MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortData(INT nIndex, INT nPortData, LPWSTR pszData, LPINT pnDataLen);
-MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortCount(LPINT pnCount);
-MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(INT nIndex, INT nPortData, LPWSTR pszData, LPINT pnDataLen);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortCount(_Out_ LPINT pnCount);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_ LPWSTR pszData, _Out_ LPINT pnDataLen);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortCount(_Out_ LPINT pnCount);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_ LPWSTR pszData, _Out_ LPINT pnDataLen);
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
@@ -37,5 +37,5 @@ MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(INT nIndex, INT nPor
 #endif /* UtListPorts_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -13,10 +13,10 @@
 
 #include <Utils/UtHeapDriver.h>
 
-static BOOLEAN lReadRegULongValue(IN HANDLE hRegKey, IN LPCWSTR pszValueName, IN OUT PULONG pulValue);
-static BOOLEAN lReadRegStringValue(IN HANDLE hRegKey, IN LPCWSTR pszValueName, OUT LPWSTR* ppszValue);
-static BOOLEAN lWriteRegULongValue(IN HANDLE hRegKey, IN LPCWSTR pszValueName, IN ULONG ulValue);
-static BOOLEAN lWriteRegStringValue(IN HANDLE hRegKey, IN LPCWSTR pszValueName, IN LPCWSTR pszValue);
+static BOOLEAN lReadRegULongValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ _Out_ PULONG pulValue);
+static BOOLEAN lReadRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _Out_ LPWSTR* ppszValue);
+static BOOLEAN lWriteRegULongValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ ULONG ulValue);
+static BOOLEAN lWriteRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ LPCWSTR pszValue);
 
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text (PAGE, PepCtrlReadRegSettings)
@@ -29,9 +29,9 @@ static BOOLEAN lWriteRegStringValue(IN HANDLE hRegKey, IN LPCWSTR pszValueName, 
 
 #pragma region "Local Functions"
 static BOOLEAN lReadRegULongValue(
-  IN HANDLE hRegKey,
-  IN LPCWSTR pszValueName,
-  IN OUT PULONG pulValue)
+  _In_ HANDLE hRegKey,
+  _In_ LPCWSTR pszValueName,
+  _In_ _Out_ PULONG pulValue)
 {
     BOOLEAN bResult = FALSE;
     UNICODE_STRING ValueName;
@@ -91,9 +91,9 @@ static BOOLEAN lReadRegULongValue(
 }
 
 static BOOLEAN lReadRegStringValue(
-  IN HANDLE hRegKey,
-  IN LPCWSTR pszValueName,
-  OUT LPWSTR* ppszValue)
+  _In_ HANDLE hRegKey,
+  _In_ LPCWSTR pszValueName,
+  _Out_ LPWSTR* ppszValue)
 {
     BOOLEAN bResult = FALSE;
     UNICODE_STRING ValueName;
@@ -158,9 +158,9 @@ static BOOLEAN lReadRegStringValue(
 }
 
 static BOOLEAN lWriteRegULongValue(
-  IN HANDLE hRegKey,
-  IN LPCWSTR pszValueName,
-  IN ULONG ulValue)
+  _In_ HANDLE hRegKey,
+  _In_ LPCWSTR pszValueName,
+  _In_ ULONG ulValue)
 {
     BOOLEAN bResult = FALSE;
     UNICODE_STRING ValueName;
@@ -189,9 +189,9 @@ static BOOLEAN lWriteRegULongValue(
 }
 
 static BOOLEAN lWriteRegStringValue(
-  IN HANDLE hRegKey,
-  IN LPCWSTR pszValueName,
-  IN LPCWSTR pszValue)
+  _In_ HANDLE hRegKey,
+  _In_ LPCWSTR pszValueName,
+  _In_ LPCWSTR pszValue)
 {
     BOOLEAN bResult = FALSE;
     UNICODE_STRING ValueName;
@@ -224,9 +224,9 @@ static BOOLEAN lWriteRegStringValue(
 #pragma endregion
 
 BOOLEAN PepCtrlReadRegSettings(
-  IN PUNICODE_STRING pRegistryPath,
-  OUT PULONG pulPortType,
-  OUT LPWSTR* ppszPortDeviceName)
+  _In_ PUNICODE_STRING pRegistryPath,
+  _Out_ PULONG pulPortType,
+  _Out_ LPWSTR* ppszPortDeviceName)
 {
     BOOLEAN bResult = FALSE;
     LPWSTR pszSettingsRegPath;
@@ -291,9 +291,9 @@ BOOLEAN PepCtrlReadRegSettings(
 }
 
 BOOLEAN PepCtrlWriteRegSettings(
-  IN PUNICODE_STRING pRegistryPath,
-  IN ULONG ulPortType,
-  IN LPWSTR pszPortDeviceName)
+  _In_ PUNICODE_STRING pRegistryPath,
+  _In_ ULONG ulPortType,
+  _In_ LPWSTR pszPortDeviceName)
 {
     BOOLEAN bResult = FALSE;
     LPWSTR pszSettingsRegPath;

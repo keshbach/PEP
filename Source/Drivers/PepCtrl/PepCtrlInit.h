@@ -5,11 +5,11 @@
 #if !defined(PepCtrlInit_H)
 #define PepCtrlInit_H
 
-BOOLEAN PepCtrlInitPortData(IN PUNICODE_STRING pRegistryPath, IN TPepCtrlPortData* pPortData);
+BOOLEAN PepCtrlInitPortData(_In_ PUNICODE_STRING pRegistryPath, _In_ TPepCtrlPortData* pPortData);
 
-VOID PepCtrlUninitPortData(IN TPepCtrlPortData* pPortData);
+VOID PepCtrlUninitPortData(_In_ TPepCtrlPortData* pPortData);
 
-VOID PepCtrlInitPortTypeFuncs(IN TPepCtrlPortData* pPortData);
+VOID PepCtrlInitPortTypeFuncs(_In_ TPepCtrlPortData* pPortData);
 
 #endif /* !defined(PepCtrlInit_H) */
 

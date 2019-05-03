@@ -4,6 +4,8 @@
 
 #include <ntddk.h>
 
+#include <ntstrsafe.h>
+
 #include "PepCtrlPortData.h"
 
 #include "PepCtrlInit.h"
@@ -11,22 +13,68 @@
 #include "PepCtrlParallelPort.h"
 #include "PepCtrlUsbPort.h"
 #include "PepCtrlReg.h"
-#include "PepCtrlLogic.h"
 #include "PepCtrlLog.h"
 
 #include <Drivers/PepCtrlDefs.h>
 
 #include <Utils/UtHeapDriver.h>
 
+#include <UtilsPep/UtPepLogic.h>
+
+static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(_In_ PVOID pvContext, _Out_ PBOOLEAN pbValue);
+static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(_In_ PVOID pvContext, _In_ PUCHAR pucData, _In_ ULONG ulDataLen);
+static VOID __cdecl lPepLogicLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
+
 #if defined(ALLOC_PRAGMA)
+#pragma alloc_text (PAGE, lPepLogicReadBitPort)
+#pragma alloc_text (PAGE, lPepLogicWritePort)
+
 #pragma alloc_text (PAGE, PepCtrlInitPortData)
 #pragma alloc_text (PAGE, PepCtrlUninitPortData)
 #pragma alloc_text (PAGE, PepCtrlInitPortTypeFuncs)
 #endif
 
+#pragma region "Local Functions"
+
+static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(
+  _In_ PVOID pvContext,
+  _Out_ PBOOLEAN pbValue)
+{
+    TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pvContext;
+
+    PAGED_CODE()
+
+    return pPortData->Funcs.pReadBitPortFunc(&pPortData->Object, pbValue);
+}
+
+static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
+  _In_ PVOID pvContext,
+  _In_ PUCHAR pucData,
+  _In_ ULONG ulDataLen)
+{
+    TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pvContext;
+
+    PAGED_CODE()
+
+    return pPortData->Funcs.pWritePortFunc(&pPortData->Object, pucData, ulDataLen);
+}
+
+static VOID __cdecl lPepLogicLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...)
+{
+    va_list arguments;
+
+    va_start(arguments, pszFormat);
+
+    PepCtrlLog(pszFormat, arguments);
+
+    va_end(arguments);
+}
+
+#pragma endregion
+
 BOOLEAN PepCtrlInitPortData(
-  IN PUNICODE_STRING pRegistryPath,
-  IN TPepCtrlPortData* pPortData)
+  _In_ PUNICODE_STRING pRegistryPath,
+  _In_ TPepCtrlPortData* pPortData)
 {
     BOOLEAN bResult = FALSE;
     ULONG ulPortType;
@@ -37,11 +85,24 @@ BOOLEAN PepCtrlInitPortData(
 
     RtlZeroMemory(pPortData, sizeof(TPepCtrlPortData));
 
+    PepCtrlLog("PepCtrlInitPortData - Calling UtPepLogicAllocLogicContext.\n");
+
+    pPortData->LogicData.pvLogicContext = UtPepLogicAllocLogicContext();
+
+    if (pPortData->LogicData.pvLogicContext == NULL)
+    {
+        PepCtrlLog("PepCtrlInitPortData - Call to UtPepLogicAllocLogicContext failed.\n");
+
+        return FALSE;
+    }
+
+    pPortData->LogicData.pvDeviceContext = pPortData;
+    pPortData->LogicData.pReadBitPortFunc = lPepLogicReadBitPort;
+    pPortData->LogicData.pWritePortFunc = lPepLogicWritePort;
+    pPortData->LogicData.pLogFunc = lPepLogicLog;
     pPortData->bPortEjected = TRUE;
 
     ExInitializeFastMutex(&pPortData->FastMutex);
-
-    PepCtrlInitModes(pPortData);
 
     PepCtrlLog("PepCtrlInitPortData - Allocating memory for the registry path.\n");
 
@@ -50,6 +111,8 @@ BOOLEAN PepCtrlInitPortData(
     if (pPortData->RegSettings.pszRegistryPath == NULL)
     {
         PepCtrlLog("PepCtrlInitPortData - Could not allocate memory for the registry path.\n");
+
+        UtPepLogicFreeLogicContext(pPortData->LogicData.pvLogicContext);
 
         return FALSE;
     }
@@ -67,6 +130,8 @@ BOOLEAN PepCtrlInitPortData(
         PepCtrlLog("PepCtrlInitPortData - Could not read the registry settings.\n");
 
         UtFreePagedMem(pPortData->RegSettings.pszRegistryPath);
+
+        UtPepLogicFreeLogicContext(pPortData->LogicData.pvLogicContext);
 
         return FALSE;
     }
@@ -86,13 +151,15 @@ BOOLEAN PepCtrlInitPortData(
 
         UtFreePagedMem(pPortData->RegSettings.pszRegistryPath);
         UtFreePagedMem(pPortData->RegSettings.pszPortDeviceName);
+
+        UtPepLogicFreeLogicContext(pPortData->LogicData.pvLogicContext);
     }
 
     return bResult;
 }
 
 VOID PepCtrlUninitPortData(
-  IN TPepCtrlPortData* pPortData)
+  _In_ TPepCtrlPortData* pPortData)
 {
     PepCtrlLog("PepCtrlUninitPortData called.\n");
 
@@ -111,9 +178,17 @@ VOID PepCtrlUninitPortData(
 
         UtFreePagedMem(pPortData->RegSettings.pszRegistryPath);
     }
+
+    if (pPortData->LogicData.pvLogicContext)
+    {
+        PepCtrlLog("PepCtrlUninitPortData - Calling UtPepLogicFreeLogicContext.\n");
+
+        UtPepLogicFreeLogicContext(pPortData->LogicData.pvLogicContext);
+    }
 }
 
-VOID PepCtrlInitPortTypeFuncs(IN TPepCtrlPortData* pPortData)
+VOID PepCtrlInitPortTypeFuncs(
+  _In_ TPepCtrlPortData* pPortData)
 {
     PepCtrlLog("PepCtrlInitPortTypeFuncs called.\n");
 

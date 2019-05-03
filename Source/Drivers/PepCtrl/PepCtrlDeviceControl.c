@@ -9,11 +9,12 @@
 #include <Drivers/PepCtrlDefs.h>
 #include <Drivers/PepCtrlIOCTL.h>
 
+#include <UtilsPep/UtPepLogic.h>
+
 #include "PepCtrlPortData.h"
 
 #include "PepCtrlDeviceControl.h"
 
-#include "PepCtrlLogic.h"
 #include "PepCtrlLog.h"
 
 static DRIVER_CANCEL lCancelIrpRoutine;
@@ -35,8 +36,8 @@ static DRIVER_CANCEL lCancelIrpRoutine;
 #endif
 
 static VOID lCancelIrpRoutine(
-  IN OUT PDEVICE_OBJECT pDeviceObject,
-  IN PIRP pIrp)
+  _In_ _Out_ PDEVICE_OBJECT pDeviceObject,
+  _In_ PIRP pIrp)
 {
 	TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
@@ -60,12 +61,12 @@ static VOID lCancelIrpRoutine(
 }
 
 NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -80,7 +81,7 @@ NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
 	{
 		if (ulInBufLen == sizeof(UINT32))
 		{
-			if (PepCtrlSetProgrammerMode(pPortData, *((PUINT32)pvInBuf)))
+			if (UtPepLogicSetProgrammerMode(&pPortData->LogicData, *((PUINT32)pvInBuf)))
 			{
 				Status = STATUS_SUCCESS;
 			}
@@ -106,12 +107,12 @@ NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
 }
 
 NTSTATUS PepCtrlDeviceControl_SetVccMode(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -126,7 +127,7 @@ NTSTATUS PepCtrlDeviceControl_SetVccMode(
 	{
 		if (ulInBufLen == sizeof(UINT32))
 		{
-			if (PepCtrlSetVccMode(pPortData, *((PUINT32)pvInBuf)))
+			if (UtPepLogicSetVccMode(&pPortData->LogicData, *((PUINT32)pvInBuf)))
 			{
 				Status = STATUS_SUCCESS;
 			}
@@ -152,12 +153,12 @@ NTSTATUS PepCtrlDeviceControl_SetVccMode(
 }
 
 NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -172,7 +173,7 @@ NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(
 	{
 		if (ulInBufLen == sizeof(UINT32))
 		{
-			if (PepCtrlSetPinPulseMode(pPortData, *((PUINT32)pvInBuf)))
+			if (UtPepLogicSetPinPulseMode(&pPortData->LogicData, *((PUINT32)pvInBuf)))
 			{
 				Status = STATUS_SUCCESS;
 			}
@@ -198,12 +199,12 @@ NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(
 }
 
 NTSTATUS PepCtrlDeviceControl_SetVppMode(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -218,7 +219,7 @@ NTSTATUS PepCtrlDeviceControl_SetVppMode(
 	{
 		if (ulInBufLen == sizeof(UINT32))
 		{
-			if (PepCtrlSetVppMode(pPortData, *((PUINT32)pvInBuf)))
+			if (UtPepLogicSetVppMode(&pPortData->LogicData, *((PUINT32)pvInBuf)))
 			{
 				Status = STATUS_SUCCESS;
 			}
@@ -244,12 +245,12 @@ NTSTATUS PepCtrlDeviceControl_SetVppMode(
 }
 
 NTSTATUS PepCtrlDeviceControl_SetAddress(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -264,7 +265,7 @@ NTSTATUS PepCtrlDeviceControl_SetAddress(
 	{
 		if (ulInBufLen == sizeof(UINT32))
 		{
-			if (PepCtrlSetAddress(pPortData, *(UINT32*)pvInBuf))
+			if (UtPepLogicSetAddress(&pPortData->LogicData, *(UINT32*)pvInBuf))
 			{
 				Status = STATUS_SUCCESS;
 			}
@@ -290,12 +291,12 @@ NTSTATUS PepCtrlDeviceControl_SetAddress(
 }
 
 NTSTATUS PepCtrlDeviceControl_GetData(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -310,7 +311,7 @@ NTSTATUS PepCtrlDeviceControl_GetData(
 	{
 		if (ulOutBufLen == sizeof(UCHAR))
 		{
-			if (PepCtrlGetData(pPortData, (UCHAR*)pvOutBuf))
+			if (UtPepLogicGetData(&pPortData->LogicData, (UCHAR*)pvOutBuf))
 			{
 				pIrp->IoStatus.Information = ulOutBufLen;
 
@@ -338,12 +339,12 @@ NTSTATUS PepCtrlDeviceControl_GetData(
 }
 
 NTSTATUS PepCtrlDeviceControl_SetData(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -358,7 +359,7 @@ NTSTATUS PepCtrlDeviceControl_SetData(
 	{
 		if (ulInBufLen == sizeof(UCHAR))
 		{
-			if (PepCtrlSetData(pPortData, *((PUCHAR)pvInBuf)))
+			if (UtPepLogicSetData(&pPortData->LogicData, *((PUCHAR)pvInBuf)))
 			{
 				Status = STATUS_SUCCESS;
 			}
@@ -384,12 +385,12 @@ NTSTATUS PepCtrlDeviceControl_SetData(
 }
 
 NTSTATUS PepCtrlDeviceControl_TriggerProgram(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 	BOOLEAN bProgramSuccess = FALSE;
@@ -405,7 +406,7 @@ NTSTATUS PepCtrlDeviceControl_TriggerProgram(
 	{
 		if (ulOutBufLen == sizeof(UINT32))
 		{
-			if (PepCtrlTriggerProgram(pPortData, &bProgramSuccess))
+			if (UtPepLogicTriggerProgram(&pPortData->LogicData, &bProgramSuccess))
 			{
 				pIrp->IoStatus.Information = ulOutBufLen;
 
@@ -435,12 +436,12 @@ NTSTATUS PepCtrlDeviceControl_TriggerProgram(
 }
 
 NTSTATUS PepCtrlDeviceControl_SetOutputEnable(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -455,7 +456,7 @@ NTSTATUS PepCtrlDeviceControl_SetOutputEnable(
 	{
 		if (ulInBufLen == sizeof(UINT32))
 		{
-			if (PepCtrlSetOutputEnable(pPortData, *((PUINT32)pvInBuf)))
+			if (UtPepLogicSetOutputEnable(&pPortData->LogicData, *((PUINT32)pvInBuf)))
 			{
 				Status = STATUS_SUCCESS;
 			}
@@ -481,12 +482,12 @@ NTSTATUS PepCtrlDeviceControl_SetOutputEnable(
 }
 
 NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -525,12 +526,12 @@ NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
 }
 
 NTSTATUS PepCtrlDeviceControl_DeviceNotification(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -586,12 +587,12 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 }
 
 NTSTATUS PepCtrlDeviceControl_GetSettings(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData, 
-  IN const PVOID pvInBuf, 
-  IN ULONG ulInBufLen, 
-  OUT PVOID pvOutBuf, 
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData, 
+  _In_ const PVOID pvInBuf, 
+  _In_ ULONG ulInBufLen, 
+  _Out_ PVOID pvOutBuf, 
+  _In_ ULONG ulOutBufLen)
 {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     size_t PortDeviceNameLen;
@@ -640,12 +641,12 @@ NTSTATUS PepCtrlDeviceControl_GetSettings(
 }
 
 NTSTATUS PepCtrlDeviceControl_SetSettings(
-  IN PIRP pIrp,
-  IN TPepCtrlPortData* pPortData,
-  IN const PVOID pvInBuf,
-  IN ULONG ulInBufLen,
-  OUT PVOID pvOutBuf,
-  IN ULONG ulOutBufLen)
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
 {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -662,9 +663,9 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
     // verify the settings appear to be correct
 
-    if (pPortData->Modes.nProgrammerMode == CPepCtrlProgrammerNoneMode)
-    {
-    }
+    //if (pPortData->Modes.nProgrammerMode == CPepCtrlProgrammerNoneMode)
+    //{
+    //}
 
     pIrp->IoStatus.Status = Status;
 

@@ -5,6 +5,8 @@
 #if !defined(PepCtrlPortData_H)
 #define PepCtrlPortData_H
 
+#include <UtilsPep/UtPepLogicDefs.h>
+
 #if defined(_MSC_VER)
 #if defined(_X86_)
 #pragma pack(push, 4)
@@ -21,14 +23,14 @@ struct tagTPepCtrlObject;
 
 #define TPEPCTRLAPI __stdcall
 
-typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlAllocPortFunc)(IN struct tagTPepCtrlObject* pPortData,
-                                                     IN LPCWSTR pszDeviceName);
-typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlFreePortFunc)(IN struct tagTPepCtrlObject* pPortData);
-typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlReadBitPortFunc)(IN struct tagTPepCtrlObject* pPortData,
-                                                       OUT PBOOLEAN pbValue);
-typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlWritePortFunc)(IN struct tagTPepCtrlObject* pPortData,
-                                                     IN PUCHAR pucData,
-                                                     IN ULONG ulDataLen);
+typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlAllocPortFunc)(_In_ struct tagTPepCtrlObject* pPortData,
+                                                    _In_ LPCWSTR pszDeviceName);
+typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlFreePortFunc)(_In_ struct tagTPepCtrlObject* pPortData);
+typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlReadBitPortFunc)(_In_ struct tagTPepCtrlObject* pPortData,
+                                                       _Out_ PBOOLEAN pbValue);
+typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlWritePortFunc)(_In_ struct tagTPepCtrlObject* pPortData,
+                                                     _In_ PUCHAR pucData,
+                                                     _In_ ULONG ulDataLen);
 typedef LPGUID (TPEPCTRLAPI *TPepCtrlGetDevInterfaceGuidFunc)(VOID);
 
 typedef struct tagTPepCtrlFuncs
@@ -39,14 +41,6 @@ typedef struct tagTPepCtrlFuncs
     TPepCtrlWritePortFunc pWritePortFunc;
     TPepCtrlGetDevInterfaceGuidFunc pGetDevInterfaceGuidFunc;
 } TPepCtrlFuncs;
-
-typedef struct tagTPepCtrlModes
-{
-    UINT32 nProgrammerMode;
-    UINT32 nVccMode;
-    UINT32 nPinPulseMode;
-    UINT32 nVppMode;
-} TPepCtrlModes;
 
 typedef struct tagTPepCtrlObject
 {
@@ -70,11 +64,10 @@ typedef struct tagTPepCtrlPortData
     HANDLE hPortRemovedThread;
     PIRP pIrp; /* IRP used to indicate when port arrives/removed */
     BOOLEAN bPortEjected;
-    UINT32 nLastAddress; /* Last address that was set */
     TPepCtrlRegSettings RegSettings;
     TPepCtrlFuncs Funcs;
-    TPepCtrlModes Modes;
     TPepCtrlObject Object;
+    TUtPepLogicData LogicData;
 } TPepCtrlPortData;
 
 #if defined(_MSC_VER)

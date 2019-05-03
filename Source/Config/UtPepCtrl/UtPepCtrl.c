@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -10,6 +10,8 @@
 
 #include <Drivers/PepCtrlDefs.h>
 #include <Drivers/PepCtrlIOCTL.h>
+
+#include <UtilsPep/UtPepLogicDefs.h>
 
 #include <Config/UtPepCtrl.h>
 #include <Config/UtPepCtrlCfg.h>
@@ -43,7 +45,7 @@ static DWORD l_dwCurrentThreadId = 0;
 #endif
 
 static DWORD WINAPI lDeviceChangeThreadFunc(
-  LPVOID pvParameter)
+  _In_ LPVOID pvParameter)
 {
     TDeviceChangedData* pDeviceChangeData = (TDeviceChangedData*)pvParameter;
     BOOL bQuit = FALSE;
@@ -121,7 +123,7 @@ static DWORD WINAPI lDeviceChangeThreadFunc(
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlInitialize(
-  TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc)
+  _In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc)
 {
     if (l_bInitialized == FALSE)
     {
@@ -210,7 +212,7 @@ BOOL UTPEPCTRLAPI UtPepCtrlUninitialize(VOID)
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(
-  LPBOOL pbPresent)
+  _Out_ LPBOOL pbPresent)
 {
     DWORD dwBytesReturned;
     UINT32 nDeviceStatus;
@@ -263,7 +265,7 @@ BOOL UTPEPCTRLAPI UtPepCtrlReset(VOID)
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(
-  EUtPepCtrlProgrammerMode ProgrammerMode)
+  _In_ EUtPepCtrlProgrammerMode ProgrammerMode)
 {
     DWORD dwBytesReturned;
     UINT32 nProgrammerMode;
@@ -276,13 +278,13 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(
     switch (ProgrammerMode)
     {
         case eUtPepCtrlProgrammerNoneMode:
-            nProgrammerMode = CPepCtrlProgrammerNoneMode;
+            nProgrammerMode = CUtPepLogicProgrammerNoneMode;
             break;
         case eUtPepCtrlProgrammerReadMode:
-            nProgrammerMode = CPepCtrlProgrammerReadMode;
+            nProgrammerMode = CUtPepLogicProgrammerReadMode;
             break;
         case eUtPepCtrlProgrammerWriteMode:
-            nProgrammerMode = CPepCtrlProgrammerWriteMode;
+            nProgrammerMode = CUtPepLogicProgrammerWriteMode;
             break;
         default:
             return FALSE;
@@ -300,7 +302,7 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlSetVccMode(
-  EUtPepCtrlVccMode VccMode)
+  _In_ EUtPepCtrlVccMode VccMode)
 {
     DWORD dwBytesReturned;
     UINT32 nVccMode;
@@ -313,10 +315,10 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetVccMode(
     switch (VccMode)
     {
         case eUtPepCtrl5VDCMode:
-            nVccMode = CPepCtrl5VDCMode;
+            nVccMode = CUtPepLogic5VDCMode;
             break;
         case eUtPepCtrl625VDCMode:
-            nVccMode = CPepCtrl625VDCMode;
+            nVccMode = CUtPepLogic625VDCMode;
             break;
         default:
             return FALSE;
@@ -333,7 +335,7 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetVccMode(
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlSetPinPulseMode(
-  EUtPepCtrlPinPulseMode PinPulseMode)
+  _In_ EUtPepCtrlPinPulseMode PinPulseMode)
 {
     DWORD dwBytesReturned;
     UINT32 nPinPulseMode;
@@ -346,16 +348,16 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetPinPulseMode(
     switch (PinPulseMode)
     {
         case eUtPepCtrlPinPulse1Mode:
-            nPinPulseMode = CPepCtrlPinPulse1Mode;
+            nPinPulseMode = CUtPepLogicPinPulse1Mode;
             break;
         case eUtPepCtrlPinPulse2Mode:
-            nPinPulseMode = CPepCtrlPinPulse2Mode;
+            nPinPulseMode = CUtPepLogicPinPulse2Mode;
             break;
         case eUtPepCtrlPinPulse3Mode:
-            nPinPulseMode = CPepCtrlPinPulse3Mode;
+            nPinPulseMode = CUtPepLogicPinPulse3Mode;
             break;
         case eUtPepCtrlPinPulse4Mode:
-            nPinPulseMode = CPepCtrlPinPulse4Mode;
+            nPinPulseMode = CUtPepLogicPinPulse4Mode;
             break;
         default:
             return FALSE;
@@ -373,7 +375,7 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetPinPulseMode(
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlSetVppMode(
-  EUtPepCtrlVppMode VppMode)
+  _In_ EUtPepCtrlVppMode VppMode)
 {
     DWORD dwBytesReturned;
     UINT32 nVppMode;
@@ -386,13 +388,13 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetVppMode(
     switch (VppMode)
     {
         case eUtPepCtrl12VDCVppMode:
-            nVppMode = CPepCtrl12VDCVppMode;
+            nVppMode = CUtPepLogic12VDCVppMode;
             break;
         case eUtPepCtrl21VDCVppMode:
-            nVppMode = CPepCtrl21VDCVppMode;
+            nVppMode = CUtPepLogic21VDCVppMode;
             break;
         case eUtPepCtrl25VDCVppMode:
-            nVppMode = CPepCtrl25VDCVppMode;
+            nVppMode = CUtPepLogic25VDCVppMode;
             break;
         default:
             return FALSE;
@@ -410,9 +412,9 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetVppMode(
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlReadData(
-  UINT32 nAddress,
-  LPBYTE pbyData,
-  UINT32 nDataLen)
+  _In_ UINT32 nAddress,
+  _Out_ LPBYTE pbyData,
+  _In_ UINT32 nDataLen)
 {
     UINT32 nIndex;
     DWORD dwBytesReturned;
@@ -448,10 +450,10 @@ BOOL UTPEPCTRLAPI UtPepCtrlReadData(
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(
-  const TUtPepCtrlReadUserData* pReadUserData,
-  UINT32 nReadUserDataLen,
-  LPBYTE pbyData,
-  UINT32 nDataLen)
+  _In_ const TUtPepCtrlReadUserData* pReadUserData,
+  _In_ UINT32 nReadUserDataLen,
+  _Out_ LPBYTE pbyData,
+  _In_ UINT32 nDataLen)
 {
     DWORD dwBytesReturned;
     UINT32 nReadUserDataIndex, nDataIndex;
@@ -515,9 +517,9 @@ BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlProgramData(
-  UINT32 nAddress,
-  LPBYTE pbyData,
-  UINT32 nDataLen)
+  _In_ UINT nAddress,
+  _Out_ LPBYTE pbyData,
+  _In_ UINT32 nDataLen)
 {
     UINT32 nIndex;
     DWORD dwBytesReturned;
@@ -554,10 +556,10 @@ BOOL UTPEPCTRLAPI UtPepCtrlProgramData(
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(
-  const TUtPepCtrlProgramUserData* pProgramUserData,
-  UINT32 nProgramUserDataLen,
-  LPBYTE pbyData,
-  UINT32 nDataLen)
+  _In_ const TUtPepCtrlProgramUserData* pProgramUserData,
+  _In_ UINT32 nProgramUserDataLen,
+  _Out_ LPBYTE pbyData,
+  _In_ UINT32 nDataLen)
 {
     DWORD dwBytesReturned;
     UINT32 nProgramUserDataIndex, nDataIndex;
@@ -606,5 +608,5 @@ BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

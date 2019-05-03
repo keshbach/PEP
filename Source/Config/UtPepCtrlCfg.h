@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepCtrlCfg_H)
@@ -21,17 +21,17 @@ typedef enum tagEUtPepCtrlCfgPortType
     eUtPepCtrlCfgUsbPrintPortType
 } EUtPepCtrlCfgPortType;
 
-typedef VOID (UTPEPCTRLCFGAPI *TUtPepCtrlCfgMsgFunc)(LPCWSTR pszMsg);
+typedef VOID (UTPEPCTRLCFGAPI *TUtPepCtrlCfgMsgFunc)(_In_ LPCWSTR pszMsg);
 
 MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgInitialize(VOID);
 MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgUninitialize(VOID);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgInstallDriver(LPCWSTR pszFile, TUtPepCtrlCfgMsgFunc pMsgFunc);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgUninstallDriver(TUtPepCtrlCfgMsgFunc pMsgFunc);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStartDriver(TUtPepCtrlCfgMsgFunc pMsgFunc);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStopDriver(TUtPepCtrlCfgMsgFunc pMsgFunc);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgSetPortSettings(EUtPepCtrlCfgPortType PortType, LPCWSTR pszPortDeviceName);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortType(EUtPepCtrlCfgPortType* pPortType);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortDeviceName(LPWSTR pszPortDeviceName, LPINT pnPortDeviceNameLen);
+MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgInstallDriver(_In_ LPCWSTR pszFile, _In_ TUtPepCtrlCfgMsgFunc pMsgFunc);
+MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgUninstallDriver(_In_ TUtPepCtrlCfgMsgFunc pMsgFunc);
+MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStartDriver(_In_ TUtPepCtrlCfgMsgFunc pMsgFunc);
+MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStopDriver(_In_ TUtPepCtrlCfgMsgFunc pMsgFunc);
+MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgSetPortSettings(_In_ EUtPepCtrlCfgPortType PortType, _In_ LPCWSTR pszPortDeviceName);
+MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortType(_Out_ EUtPepCtrlCfgPortType* pPortType);
+MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortDeviceName(_Out_ LPWSTR pszPortDeviceName, _Out_ LPINT pnPortDeviceNameLen);
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
@@ -42,5 +42,5 @@ MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortDeviceName(LPWSTR pszPortDevice
 #endif /* UtPepCtrlCfg_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/

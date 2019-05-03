@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -31,10 +31,10 @@ static TDeviceInfo* l_pUsbPrintPortDeviceInfo = NULL;
 static INT l_nUsbPrintPortDeviceInfoCount = 0;
 
 static BOOL lGetPortData(
-  TDeviceInfo* pDeviceInfo,
-  INT nPortData,
-  LPWSTR pszData,
-  LPINT pnDataLen)
+  _In_ TDeviceInfo* pDeviceInfo,
+  _In_ INT nPortData,
+  _Out_ LPWSTR pszData,
+  _Out_ LPINT pnDataLen)
 {
     LPCWSTR pszPortData;
     INT nPortDataLen;
@@ -80,8 +80,8 @@ static BOOL lGetPortData(
 }
 
 static VOID lFreeDeviceInfos(
-  TDeviceInfo* pDeviceInfo,
-  INT nDeviceInfoCount)
+  _In_ TDeviceInfo* pDeviceInfo,
+  _In_ INT nDeviceInfoCount)
 {
     INT nIndex;
 
@@ -102,10 +102,10 @@ static VOID lFreeDeviceInfos(
 }
 
 BOOL lReadDeviceRegPropString(
-  HDEVINFO hDevInfo,
-  PSP_DEVINFO_DATA pDevInfoData,
-  DWORD dwProperty,
-  LPWSTR* ppszValue)
+  _In_ HDEVINFO hDevInfo,
+  _In_ PSP_DEVINFO_DATA pDevInfoData,
+  _In_ DWORD dwProperty,
+  _Out_ LPWSTR* ppszValue)
 {
     DWORD dwDataType, dwBufferLen;
 
@@ -138,9 +138,9 @@ BOOL lReadDeviceRegPropString(
 }
 
 static BOOL lEnumDeviceInterface(
-  LPGUID pInterfaceGuid,
-  TDeviceInfo** ppDeviceInfo,
-  LPINT pnDeviceInfoCount)
+  _In_ LPGUID pInterfaceGuid,
+  _Out_ TDeviceInfo** ppDeviceInfo,
+  _Out_ LPINT pnDeviceInfoCount)
 {
     HDEVINFO hDevInfo;
     DWORD dwDevCount, dwBufferLen;
@@ -250,8 +250,8 @@ static BOOL lEnumDeviceInterface(
 }
 
 static VOID lFixParallelPortDeviceInfo(
-  TDeviceInfo* pDeviceInfo,
-  INT nDeviceInfoCount)
+  _In_ TDeviceInfo* pDeviceInfo,
+  _In_ INT nDeviceInfoCount)
 {
     TDeviceInfo* pCurDeviceInfo;
     INT nIndex, nLen;
@@ -342,7 +342,7 @@ BOOL UTLISTPORTSAPI UtListPortsUninitialize(VOID)
 }
 
 BOOL UTLISTPORTSAPI UtListPortsGetLptPortCount(
-  LPINT pnCount)
+  _Out_ LPINT pnCount)
 {
     *pnCount = l_nLptPortDeviceInfoCount;
 
@@ -350,10 +350,10 @@ BOOL UTLISTPORTSAPI UtListPortsGetLptPortCount(
 }
 
 BOOL UTLISTPORTSAPI UtListPortsGetLptPortData(
-  INT nIndex,
-  INT nPortData,
-  LPWSTR pszData,
-  LPINT pnDataLen)
+  _In_ INT nIndex,
+  _In_ INT nPortData,
+  _Out_ LPWSTR pszData,
+  _Out_ LPINT pnDataLen)
 {
     TDeviceInfo* pDeviceInfo;
 
@@ -368,7 +368,7 @@ BOOL UTLISTPORTSAPI UtListPortsGetLptPortData(
 }
 
 BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortCount(
-  LPINT pnCount)
+  _Out_ LPINT pnCount)
 {
     *pnCount = l_nUsbPrintPortDeviceInfoCount;
 
@@ -376,10 +376,10 @@ BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortCount(
 }
 
 BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(
-  INT nIndex,
-  INT nPortData,
-  LPWSTR pszData,
-  LPINT pnDataLen)
+  _In_ INT nIndex,
+  _In_ INT nPortData,
+  _Out_ LPWSTR pszData,
+  _Out_ LPINT pnDataLen)
 {
     TDeviceInfo* pDeviceInfo;
 
@@ -394,5 +394,5 @@ BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/

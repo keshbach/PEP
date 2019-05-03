@@ -120,7 +120,13 @@
 #pragma region "Structures"
 
 #if defined(_MSC_VER)
+#if defined(_X86_)
 #pragma pack(push, 4)
+#elif defined(_AMD64_)
+#pragma pack(push, 8)
+#else
+#error Need to specify cpu architecture to configure structure padding
+#endif
 #else
 #error Need to specify how to enable byte aligned structure padding
 #endif
@@ -663,10 +669,10 @@ PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext()
 #if defined(BUILD_USER_LIB)
     pLogicData = (TPepInternalLogicData*)UtAllocMem(sizeof(TPepInternalLogicData));
 #elif defined(BUILD_DRIVER_LIB)
-    pLogicData = (TPepInternalLogicData*)UtAllocPagedMem(sizeof(TPepInternalLogicData));
+    pLogicData = (TPepInternalLogicData*)UtAllocNonPagedMem(sizeof(TPepInternalLogicData));
 #endif
 
-    pLogicData->nLastAddress = 0;
+    pLogicData->nLastAddress = 0xFFFFFFFF;
 
     lInitModes(pLogicData);
 
@@ -1075,6 +1081,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
 BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
   _In_ TUtPepLogicData* pLogicData)
 {
+    BOOLEAN bResult = FALSE;
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
 #if defined(BUILD_DRIVER_LIB)
@@ -1090,11 +1097,20 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
             lSetProgrammerAddress(pLogicData, 0) &&
             lSetProgrammerVppMode(pLogicData))
         {
-            return TRUE;
+            bResult = TRUE;
         }
     }
+    else
+    {
+        bResult = TRUE;
+    }
 
-    return FALSE;
+    if (bResult)
+    {
+        pData->nLastAddress = 0xFFFFFFFF;
+    }
+
+    return bResult;
 }
 
 #pragma endregion

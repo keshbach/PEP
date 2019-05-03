@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepCtrl_H)
@@ -56,7 +56,7 @@ typedef enum tagEUtPepCtrlDeviceChange
     eUtPepCtrlDeviceRemoved
 } EUtPepCtrlDeviceChange;
 
-typedef VOID (UTPEPCTRLAPI *TUtPepCtrlDeviceChangeFunc)(EUtPepCtrlDeviceChange DeviceChange);
+typedef VOID (UTPEPCTRLAPI *TUtPepCtrlDeviceChangeFunc)(_In_ EUtPepCtrlDeviceChange DeviceChange);
 
 typedef struct tagTUtPepCtrlReadUserData
 {
@@ -71,18 +71,18 @@ typedef struct tagTUtPepCtrlProgramUserData
     BOOL bPerformProgram;
 } TUtPepCtrlProgramUserData;
 
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlInitialize(TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlInitialize(_In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlUninitialize(VOID);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(LPBOOL pbPresent);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(_Out_ LPBOOL pbPresent);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlReset(VOID);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(EUtPepCtrlProgrammerMode ProgrammerMode);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetVccMode(EUtPepCtrlVccMode VccMode);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetPinPulseMode(EUtPepCtrlPinPulseMode PinPulseMode);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetVppMode(EUtPepCtrlVppMode VppMode);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadData(UINT32 nAddress, LPBYTE pbyData, UINT32 nDataLen);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(const TUtPepCtrlReadUserData* pReadUserData, UINT32 nReadUserDataLen, LPBYTE pbyData, UINT32 nDataLen);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramData(UINT nAddress, LPBYTE pbyData, UINT32 nDataLen);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(const TUtPepCtrlProgramUserData* pProgramUserData, UINT32 nProgramUserDataLen, LPBYTE pbyData, UINT32 nDataLen);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(_In_ EUtPepCtrlProgrammerMode ProgrammerMode);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetVccMode(_In_ EUtPepCtrlVccMode VccMode);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetPinPulseMode(_In_ EUtPepCtrlPinPulseMode PinPulseMode);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetVppMode(_In_ EUtPepCtrlVppMode VppMode);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadData(_In_ UINT32 nAddress, _Out_ LPBYTE pbyData, _Out_ UINT32 nDataLen);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(_In_ const TUtPepCtrlReadUserData* pReadUserData, _In_ UINT32 nReadUserDataLen, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramData(_In_ UINT nAddress, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(_In_ const TUtPepCtrlProgramUserData* pProgramUserData, _In_ UINT32 nProgramUserDataLen, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
@@ -93,5 +93,5 @@ MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(const TUtPepCtrlProgramUserD
 #endif /* UtPepCtrl_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

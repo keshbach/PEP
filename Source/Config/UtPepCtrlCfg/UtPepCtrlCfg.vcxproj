@@ -212,6 +212,9 @@
   <ItemGroup>
     <ResourceCompile Include="UtPepCtrlCfg.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\UtPepCtrlCfg.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

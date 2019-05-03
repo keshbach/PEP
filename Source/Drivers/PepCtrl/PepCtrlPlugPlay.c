@@ -13,11 +13,11 @@
 
 #include <Drivers/PepCtrlIOCTL.h>
 
-static VOID lCloseThread(IN HANDLE hThread);
+static VOID lCloseThread(_In_ HANDLE hThread);
 static KSTART_ROUTINE lPortArrivedThreadStart;
 static KSTART_ROUTINE lPortRemovedThreadStart;
-static VOID lDeviceInterfaceArrival(IN PDEVICE_OBJECT pDeviceObject);
-static VOID lDeviceInterfaceRemoval(IN PDEVICE_OBJECT pDeviceObject);
+static VOID lDeviceInterfaceArrival(_In_ PDEVICE_OBJECT pDeviceObject);
+static VOID lDeviceInterfaceRemoval(_In_ PDEVICE_OBJECT pDeviceObject);
 
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text (PAGE, lCloseThread)
@@ -32,7 +32,7 @@ static VOID lDeviceInterfaceRemoval(IN PDEVICE_OBJECT pDeviceObject);
 #pragma region "Local Functions"
 
 static VOID lCloseThread(
-  IN HANDLE hThread)
+  _In_ HANDLE hThread)
 {
     NTSTATUS Status;
     PKTHREAD Thread;
@@ -87,7 +87,7 @@ static VOID lCloseThread(
 }
 
 static VOID lPortArrivedThreadStart(
-    IN PVOID pvStartContext)
+  _In_ PVOID pvStartContext)
 {
     PDEVICE_OBJECT pDeviceObject = (PDEVICE_OBJECT)pvStartContext;
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
@@ -139,7 +139,7 @@ static VOID lPortArrivedThreadStart(
 }
 
 static VOID lPortRemovedThreadStart(
-    IN PVOID pvStartContext)
+  _In_ PVOID pvStartContext)
 {
     PDEVICE_OBJECT pDeviceObject = (PDEVICE_OBJECT)pvStartContext;
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
@@ -183,7 +183,7 @@ static VOID lPortRemovedThreadStart(
 }
 
 static VOID lDeviceInterfaceArrival(
-  IN PDEVICE_OBJECT pDeviceObject)
+  _In_ PDEVICE_OBJECT pDeviceObject)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
     NTSTATUS status;
@@ -212,7 +212,7 @@ static VOID lDeviceInterfaceArrival(
 }
 
 static VOID lDeviceInterfaceRemoval(
-  IN PDEVICE_OBJECT pDeviceObject)
+  _In_ PDEVICE_OBJECT pDeviceObject)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
     NTSTATUS status;
@@ -243,8 +243,8 @@ static VOID lDeviceInterfaceRemoval(
 #pragma endregion
 
 NTSTATUS PepCtrlPlugPlayDeviceInterfaceChange(
-  IN PVOID pvNotificationStructure,
-  IN PVOID pvContext)
+  _In_ PVOID pvNotificationStructure,
+  _In_ PVOID pvContext)
 {
     PDEVICE_INTERFACE_CHANGE_NOTIFICATION pNotification;
     PDEVICE_OBJECT pDeviceObject;
@@ -288,7 +288,7 @@ NTSTATUS PepCtrlPlugPlayDeviceInterfaceChange(
 }
 
 VOID PepCtrlPlugPlayClosePortThreads(
-  IN TPepCtrlPortData* pPortData)
+  _In_ TPepCtrlPortData* pPortData)
 {
     HANDLE hPortArrivedThread, hPortRemovedThread;
 

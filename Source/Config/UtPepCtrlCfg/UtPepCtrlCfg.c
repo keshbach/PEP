@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -23,9 +23,9 @@ extern HINSTANCE g_hInstance;
 static BOOL l_bInitialize = TRUE;
 
 static VOID lWriteString1ParamMsg(
-    LPCWSTR pszMsg,
-    LPCWSTR pszValue,
-    TUtPepCtrlCfgMsgFunc pMsgFunc)
+  _In_ LPCWSTR pszMsg,
+  _In_ LPCWSTR pszValue,
+  _In_ TUtPepCtrlCfgMsgFunc pMsgFunc)
 {
     INT nTmpMsgLen = (lstrlenW(pszMsg) + lstrlenW(pszValue)) * sizeof(WCHAR);
     LPWSTR pszTmpMsg = (LPWSTR)UtAllocMem(nTmpMsgLen);
@@ -38,10 +38,10 @@ static VOID lWriteString1ParamMsg(
 }
 
 static VOID lWriteString2ParamsMsg(
-    LPCWSTR pszMsg,
-    LPCWSTR pszValue1,
-    LPCWSTR pszValue2,
-    TUtPepCtrlCfgMsgFunc pMsgFunc)
+  _In_ LPCWSTR pszMsg,
+  _In_ LPCWSTR pszValue1,
+  _In_ LPCWSTR pszValue2,
+  _In_ TUtPepCtrlCfgMsgFunc pMsgFunc)
 {
     INT nTmpMsgLen = (lstrlenW(pszMsg) + lstrlenW(pszValue1) + lstrlenW(pszValue2)) * sizeof(WCHAR);
     LPWSTR pszTmpMsg = (LPWSTR)UtAllocMem(nTmpMsgLen);
@@ -54,9 +54,9 @@ static VOID lWriteString2ParamsMsg(
 }
 
 static VOID lWriteHexMsg(
-    LPCWSTR pszMsg,
-    DWORD dwValue,
-    TUtPepCtrlCfgMsgFunc pMsgFunc)
+  _In_ LPCWSTR pszMsg,
+  _In_ DWORD dwValue,
+  _In_ TUtPepCtrlCfgMsgFunc pMsgFunc)
 {
     INT nTmpMsgLen = (lstrlenW(pszMsg) + 11) * sizeof(WCHAR);
     LPWSTR pszTmpMsg = (LPWSTR)UtAllocMem(nTmpMsgLen);
@@ -103,8 +103,8 @@ BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgUninitialize(VOID)
 }
 
 BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgInstallDriver(
-  LPCWSTR pszFile,
-  TUtPepCtrlCfgMsgFunc pMsgFunc)
+  _In_ LPCWSTR pszFile,
+  _In_ TUtPepCtrlCfgMsgFunc pMsgFunc)
 {
     BOOL bResult = FALSE;
     SC_HANDLE hManager;
@@ -210,7 +210,7 @@ BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgInstallDriver(
 }
 
 BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgUninstallDriver(
-  TUtPepCtrlCfgMsgFunc pMsgFunc)
+  _In_ TUtPepCtrlCfgMsgFunc pMsgFunc)
 {
     BOOL bResult = FALSE;
     SC_HANDLE hManager;
@@ -365,7 +365,7 @@ BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgUninstallDriver(
 }
 
 BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStartDriver(
-  TUtPepCtrlCfgMsgFunc pMsgFunc)
+  _In_ TUtPepCtrlCfgMsgFunc pMsgFunc)
 {
     BOOL bResult = FALSE;
     BOOL bQuitLoop = FALSE;
@@ -613,7 +613,7 @@ BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStartDriver(
 }
 
 BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStopDriver(
-  TUtPepCtrlCfgMsgFunc pMsgFunc)
+  _In_ TUtPepCtrlCfgMsgFunc pMsgFunc)
 {
     BOOL bResult = FALSE;
     BOOL bQuitLoop = FALSE;
@@ -861,8 +861,8 @@ BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStopDriver(
 }
 
 BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgSetPortSettings(
-  EUtPepCtrlCfgPortType PortType,
-  LPCWSTR pszPortDeviceName)
+  _In_ EUtPepCtrlCfgPortType PortType,
+  _In_ LPCWSTR pszPortDeviceName)
 {
     BOOL bResult = FALSE;
     DWORD dwPortTypeData;
@@ -909,7 +909,7 @@ BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgSetPortSettings(
 }
 
 BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortType(
-  EUtPepCtrlCfgPortType* pPortType)
+  _Out_ EUtPepCtrlCfgPortType* pPortType)
 {
     BOOL bResult = FALSE;
     HKEY hKey;
@@ -956,8 +956,8 @@ BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortType(
 }
 
 BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortDeviceName(
-  LPWSTR pszPortDeviceName,
-  LPINT pnPortDeviceNameLen)
+  _Out_ LPWSTR pszPortDeviceName,
+  _Out_ LPINT pnPortDeviceNameLen)
 {
     BOOL bResult = FALSE;
     HKEY hKey;
@@ -1009,5 +1009,5 @@ End:
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/

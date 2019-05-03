@@ -1,26 +1,26 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepCtrlParallelPort_H)
 #define PepCtrlParallelPort_H
 
-BOOLEAN TPEPCTRLAPI PepCtrlReadBitParallelPort(IN TPepCtrlObject* pObject,
-                                               OUT PBOOLEAN pbValue);
+BOOLEAN TPEPCTRLAPI PepCtrlReadBitParallelPort(_In_ TPepCtrlObject* pObject,
+                                               _Out_ PBOOLEAN pbValue);
 
-BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(IN TPepCtrlObject* pObject,
-                                             IN PUCHAR pucData,
-                                             IN ULONG ulDataLen);
+BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(_In_ TPepCtrlObject* pObject,
+                                             _In_ PUCHAR pucData,
+                                             _In_ ULONG ulDataLen);
 
-BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(IN TPepCtrlObject* pObject,
-                                             IN LPCWSTR pszDeviceName);
+BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(_In_ TPepCtrlObject* pObject,
+                                             _In_ LPCWSTR pszDeviceName);
 
-BOOLEAN TPEPCTRLAPI PepCtrlFreeParallelPort(IN TPepCtrlObject* pObject);
+BOOLEAN TPEPCTRLAPI PepCtrlFreeParallelPort(_In_ TPepCtrlObject* pObject);
 
 LPGUID TPEPCTRLAPI PepCtrlGetParallelPortDevInterfaceGuid(VOID);
 
 #endif /* !defined(PepCtrlParallelPort_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

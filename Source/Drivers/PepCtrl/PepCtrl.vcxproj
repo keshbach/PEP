@@ -243,7 +243,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UtHeapDriver.lib;$(DDK_LIB_PATH)BufferOverflowK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeapDriver.lib;UtPepDriver.lib;$(DDK_LIB_PATH)BufferOverflowK.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>GsDriverEntry@8</EntryPointSymbol>
       <IgnoreSpecificDefaultLibraries>wdfldr.lib;BufferOverflowfastfailK.lib</IgnoreSpecificDefaultLibraries>
       <Version>
@@ -264,7 +264,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UtHeapDriver.lib;$(DDK_LIB_PATH)BufferOverflowK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeapDriver.lib;UtPepDriver.lib;$(DDK_LIB_PATH)BufferOverflowK.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>GsDriverEntry@8</EntryPointSymbol>
       <IgnoreSpecificDefaultLibraries>wdfldr.lib;BufferOverflowfastfailK.lib</IgnoreSpecificDefaultLibraries>
       <Version>
@@ -286,7 +286,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UtHeapDriver.lib;$(DDK_LIB_PATH)BufferOverflowK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeapDriver.lib;UtPepDriver.lib;$(DDK_LIB_PATH)BufferOverflowK.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>GsDriverEntry</EntryPointSymbol>
       <IgnoreSpecificDefaultLibraries>wdfldr.lib;BufferOverflowfastfailK.lib</IgnoreSpecificDefaultLibraries>
       <Version>
@@ -307,7 +307,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UtHeapDriver.lib;$(DDK_LIB_PATH)BufferOverflowK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeapDriver.lib;UtPepDriver.lib;$(DDK_LIB_PATH)BufferOverflowK.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>GsDriverEntry</EntryPointSymbol>
       <IgnoreSpecificDefaultLibraries>wdfldr.lib;BufferOverflowfastfailK.lib</IgnoreSpecificDefaultLibraries>
       <Version>
@@ -334,7 +334,6 @@
     <ClInclude Include="PepCtrlInit.h" />
     <ClInclude Include="PepCtrlLog.h" />
     <ClInclude Include="PepCtrlDeviceControl.h" />
-    <ClInclude Include="PepCtrlLogic.h" />
     <ClInclude Include="PepCtrlParallelPort.h" />
     <ClInclude Include="PepCtrlPlugPlay.h" />
     <ClInclude Include="PepCtrlPortData.h" />
@@ -351,7 +350,6 @@
     <ClCompile Include="PepCtrlLog.c" />
     <ClCompile Include="PepCtrlDeviceControl.c" />
     <ClCompile Include="PepCtrlInitGuids.c" />
-    <ClCompile Include="PepCtrlLogic.c" />
     <ClCompile Include="PepCtrlParallelPort.c" />
     <ClCompile Include="PepCtrlPlugPlay.c" />
     <ClCompile Include="PepCtrlReg.c" />

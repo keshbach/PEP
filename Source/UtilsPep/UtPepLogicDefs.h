@@ -48,7 +48,13 @@ typedef BOOLEAN (TUTPEPLOGICAPI *TUtPepLogicWritePortFunc)(_In_ PVOID pvContext,
 typedef VOID (__cdecl *TUtPepLogicLogFunc)(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
 
 #if defined(_MSC_VER)
+#if defined(_X86_)
 #pragma pack(push, 4)
+#elif defined(_AMD64_)
+#pragma pack(push, 8)
+#else
+#error Need to specify cpu architecture to configure structure padding
+#endif
 #else
 #error Need to specify how to enable byte aligned structure padding
 #endif

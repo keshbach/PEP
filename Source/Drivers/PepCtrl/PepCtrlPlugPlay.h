@@ -5,9 +5,9 @@
 #if !defined(PepCtrlPlugPlay_H)
 #define PepCtrlPlugPlay_H
 
-NTSTATUS PepCtrlPlugPlayDeviceInterfaceChange(IN PVOID pvNotificationStructure, IN PVOID pvContext);
+NTSTATUS PepCtrlPlugPlayDeviceInterfaceChange(_In_ PVOID pvNotificationStructure, _In_ PVOID pvContext);
 
-VOID PepCtrlPlugPlayClosePortThreads(IN TPepCtrlPortData* pPortData);
+VOID PepCtrlPlugPlayClosePortThreads(_In_ TPepCtrlPortData* pPortData);
 
 #endif /* !defined(PepCtrlPlugPlay_H) */
 

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2009 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -7,9 +7,9 @@
 HINSTANCE g_hInstance;
 
 BOOL APIENTRY DllMain(
-  HINSTANCE hInstance,
-  DWORD dwReason,
-  LPVOID pvReserved)
+  _In_ HINSTANCE hInstance,
+  _In_ DWORD dwReason,
+  _In_ LPVOID pvReserved)
 {
     pvReserved;
 
@@ -30,5 +30,5 @@ BOOL APIENTRY DllMain(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2009 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

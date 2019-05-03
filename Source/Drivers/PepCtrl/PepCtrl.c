@@ -11,12 +11,13 @@
 
 #include <Utils/UtHeapDriver.h>
 
+#include <UtilsPep/UtPepLogic.h>
+
 #include <Drivers/PepCtrlDefs.h>
 #include <Drivers/PepCtrlIOCTL.h>
 
 #include "PepCtrlLog.h"
 #include "PepCtrlPortData.h"
-#include "PepCtrlLogic.h"
 #include "PepCtrlDeviceControl.h"
 #include "PepCtrlPlugPlay.h"
 #include "PepCtrlInit.h"
@@ -52,7 +53,7 @@ static DRIVER_UNLOAD lPepCtrlDriverUnload;
 #pragma alloc_text (PAGE, lPepCtrlDriverUnload)
 #endif
 
-typedef NTSTATUS (*TDeviceControlFunc)(IN PIRP pIrp, IN TPepCtrlPortData* pPortData, IN const PVOID pvInBuf, IN ULONG ulInBufLen, OUT PVOID pvOutBuf, IN ULONG ulOutBufLen);
+typedef NTSTATUS (*TDeviceControlFunc)(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
 
 typedef struct tagTDeviceControlFuncs
 {
@@ -78,8 +79,8 @@ static TDeviceControlFuncs l_DeviceControlFuncs[] = {
 #pragma region "Local Functions"
 
 static NTSTATUS lPepCtrlIrpClose(
-  IN PDEVICE_OBJECT pDeviceObject,
-  IN PIRP pIrp)
+  _In_ PDEVICE_OBJECT pDeviceObject,
+  _In_ PIRP pIrp)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -90,7 +91,7 @@ static NTSTATUS lPepCtrlIrpClose(
 
     PepCtrlLog("lPepCtrlIrpClose called.\n");
 
-    PepCtrlReset(pPortData);
+    UtPepLogicReset(&pPortData->LogicData);
 
     pIrp->IoStatus.Status = Status;
     pIrp->IoStatus.Information = 0;
@@ -101,8 +102,8 @@ static NTSTATUS lPepCtrlIrpClose(
 }
 
 static NTSTATUS lPepCtrlIrpPower(
-  IN PDEVICE_OBJECT pDeviceObject,
-  IN PIRP pIrp)
+  _In_ PDEVICE_OBJECT pDeviceObject,
+  _In_ PIRP pIrp)
 {
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation(pIrp);
     NTSTATUS Status = STATUS_SUCCESS;
@@ -153,8 +154,8 @@ static NTSTATUS lPepCtrlIrpPower(
 }
 
 static NTSTATUS lPepCtrlIrpCreate(
-  IN PDEVICE_OBJECT pDeviceObject,
-  IN PIRP pIrp)
+  _In_ PDEVICE_OBJECT pDeviceObject,
+  _In_ PIRP pIrp)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
@@ -162,11 +163,9 @@ static NTSTATUS lPepCtrlIrpCreate(
 
     PAGED_CODE()
 
-    pPortData->nLastAddress = 0xFFFFFFFF;
-
     if (!pPortData->bPortEjected)
     {
-        PepCtrlSetAddress(pPortData, 0);
+        UtPepLogicSetAddress(&pPortData->LogicData, 0);
     }
 
     pIrp->IoStatus.Status = STATUS_SUCCESS;
@@ -178,8 +177,8 @@ static NTSTATUS lPepCtrlIrpCreate(
 }
 
 static NTSTATUS lPepCtrlIrpDeviceControl(
-  IN PDEVICE_OBJECT pDeviceObject,
-  IN PIRP pIrp)
+  _In_ PDEVICE_OBJECT pDeviceObject,
+  _In_ PIRP pIrp)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -237,7 +236,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 }
 
 static VOID lPepCtrlDriverUnload(
-  IN PDRIVER_OBJECT pDriverObject)
+  _In_ PDRIVER_OBJECT pDriverObject)
 {
     TPepCtrlPortData* pPortData;
     UNICODE_STRING DOSName;
@@ -289,8 +288,8 @@ static VOID lPepCtrlDriverUnload(
 #pragma region "Driver Entry"
 
 NTSTATUS __stdcall DriverEntry(
-  IN PDRIVER_OBJECT pDriverObject,
-  IN PUNICODE_STRING pRegistryPath)
+  _In_ PDRIVER_OBJECT pDriverObject,
+  _In_ PUNICODE_STRING pRegistryPath)
 {
     BOOLEAN bInitialized = TRUE;
     TPepCtrlPortData* pPortData;

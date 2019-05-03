@@ -5,8 +5,8 @@
 #if !defined(PepCtrlReg_H)
 #define PepCtrlReg_H
 
-BOOLEAN PepCtrlReadRegSettings(IN PUNICODE_STRING pRegistryPath, OUT PULONG pulPortType, OUT LPWSTR* ppszPortDeviceName);
-BOOLEAN PepCtrlWriteRegSettings(IN PUNICODE_STRING pRegistryPath, IN ULONG ulPortType, IN LPWSTR pszPortDeviceName);
+BOOLEAN PepCtrlReadRegSettings(_In_ PUNICODE_STRING pRegistryPath, _Out_ PULONG pulPortType, _Out_ LPWSTR* ppszPortDeviceName);
+BOOLEAN PepCtrlWriteRegSettings(_In_ PUNICODE_STRING pRegistryPath, _In_ ULONG ulPortType, _In_ LPWSTR pszPortDeviceName);
 
 #endif /* !defined(PepCtrlReg_H) */
 

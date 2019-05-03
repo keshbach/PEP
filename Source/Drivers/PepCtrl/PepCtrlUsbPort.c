@@ -19,8 +19,8 @@
    Local Functions
 */
 
-static BOOLEAN lResetUsbPort(IN TPepCtrlObject* pObject);
-static BOOLEAN lReadDeviceId(IN TPepCtrlObject* pObject);
+static BOOLEAN lResetUsbPort(_In_ TPepCtrlObject* pObject);
+static BOOLEAN lReadDeviceId(_In_ TPepCtrlObject* pObject);
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text (PAGE, lResetUsbPort)
@@ -36,9 +36,9 @@ static BOOLEAN lReadDeviceId(IN TPepCtrlObject* pObject);
 static GUID l_UsbPrintGuid = {0};
 
 static NTSTATUS lUsbPortIoCompletion(
-  IN PDEVICE_OBJECT pDeviceObject,
-  IN PIRP pIrp,
-  IN PVOID pvContext)
+  _In_ PDEVICE_OBJECT pDeviceObject,
+  _In_ PIRP pIrp,
+  _In_ PVOID pvContext)
 {
     PepCtrlLog("lUsbPortIoCompletion called.\n");
 
@@ -57,7 +57,7 @@ static NTSTATUS lUsbPortIoCompletion(
 }
 
 static BOOLEAN lResetUsbPort(
-  IN TPepCtrlObject* pObject)
+  _In_ TPepCtrlObject* pObject)
 {
     BOOLEAN bResult = FALSE;
     NTSTATUS status;
@@ -175,7 +175,8 @@ static BOOLEAN lResetUsbPort(
     return bResult;
 }
 
-static BOOLEAN lReadDeviceId(IN TPepCtrlObject* pObject)
+static BOOLEAN lReadDeviceId(
+  _In_ TPepCtrlObject* pObject)
 {
     BOOLEAN bResult = FALSE;
     NTSTATUS status;
@@ -295,8 +296,8 @@ static BOOLEAN lReadDeviceId(IN TPepCtrlObject* pObject)
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
-  IN TPepCtrlObject* pObject,
-  OUT PUCHAR pucStatus)
+  _In_ TPepCtrlObject* pObject,
+  _Out_ PBOOLEAN pbValue)
 {
 	BOOLEAN bResult = FALSE;
     NTSTATUS status;
@@ -317,7 +318,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
 
     pIrp = IoBuildDeviceIoControlRequest(IOCTL_USBPRINT_GET_LPT_STATUS,
                                          pObject->pPortDeviceObject,
-                                         NULL, 0, pucStatus, sizeof(*pucStatus),
+                                         NULL, 0, pbValue, sizeof(*pbValue),
                                          TRUE, &Event, &IoStatusBlock);
 
 	if (!pIrp)
@@ -415,9 +416,9 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
-  IN TPepCtrlObject* pObject,
-  IN PUCHAR pucData,
-  IN ULONG ulDataLen)
+  _In_ TPepCtrlObject* pObject,
+  _In_ PUCHAR pucData,
+  _In_ ULONG ulDataLen)
 {
 	BOOLEAN bResult = FALSE;
     NTSTATUS status;
@@ -540,8 +541,8 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
-  IN TPepCtrlObject* pObject,
-  IN LPCWSTR pszDeviceName)
+  _In_ TPepCtrlObject* pObject,
+  _In_ LPCWSTR pszDeviceName)
 {
     BOOLEAN bResult = FALSE;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -582,7 +583,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
 }
 
 BOOLEAN TPEPCTRLAPI PepCtrlFreeUsbPort(
-  IN TPepCtrlObject* pObject)
+  _In_ TPepCtrlObject* pObject)
 {
     PAGED_CODE()
 
