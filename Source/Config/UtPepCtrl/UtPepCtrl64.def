@@ -1,22 +1,25 @@
 ;
-;  Copyright (C) 2006-2013 Kevin Eshbach
+;  Copyright (C) 2006-2019 Kevin Eshbach
 ;
 
 LIBRARY UtPepCtrl BASE=0x4003c0000
 EXPORTS
     UtPepCtrlInitialize @ 1
     UtPepCtrlUninitialize @ 2
-    UtPepCtrlIsDevicePresent @ 3
-    UtPepCtrlReset @ 4
-    UtPepCtrlSetProgrammerMode @ 5
-    UtPepCtrlSetVccMode @ 6
-    UtPepCtrlSetPinPulseMode @ 7
-    UtPepCtrlSetVppMode @ 8
-    UtPepCtrlReadData @ 9
-    UtPepCtrlReadUserData @ 10
-    UtPepCtrlProgramData @ 11
-    UtPepCtrlProgramUserData @ 12
+    UtPepCtrlSetPortSettings @ 3
+    UtPepCtrlGetPortType @ 4
+    UtPepCtrlGetPortDeviceName @ 5
+    UtPepCtrlIsDevicePresent @ 6
+    UtPepCtrlReset @ 7
+    UtPepCtrlSetProgrammerMode @ 8
+    UtPepCtrlSetVccMode @ 9
+    UtPepCtrlSetPinPulseMode @ 10
+    UtPepCtrlSetVppMode @ 11
+    UtPepCtrlReadData @ 12
+    UtPepCtrlReadUserData @ 13
+    UtPepCtrlProgramData @ 14
+    UtPepCtrlProgramUserData @ 15
 
 ;
-;  Copyright (C) 2006-2013 Kevin Eshbach
+;  Copyright (C) 2006-2019 Kevin Eshbach
 ;

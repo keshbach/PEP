@@ -13,6 +13,7 @@
 #include "PepCtrlParallelPort.h"
 #include "PepCtrlUsbPort.h"
 #include "PepCtrlReg.h"
+#include "PepCtrlPlugPlay.h"
 #include "PepCtrlLog.h"
 
 #include <Drivers/PepCtrlDefs.h>
@@ -21,13 +22,23 @@
 
 #include <UtilsPep/UtPepLogic.h>
 
+#include <Includes/UtMacros.h>
+
 static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(_In_ PVOID pvContext, _Out_ PBOOLEAN pbValue);
 static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(_In_ PVOID pvContext, _In_ PUCHAR pucData, _In_ ULONG ulDataLen);
 static VOID __cdecl lPepLogicLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
+static BOOLEAN lPortDeviceArrived(_In_ TPepCtrlPortData* pPortData);
+static VOID lPortDeviceRemoved(_In_ TPepCtrlPortData* pPortData);
+static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(_In_ PDEVICE_OBJECT pDeviceObject);
+static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(_In_ PDEVICE_OBJECT pDeviceObject);
 
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text (PAGE, lPepLogicReadBitPort)
 #pragma alloc_text (PAGE, lPepLogicWritePort)
+#pragma alloc_text (PAGE, lPortDeviceArrived)
+#pragma alloc_text (PAGE, lPortDeviceRemoved)
+#pragma alloc_text (PAGE, lPepPlugPlayDeviceArrived)
+#pragma alloc_text (PAGE, lPepPlugPlayDeviceRemoved)
 
 #pragma alloc_text (PAGE, PepCtrlInitPortData)
 #pragma alloc_text (PAGE, PepCtrlUninitPortData)
@@ -59,7 +70,9 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
     return pPortData->Funcs.pWritePortFunc(&pPortData->Object, pucData, ulDataLen);
 }
 
-static VOID __cdecl lPepLogicLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...)
+static VOID __cdecl lPepLogicLog(
+  _In_z_ _Printf_format_string_ PCSTR pszFormat,
+  ...)
 {
     va_list arguments;
 
@@ -70,16 +83,184 @@ static VOID __cdecl lPepLogicLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, 
     va_end(arguments);
 }
 
-#pragma endregion
-
-BOOLEAN PepCtrlInitPortData(
-  _In_ PUNICODE_STRING pRegistryPath,
+static BOOLEAN lPortDeviceArrived(
   _In_ TPepCtrlPortData* pPortData)
 {
     BOOLEAN bResult = FALSE;
+    PIRP pIrp = NULL;
+    UINT32* pnStatusChange;
+
+    PepCtrlLog("lPortDeviceArrived entering.\n");
+
+    PAGED_CODE()
+
+    PepCtrlLog("lPortDeviceArrived - Attempting to allocate the port.\n");
+
+    if (pPortData->Funcs.pAllocPortFunc(&pPortData->Object, pPortData->RegSettings.pszPortDeviceName))
+    {
+        PepCtrlLog("lPortDeviceArrived - Successfully allocated the port.\n");
+
+        pIrp = pPortData->pIrp;
+
+        pPortData->pIrp = NULL;
+
+        bResult = TRUE;
+    }
+    else
+    {
+        PepCtrlLog("lPortDeviceArrived - Failed to allocate the port.\n");
+    }
+
+    if (pIrp)
+    {
+        PepCtrlLog("lPortDeviceArrived - Completing status change IRP.\n");
+
+        IoSetCancelRoutine(pIrp, NULL);
+
+        pnStatusChange = (UINT32*)pIrp->AssociatedIrp.SystemBuffer;
+
+        *pnStatusChange = CPepCtrlDeviceArrived;
+
+        pIrp->IoStatus.Information = sizeof(UINT32);
+        pIrp->IoStatus.Status = STATUS_SUCCESS;
+
+        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+    }
+
+    PepCtrlLog("lPortDeviceArrived leaving.\n");
+
+    return bResult;
+}
+
+static VOID lPortDeviceRemoved(
+  _In_ TPepCtrlPortData* pPortData)
+{
+    PIRP pIrp = NULL;
+    UINT32* pnStatusChange;
+
+    PepCtrlLog("lPortDeviceRemoved entering.\n");
+
+    PAGED_CODE()
+
+    PepCtrlLog("lPortDeviceRemoved - Freeing the port.\n");
+
+    if (pPortData->Funcs.pFreePortFunc(&pPortData->Object))
+    {
+        PepCtrlLog("lPortDeviceRemoved - Successfully freed the port.\n");
+    }
+    else
+    {
+        PepCtrlLog("lPortDeviceRemoved - Failed to free the port.\n");
+    }
+
+    pIrp = pPortData->pIrp;
+
+    pPortData->pIrp = NULL;
+
+    if (pIrp)
+    {
+        PepCtrlLog("lPortDeviceRemoved - Completing status change IRP.\n");
+
+        IoSetCancelRoutine(pIrp, NULL);
+
+        pnStatusChange = (UINT32*)pIrp->AssociatedIrp.SystemBuffer;
+
+        *pnStatusChange = CPepCtrlDeviceRemoved;
+
+        pIrp->IoStatus.Information = sizeof(UINT32);
+        pIrp->IoStatus.Status = STATUS_SUCCESS;
+
+        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+    }
+
+    PepCtrlLog("lPortDeviceRemoved leaving.\n");
+}
+
+static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
+  _In_ PDEVICE_OBJECT pDeviceObject)
+{
+    BOOLEAN bResult = FALSE;
+    BOOLEAN bQuit = FALSE;
+    TPepCtrlPortData* pPortData;
+
+    PepCtrlLog("lPepPlugPlayDeviceArrived entering.\n");
+
+    PAGED_CODE()
+
+    pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
+
+    while (!bQuit)
+    {
+        if (ExTryToAcquireFastMutex(&pPortData->FastMutex))
+        {
+            bResult = lPortDeviceArrived(pPortData);
+
+            ExReleaseFastMutex(&pPortData->FastMutex);
+
+            bQuit = TRUE;
+        }
+        else
+        {
+            if (pPortData->nState == CPepCtrlStateUnloading)
+            {
+                bQuit = TRUE;
+            }
+        }
+    }
+
+    PepCtrlLog("lPepPlugPlayDeviceArrived leaving.\n");
+
+    return bResult;
+}
+
+static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
+  _In_ PDEVICE_OBJECT pDeviceObject)
+{
+    BOOLEAN bQuit = FALSE;
+    TPepCtrlPortData* pPortData;
+
+    PepCtrlLog("lPepPlugPlayDeviceRemoved entering.\n");
+
+    PAGED_CODE()
+
+    pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
+
+    while (!bQuit)
+    {
+        if (ExTryToAcquireFastMutex(&pPortData->FastMutex))
+        {
+            lPortDeviceRemoved(pPortData);
+
+            ExReleaseFastMutex(&pPortData->FastMutex);
+
+            bQuit = TRUE;
+        }
+        else
+        {
+            if (pPortData->nState == CPepCtrlStateUnloading ||
+                pPortData->nState == CPepCtrlStateChangePortSettings)
+            {
+                lPortDeviceRemoved(pPortData);
+
+                bQuit = TRUE;
+            }
+        }
+    }
+
+    PepCtrlLog("lPepPlugPlayDeviceRemoved leaving.\n");
+}
+
+#pragma endregion
+
+BOOLEAN PepCtrlInitPortData(
+  _In_ PDRIVER_OBJECT pDriverObject,
+  _In_ PDEVICE_OBJECT pDeviceObject,
+  _In_ PUNICODE_STRING pRegistryPath,
+  _In_ TPepCtrlPortData* pPortData)
+{
     ULONG ulPortType;
 
-    PepCtrlLog("PepCtrlInitPortData called.\n");
+    PepCtrlLog("PepCtrlInitPortData entering.\n");
 
     PAGED_CODE()
 
@@ -87,11 +268,14 @@ BOOLEAN PepCtrlInitPortData(
 
     PepCtrlLog("PepCtrlInitPortData - Calling UtPepLogicAllocLogicContext.\n");
 
+    pPortData->pDriverObject = pDriverObject;
+    pPortData->pDeviceObject = pDeviceObject;
+    pPortData->nState = CPepCtrlStateRunning;
     pPortData->LogicData.pvLogicContext = UtPepLogicAllocLogicContext();
 
     if (pPortData->LogicData.pvLogicContext == NULL)
     {
-        PepCtrlLog("PepCtrlInitPortData - Call to UtPepLogicAllocLogicContext failed.\n");
+        PepCtrlLog("PepCtrlInitPortData leaving (Call to UtPepLogicAllocLogicContext failed.)\n");
 
         return FALSE;
     }
@@ -100,7 +284,6 @@ BOOLEAN PepCtrlInitPortData(
     pPortData->LogicData.pReadBitPortFunc = lPepLogicReadBitPort;
     pPortData->LogicData.pWritePortFunc = lPepLogicWritePort;
     pPortData->LogicData.pLogFunc = lPepLogicLog;
-    pPortData->bPortEjected = TRUE;
 
     ExInitializeFastMutex(&pPortData->FastMutex);
 
@@ -110,9 +293,9 @@ BOOLEAN PepCtrlInitPortData(
 
     if (pPortData->RegSettings.pszRegistryPath == NULL)
     {
-        PepCtrlLog("PepCtrlInitPortData - Could not allocate memory for the registry path.\n");
+        PepCtrlUninitPortData(pPortData);
 
-        UtPepLogicFreeLogicContext(pPortData->LogicData.pvLogicContext);
+        PepCtrlLog("PepCtrlInitPortData leaving (Could not allocate memory for the registry path.)\n");
 
         return FALSE;
     }
@@ -127,11 +310,9 @@ BOOLEAN PepCtrlInitPortData(
     if (!PepCtrlReadRegSettings(pRegistryPath, &ulPortType,
                                 &pPortData->RegSettings.pszPortDeviceName))
     {
-        PepCtrlLog("PepCtrlInitPortData - Could not read the registry settings.\n");
+        PepCtrlUninitPortData(pPortData);
 
-        UtFreePagedMem(pPortData->RegSettings.pszRegistryPath);
-
-        UtPepLogicFreeLogicContext(pPortData->LogicData.pvLogicContext);
+        PepCtrlLog("PepCtrlInitPortData leaving (Could not read the registry settings.)\n");
 
         return FALSE;
     }
@@ -141,29 +322,60 @@ BOOLEAN PepCtrlInitPortData(
     if (pPortData->RegSettings.nPortType == CPepCtrlParallelPortType ||
         pPortData->RegSettings.nPortType == CPepCtrlUsbPrintPortType)
     {
-        PepCtrlInitPortTypeFuncs(pPortData);
+        switch (pPortData->RegSettings.nPortType)
+        {
+            case CPepCtrlParallelPortType:
+                PepCtrlLog("PepCtrlInitPortData - Parallel Port type retrieved from the registry.\n");
+                break;
+            case CPepCtrlUsbPrintPortType:
+                PepCtrlLog("PepCtrlInitPortData - USB Print Port type retrieved from the registry.\n");
+                break;
+            default:
+                PepCtrlLog("PepCtrlInitPortData - Unknown Port type retrieved from the registry.\n");
+                break;
+        }
 
-        bResult = TRUE;
+        PepCtrlLog("PepCtrlInitPortData - Port Device Name \"%ws\" retrieved from the registry.\n", pPortData->RegSettings.pszPortDeviceName);
+
+        PepCtrlInitPortTypeFuncs(pPortData);
     }
     else
     {
-        PepCtrlLog("PepCtrlInitPortData - Unknown Port type retrieved from the registry.\n");
-
-        UtFreePagedMem(pPortData->RegSettings.pszRegistryPath);
-        UtFreePagedMem(pPortData->RegSettings.pszPortDeviceName);
-
-        UtPepLogicFreeLogicContext(pPortData->LogicData.pvLogicContext);
+        PepCtrlLog("PepCtrlInitPortData - No Port type retrieved from the registry.\n");
     }
 
-    return bResult;
+    pPortData->pvPlugPlayData = PepCtrlPlugPlayAlloc(pPortData->pDriverObject,
+                                                     pPortData->pDeviceObject,
+                                                     lPepPlugPlayDeviceArrived,
+                                                     lPepPlugPlayDeviceRemoved);
+
+    if (pPortData->pvPlugPlayData == NULL)
+    {
+        PepCtrlUninitPortData(pPortData);
+
+        PepCtrlLog("PepCtrlInitPortData leaving (Could not allocate memory for the Plug and Play data.)\n");
+
+        return FALSE;
+    }
+
+    PepCtrlLog("PepCtrlInitPortData leaving.\n");
+
+    return TRUE;
 }
 
 VOID PepCtrlUninitPortData(
   _In_ TPepCtrlPortData* pPortData)
 {
-    PepCtrlLog("PepCtrlUninitPortData called.\n");
+    PepCtrlLog("PepCtrlUninitPortData enter.\n");
 
     PAGED_CODE()
+
+    if (pPortData->pvPlugPlayData)
+    {
+        PepCtrlLog("PepCtrlUninitPortData - Deleting the memory allocated for the Plug and Play data.\n");
+
+        PepCtrlPlugPlayFree(pPortData->pvPlugPlayData);
+    }
 
     if (pPortData->RegSettings.pszPortDeviceName)
     {
@@ -185,12 +397,14 @@ VOID PepCtrlUninitPortData(
 
         UtPepLogicFreeLogicContext(pPortData->LogicData.pvLogicContext);
     }
+
+    PepCtrlLog("PepCtrlUninitPortData leaving.\n");
 }
 
 VOID PepCtrlInitPortTypeFuncs(
   _In_ TPepCtrlPortData* pPortData)
 {
-    PepCtrlLog("PepCtrlInitPortTypeFuncs called.\n");
+    PepCtrlLog("PepCtrlInitPortTypeFuncs entering.\n");
 
     PAGED_CODE()
 
@@ -202,7 +416,7 @@ VOID PepCtrlInitPortTypeFuncs(
         pPortData->Funcs.pFreePortFunc = &PepCtrlFreeParallelPort;
         pPortData->Funcs.pReadBitPortFunc = &PepCtrlReadBitParallelPort;
         pPortData->Funcs.pWritePortFunc = &PepCtrlWriteParallelPort;
-        pPortData->Funcs.pGetDevInterfaceGuidFunc = &PepCtrlGetParallelPortDevInterfaceGuid;
+        pPortData->Funcs.pGetDeviceInterfaceGuidFunc = &PepCtrlGetParallelPortDevInterfaceGuid;
     }
     else if (pPortData->RegSettings.nPortType == CPepCtrlUsbPrintPortType)
     {
@@ -212,8 +426,20 @@ VOID PepCtrlInitPortTypeFuncs(
         pPortData->Funcs.pFreePortFunc = &PepCtrlFreeUsbPort;
         pPortData->Funcs.pReadBitPortFunc = &PepCtrlReadBitUsbPort;
         pPortData->Funcs.pWritePortFunc = &PepCtrlWriteUsbPort;
-        pPortData->Funcs.pGetDevInterfaceGuidFunc = &PepCtrlGetUsbPortDevInterfaceGuid;
+        pPortData->Funcs.pGetDeviceInterfaceGuidFunc = &PepCtrlGetUsbPortDevInterfaceGuid;
     }
+    else
+    {
+        PepCtrlLog("PepCtrlInitPortTypeFuncs - Initializing with no functions.\n");
+
+        pPortData->Funcs.pAllocPortFunc = NULL;
+        pPortData->Funcs.pFreePortFunc = NULL;
+        pPortData->Funcs.pReadBitPortFunc = NULL;
+        pPortData->Funcs.pWritePortFunc = NULL;
+        pPortData->Funcs.pGetDeviceInterfaceGuidFunc = NULL;
+    }
+
+    PepCtrlLog("PepCtrlInitPortTypeFuncs leaving.\n");
 }
 
 /***************************************************************************/

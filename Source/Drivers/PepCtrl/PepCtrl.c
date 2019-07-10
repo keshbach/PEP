@@ -89,7 +89,7 @@ static NTSTATUS lPepCtrlIrpClose(
 
     PAGED_CODE()
 
-    PepCtrlLog("lPepCtrlIrpClose called.\n");
+    PepCtrlLog("lPepCtrlIrpClose entering.\n");
 
     UtPepLogicReset(&pPortData->LogicData);
 
@@ -97,6 +97,8 @@ static NTSTATUS lPepCtrlIrpClose(
     pIrp->IoStatus.Information = 0;
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+    PepCtrlLog("lPepCtrlIrpClose leaving.\n");
 
     return STATUS_SUCCESS;
 }
@@ -112,7 +114,7 @@ static NTSTATUS lPepCtrlIrpPower(
 
     PAGED_CODE()
 
-    PepCtrlLog("lPepCtrlIrpPower called.\n");
+    PepCtrlLog("lPepCtrlIrpPower entering.\n");
 
     if (pIrpSp->MinorFunction == IRP_MN_POWER_SEQUENCE)
     {
@@ -150,6 +152,8 @@ static NTSTATUS lPepCtrlIrpPower(
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+    PepCtrlLog("lPepCtrlIrpPower leaving.\n");
+
     return STATUS_SUCCESS;
 }
 
@@ -159,19 +163,27 @@ static NTSTATUS lPepCtrlIrpCreate(
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
-    PepCtrlLog("lPepCtrlIrpCreate called.\n");
+    PepCtrlLog("lPepCtrlIrpCreate entering.\n");
 
     PAGED_CODE()
 
-    if (!pPortData->bPortEjected)
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
+        PepCtrlLog("lPepCtrlIrpCreate - Device present setting address to 0.\n");
+
         UtPepLogicSetAddress(&pPortData->LogicData, 0);
+    }
+    else
+    {
+        PepCtrlLog("lPepCtrlIrpCreate - Device not present.\n");
     }
 
     pIrp->IoStatus.Status = STATUS_SUCCESS;
     pIrp->IoStatus.Information = 0;
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+    PepCtrlLog("lPepCtrlIrpCreate leaving.\n");
 
     return STATUS_SUCCESS;
 }
@@ -189,7 +201,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 
     PAGED_CODE()
 
-    PepCtrlLog("lPepCtrlIrpDeviceControl called.\n");
+    PepCtrlLog("lPepCtrlIrpDeviceControl entering.\n");
 
     pIrpSp = IoGetCurrentIrpStackLocation(pIrp);
 
@@ -211,11 +223,15 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
         {
             ExAcquireFastMutexUnsafe(&pPortData->FastMutex);
 
+            pPortData->nState = CPepCtrlStateDeviceControl;
+
             bFuncFound = TRUE;
 
             Status = l_DeviceControlFuncs[ulIndex].DeviceControlFunc(pIrp, pPortData, pvInBuf,
                                                                      ulInBufLen, pvOutBuf,
                                                                      ulOutBufLen);
+
+            pPortData->nState = CPepCtrlStateRunning;
 
             ExReleaseFastMutexUnsafe(&pPortData->FastMutex);
         }
@@ -232,6 +248,8 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
     }
 
+    PepCtrlLog("lPepCtrlIrpDeviceControl leaving.\n");
+
     return Status;
 }
 
@@ -240,34 +258,29 @@ static VOID lPepCtrlDriverUnload(
 {
     TPepCtrlPortData* pPortData;
     UNICODE_STRING DOSName;
-    NTSTATUS Status;
 
     PAGED_CODE()
 
-    PepCtrlLog("lPepCtrlDriverUnload called.\n");
+    PepCtrlLog("lPepCtrlDriverUnload entering.\n");
 
     pPortData = (TPepCtrlPortData*)pDriverObject->DeviceObject->DeviceExtension;
 
-    PepCtrlPlugPlayClosePortThreads(pPortData);
-
-    PepCtrlLog("lPepCtrlDriverUnload - Unregistering Plug n Play notification of a device change.\n");
-
-    Status = IoUnregisterPlugPlayNotification(pPortData->pvPnPNotificationEntry);
-
-    if (NT_SUCCESS(Status))
+    if (pPortData->RegSettings.nPortType != CPepCtrlNoPortType)
     {
-        PepCtrlLog("lPepCtrlDriverUnload - Plug n Play notification unregistered.\n");
-    }
-    else
-    {
-        PepCtrlLog("lPepCtrlDriverUnload - Could not unregister the Plug n Play notification.  (0x%X)\n", Status);
-    }
+        ExAcquireFastMutexUnsafe(&pPortData->FastMutex);
 
-    if (!pPortData->bPortEjected)
-    {
-        PepCtrlLog("lPepCtrlDriverUnload - Freeing the port.\n");
+        pPortData->nState = CPepCtrlStateUnloading;
 
-        pPortData->Funcs.pFreePortFunc(&pPortData->Object);
+        if (PepCtrlPlugPlayUnregister(pPortData->pvPlugPlayData))
+        {
+            PepCtrlLog("lPepCtrlDriverUnload - Plug and Play notification unregistered.\n");
+        }
+        else
+        {
+            PepCtrlLog("lPepCtrlDriverUnload - Could not unregister the Plug and Play notification.\n");
+        }
+
+        ExReleaseFastMutexUnsafe(&pPortData->FastMutex);
     }
 
     PepCtrlUninitPortData(pPortData);
@@ -281,6 +294,8 @@ static VOID lPepCtrlDriverUnload(
     PepCtrlLog("lPepCtrlDriverUnload - Deleting the device.\n");
 
     IoDeleteDevice(pDriverObject->DeviceObject);
+
+    PepCtrlLog("lPepCtrlDriverUnload leaving.\n");
 }
 
 #pragma endregion
@@ -293,11 +308,11 @@ NTSTATUS __stdcall DriverEntry(
 {
     BOOLEAN bInitialized = TRUE;
     TPepCtrlPortData* pPortData;
-    UNICODE_STRING DeviceName, DOSName, DefSecuritySettings;
+    UNICODE_STRING DeviceName, DOSName;
     PDEVICE_OBJECT pDeviceObject;
     NTSTATUS status;
     
-    PepCtrlLog("DriverEntry called");
+    PepCtrlLog("DriverEntry entering");
 
     PepCtrlLog("DriverEntry - Initializing the memory pool tag.\n");
 
@@ -307,7 +322,6 @@ NTSTATUS __stdcall DriverEntry(
 
     RtlInitUnicodeString(&DeviceName, CPepCtrlInternalDeviceName);
     RtlInitUnicodeString(&DOSName, CPepCtrlInternalDosDeviceName);
-    RtlInitUnicodeString(&DefSecuritySettings, L"");
 
     PepCtrlLog("DriverEntry - Creating the device \"%ws\".\n", DeviceName.Buffer);
 
@@ -317,7 +331,7 @@ NTSTATUS __stdcall DriverEntry(
 
     if (!NT_SUCCESS(status))
     {
-        PepCtrlLog("DriverEntry - Could not create the device.  (0x%X)\n", status);
+        PepCtrlLog("DriverEntry leaving (Could not create the device.  (0x%X))\n", status);
 
         return status;
     }
@@ -328,7 +342,7 @@ NTSTATUS __stdcall DriverEntry(
 
     if (!NT_SUCCESS(status))
     {
-        PepCtrlLog("DriverEntry - Could not create the symbolic link.  (0x%X)\n", status);
+        PepCtrlLog("DriverEntry leaving (Could not create the symbolic link.  (0x%X))\n", status);
 
         IoDeleteDevice(pDeviceObject);
 
@@ -337,28 +351,28 @@ NTSTATUS __stdcall DriverEntry(
 
     pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
-    if (FALSE == PepCtrlInitPortData(pRegistryPath, pPortData))
+    RtlZeroMemory(pPortData, sizeof(TPepCtrlPortData));
+
+    if (FALSE == PepCtrlInitPortData(pDriverObject, pDeviceObject, pRegistryPath, pPortData))
     {
-        PepCtrlLog("DriverEntry - Could not initialize the port data or allocate the port.\n");
+        PepCtrlLog("DriverEntry - Could not initialize the port data.\n");
 
         bInitialized = FALSE;
     }
 
-    if (bInitialized == TRUE)
+    if (bInitialized == TRUE && pPortData->RegSettings.nPortType != CPepCtrlNoPortType)
     {
-        PepCtrlLog("DriverEntry - Registering for Plug n Play notification of a device change.\n");
+        PepCtrlLog("DriverEntry - Port settings found - attempting to register for plug 'n play events.\n");
 
-        status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
-                                                PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
-                                                (PVOID)pPortData->Funcs.pGetDevInterfaceGuidFunc(),
-                                                pDriverObject,
-                                                PepCtrlPlugPlayDeviceInterfaceChange,
-                                                pDeviceObject,
-                                                &pPortData->pvPnPNotificationEntry);
-
-        if (NT_ERROR(status))
+        if (PepCtrlPlugPlayRegister(pPortData->Funcs.pGetDeviceInterfaceGuidFunc(),
+                                    pPortData->RegSettings.pszPortDeviceName,
+                                    pPortData->pvPlugPlayData))
         {
-            PepCtrlLog("DriverEntry - Could not register for the device removal notification.  (0x%X)\n", status);
+            PepCtrlLog("DriverEntry - Successfully registered for plug 'n play events.\n");
+        }
+        else
+        {
+            PepCtrlLog("DriverEntry - Failed to register for plug 'n play events.\n");
 
             bInitialized = FALSE;
         }
@@ -366,15 +380,24 @@ NTSTATUS __stdcall DriverEntry(
 
     if (!bInitialized)
     {
+        PepCtrlLog("DriverEntry - Uninitializing the port data.\n");
+
         PepCtrlUninitPortData(pPortData);
 
         PepCtrlLog("DriverEntry - Deleting the symbolic link of \"%ws\".\n", DOSName.Buffer);
 
-        IoDeleteSymbolicLink(&DOSName);
+        status = IoDeleteSymbolicLink(&DOSName);
+
+        if (!NT_SUCCESS(status))
+        {
+            PepCtrlLog("DriverEntry - Waringing: Failed to delete the symbolic link.  (0x%X)\n", status);
+        }
 
         PepCtrlLog("DriverEntry - Deleting the device.\n");
 
         IoDeleteDevice(pDriverObject->DeviceObject);
+
+        PepCtrlLog("DriverEntry leaving (Failed to initialize.)\n");
 
         return STATUS_UNSUCCESSFUL;
     }
@@ -387,7 +410,7 @@ NTSTATUS __stdcall DriverEntry(
     pDriverObject->MajorFunction[IRP_MJ_CLOSE] = lPepCtrlIrpClose;
     pDriverObject->DriverUnload = lPepCtrlDriverUnload;
 
-    PepCtrlLog("DriverEntry - Finished initializing the driver.\n");
+    PepCtrlLog("DriverEntry leaving (Finished initializing the driver).\n");
 
     return STATUS_SUCCESS;
 }

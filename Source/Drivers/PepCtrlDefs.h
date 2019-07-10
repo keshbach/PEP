@@ -1,9 +1,21 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-201 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepCtrlDefs_H)
 #define PepCtrlDefs_H
+
+#if defined(_MSC_VER)
+#if defined(_X86_)
+#pragma pack(push, 4)
+#elif defined(_WIN64)
+#pragma pack(push, 8)
+#else
+#error Need to specify cpu architecture to configure structure padding
+#endif
+#else
+#error Need to specify how to enable byte aligned structure padding
+#endif
 
 #define CPepCtrlDeviceName L"\\\\.\\PepCtrl"
 
@@ -11,25 +23,40 @@
 #define CPepCtrlServiceDisplayName L"Pep Controller"
 
 /*
-   Registry Key and Value names
+  Device Status
 */
 
-#define CPepCtrlRootRegKey L"System\\CurrentControlSet\\Services\\PepCtrl"
-#define CPepCtrlSettingsRegKey L"System\\CurrentControlSet\\Services\\PepCtrl\\Settings"
+#define CPepCtrlDeviceNotPresent 0x0001
+#define CPepCtrlDevicePresent    0x0002
 
-#define CPepCtrlSettingsRegKeyName L"Settings"
+/*
+  Device status change notification
+*/
 
-#define CPepCtrlPortTypeRegValue L"PortType"
-#define CPepCtrlPortDeviceNameRegValue L"PortDeviceName"
+#define CPepCtrlDeviceArrived 0x0001
+#define CPepCtrlDeviceRemoved 0x0002
 
 /*
   Port Types
 */
 
-#define CPepCtrlParallelPortType 1
-#define CPepCtrlUsbPrintPortType 2
+#define CPepCtrlNoPortType       0x0000
+#define CPepCtrlParallelPortType 0x0001
+#define CPepCtrlUsbPrintPortType 0x0002
 
+typedef struct tagTPepCtrlPortSettings
+{
+    UINT32 nPortType;
+    WCHAR cPortDeviceName[1];
+} TPepCtrlPortSettings;
+
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#else
+#error Need to specify how to restore original structure padding
 #endif
+
+#endif // PepCtrlDefs_H
 
 /***************************************************************************/
 /*  Copyright (C) 2006-2018 Kevin Eshbach                                  */

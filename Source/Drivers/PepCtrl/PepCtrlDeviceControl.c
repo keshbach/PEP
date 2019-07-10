@@ -6,6 +6,8 @@
 
 #include <ntstrsafe.h>
 
+#include <Utils/UtHeapDriver.h>
+
 #include <Drivers/PepCtrlDefs.h>
 #include <Drivers/PepCtrlIOCTL.h>
 
@@ -15,9 +17,15 @@
 
 #include "PepCtrlDeviceControl.h"
 
+#include "PepCtrlPlugPlay.h"
+
+#include "PepCtrlInit.h"
+
+#include "PepCtrlReg.h"
+
 #include "PepCtrlLog.h"
 
-static DRIVER_CANCEL lCancelIrpRoutine;
+static DRIVER_CANCEL lDeviceControlCancelIrpRoutine;
 
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetProgrammerMode)
@@ -35,13 +43,15 @@ static DRIVER_CANCEL lCancelIrpRoutine;
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetSettings)
 #endif
 
-static VOID lCancelIrpRoutine(
+#pragma region "Local Functions"
+
+static VOID lDeviceControlCancelIrpRoutine(
   _In_ _Out_ PDEVICE_OBJECT pDeviceObject,
   _In_ PIRP pIrp)
 {
 	TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
-    PepCtrlLog("lCancelIrpRoutine called.\n");
+    PepCtrlLog("lDeviceControlCancelIrpRoutine entering.\n");
 
 	IoReleaseCancelSpinLock(pIrp->CancelIrql);
 
@@ -58,7 +68,11 @@ static VOID lCancelIrpRoutine(
 	pIrp->IoStatus.Information = 0;
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+    PepCtrlLog("lDeviceControlCancelIrpRoutine leaving.\n");
 }
+
+#pragma endregion
 
 NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
   _In_ PIRP pIrp,
@@ -77,8 +91,8 @@ NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
 
     PepCtrlLog("PepCtrlDeviceControl_SetProgrammerMode called.\n");
 
-	if (!pPortData->bPortEjected)
-	{
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
 		if (ulInBufLen == sizeof(UINT32))
 		{
 			if (UtPepLogicSetProgrammerMode(&pPortData->LogicData, *((PUINT32)pvInBuf)))
@@ -123,8 +137,8 @@ NTSTATUS PepCtrlDeviceControl_SetVccMode(
 
     PepCtrlLog("PepCtrlDeviceControl_SetVccMode called.\n");
 
-	if (!pPortData->bPortEjected)
-	{
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
 		if (ulInBufLen == sizeof(UINT32))
 		{
 			if (UtPepLogicSetVccMode(&pPortData->LogicData, *((PUINT32)pvInBuf)))
@@ -169,8 +183,8 @@ NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(
 
     PepCtrlLog("PepCtrlDeviceControl_SetPinPulseMode called.\n");
 
-	if (!pPortData->bPortEjected)
-	{
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
 		if (ulInBufLen == sizeof(UINT32))
 		{
 			if (UtPepLogicSetPinPulseMode(&pPortData->LogicData, *((PUINT32)pvInBuf)))
@@ -215,8 +229,8 @@ NTSTATUS PepCtrlDeviceControl_SetVppMode(
 
     PepCtrlLog("PepCtrlDeviceControl_SetVppMode called.\n");
 
-	if (!pPortData->bPortEjected)
-	{
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
 		if (ulInBufLen == sizeof(UINT32))
 		{
 			if (UtPepLogicSetVppMode(&pPortData->LogicData, *((PUINT32)pvInBuf)))
@@ -261,8 +275,8 @@ NTSTATUS PepCtrlDeviceControl_SetAddress(
 
     PepCtrlLog("PepCtrlDeviceControl_SetAddress called.\n");
 
-	if (!pPortData->bPortEjected)
-	{
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
 		if (ulInBufLen == sizeof(UINT32))
 		{
 			if (UtPepLogicSetAddress(&pPortData->LogicData, *(UINT32*)pvInBuf))
@@ -307,8 +321,8 @@ NTSTATUS PepCtrlDeviceControl_GetData(
 
     PepCtrlLog("PepCtrlDeviceControl_GetData called.\n");
 
-	if (!pPortData->bPortEjected)
-	{
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
 		if (ulOutBufLen == sizeof(UCHAR))
 		{
 			if (UtPepLogicGetData(&pPortData->LogicData, (UCHAR*)pvOutBuf))
@@ -355,8 +369,8 @@ NTSTATUS PepCtrlDeviceControl_SetData(
 
     PepCtrlLog("PepCtrlDeviceControl_SetData called.\n");
 
-	if (!pPortData->bPortEjected)
-	{
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
 		if (ulInBufLen == sizeof(UCHAR))
 		{
 			if (UtPepLogicSetData(&pPortData->LogicData, *((PUCHAR)pvInBuf)))
@@ -402,8 +416,8 @@ NTSTATUS PepCtrlDeviceControl_TriggerProgram(
 
     PepCtrlLog("PepCtrlDeviceControl_TriggerProgram called.\n");
 
-	if (!pPortData->bPortEjected)
-	{
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
 		if (ulOutBufLen == sizeof(UINT32))
 		{
 			if (UtPepLogicTriggerProgram(&pPortData->LogicData, &bProgramSuccess))
@@ -452,8 +466,8 @@ NTSTATUS PepCtrlDeviceControl_SetOutputEnable(
 
     PepCtrlLog("PepCtrlDeviceControl_SetOutputEnable called.\n");
 
-	if (!pPortData->bPortEjected)
-	{
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
 		if (ulInBufLen == sizeof(UINT32))
 		{
 			if (UtPepLogicSetOutputEnable(&pPortData->LogicData, *((PUINT32)pvInBuf)))
@@ -500,7 +514,7 @@ NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
 
 	if (ulOutBufLen == sizeof(UINT32))
 	{
-		*((UINT32*)pvOutBuf) = pPortData->bPortEjected ? CPepCtrlDeviceNotPresent : CPepCtrlDevicePresent;
+        *((UINT32*)pvOutBuf) = (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData)) ? CPepCtrlDevicePresent : CPepCtrlDeviceNotPresent;
 
 		pIrp->IoStatus.Information = ulOutBufLen;
 
@@ -570,7 +584,7 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 
 		IoMarkIrpPending(pIrp);
 
-		IoSetCancelRoutine(pIrp, lCancelIrpRoutine);
+		IoSetCancelRoutine(pIrp, lDeviceControlCancelIrpRoutine);
 
 		Status = STATUS_PENDING;
 
@@ -595,47 +609,64 @@ NTSTATUS PepCtrlDeviceControl_GetSettings(
   _In_ ULONG ulOutBufLen)
 {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
-    size_t PortDeviceNameLen;
+    size_t PortDeviceNameLen = 0;
     UINT32 Length;
+    TPepCtrlPortSettings* pPortSettings;
 
     pvInBuf;
     ulInBufLen;
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlDeviceControl_GetSettings called.\n");
+    PepCtrlLog("PepCtrlDeviceControl_GetSettings entering.\n");
 
-    RtlStringCchLengthW(pPortData->RegSettings.pszPortDeviceName, NTSTRSAFE_MAX_CCH, &PortDeviceNameLen);
+    Length = sizeof(UINT32);
 
-    Length = sizeof(UINT32) + (((UINT32)PortDeviceNameLen + 1) * sizeof(WCHAR));
-
-    if (ulOutBufLen == sizeof(UINT32))
+    if (pPortData->RegSettings.nPortType == CPepCtrlParallelPortType ||
+        pPortData->RegSettings.nPortType == CPepCtrlUsbPrintPortType)
     {
-        *((UINT32*)pvOutBuf) = Length;
+        RtlStringCchLengthW(pPortData->RegSettings.pszPortDeviceName, NTSTRSAFE_MAX_CCH, &PortDeviceNameLen);
 
-        pIrp->IoStatus.Information = ulOutBufLen;
-
-        Status = STATUS_SUCCESS;
+        Length += (((UINT32)PortDeviceNameLen + 1) * sizeof(WCHAR));
     }
-    else if (ulOutBufLen >= Length)
-    {
-        *((UINT32*)pvOutBuf) = pPortData->RegSettings.nPortType;
 
-        RtlStringCchCopyW((LPWSTR)(((UINT32*)pvOutBuf) + 1), PortDeviceNameLen + 1,
-                          pPortData->RegSettings.pszPortDeviceName);
-
-        pIrp->IoStatus.Information = Length;
-
-        Status = STATUS_SUCCESS;
-    }
-    else 
+    if (ulOutBufLen < Length)
     {
         Status = STATUS_BUFFER_TOO_SMALL;
+
+        pIrp->IoStatus.Status = Status;
+
+        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+        PepCtrlLog("PepCtrlDeviceControl_GetSettings leaving (buffer too small).\n");
+
+        return Status;
     }
 
+    pPortSettings = (TPepCtrlPortSettings*)pvOutBuf;
+
+    pPortSettings->nPortType = pPortData->RegSettings.nPortType;
+
+    if (pPortData->RegSettings.nPortType == CPepCtrlParallelPortType ||
+        pPortData->RegSettings.nPortType == CPepCtrlUsbPrintPortType)
+    {
+        RtlStringCchCopyW(pPortSettings->cPortDeviceName, 
+                          PortDeviceNameLen + 1,
+                          pPortData->RegSettings.pszPortDeviceName);
+    }
+    else
+    {
+        pPortSettings->cPortDeviceName[0] = 0;
+    }
+
+    Status = STATUS_SUCCESS;
+
     pIrp->IoStatus.Status = Status;
+    pIrp->IoStatus.Information = ulOutBufLen;
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+    PepCtrlLog("PepCtrlDeviceControl_GetSettings leaving (settings retrieved).\n");
 
     return Status;
 }
@@ -649,27 +680,203 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
   _In_ ULONG ulOutBufLen)
 {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    TPepCtrlPortSettings* pPortSettings;
+    ULONG ulBufferLen, ulDeviceNameLen;
+    BOOLEAN bDeviceNameValid;
+    UNICODE_STRING RegistryPath;
+    LPWSTR pszDeviceName;
 
     pIrp;
-    pPortData;
-    pvInBuf;
-    ulInBufLen;
     pvOutBuf;
     ulOutBufLen;
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlDeviceControl_SetSettings called.\n");
+    PepCtrlLog("PepCtrlDeviceControl_SetSettings entering.\n");
 
-    // verify the settings appear to be correct
+    if (ulInBufLen < sizeof(TPepCtrlPortSettings))
+    {
+        Status = STATUS_BUFFER_TOO_SMALL;
 
-    //if (pPortData->Modes.nProgrammerMode == CPepCtrlProgrammerNoneMode)
-    //{
-    //}
+        pIrp->IoStatus.Status = Status;
+
+        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+        PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Buffer too small.)\n");
+
+        return Status;
+    }
+
+    pPortSettings = (TPepCtrlPortSettings*)pvInBuf;
+
+    if (pPortSettings->nPortType != CPepCtrlNoPortType &&
+        pPortSettings->nPortType != CPepCtrlParallelPortType &&
+        pPortSettings->nPortType != CPepCtrlUsbPrintPortType)
+    {
+        Status = STATUS_UNSUCCESSFUL;
+
+        pIrp->IoStatus.Status = Status;
+
+        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+        PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Invalid port type.)\n");
+
+        return Status;
+    }
+
+    if (pPortSettings->nPortType != CPepCtrlNoPortType)
+    {
+        PepCtrlLog("PepCtrlDeviceControl_SetSettings - Validating the port data.\n");
+
+        ulBufferLen = ulInBufLen - UFIELD_OFFSET(TPepCtrlPortSettings, cPortDeviceName);
+        ulDeviceNameLen = 0;
+        bDeviceNameValid = FALSE;
+
+        for (ULONG ulIndex = 0; !bDeviceNameValid && ulIndex < ulBufferLen; ++ulIndex)
+        {
+            if (pPortSettings->cPortDeviceName[ulIndex] == 0)
+            {
+                bDeviceNameValid = TRUE;
+            }
+
+            ++ulDeviceNameLen;
+        }
+
+        if (!bDeviceNameValid)
+        {
+            Status = STATUS_UNSUCCESSFUL;
+
+            pIrp->IoStatus.Status = Status;
+
+            IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+            PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Port device name not null terminated.)\n");
+
+            return Status;
+        }
+
+        if (ulDeviceNameLen == 1)
+        {
+            Status = STATUS_UNSUCCESSFUL;
+
+            pIrp->IoStatus.Status = Status;
+
+            IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+            PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Port device name is empty.)\n");
+
+            return Status;
+        }
+    }
+    else
+    {
+        ulDeviceNameLen = 1;
+    }
+
+    if (pPortData->RegSettings.nPortType != CPepCtrlNoPortType)
+    {
+        PepCtrlLog("PepCtrlDeviceControl_SetSettings releasing the existing device.\n");
+
+        pPortData->nState = CPepCtrlStateChangePortSettings;
+
+        if (PepCtrlPlugPlayUnregister(pPortData->pvPlugPlayData))
+        {
+            PepCtrlLog("PepCtrlDeviceControl_SetSettings - Plug and Play notification unregistered.\n");
+        }
+        else 
+        {
+            PepCtrlLog("PepCtrlDeviceControl_SetSettings - Could not unregister the Plug and Play notification.\n");
+        }
+
+        pPortData->nState = CPepCtrlStateDeviceControl;
+
+        pPortData->RegSettings.nPortType = CPepCtrlNoPortType;
+    }
+    else
+    {
+        PepCtrlLog("PepCtrlDeviceControl_SetSettings no existing device to release.\n");
+    }
+
+    if (pPortData->RegSettings.pszPortDeviceName)
+    {
+        PepCtrlLog("PepCtrlDeviceControl_SetSettings - Deleting the memory allocated for the port's device name.\n");
+
+        UtFreePagedMem(pPortData->RegSettings.pszPortDeviceName);
+
+        pPortData->RegSettings.pszPortDeviceName = NULL;
+    }
+
+    RtlInitUnicodeString(&RegistryPath, pPortData->RegSettings.pszRegistryPath);
+
+    PepCtrlLog("PepCtrlDeviceControl_SetSettings - saving the new registry settings.\n");
+
+    if (!PepCtrlWriteRegSettings(&RegistryPath, pPortSettings->nPortType,
+                                 pPortSettings->cPortDeviceName))
+    {
+        Status = STATUS_UNSUCCESSFUL;
+
+        pIrp->IoStatus.Status = Status;
+
+        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+        PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Could not save the new registry settings.)\n");
+
+        return Status;
+    }
+
+    pszDeviceName = (LPWSTR)UtAllocPagedMem(ulDeviceNameLen * sizeof(WCHAR));
+
+    if (pszDeviceName == NULL)
+    {
+        Status = STATUS_UNSUCCESSFUL;
+
+        pIrp->IoStatus.Status = Status;
+
+        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+        PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Could not allocate memory for the port's device name.)\n");
+
+        return Status;
+    }
+
+    if (pPortSettings->nPortType != CPepCtrlNoPortType)
+    {
+        RtlStringCbCopyW(pszDeviceName, ulDeviceNameLen * sizeof(WCHAR),
+                         pPortSettings->cPortDeviceName);
+    }
+    else
+    {
+        *pszDeviceName = 0;
+    }
+
+    pPortData->RegSettings.nPortType = pPortSettings->nPortType;
+    pPortData->RegSettings.pszPortDeviceName = pszDeviceName;
+
+    if (pPortSettings->nPortType != CPepCtrlNoPortType)
+    {
+        PepCtrlInitPortTypeFuncs(pPortData);
+
+        PepCtrlLog("PepCtrlDeviceControl_SetSettings - Registering for plug and Play notification.\n");
+
+        if (PepCtrlPlugPlayRegister(pPortData->Funcs.pGetDeviceInterfaceGuidFunc(),
+                                    pPortData->RegSettings.pszPortDeviceName,
+                                    pPortData->pvPlugPlayData))
+        {
+            PepCtrlLog("PepCtrlDeviceControl_SetSettings - Plug and Play notification registered.\n");
+        }
+        else
+        {
+            PepCtrlLog("PepCtrlDeviceControl_SetSettings - Plug and Play notification failed to register.\n");
+        }
+    }
+
+    Status = STATUS_SUCCESS;
 
     pIrp->IoStatus.Status = Status;
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+    PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving.\n");
 
     return Status;
 }

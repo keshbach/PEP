@@ -9,14 +9,22 @@
 
 #include <Utils/UtHeapDriver.h>
 
+#include <Includes/UtMacros.h>
+
 #include "PepCtrlPortData.h"
 #include "PepCtrlParallelPort.h"
 
 #include "PepCtrlLog.h"
 
-#define CTimeoutTicks 1000000 // 100 milliseconds
+#pragma region "Constants"
+
+#define CTimeoutMs 100
 
 #define CBusyStatusBit 0x80
+
+#pragma endregion
+
+#pragma region "Macros"
 
 /*
    Parallel Port Addresses Macros
@@ -25,6 +33,8 @@
 #define MDataAddress(x) (x)
 #define MStatusAddress(x) (x + 1)
 #define MControlAddress(x) (x + 2)
+
+#pragma endregion
 
 /*
    Local Functions
@@ -42,14 +52,20 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(_In_ PDEVICE_OBJECT pDe
 #pragma alloc_text (PAGE, PepCtrlGetParallelPortDevInterfaceGuid)
 #endif
 
-static GUID l_ParallelGuid = {0};
+#pragma region "Location Variables"
+
+static GUID l_ParallelGuid = { 0 };
+
+#pragma endregion
+
+#pragma region "Local Functions"
 
 static NTSTATUS lParallelPortIoCompletion(
   _In_ PDEVICE_OBJECT pDeviceObject,
   _In_ PIRP pIrp,
   _In_ PVOID pvContext)
 {
-    PepCtrlLog("lParallelPortIoCompletion called.\n");
+    PepCtrlLog("lParallelPortIoCompletion entering.\n");
 
 	pDeviceObject;
 	pIrp;
@@ -60,7 +76,7 @@ static NTSTATUS lParallelPortIoCompletion(
 
     PepCtrlLog("lParallelPortIoCompletion - finished setting the event.\n");
 
-    PepCtrlLog("lParallelPortIoCompletion finished.\n");
+    PepCtrlLog("lParallelPortIoCompletion leaving.\n");
 
 	return STATUS_MORE_PROCESSING_REQUIRED;
 }
@@ -77,9 +93,9 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
     ULONG ulParallelPortInfoLen;
 	LARGE_INTEGER TimeoutInteger;
 
-    PAGED_CODE()
+    PepCtrlLog("lAllocParallelPortInfo entering.\n");
 
-    PepCtrlLog("lAllocParallelPortInfo called.\n");
+    PAGED_CODE()
 
     RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
 
@@ -99,7 +115,7 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
 
 	if (!pIrp)
 	{
-        PepCtrlLog("lAllocParallelPortInfo - IRP could not be allocated\n");
+        PepCtrlLog("lAllocParallelPortInfo leaving (IRP could not be allocated)\n");
 
 		UtFreeNonPagedMem(pParallelPortInfo);
 
@@ -118,7 +134,7 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
     {
         PepCtrlLog("lAllocParallelPortInfo - Call to IoCallDriver returned status pending\n");
 
-		TimeoutInteger.QuadPart = -CTimeoutTicks;
+        TimeoutInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
         status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
 
@@ -179,13 +195,19 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
 
 	if (bResult)
 	{
+        PepCtrlLog("lAllocParallelPortInfo leaving (Parallel port allocated.)\n");
+
 		return pParallelPortInfo;
 	}
 
     UtFreeNonPagedMem(pParallelPortInfo);
 
+    PepCtrlLog("lAllocParallelPortInfo leaving (Parallel port could not be allocated).\n");
+
     return NULL;
 }
+
+#pragma endregion
 
 BOOLEAN TPEPCTRLAPI PepCtrlReadBitParallelPort(
   _In_ TPepCtrlObject* pObject,
@@ -196,13 +218,15 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitParallelPort(
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlReadBitParallelPort called.\n");
+    PepCtrlLog("PepCtrlReadBitParallelPort entering.\n");
 
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
     ucStatus = READ_PORT_UCHAR(MStatusAddress(pParallelPortInfo->Controller));
 
     *pbValue = (ucStatus & CBusyStatusBit) ? TRUE : FALSE;
+
+    PepCtrlLog("PepCtrlReadBitParallelPort leaving.\n");
 
     return TRUE;
 }
@@ -215,9 +239,9 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(
     PPARALLEL_PORT_INFORMATION pParallelPortInfo;
     ULONG ulIndex;
 
-    PAGED_CODE()
+    PepCtrlLog("PepCtrlWriteParallelPort entering.\n");
 
-    PepCtrlLog("PepCtrlWriteParallelPort called.\n");
+    PAGED_CODE()
 
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
@@ -226,6 +250,8 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(
     	WRITE_PORT_UCHAR(MDataAddress(pParallelPortInfo->Controller),
                          pucData[ulIndex]);
     }
+
+    PepCtrlLog("PepCtrlWriteParallelPort leaving.\n");
 
     return TRUE;
 }
@@ -238,9 +264,9 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
     UNICODE_STRING DeviceName;
     PPARALLEL_PORT_INFORMATION pParallelPortInfo;
 
-    PAGED_CODE()
+    PepCtrlLog("PepCtrlAllocParallelPort entering.\n");
 
-    PepCtrlLog("PepCtrlAllocParallelPort called.\n");
+    PAGED_CODE()
 
     RtlInitUnicodeString(&DeviceName, pszDeviceName);
 
@@ -275,7 +301,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
 
 		if (pParallelPortInfo->TryAllocatePort(pObject->pPortDeviceObject->DeviceExtension))
 		{
-            PepCtrlLog("PepCtrlAllocParallelPort - Parallel port allocated.\n");
+            PepCtrlLog("PepCtrlAllocParallelPort leaving (Parallel port allocated.)\n");
 
             return TRUE;
         }
@@ -298,6 +324,8 @@ FreeDevice:
     pObject->pPortDeviceObject = NULL;
     pObject->pvObjectData = NULL;
 
+    PepCtrlLog("PepCtrlAllocParallelPort leaving.\n");
+
     return FALSE;
 }
 
@@ -306,9 +334,9 @@ BOOLEAN TPEPCTRLAPI PepCtrlFreeParallelPort(
 {
     PPARALLEL_PORT_INFORMATION pParallelPortInfo;
 
-    PAGED_CODE()
+    PepCtrlLog("PepCtrlFreeParallelPort entering.\n");
 
-    PepCtrlLog("PepCtrlFreeParallelPort called.\n");
+    PAGED_CODE()
 
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
@@ -324,17 +352,21 @@ BOOLEAN TPEPCTRLAPI PepCtrlFreeParallelPort(
     pObject->pPortDeviceObject = NULL;
     pObject->pvObjectData = NULL;
 
+    PepCtrlLog("PepCtrlFreeParallelPort leaving.\n");
+
     return TRUE;
 }
 
 LPGUID TPEPCTRLAPI PepCtrlGetParallelPortDevInterfaceGuid(VOID)
 {
-    PepCtrlLog("PepCtrlGetParallelPortDevInterfaceGuid called.\n");
+    PepCtrlLog("PepCtrlGetParallelPortDevInterfaceGuid entering.\n");
 
     PAGED_CODE()
 
     RtlCopyBytes(&l_ParallelGuid, &GUID_DEVINTERFACE_PARALLEL,
                  sizeof(l_ParallelGuid));
+
+    PepCtrlLog("PepCtrlGetParallelPortDevInterfaceGuid leaving.\n");
 
     return &l_ParallelGuid;
 }

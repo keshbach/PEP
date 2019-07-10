@@ -15,12 +15,6 @@
 
 #define UTPEPCTRLCFGAPI __stdcall
 
-typedef enum tagEUtPepCtrlCfgPortType
-{
-    eUtPepCtrlCfgParallelPortType,
-    eUtPepCtrlCfgUsbPrintPortType
-} EUtPepCtrlCfgPortType;
-
 typedef VOID (UTPEPCTRLCFGAPI *TUtPepCtrlCfgMsgFunc)(_In_ LPCWSTR pszMsg);
 
 MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgInitialize(VOID);
@@ -29,9 +23,6 @@ MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgInstallDriver(_In_ LPCWSTR pszFile, _I
 MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgUninstallDriver(_In_ TUtPepCtrlCfgMsgFunc pMsgFunc);
 MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStartDriver(_In_ TUtPepCtrlCfgMsgFunc pMsgFunc);
 MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStopDriver(_In_ TUtPepCtrlCfgMsgFunc pMsgFunc);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgSetPortSettings(_In_ EUtPepCtrlCfgPortType PortType, _In_ LPCWSTR pszPortDeviceName);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortType(_Out_ EUtPepCtrlCfgPortType* pPortType);
-MExternC BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortDeviceName(_Out_ LPWSTR pszPortDeviceName, _Out_ LPINT pnPortDeviceNameLen);
 
 #if defined(_MSC_VER)
 #pragma pack(pop)

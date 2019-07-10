@@ -19,6 +19,11 @@
 #error Need to specify how to enable byte aligned structure padding
 #endif
 
+#define CPepCtrlStateRunning            0x0001
+#define CPepCtrlStateDeviceControl      0x0002
+#define CPepCtrlStateUnloading          0x0003
+#define CPepCtrlStateChangePortSettings 0x0004 
+
 struct tagTPepCtrlObject;
 
 #define TPEPCTRLAPI __stdcall
@@ -31,7 +36,7 @@ typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlReadBitPortFunc)(_In_ struct tagTPepCtrlOb
 typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlWritePortFunc)(_In_ struct tagTPepCtrlObject* pPortData,
                                                      _In_ PUCHAR pucData,
                                                      _In_ ULONG ulDataLen);
-typedef LPGUID (TPEPCTRLAPI *TPepCtrlGetDevInterfaceGuidFunc)(VOID);
+typedef LPGUID(TPEPCTRLAPI *TPepCtrlGetDevInterfaceGuidFunc)(VOID);
 
 typedef struct tagTPepCtrlFuncs
 {
@@ -39,7 +44,7 @@ typedef struct tagTPepCtrlFuncs
     TPepCtrlFreePortFunc pFreePortFunc;
     TPepCtrlReadBitPortFunc pReadBitPortFunc;
     TPepCtrlWritePortFunc pWritePortFunc;
-    TPepCtrlGetDevInterfaceGuidFunc pGetDevInterfaceGuidFunc;
+    TPepCtrlGetDevInterfaceGuidFunc pGetDeviceInterfaceGuidFunc;
 } TPepCtrlFuncs;
 
 typedef struct tagTPepCtrlObject
@@ -58,16 +63,16 @@ typedef struct tagTPepCtrlRegSettings
 
 typedef struct tagTPepCtrlPortData
 {
+    PDRIVER_OBJECT pDriverObject;
+    PDEVICE_OBJECT pDeviceObject;
     FAST_MUTEX FastMutex;
-    PVOID pvPnPNotificationEntry;
-    HANDLE hPortArrivedThread;
-    HANDLE hPortRemovedThread;
+    INT32 nState;
     PIRP pIrp; /* IRP used to indicate when port arrives/removed */
-    BOOLEAN bPortEjected;
     TPepCtrlRegSettings RegSettings;
     TPepCtrlFuncs Funcs;
     TPepCtrlObject Object;
     TUtPepLogicData LogicData;
+    PVOID pvPlugPlayData; /* Instance data for the Plug and Play */
 } TPepCtrlPortData;
 
 #if defined(_MSC_VER)

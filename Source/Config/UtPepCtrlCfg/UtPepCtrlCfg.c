@@ -16,11 +16,17 @@
 
 #include <assert.h>
 
+#pragma region "Constants"
+
 #define CServiceManagerTotalRetries 6
+
+#pragma endregion
 
 extern HINSTANCE g_hInstance;
 
 static BOOL l_bInitialize = TRUE;
+
+#pragma region "Local Functions"
 
 static VOID lWriteString1ParamMsg(
   _In_ LPCWSTR pszMsg,
@@ -67,6 +73,8 @@ static VOID lWriteHexMsg(
 
     UtFreeMem(pszTmpMsg);
 }
+
+#pragma endregion
 
 BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgInitialize(VOID)
 {
@@ -856,154 +864,6 @@ BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgStopDriver(
                          GetLastError(), pMsgFunc);
         }
     }
-
-    return bResult;
-}
-
-BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgSetPortSettings(
-  _In_ EUtPepCtrlCfgPortType PortType,
-  _In_ LPCWSTR pszPortDeviceName)
-{
-    BOOL bResult = FALSE;
-    DWORD dwPortTypeData;
-    HKEY hKey;
-
-    if (l_bInitialize == TRUE)
-    {
-		return FALSE;
-    }
-
-    switch (PortType)
-    {
-        case eUtPepCtrlCfgParallelPortType:
-            dwPortTypeData = CPepCtrlParallelPortType;
-            break;
-        case eUtPepCtrlCfgUsbPrintPortType:
-            dwPortTypeData = CPepCtrlUsbPrintPortType;
-            break;
-        default:
-            assert(0);
-            return FALSE;
-    }
-
-    if (ERROR_SUCCESS != RegCreateKeyExW(HKEY_LOCAL_MACHINE, CPepCtrlSettingsRegKey,
-                                         0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE,
-                                         NULL, &hKey, NULL))
-    {
-        return FALSE;
-    }
-
-    if (ERROR_SUCCESS == RegSetValueExW(hKey, CPepCtrlPortTypeRegValue, 0,
-                                        REG_DWORD, (LPBYTE)&dwPortTypeData,
-                                        sizeof(dwPortTypeData)) &&
-        ERROR_SUCCESS == RegSetValueExW(hKey, CPepCtrlPortDeviceNameRegValue, 0,
-                                        REG_SZ, (LPBYTE)pszPortDeviceName,
-                                        (lstrlenW(pszPortDeviceName) + 1) * sizeof(WCHAR)))
-    {
-        bResult = TRUE;
-    }
-
-    RegCloseKey(hKey);
-
-    return bResult;
-}
-
-BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortType(
-  _Out_ EUtPepCtrlCfgPortType* pPortType)
-{
-    BOOL bResult = FALSE;
-    HKEY hKey;
-    DWORD dwPortTypeData, dwPortTypeDataLen;
-
-    if (l_bInitialize == TRUE)
-    {
-        return FALSE;
-    }
-
-    if (ERROR_SUCCESS != RegOpenKeyExW(HKEY_LOCAL_MACHINE, CPepCtrlSettingsRegKey,
-                                       0, KEY_READ, &hKey))
-    {
-        return FALSE;
-    }
-
-    dwPortTypeDataLen = sizeof(dwPortTypeData);
-
-    if (ERROR_SUCCESS == RegQueryValueExW(hKey, CPepCtrlPortTypeRegValue,
-                                          NULL, NULL, (LPBYTE)&dwPortTypeData,
-                                          &dwPortTypeDataLen))
-    {
-        switch (dwPortTypeData)
-        {
-            case CPepCtrlParallelPortType:
-                *pPortType = eUtPepCtrlCfgParallelPortType;
-
-                bResult = TRUE;
-                break;
-            case CPepCtrlUsbPrintPortType:
-                *pPortType = eUtPepCtrlCfgUsbPrintPortType;
-
-                bResult = TRUE;
-                break;
-            default:
-                assert(0);
-                break;
-        }
-    }
-
-    RegCloseKey(hKey);
-
-    return bResult;
-}
-
-BOOL UTPEPCTRLCFGAPI UtPepCtrlCfgGetPortDeviceName(
-  _Out_ LPWSTR pszPortDeviceName,
-  _Out_ LPINT pnPortDeviceNameLen)
-{
-    BOOL bResult = FALSE;
-    HKEY hKey;
-    DWORD dwPortDeviceNameLen;
-
-    if (l_bInitialize == TRUE)
-    {
-        return FALSE;
-    }
-
-    if (ERROR_SUCCESS != RegOpenKeyExW(HKEY_LOCAL_MACHINE, CPepCtrlSettingsRegKey,
-                                       0, KEY_READ, &hKey))
-    {
-        return FALSE;
-    }
-
-    if (ERROR_SUCCESS != RegQueryValueExW(hKey, CPepCtrlPortDeviceNameRegValue,
-                                          NULL, NULL, NULL,
-                                          &dwPortDeviceNameLen))
-    {
-        goto End;
-    }
-
-    if (pszPortDeviceName)
-    {
-        if (*pnPortDeviceNameLen >= (INT)dwPortDeviceNameLen)
-        {
-            dwPortDeviceNameLen = *pnPortDeviceNameLen;
-
-            if (ERROR_SUCCESS == RegQueryValueExW(hKey, CPepCtrlPortDeviceNameRegValue,
-                                                  NULL, NULL, (LPBYTE)pszPortDeviceName,
-                                                  &dwPortDeviceNameLen))
-            {
-                bResult = TRUE;
-            }
-        }
-    }
-    else
-    {
-        *pnPortDeviceNameLen = dwPortDeviceNameLen;
-
-        bResult = TRUE;
-    }
-
-End:
-    RegCloseKey(hKey);
 
     return bResult;
 }

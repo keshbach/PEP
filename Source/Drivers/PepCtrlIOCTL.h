@@ -6,20 +6,6 @@
 #define PepCtrlIOCTL_H
 
 /*
-  Device Status
-*/
-
-#define CPepCtrlDeviceNotPresent 0x0001
-#define CPepCtrlDevicePresent    0x0002
-
-/*
-  Device status change notification
-*/
-
-#define CPepCtrlDeviceArrived 0x0001
-#define CPepCtrlDeviceRemoved 0x0002
-
-/*
    IO Control Codes
 */
 

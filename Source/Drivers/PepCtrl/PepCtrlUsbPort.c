@@ -9,11 +9,16 @@
 
 #include "PepCtrlPortData.h"
 #include "PepCtrlUsbPort.h"
-#include "UsbPrintGuid.h"
 
 #include "PepCtrlLog.h"
 
-#define CTimeoutTicks 1000000 // 100 milliseconds
+#include <Includes/UtMacros.h>
+
+#pragma region "Constants"
+
+#define CTimeoutMs 100
+
+#pragma endregion
 
 /*
    Local Functions
@@ -33,14 +38,20 @@ static BOOLEAN lReadDeviceId(_In_ TPepCtrlObject* pObject);
 #pragma alloc_text (PAGE, PepCtrlGetUsbPortDevInterfaceGuid)
 #endif
 
-static GUID l_UsbPrintGuid = {0};
+#pragma region "Local Variables"
+
+static GUID l_UsbPrintGuid = { 0 };
+
+#pragma endregion
+
+#pragma region "Local Functions"
 
 static NTSTATUS lUsbPortIoCompletion(
   _In_ PDEVICE_OBJECT pDeviceObject,
   _In_ PIRP pIrp,
   _In_ PVOID pvContext)
 {
-    PepCtrlLog("lUsbPortIoCompletion called.\n");
+    PepCtrlLog("lUsbPortIoCompletion entering.\n");
 
     pDeviceObject;
 	pIrp;
@@ -51,7 +62,7 @@ static NTSTATUS lUsbPortIoCompletion(
 
     PepCtrlLog("lUsbPortIoCompletion - finished setting the event.\n");
 
-    PepCtrlLog("lUsbPortIoCompletion finished.\n");
+    PepCtrlLog("lUsbPortIoCompletion leaving.\n");
 
 	return STATUS_MORE_PROCESSING_REQUIRED;
 }
@@ -68,7 +79,7 @@ static BOOLEAN lResetUsbPort(
 
     PAGED_CODE()
 
-    PepCtrlLog("lResetUsbPort called.\n");
+    PepCtrlLog("lResetUsbPort entering.\n");
 
     PepCtrlLog("lResetUsbPort - Initializing event\n");
 
@@ -83,7 +94,7 @@ static BOOLEAN lResetUsbPort(
 
     if (!pIrp)
     {
-        PepCtrlLog("lResetUsbPort - IRP could not be allocated\n");
+        PepCtrlLog("lResetUsbPort leaving (IRP could not be allocated)\n");
 
         return FALSE;
     }
@@ -102,7 +113,7 @@ static BOOLEAN lResetUsbPort(
     {
         PepCtrlLog("lResetUsbPort - Call to IoCallDriver returned status pending\n");
 
-        TimeoutInteger.QuadPart = -CTimeoutTicks;
+        TimeoutInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
         PepCtrlLog("lResetUsbPort - Waiting for the IoCallDriver event to be set\n");
 
@@ -172,6 +183,8 @@ static BOOLEAN lResetUsbPort(
 
     PepCtrlLog("lResetUsbPort - Finished waiting for the IRP to complete  (Error Code: 0x%X)\n", status);
 
+    PepCtrlLog("lResetUsbPort leaving.\n");
+
     return bResult;
 }
 
@@ -188,7 +201,7 @@ static BOOLEAN lReadDeviceId(
 
     PAGED_CODE()
 
-    PepCtrlLog("lReadDeviceId called.\n");
+    PepCtrlLog("lReadDeviceId entering.\n");
 
     PepCtrlLog("lReadDeviceId - Initializing event\n");
 
@@ -203,7 +216,7 @@ static BOOLEAN lReadDeviceId(
 
     if (!pIrp)
     {
-        PepCtrlLog("lReadDeviceId - IRP could not be allocated\n");
+        PepCtrlLog("lReadDeviceId leaving (IRP could not be allocated)\n");
 
         return FALSE;
     }
@@ -222,7 +235,7 @@ static BOOLEAN lReadDeviceId(
     {
         PepCtrlLog("lReadDeviceId - Call to IoCallDriver returned status pending\n");
 
-        TimeoutInteger.QuadPart = -CTimeoutTicks;
+        TimeoutInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
         PepCtrlLog("lReadDeviceId - Waiting for the IoCallDriver event to be set\n");
 
@@ -292,8 +305,12 @@ static BOOLEAN lReadDeviceId(
 
     PepCtrlLog("lReadDeviceId - Finished waiting for the IRP to complete  (Error Code: 0x%X)\n", status);
 
+    PepCtrlLog("lReadDeviceId leaving.\n");
+
     return bResult;
 }
+
+#pragma endregion
 
 BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
   _In_ TPepCtrlObject* pObject,
@@ -308,7 +325,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlReadBitUsbPort called.\n");
+    PepCtrlLog("PepCtrlReadBitUsbPort entering.\n");
 
     PepCtrlLog("PepCtrlReadBitUsbPort - Initializing event\n");
 
@@ -323,7 +340,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
 
 	if (!pIrp)
 	{
-        PepCtrlLog("PepCtrlReadBitUsbPort - IRP could not be allocated\n");
+        PepCtrlLog("PepCtrlReadBitUsbPort leaving (IRP could not be allocated)\n");
 
 		return FALSE;
 	}
@@ -342,7 +359,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
     {
         PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver returned status pending\n");
 
-		TimeoutInteger.QuadPart = -CTimeoutTicks;
+        TimeoutInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
         PepCtrlLog("PepCtrlReadBitUsbPort - Waiting for the IoCallDriver event to be set\n");
 
@@ -412,6 +429,8 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
 
     PepCtrlLog("PepCtrlReadBitUsbPort - Finished waiting for the IRP to complete  (Error Code: 0x%X)\n", status);
 
+    PepCtrlLog("PepCtrlReadBitUsbPort leaving.\n");
+
     return bResult;
 }
 
@@ -429,7 +448,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlWriteUsbPort called.\n");
+    PepCtrlLog("PepCtrlWriteUsbPort entering.\n");
 
     PepCtrlLog("PepCtrlWriteUsbPort - Initializing event\n");
 
@@ -448,7 +467,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
 
 	if (!pIrp) 
 	{
-        PepCtrlLog("PepCtrlWriteUsbPort - IRP could not be allocated\n");
+        PepCtrlLog("PepCtrlWriteUsbPort leaving (IRP could not be allocated)\n");
 
 		return FALSE;
 	}
@@ -467,7 +486,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
     {
         PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver returned status pending\n");
 
-		TimeoutInteger.QuadPart = -CTimeoutTicks;
+        TimeoutInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
         PepCtrlLog("PepCtrlWriteUsbPort - Waiting for the IoCallDriver event to be set\n");
 
@@ -537,6 +556,8 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
 
     PepCtrlLog("PepCtrlWriteUsbPort - Finished waiting for the IRP to complete  (Error Code: 0x%X)\n", status);
 
+    PepCtrlLog("PepCtrlWriteUsbPort leaving.\n");
+
     return bResult;
 }
 
@@ -551,7 +572,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlAllocUsbPort called.\n");
+    PepCtrlLog("PepCtrlAllocUsbPort entering.\n");
 
     RtlInitUnicodeString(&DeviceName, pszDeviceName);
 
@@ -579,6 +600,8 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
         PepCtrlLog("PepCtrlAllocUsbPort - Failed to get device object pointer\n");
     }
 
+    PepCtrlLog("PepCtrlAllocUsbPort leaving.\n");
+
     return bResult;
 }
 
@@ -587,23 +610,27 @@ BOOLEAN TPEPCTRLAPI PepCtrlFreeUsbPort(
 {
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlFreeUsbPort called.\n");
+    PepCtrlLog("PepCtrlFreeUsbPort entering.\n");
 
     PepCtrlLog("PepCtrlFreeUsbPort - USB Printer port being released.\n");
 
     ObDereferenceObject(pObject->pPortFileObject);
+
+    PepCtrlLog("PepCtrlFreeUsbPort leaving.\n");
 
     return TRUE;
 }
 
 LPGUID TPEPCTRLAPI PepCtrlGetUsbPortDevInterfaceGuid(VOID)
 {
-    PAGED_CODE()
+    PepCtrlLog("PepCtrlGetUsbPortDevInterfaceGuid entering.\n");
 
-    PepCtrlLog("PepCtrlGetUsbPortDevInterfaceGuid called.\n");
+    PAGED_CODE()
 
     RtlCopyBytes(&l_UsbPrintGuid, &GUID_DEVINTERFACE_USBPRINT,
                  sizeof(l_UsbPrintGuid));
+
+    PepCtrlLog("PepCtrlGetUsbPortDevInterfaceGuid leaving.\n");
 
     return &l_UsbPrintGuid;
 }

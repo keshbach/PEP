@@ -4,6 +4,8 @@
 
 #include <windows.h>
 
+#include <strsafe.h>
+
 #include <winioctl.h>
 
 #include <assert.h>
@@ -14,11 +16,12 @@
 #include <UtilsPep/UtPepLogicDefs.h>
 
 #include <Config/UtPepCtrl.h>
-#include <Config/UtPepCtrlCfg.h>
 
 #include <Includes/UtMacros.h>
 
 #include <Utils/UtHeap.h>
+
+#pragma region "Structures"
 
 typedef struct tagTDeviceData
 {
@@ -34,6 +37,10 @@ typedef struct tagTDeviceChangeData
     TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc;
 } TDeviceChangedData;
 
+#pragma endregion
+
+#pragma region "Local Variables"
+
 static BOOL l_bInitialized = FALSE;
 static TDeviceData l_DeviceData = {INVALID_HANDLE_VALUE, NULL, 0};
 static TDeviceChangedData l_DeviceChangeData = {NULL, NULL, NULL};
@@ -43,6 +50,10 @@ static UINT32 l_nDisableOutputEnable = FALSE;
 #if !defined(NDEBUG)
 static DWORD l_dwCurrentThreadId = 0;
 #endif
+
+#pragma endregion
+
+#pragma region "Local Functions"
 
 static DWORD WINAPI lDeviceChangeThreadFunc(
   _In_ LPVOID pvParameter)
@@ -121,6 +132,59 @@ static DWORD WINAPI lDeviceChangeThreadFunc(
 
     return 1;
 }
+
+static TPepCtrlPortSettings* lAllocPortSettings(VOID)
+{
+    int nPortSettingsLen = sizeof(TPepCtrlPortSettings) + 50;
+    BOOL bResult;
+    DWORD dwBytesReturned;
+    TPepCtrlPortSettings* pPortSettings;
+
+    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    while (nPortSettingsLen < 32768)
+    {
+        pPortSettings = (TPepCtrlPortSettings*)UtAllocMem(nPortSettingsLen);
+
+        if (pPortSettings == NULL)
+        {
+            return NULL;
+        }
+
+        bResult = DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_GET_SETTINGS,
+                                  NULL, 0,
+                                  pPortSettings, nPortSettingsLen,
+                                  &dwBytesReturned, NULL);
+
+        if (bResult && dwBytesReturned >= sizeof(TPepCtrlPortSettings))
+        {
+            return pPortSettings;
+        }
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            UtFreeMem(pPortSettings);
+
+            return NULL;
+        }
+
+        nPortSettingsLen += 50;
+
+        UtFreeMem(pPortSettings);
+    }
+
+    return NULL;
+}
+
+static VOID lFreePortSettings(TPepCtrlPortSettings* pPortSettings)
+{
+    UtFreeMem(pPortSettings);
+}
+
+#pragma endregion
 
 BOOL UTPEPCTRLAPI UtPepCtrlInitialize(
   _In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc)
@@ -209,6 +273,147 @@ BOOL UTPEPCTRLAPI UtPepCtrlUninitialize(VOID)
     }
 
     return bResult;
+}
+
+BOOL UTPEPCTRLAPI UtPepCtrlSetPortSettings(
+  _In_ EUtPepCtrlPortType PortType,
+  _In_ LPCWSTR pszPortDeviceName)
+{
+    BOOL bResult;
+    DWORD dwBytesReturned;
+    int nPortDeviceNameLen, nPortSettingsLen;
+    TPepCtrlPortSettings* pPortSettings;
+
+    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    if (PortType != eUtPepCtrlNonePortType &&
+        PortType != eUtPepCtrlParallelPortType &&
+        PortType != eUtPepCtrlUsbPrintPortType)
+    {
+        return FALSE;
+    }
+
+    if (pszPortDeviceName == NULL)
+    {
+        return FALSE;
+    }
+
+    nPortDeviceNameLen = lstrlenW(pszPortDeviceName);
+
+    if (nPortDeviceNameLen == 0)
+    {
+        return FALSE;
+    }
+
+    nPortSettingsLen = sizeof(TPepCtrlPortSettings) + (nPortDeviceNameLen * sizeof(WCHAR));
+    pPortSettings = (TPepCtrlPortSettings*)UtAllocMem(nPortSettingsLen);
+
+    if (pPortSettings == NULL)
+    {
+        return FALSE;
+    }
+
+    switch (PortType)
+    {
+        case eUtPepCtrlNonePortType:
+            pPortSettings->nPortType = CPepCtrlNoPortType;
+            break;
+        case eUtPepCtrlParallelPortType:
+            pPortSettings->nPortType = CPepCtrlParallelPortType;
+            break;
+        case eUtPepCtrlUsbPrintPortType:
+            pPortSettings->nPortType = CPepCtrlUsbPrintPortType;
+            break;
+    }
+
+    StringCchCopyW(pPortSettings->cPortDeviceName, nPortDeviceNameLen + 1, pszPortDeviceName);
+
+    bResult = DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_SETTINGS,
+                              pPortSettings, nPortSettingsLen,
+                              NULL, 0, &dwBytesReturned,
+                              NULL);
+
+    UtFreeMem(pPortSettings);
+
+    return bResult;
+}
+
+BOOL UTPEPCTRLAPI UtPepCtrlGetPortType(
+  _Out_ EUtPepCtrlPortType* pPortType)
+{
+    TPepCtrlPortSettings* pPortSettings;
+
+    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    if (pPortType == NULL)
+    {
+        return FALSE;
+    }
+
+    pPortSettings = lAllocPortSettings();
+
+    if (pPortSettings == NULL)
+    {
+        return FALSE;
+    }
+
+    *pPortType = pPortSettings->nPortType;
+
+    lFreePortSettings(pPortSettings);
+
+    return TRUE;
+}
+
+BOOL UTPEPCTRLAPI UtPepCtrlGetPortDeviceName(
+  _Out_ LPWSTR pszPortDeviceName,
+  _Out_ LPINT pnPortDeviceNameLen)
+{
+    TPepCtrlPortSettings* pPortSettings;
+
+    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    if (pnPortDeviceNameLen == NULL)
+    {
+        return FALSE;
+    }
+
+    pPortSettings = lAllocPortSettings();
+
+    if (pPortSettings == NULL)
+    {
+        return FALSE;
+    }
+
+    if (pszPortDeviceName == NULL)
+    {
+        *pnPortDeviceNameLen = lstrlenW(pPortSettings->cPortDeviceName) + 1;
+
+        lFreePortSettings(pPortSettings);
+
+        return TRUE;
+    }
+
+    if (*pnPortDeviceNameLen < lstrlenW(pPortSettings->cPortDeviceName) + 1)
+    {
+        lFreePortSettings(pPortSettings);
+
+        return FALSE;
+    }
+
+    StringCchCopyW(pszPortDeviceName, *pnPortDeviceNameLen, pPortSettings->cPortDeviceName);
+
+    lFreePortSettings(pPortSettings);
+
+    return TRUE;
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(

@@ -13,8 +13,24 @@
 
 #include <Utils/UtHeapDriver.h>
 
-static BOOLEAN lReadRegULongValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ _Out_ PULONG pulValue);
-static BOOLEAN lReadRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _Out_ LPWSTR* ppszValue);
+#pragma region "Constants"
+
+/*
+   Registry Key and Value names
+*/
+
+#define CPepCtrlRootRegKey L"System\\CurrentControlSet\\Services\\PepCtrl"
+#define CPepCtrlSettingsRegKey L"System\\CurrentControlSet\\Services\\PepCtrl\\Settings"
+
+#define CPepCtrlSettingsRegKeyName L"Settings"
+
+#define CPepCtrlPortTypeRegValue L"PortType"
+#define CPepCtrlPortDeviceNameRegValue L"PortDeviceName"
+
+#pragma endregion
+
+static BOOLEAN lReadRegULongValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ ULONG ulDefaultValue, _In_ _Out_ PULONG pulValue);
+static BOOLEAN lReadRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ LPCWSTR pszDefaultValue, _Out_ LPWSTR* ppszValue);
 static BOOLEAN lWriteRegULongValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ ULONG ulValue);
 static BOOLEAN lWriteRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ LPCWSTR pszValue);
 
@@ -31,6 +47,7 @@ static BOOLEAN lWriteRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueNa
 static BOOLEAN lReadRegULongValue(
   _In_ HANDLE hRegKey,
   _In_ LPCWSTR pszValueName,
+  _In_ ULONG ulDefaultValue,
   _In_ _Out_ PULONG pulValue)
 {
     BOOLEAN bResult = FALSE;
@@ -82,6 +99,14 @@ static BOOLEAN lReadRegULongValue(
 
         UtFreePagedMem(pValueInfo);
     }
+    else if (status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        PepCtrlLog("lReadRegULongValue - The registry value does not exist.  Returning the default value.\n");
+
+        *pulValue = ulDefaultValue;
+
+        bResult = TRUE;
+    }
     else
     {
         PepCtrlLog("lReadRegULongValue - Could not query the registry value size. (0x%X)\n", status);
@@ -93,6 +118,7 @@ static BOOLEAN lReadRegULongValue(
 static BOOLEAN lReadRegStringValue(
   _In_ HANDLE hRegKey,
   _In_ LPCWSTR pszValueName,
+  _In_ LPCWSTR pszDefaultValue,
   _Out_ LPWSTR* ppszValue)
 {
     BOOLEAN bResult = FALSE;
@@ -100,6 +126,7 @@ static BOOLEAN lReadRegStringValue(
     PKEY_VALUE_PARTIAL_INFORMATION pValueInfo;
     NTSTATUS status;
     ULONG ulValueInfoLen, ulResultLen;
+    size_t DefaultValueLen = 0;
 
     PepCtrlLog("lReadRegStringValue called with the value name of \"%ws\".\n", pszValueName);
 
@@ -148,6 +175,25 @@ static BOOLEAN lReadRegStringValue(
         }
 
         UtFreePagedMem(pValueInfo);
+    }
+    else if (status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        PepCtrlLog("lReadRegStringValue - The registry value does not exist.  Returning the default value.\n");
+
+        RtlStringCchLengthW(pszDefaultValue, NTSTRSAFE_MAX_CCH, &DefaultValueLen);
+
+        *ppszValue = (LPWSTR)UtAllocPagedMem((DefaultValueLen + 1) * sizeof(WCHAR));
+
+        if (*ppszValue == NULL)
+        {
+            PepCtrlLog("lReadRegStringValue - Could not allocate memory for the default value.\n");
+
+            return FALSE;
+        }
+
+        RtlStringCchCopyW(*ppszValue, DefaultValueLen + 1, pszDefaultValue);
+
+        bResult = TRUE;
     }
     else
     {
@@ -235,6 +281,7 @@ BOOLEAN PepCtrlReadRegSettings(
     HANDLE hRegKey;
     NTSTATUS status;
     size_t SettingsLen, SettingsRegPathLen;
+    ULONG ulDisposition;
 
     PepCtrlLog("PepCtrlReadRegSettings called with a registry path of \"%ws\".\n", pRegistryPath->Buffer);
 
@@ -268,12 +315,13 @@ BOOLEAN PepCtrlReadRegSettings(
 
     PepCtrlLog("PepCtrlReadRegSettings - Opening the registry key \"%ws\".\n", pszSettingsRegPath);
 
-    status = ZwOpenKey(&hRegKey, GENERIC_READ, &RegPathObj);
+    status = ZwCreateKey(&hRegKey, KEY_READ | KEY_WRITE, &RegPathObj, 0, NULL,
+                         REG_OPTION_NON_VOLATILE, &ulDisposition);
 
-    if (NT_SUCCESS(status))
+    if (status == STATUS_SUCCESS)
     {
-        if (lReadRegULongValue(hRegKey, CPepCtrlPortTypeRegValue, pulPortType) &&
-            lReadRegStringValue(hRegKey, CPepCtrlPortDeviceNameRegValue, ppszPortDeviceName))
+        if (lReadRegULongValue(hRegKey, CPepCtrlPortTypeRegValue, CPepCtrlNoPortType, pulPortType) &&
+            lReadRegStringValue(hRegKey, CPepCtrlPortDeviceNameRegValue, L"", ppszPortDeviceName))
         {
             bResult = TRUE;
         }
@@ -304,7 +352,8 @@ BOOLEAN PepCtrlWriteRegSettings(
     size_t SettingsLen, SettingsRegPathLen;
     ULONG ulDisposition;
 
-    PepCtrlLog("PepCtrlWriteRegSettings called with a registry path of \"%ws\".\n", pRegistryPath->Buffer);
+    PepCtrlLog("PepCtrlWriteRegSettings - entering (Registry Path: \"%ws\", Port Type: 0x%X, Port Device Name: \"%ws\")\n",
+               pRegistryPath->Buffer, ulPortType, pszPortDeviceName);
 
     PAGED_CODE()
 
@@ -315,7 +364,7 @@ BOOLEAN PepCtrlWriteRegSettings(
 
     if (!pszSettingsRegPath)
     {
-        PepCtrlLog("PepCtrlWriteRegSettings - Could not allocate memory for the settings registry key name.\n");
+        PepCtrlLog("PepCtrlWriteRegSettings leaving (Could not allocate memory for the settings registry key name).\n");
 
         return FALSE;
     }
@@ -355,7 +404,9 @@ BOOLEAN PepCtrlWriteRegSettings(
     }
 
     UtFreePagedMem(pszSettingsRegPath);
-        
+
+    PepCtrlLog("PepCtrlWriteRegSettings - leaving\n");
+
     return bResult;
 }
 

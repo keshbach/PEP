@@ -15,6 +15,15 @@
 
 #define UTPEPCTRLAPI __stdcall
 
+#pragma region "Enumerations"
+
+typedef enum tagEUtPepCtrlPortType
+{
+    eUtPepCtrlNonePortType,
+    eUtPepCtrlParallelPortType,
+    eUtPepCtrlUsbPrintPortType
+} EUtPepCtrlPortType;
+
 typedef enum tagEUtPepCtrlProgrammerMode
 {
     eUtPepCtrlProgrammerNoneMode,
@@ -56,6 +65,8 @@ typedef enum tagEUtPepCtrlDeviceChange
     eUtPepCtrlDeviceRemoved
 } EUtPepCtrlDeviceChange;
 
+#pragma endregion
+
 typedef VOID (UTPEPCTRLAPI *TUtPepCtrlDeviceChangeFunc)(_In_ EUtPepCtrlDeviceChange DeviceChange);
 
 typedef struct tagTUtPepCtrlReadUserData
@@ -73,6 +84,9 @@ typedef struct tagTUtPepCtrlProgramUserData
 
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlInitialize(_In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlUninitialize(VOID);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetPortSettings(_In_ EUtPepCtrlPortType PortType, _In_ LPCWSTR pszPortDeviceName);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlGetPortType(_Out_ EUtPepCtrlPortType* pPortType);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlGetPortDeviceName(_Out_ LPWSTR pszPortDeviceName, _Out_ LPINT pnPortDeviceNameLen);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(_Out_ LPBOOL pbPresent);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlReset(VOID);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(_In_ EUtPepCtrlProgrammerMode ProgrammerMode);
