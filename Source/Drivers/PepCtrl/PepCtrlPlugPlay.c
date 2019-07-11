@@ -276,7 +276,7 @@ static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lPopDeviceInterfaceChangeEntr
     PepCtrlLog("lPopDeviceInterfaceChangeEntry - Attempting to pop an entry from the list.\n");
 #endif
 
-    pEntry = ExpInterlockedPopEntrySList(&pPlugPlayData->DeviceInterfaceChangeList);
+    pEntry = InterlockedPopEntrySList(&pPlugPlayData->DeviceInterfaceChangeList);
 
     if (pEntry)
     {
@@ -320,8 +320,8 @@ static BOOLEAN lPushDeviceInterfaceChangeEntry(
     {
         PepCtrlLog("lPushDeviceInterfaceChangeEntry - Memory allocated for the entry.\n");
 
-        ExpInterlockedPushEntrySList(&pPlugPlayData->DeviceInterfaceChangeList,
-                                    &pDeviceInterfaceChangeEntry->ListEntry);
+        InterlockedPushEntrySList(&pPlugPlayData->DeviceInterfaceChangeList,
+                                  &pDeviceInterfaceChangeEntry->ListEntry);
 
         bResult = TRUE;
     }
