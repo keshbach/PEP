@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -12,7 +12,15 @@ namespace Pep
 	{
         public ref class Config sealed
 		{
-		public:
+        public:
+            enum class EPortType
+            {
+                None,
+                Parallel,
+                USBPrint
+            };
+        
+        public:
 			/// <summary>
 			/// Determines if the PEP device is present.
 			/// </summary>
@@ -22,30 +30,6 @@ namespace Pep
 				System::Boolean get()
 				{
 					return GetDevicePresent();
-				}
-			}
-
-			/// <summary>
-			/// Retrieves the type of port that the PEP device driver uses.
-			/// </summary>
-
-            static property System::String^ PortType
-			{
-				System::String^ get()
-				{
-					return GetPortType();
-				}
-			}
-
-			/// <summary>
-			/// Retrieves the name of the device that the PEP device driver uses.
-			/// </summary>
-
-			static property System::String^ PortDeviceName
-			{
-				System::String^ get()
-				{
-					return GetPortDeviceName();
 				}
 			}
 
@@ -70,13 +54,29 @@ namespace Pep
 
 			static System::Boolean Reset();
 
+            /// <summary>
+            /// Retrieves the current port configuration.
+            /// </summary>
+            /// <param name="PortType">The type of port.</param>
+            /// <param name="sPortDeviceName">The name of the port device.</param>
+            /// <returns>Returns true if successful.</returns>
+
+            static System::Boolean GetPortConfig([System::Runtime::InteropServices::Out] EPortType% PortType, [System::Runtime::InteropServices::Out] System::String^% sPortDeviceName);
+
+            /// <summary>
+            /// Changes the current port configuration.
+            /// </summary>
+            /// <param name="PortType">The type of port.</param>
+            /// <param name="sPortDeviceName">The name of the port device.</param>
+            /// <returns>Returns true if successful.</returns>
+
+            static System::Boolean SetPortConfig(EPortType PortType, System::String^ sPortDeviceName);
+
 		internal:
 			static Pep::Programmer::IDeviceChange^ GetDeviceChange();
 
 		private:
 			static System::Boolean GetDevicePresent();
-			static System::String^ GetPortType();
-			static System::String^ GetPortDeviceName();
 
 		private:
 			static Pep::Programmer::IDeviceChange^ s_pDeviceChange = nullptr;
@@ -85,5 +85,5 @@ namespace Pep
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
