@@ -10,7 +10,6 @@
 #include "PepSetupResources.h"
 #include "PepSetupInstallVcRedist.h"
 #include "PepSetupInstallNetFramework.h"
-#include "PepSetupUpdateMsi.h"
 
 #include "UtPepSetup.h"
 
@@ -597,8 +596,7 @@ static DWORD WINAPI lRunInstallThreadProc(
     }
 
     if (lGetMsiProductCode(PepSetupGetPepSetupMsiFile(), &ProductCodeGuid) &&
-        lIsProductAlreadyInstalled(&ProductCodeGuid, &bAlreadyInstalled) &&
-        PepSetupUpdateMsi(PepSetupGetPepSetupMsiFile()))
+        lIsProductAlreadyInstalled(&ProductCodeGuid, &bAlreadyInstalled))
     {
         if (nTotalArgs == 3)
         {

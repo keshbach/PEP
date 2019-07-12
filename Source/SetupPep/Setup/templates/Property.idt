@@ -36,8 +36,6 @@ InstallMode	Typical
 InstallerIcon	insticon
 Manufacturer	Kevin Eshbach
 PROMPTROLLBACKCOST	P
-ParallelPortConfigText	Parallel Port Sample Text
-ParallelPortDevObjName	\Device\ParallelPort2
 ProductCode	{8A2BA0CA-C82B-4B66-B7F5-CFEDACAE3035}
 ProductLanguage	:1033
 ProductName	Pep Application
@@ -45,7 +43,6 @@ ProductVersion	3.1.0000
 RemoveIcon	removico
 RepairIcon	repairic
 Setup	Setup
-TotalParallelPorts	1
 UpgradeCode	{C5C79143-3863-44CF-829E-941DD061D432}
 Wizard	Setup Wizard
 _BrowseProperty	PRODUCTDIRECTORY

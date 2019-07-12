@@ -64,15 +64,6 @@ CancelDlg	Icon	Icon	15	15	24	24	5242881		[InfoIcon]		Information icon|
 CancelDlg	No	PushButton	132	57	56	17	3		[ButtonText_No]	Yes	
 CancelDlg	Text	Text	48	15	194	30	3		Are you sure you want to cancel [ProductName] installation?		
 CancelDlg	Yes	PushButton	72	57	56	17	3		[ButtonText_Yes]	No	
-ConfigPortDlg	Back	PushButton	180	243	56	17	3		[ButtonText_Back]	Next	
-ConfigPortDlg	BannerBitmap	Bitmap	0	0	374	44	1		[BannerBitmap]	PortText	
-ConfigPortDlg	BannerLine	Line	0	44	374	0	1				
-ConfigPortDlg	BottomLine	Line	0	234	374	0	1				
-ConfigPortDlg	Cancel	PushButton	304	243	56	17	3		[ButtonText_Cancel]	BannerBitmap	
-ConfigPortDlg	Description	Text	25	23	280	15	196611		Parallel port being assigned to the device programmer		
-ConfigPortDlg	Next	PushButton	236	243	56	17	3		[ButtonText_Next]	Cancel	
-ConfigPortDlg	PortText	ScrollableText	25	58	320	110	7		{\rtf1\ansi\ansicpg1252\deff0\deftab720{\fonttbl{\f0\froman\fprq2 Times New Roman;}}{\colortbl\red0\green0\blue0;} \deflang1033\horzdoc{\*\fchars }{\*\lchars }\pard\plain\f0\fs20The "Quatech SPPXP-100 ExpressCard IEEE-1284 Parallel Adapter (LPT3)" parallel port will be used.Note: After turning on your computer press F8 and select the "Disable Driver Signature Enforcement" option from the "Advanced Boot Options" screen.\par}	Back	
-ConfigPortDlg	Title	Text	15	6	200	15	196611		[DlgTitleFont]Parallel port		
 CustomizeDlg	Back	PushButton	180	243	56	17	3		[ButtonText_Back]	Next	
 CustomizeDlg	BannerBitmap	Bitmap	0	0	374	44	1		[BannerBitmap]	Tree	
 CustomizeDlg	BannerLine	Line	0	44	374	0	1				

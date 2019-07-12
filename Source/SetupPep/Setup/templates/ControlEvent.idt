@@ -22,14 +22,11 @@ AdminWelcomeDlg	Next	[InstallMode]	Server Image	1	1
 BrowseDlg	Back	NewDialog	LicenseAgreementDlg	1	
 BrowseDlg	Cancel	SpawnDialog	CancelDlg	1	
 BrowseDlg	NewFolder	DirectoryListNew	0	1	
-BrowseDlg	Next	NewDialog	ConfigPortDlg	1	2
+BrowseDlg	Next	NewDialog	VerifyReadyDlg	1	2
 BrowseDlg	Next	SetTargetPath	[_BrowseProperty]	1	1
 BrowseDlg	Up	DirectoryListUp	0	1	
 CancelDlg	No	EndDialog	Return	1	
 CancelDlg	Yes	EndDialog	Exit	1	
-ConfigPortDlg	Back	NewDialog	BrowseDlg	1	
-ConfigPortDlg	Cancel	SpawnDialog	CancelDlg	1	
-ConfigPortDlg	Next	NewDialog	VerifyReadyDlg	1	
 CustomizeDlg	Back	NewDialog	MaintenanceTypeDlg	InstallMode = "Change"	
 CustomizeDlg	Back	NewDialog	SetupTypeDlg	InstallMode = "Custom"	
 CustomizeDlg	Browse	SelectionBrowse	BrowseDlg	1	
@@ -101,8 +98,7 @@ UserRegistrationDlg	Next	NewDialog	SetupTypeDlg	ProductID	3
 UserRegistrationDlg	Next	SpawnWaitDialog	WaitForCostingDlg	CostingComplete = 1	2
 UserRegistrationDlg	Next	ValidateProductID	0	0	1
 VerifyReadyDlg	Back	NewDialog	AdminInstallPointDlg	InstallMode = "Server Image"	
-VerifyReadyDlg	Back	NewDialog	ConfigPortDlg	InstallMode = "Typical" OR InstallMode = "Complete"	
-VerifyReadyDlg	Back	NewDialog	CustomizeDlg	InstallMode = "Custom" OR InstallMode = "Change"	
+VerifyReadyDlg	Back	NewDialog	CustomizeDlg	InstallMode = "Typical" OR InstallMode = "Complete" OR InstallMode = "Custom" OR InstallMode = "Change"	
 VerifyReadyDlg	Back	NewDialog	MaintenanceTypeDlg	InstallMode = "Repair"	
 VerifyReadyDlg	Cancel	SpawnDialog	CancelDlg	1	
 VerifyReadyDlg	Install	EnableRollback	False	OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST="D"	4

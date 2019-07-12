@@ -7,7 +7,6 @@ AdminRegistrationDlg	50	50	370	270	3	[ProductName] [Setup]	OrganizationLabel	Nex
 AdminWelcomeDlg	50	50	370	270	3	[ProductName] [Setup]	Next	Next	Cancel
 BrowseDlg	50	50	370	270	3	[ProductName] [Setup]	PathEdit	Next	Cancel
 CancelDlg	50	10	260	85	3	[ProductName] [Setup]	No	No	No
-ConfigPortDlg	50	50	370	270	3	[ProductName] [Setup]	Next	Next	Cancel
 CustomizeDlg	50	50	370	270	35	[ProductName] [Setup]	Tree	Next	Cancel
 DiskCostDlg	50	50	370	270	3	[ProductName] [Setup]	OK	OK	OK
 ErrorDlg	50	10	270	105	65539	Installer Information	ErrorText		

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2018 Kevin Eshbach
+//  Copyright (C) 2014-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -17,7 +17,8 @@
 
 #define CLogMessagePrefix L"PepCustomAction: "
 
-#define CUtPepCtrlDllFileName L"UtPepCtrl.dll"
+#define CUtPepCtrlCfgDllFileName L"UtPepCtrlCfg.dll"
+
 #define CPepCtrlSysFileName L"PepCtrl.sys"
 
 #define CCustomActionDataName L"CustomActionData"
@@ -34,7 +35,6 @@ typedef BOOL (UTPEPCTRLCFGAPI* TUtPepCtrlCfgInstallDriver)(__in LPCWSTR pszFile,
 typedef BOOL (UTPEPCTRLCFGAPI* TUtPepCtrlCfgUninstallDriver)(__in TUtPepCtrlCfgMsgFunc pMsgFunc);
 typedef BOOL (UTPEPCTRLCFGAPI* TUtPepCtrlCfgStartDriver)(__in TUtPepCtrlCfgMsgFunc pMsgFunc);
 typedef BOOL (UTPEPCTRLCFGAPI* TUtPepCtrlCfgStopDriver)(__in TUtPepCtrlCfgMsgFunc pMsgFunc);
-typedef BOOL (UTPEPCTRLCFGAPI* TUtPepCtrlCfgSetPortSettings)(__in EUtPepCtrlCfgPortType PortType, __in LPCWSTR pszPortDeviceName);
 
 #pragma endregion
 
@@ -42,7 +42,6 @@ typedef BOOL (UTPEPCTRLCFGAPI* TUtPepCtrlCfgSetPortSettings)(__in EUtPepCtrlCfgP
 
 typedef struct TCustomActionData
 {
-	LPTSTR pszParallelPortDevObjName;
 	LPTSTR pszProductPath;
 } TCustomActionData;
 
@@ -156,7 +155,7 @@ static LPWSTR lAllocCustomActionDataValue(
 static TCustomActionData* lAllocCustomActionData(
   __in MSIHANDLE hInstall)
 {
-	LPTSTR pszCustomActionDataValue, pszSeparator;
+	LPTSTR pszCustomActionDataValue;
 	TCustomActionData* pCustomActionData;
 	INT nDataLen;
 
@@ -169,20 +168,6 @@ static TCustomActionData* lAllocCustomActionData(
 		return NULL;
 	}
 
-	pszSeparator = pszCustomActionDataValue;
-
-	while (*pszSeparator != TEXT('|') && *pszSeparator != NULL)
-	{
-		++pszSeparator;
-	}
-
-	if (*pszSeparator == NULL)
-	{
-		UtFreeMem(pszCustomActionDataValue);
-
-		return NULL;
-	}
-
 	pCustomActionData = (TCustomActionData*)UtAllocMem(sizeof(TCustomActionData));
 
 	if (pCustomActionData == NULL)
@@ -192,38 +177,21 @@ static TCustomActionData* lAllocCustomActionData(
 		return NULL;
 	}
 
-	// Extract parallel port device object name
-
-	nDataLen = (pszSeparator - pszCustomActionDataValue) + 1;
-
-	pCustomActionData->pszParallelPortDevObjName = (LPTSTR)UtAllocMem(nDataLen * sizeof(TCHAR));
-
-	if (pCustomActionData->pszParallelPortDevObjName == NULL)
-	{
-		UtFreeMem(pszCustomActionDataValue);
-		UtFreeMem(pCustomActionData);
-		
-		return NULL;
-	}
-
-	::StringCchCopy(pCustomActionData->pszParallelPortDevObjName, nDataLen, pszCustomActionDataValue);
-
 	// Extract product path
 
-	nDataLen = ((pszCustomActionDataValue + ::lstrlen(pszCustomActionDataValue)) - pszSeparator);
+	nDataLen = ::lstrlen(pszCustomActionDataValue) + 1;
 
 	pCustomActionData->pszProductPath = (LPTSTR)UtAllocMem(nDataLen * sizeof(TCHAR));
 
 	if (pCustomActionData->pszProductPath == NULL)
 	{
 		UtFreeMem(pszCustomActionDataValue);
-		UtFreeMem(pCustomActionData->pszParallelPortDevObjName);
 		UtFreeMem(pCustomActionData);
 
 		return NULL;
 	}
 
-	::StringCchCopy(pCustomActionData->pszProductPath, nDataLen, pszSeparator + 1);
+	::StringCchCopy(pCustomActionData->pszProductPath, nDataLen, pszCustomActionDataValue);
 
 	return pCustomActionData;
 }
@@ -231,7 +199,6 @@ static TCustomActionData* lAllocCustomActionData(
 static void lFreeCustomActionData(
   __in TCustomActionData* pCustomActionData)
 {
-	UtFreeMem(pCustomActionData->pszParallelPortDevObjName);
 	UtFreeMem(pCustomActionData->pszProductPath);
 	UtFreeMem(pCustomActionData);
 }
@@ -337,7 +304,7 @@ static BOOL lInitialize(
 
     lWriteMsiLogMessage(hInstall, L"Extracting the UtPepCtrl.dll file");
 
-    ::PathCombine(l_cUtPepCtrlDllFileName, l_cTempPath, CUtPepCtrlDllFileName);
+    ::PathCombine(l_cUtPepCtrlDllFileName, l_cTempPath, CUtPepCtrlCfgDllFileName);
 
     lWriteMsiLogMessage(hInstall, l_cUtPepCtrlDllFileName);
 
@@ -485,14 +452,12 @@ static BOOL lRemoveDriverFile(
 }
 
 static BOOL lInstallDriver(
-  __in LPCWSTR pszProductPath,
-  __in LPCWSTR pszParallelPortDevObjName)
+  __in LPCWSTR pszProductPath)
 {
 	WCHAR cDriverPath[MAX_PATH], cDriverFile[MAX_PATH];
     TUtPepCtrlCfgInstallDriver pUtPepCtrlCfgInstallDriver;
     TUtPepCtrlCfgUninstallDriver pUtPepCtrlCfgUninstallDriver;
     TUtPepCtrlCfgStartDriver pUtPepCtrlCfgStartDriver;
-    TUtPepCtrlCfgSetPortSettings pUtPepCtrlCfgSetPortSettings;
 
     lWriteMsiLogMessage(l_hInstall, L"lInstallDriver");
 
@@ -515,10 +480,9 @@ static BOOL lInstallDriver(
     pUtPepCtrlCfgInstallDriver = (TUtPepCtrlCfgInstallDriver)::GetProcAddress(l_hUtPepCtrl, "UtPepCtrlCfgInstallDriver");
     pUtPepCtrlCfgUninstallDriver = (TUtPepCtrlCfgUninstallDriver)::GetProcAddress(l_hUtPepCtrl, "UtPepCtrlCfgUninstallDriver");
     pUtPepCtrlCfgStartDriver = (TUtPepCtrlCfgStartDriver)::GetProcAddress(l_hUtPepCtrl, "UtPepCtrlCfgStartDriver");
-    pUtPepCtrlCfgSetPortSettings = (TUtPepCtrlCfgSetPortSettings)::GetProcAddress(l_hUtPepCtrl, "UtPepCtrlCfgSetPortSettings");
 
     if (!pUtPepCtrlCfgInstallDriver || !pUtPepCtrlCfgUninstallDriver ||
-        !pUtPepCtrlCfgStartDriver || !pUtPepCtrlCfgSetPortSettings)
+        !pUtPepCtrlCfgStartDriver)
     {
         lWriteMsiLogMessage(l_hInstall, L"Could not find exported functions");
 
@@ -541,21 +505,6 @@ static BOOL lInstallDriver(
     }
 
     lWriteMsiLogMessage(l_hInstall, L"Setting the driver configuration settings (Calling UtPepCtrlCfgSetPortSettings)");
-
-    if (!pUtPepCtrlCfgSetPortSettings(eUtPepCtrlCfgParallelPortType,
-		                              pszParallelPortDevObjName))
-    {
-        lWriteMsiLogMessage(l_hInstall, L"Could not set the driver configuration settings");
-
-        lWriteMsiLogMessage(l_hInstall, L"Uninstalling the driver file (Calling UtPepCtrlCfgUninstallDriver)");
-
-        pUtPepCtrlCfgUninstallDriver(lUtPepCtrlCfgMsg);
-
-		lRemoveDriverFile(cDriverFile);
-		lRemoveDriverDirectory(cDriverPath);
-
-        return FALSE;
-    }
 
 /*    lWriteMsiLogMessage(l_hInstall, L"Attempting to start the driver (Calling UtPepCtrlCfgStartDriver)");
 
@@ -669,7 +618,7 @@ UINT __stdcall InstallCommitDriverCustomAction(
 
     lWriteMsiLogMessage(hInstall, L"Attempting to install the PepCtrl.sys driver file");
 
-    if (!lInstallDriver(pCustomActionData->pszProductPath, pCustomActionData->pszParallelPortDevObjName))
+    if (!lInstallDriver(pCustomActionData->pszProductPath))
     {
         lWriteMsiLogMessage(hInstall, L"Could not install the PepCtrl.sys driver file");
 
@@ -801,5 +750,5 @@ UINT __stdcall RemoveRollbackDriverCustomAction(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2018 Kevin Eshbach
+//  Copyright (C) 2014-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
