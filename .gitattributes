@@ -1,2 +1,6 @@
 Docs/* linguist-vendored
 RegTests/* linguist-vendored
+
+* text=auto
+
+*.rc text
