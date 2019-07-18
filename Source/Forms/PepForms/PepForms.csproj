@@ -81,6 +81,9 @@
     <Reference Include="UtPepNet">
       <HintPath>$(SolutionDir)..\bin\$(Configuration)\$(PlatformName)\UtPepNet.dll</HintPath>
     </Reference>
+    <Reference Include="UtListPortsNet">
+      <HintPath>$(SolutionDir)..\bin\$(Configuration)\$(PlatformName)\UtListPortsNet.dll</HintPath>
+    </Reference>
     <Reference Include="ZipNet">
       <HintPath>$(SolutionDir)..\bin\$(Configuration)\$(PlatformName)\ZipNet.dll</HintPath>
     </Reference>
@@ -106,6 +109,12 @@
     <Compile Include="SelectDeviceForm.designer.cs">
       <DependentUpon>SelectDeviceForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="SelectPortForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SelectPortForm.Designer.cs">
+      <DependentUpon>SelectPortForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="ViewBufferForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -129,6 +138,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SelectDeviceForm.resx">
       <DependentUpon>SelectDeviceForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SelectPortForm.resx">
+      <DependentUpon>SelectPortForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ViewBufferForm.resx">
       <DependentUpon>ViewBufferForm.cs</DependentUpon>
