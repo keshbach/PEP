@@ -18,7 +18,6 @@ namespace Common
 
         public:
             Parallel();
-            ~Parallel();
         };
     }
 }

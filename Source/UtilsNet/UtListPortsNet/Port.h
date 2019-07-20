@@ -25,11 +25,6 @@ namespace Common
                 {
                     return m_sLocation;
                 }
-
-                void set(System::String^ value)
-                {
-                    m_sLocation = value;
-                }
             }
 
             /// <summary>
@@ -41,11 +36,6 @@ namespace Common
                 System::String^ get()
                 {
                     return m_sPhysicalDeviceObjectName;
-                }
-
-                void set(System::String^ value)
-                {
-                    m_sPhysicalDeviceObjectName = value;
                 }
             }
 
