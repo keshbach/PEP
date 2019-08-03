@@ -567,7 +567,6 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
 {
     BOOLEAN bResult = FALSE;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DeviceName;
 
     PAGED_CODE()
@@ -575,10 +574,6 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
     PepCtrlLog("PepCtrlAllocUsbPort entering.\n");
 
     RtlInitUnicodeString(&DeviceName, pszDeviceName);
-
-    InitializeObjectAttributes(&ObjectAttributes, &DeviceName,
-                               OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-                               NULL, NULL);
 
     PepCtrlLog("PepCtrlAllocUsbPort - Getting Device Object pointer to \"%ws\"\n", pszDeviceName);
 
