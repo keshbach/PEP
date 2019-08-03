@@ -43,7 +43,8 @@ BOOLEAN PepCtrlThreadStart(
     return bResult;
 }
 
-BOOLEAN PepCtrlThreadStop(_In_ HANDLE hThread)
+BOOLEAN PepCtrlThreadStop(
+  _In_ HANDLE hThread)
 {
     BOOLEAN bResult = FALSE;
     NTSTATUS Status;
