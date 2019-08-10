@@ -221,7 +221,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
     {
         if (l_DeviceControlFuncs[ulIndex].ulIOControlCode == pIrpSp->Parameters.DeviceIoControl.IoControlCode)
         {
-            ExAcquireFastMutexUnsafe(&pPortData->FastMutex);
+            ExAcquireFastMutex(&pPortData->FastMutex);
 
             pPortData->nState = CPepCtrlStateDeviceControl;
 
@@ -233,7 +233,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 
             pPortData->nState = CPepCtrlStateRunning;
 
-            ExReleaseFastMutexUnsafe(&pPortData->FastMutex);
+            ExReleaseFastMutex(&pPortData->FastMutex);
         }
     }
 
@@ -267,7 +267,7 @@ static VOID lPepCtrlDriverUnload(
 
     if (pPortData->RegSettings.nPortType != CPepCtrlNoPortType)
     {
-        ExAcquireFastMutexUnsafe(&pPortData->FastMutex);
+        ExAcquireFastMutex(&pPortData->FastMutex);
 
         pPortData->nState = CPepCtrlStateUnloading;
 
@@ -280,7 +280,7 @@ static VOID lPepCtrlDriverUnload(
             PepCtrlLog("lPepCtrlDriverUnload - Could not unregister the Plug and Play notification.\n");
         }
 
-        ExReleaseFastMutexUnsafe(&pPortData->FastMutex);
+        ExReleaseFastMutex(&pPortData->FastMutex);
     }
 
     PepCtrlUninitPortData(pPortData);
@@ -296,6 +296,8 @@ static VOID lPepCtrlDriverUnload(
     IoDeleteDevice(pDriverObject->DeviceObject);
 
     PepCtrlLog("lPepCtrlDriverUnload leaving.\n");
+
+    //PepCtrlLogCloseFile();
 }
 
 #pragma endregion
@@ -311,7 +313,9 @@ NTSTATUS __stdcall DriverEntry(
     UNICODE_STRING DeviceName, DOSName;
     PDEVICE_OBJECT pDeviceObject;
     NTSTATUS status;
-    
+
+    //PepCtrlLogOpenFile(L"\\DosDevices\\C:\\git\\pep\\pepctrl.log");
+
     PepCtrlLog("DriverEntry entering");
 
     PepCtrlLog("DriverEntry - Initializing the memory pool tag.\n");
@@ -350,6 +354,9 @@ NTSTATUS __stdcall DriverEntry(
     }
 
     pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
+
+    PepCtrlLog("DriverEntry - Port Data pointer: 0x%p\n",
+               pPortData);
 
     RtlZeroMemory(pPortData, sizeof(TPepCtrlPortData));
 

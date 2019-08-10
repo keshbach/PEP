@@ -55,14 +55,14 @@ static VOID lDeviceControlCancelIrpRoutine(
 
 	IoReleaseCancelSpinLock(pIrp->CancelIrql);
 
-    ExAcquireFastMutexUnsafe(&pPortData->FastMutex);
+    ExAcquireFastMutex(&pPortData->FastMutex);
 
 	if (pPortData->pIrp == pIrp)
 	{
 		pPortData->pIrp = NULL;
 	}
 
-	ExReleaseFastMutexUnsafe(&pPortData->FastMutex);
+	ExReleaseFastMutex(&pPortData->FastMutex);
 
 	pIrp->IoStatus.Status = STATUS_CANCELLED;
 	pIrp->IoStatus.Information = 0;

@@ -55,6 +55,9 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(
 
     PAGED_CODE()
 
+    PepCtrlLog("lPepLogicReadBitPort - Port Data pointer: 0x%p\n",
+               pPortData);
+
     return pPortData->Funcs.pReadBitPortFunc(&pPortData->Object, pbValue);
 }
 
@@ -66,6 +69,9 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pvContext;
 
     PAGED_CODE()
+
+    PepCtrlLog("lPepLogicWritePort - Port Data pointer: 0x%p\n",
+               pPortData);
 
     return pPortData->Funcs.pWritePortFunc(&pPortData->Object, pucData, ulDataLen);
 }
@@ -89,14 +95,22 @@ static BOOLEAN lPortDeviceArrived(
     BOOLEAN bResult = FALSE;
     PIRP pIrp = NULL;
     UINT32* pnStatusChange;
+    TPepCtrlObject* pPepCtrlObject;
 
     PepCtrlLog("lPortDeviceArrived entering.\n");
 
     PAGED_CODE()
 
+    pPepCtrlObject = &pPortData->Object;
+
+    PepCtrlLog("lPortDeviceArrived - Port Data pointer: 0x%p\n",
+               pPortData);
+    PepCtrlLog("lPortDeviceArrived - Control Object pointer: 0x%p\n",
+               pPepCtrlObject);
+
     PepCtrlLog("lPortDeviceArrived - Attempting to allocate the port.\n");
 
-    if (pPortData->Funcs.pAllocPortFunc(&pPortData->Object, pPortData->RegSettings.pszPortDeviceName))
+    if (pPortData->Funcs.pAllocPortFunc(pPepCtrlObject, pPortData->RegSettings.pszPortDeviceName))
     {
         PepCtrlLog("lPortDeviceArrived - Successfully allocated the port.\n");
 
@@ -137,14 +151,22 @@ static VOID lPortDeviceRemoved(
 {
     PIRP pIrp = NULL;
     UINT32* pnStatusChange;
+    TPepCtrlObject* pPepCtrlObject;
 
     PepCtrlLog("lPortDeviceRemoved entering.\n");
 
     PAGED_CODE()
 
-    PepCtrlLog("lPortDeviceRemoved - Freeing the port.\n");
+    pPepCtrlObject = &pPortData->Object;
 
-    if (pPortData->Funcs.pFreePortFunc(&pPortData->Object))
+    PepCtrlLog("lPortDeviceRemoved - Port Data pointer: 0x%p\n",
+               pPortData);
+    PepCtrlLog("lPortDeviceRemoved - Control Object pointer: 0x%p\n",
+               pPepCtrlObject);
+
+    PepCtrlLog("lPortDeviceRemoved - Attempting to free the port.\n");
+
+    if (pPortData->Funcs.pFreePortFunc(pPepCtrlObject))
     {
         PepCtrlLog("lPortDeviceRemoved - Successfully freed the port.\n");
     }
@@ -189,6 +211,9 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
 
     pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
+    PepCtrlLog("lPepPlugPlayDeviceArrived - Port Data pointer: 0x%p\n",
+               pPortData);
+
     while (!bQuit)
     {
         if (ExTryToAcquireFastMutex(&pPortData->FastMutex))
@@ -224,6 +249,9 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
     PAGED_CODE()
 
     pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
+
+    PepCtrlLog("lPepPlugPlayDeviceRemoved - Port Data pointer: 0x%p\n",
+               pPortData);
 
     while (!bQuit)
     {
@@ -264,6 +292,13 @@ BOOLEAN PepCtrlInitPortData(
 
     PAGED_CODE()
 
+    PepCtrlLog("PepCtrlInitPortData - Driver Object pointer: 0x%p\n",
+               pDriverObject);
+    PepCtrlLog("PepCtrlInitPortData - Device Object pointer: 0x%p\n",
+               pDeviceObject);
+    PepCtrlLog("PepCtrlInitPortData - Port Data pointer: 0x%p\n",
+               pPortData);
+
     RtlZeroMemory(pPortData, sizeof(TPepCtrlPortData));
 
     PepCtrlLog("PepCtrlInitPortData - Calling UtPepLogicAllocLogicContext.\n");
@@ -293,12 +328,16 @@ BOOLEAN PepCtrlInitPortData(
 
     if (pPortData->RegSettings.pszRegistryPath == NULL)
     {
+        PepCtrlLog("PepCtrlInitPortData - Failed to allocate memory for the registry path.\n");
+
         PepCtrlUninitPortData(pPortData);
 
         PepCtrlLog("PepCtrlInitPortData leaving (Could not allocate memory for the registry path.)\n");
 
         return FALSE;
     }
+
+    PepCtrlLog("PepCtrlInitPortData - Memory allocated for the registry path.\n");
 
     RtlCopyMemory(pPortData->RegSettings.pszRegistryPath, pRegistryPath->Buffer,
                   pRegistryPath->Length * sizeof(WCHAR));
@@ -344,6 +383,8 @@ BOOLEAN PepCtrlInitPortData(
         PepCtrlLog("PepCtrlInitPortData - No Port type retrieved from the registry.\n");
     }
 
+    PepCtrlLog("PepCtrlInitPortData - Attempting to allocate the plug 'n play data.\n");
+
     pPortData->pvPlugPlayData = PepCtrlPlugPlayAlloc(pPortData->pDriverObject,
                                                      pPortData->pDeviceObject,
                                                      lPepPlugPlayDeviceArrived,
@@ -351,12 +392,17 @@ BOOLEAN PepCtrlInitPortData(
 
     if (pPortData->pvPlugPlayData == NULL)
     {
+        PepCtrlLog("PepCtrlInitPortData - Failed to allocate the plug 'n play data.\n");
+
         PepCtrlUninitPortData(pPortData);
 
         PepCtrlLog("PepCtrlInitPortData leaving (Could not allocate memory for the Plug and Play data.)\n");
 
         return FALSE;
     }
+
+    PepCtrlLog("PepCtrlInitPortData - Successfully allocated the plug 'n play data.  (Pointer: 0x%p)\n",
+               pPortData->pvPlugPlayData);
 
     PepCtrlLog("PepCtrlInitPortData leaving.\n");
 
@@ -369,6 +415,9 @@ VOID PepCtrlUninitPortData(
     PepCtrlLog("PepCtrlUninitPortData enter.\n");
 
     PAGED_CODE()
+
+    PepCtrlLog("PepCtrlUninitPortData - Port Data pointer: 0x%p\n",
+               pPortData);
 
     if (pPortData->pvPlugPlayData)
     {
@@ -407,6 +456,9 @@ VOID PepCtrlInitPortTypeFuncs(
     PepCtrlLog("PepCtrlInitPortTypeFuncs entering.\n");
 
     PAGED_CODE()
+
+    PepCtrlLog("PepCtrlInitPortTypeFuncs - Port Data pointer: 0x%p\n",
+               pPortData);
 
     if (pPortData->RegSettings.nPortType == CPepCtrlParallelPortType)
     {
