@@ -1,0 +1,26 @@
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2019-2019 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////
+
+#include "stdafx.h"
+#include "PepApp.h"
+#include "UtPepApp.h"
+
+int CALLBACK WinMain(
+  _In_ HINSTANCE hInstance,
+  _In_opt_ HINSTANCE hPrevInstance,
+  _In_ LPSTR pszCmdLine,
+  _In_ int nCmdShow)
+{
+    hPrevInstance;
+    pszCmdLine;
+    nCmdShow;
+
+    UtPepAppSetInstance(hInstance);
+
+    return PepAppExecute(hInstance, ::GetCommandLineW());
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2019-2019 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////
