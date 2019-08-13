@@ -6,6 +6,10 @@
 
 #include "PepAppHostControl.h"
 
+#include <new>
+
+#include "PepAppHostMemoryManager.h"
+
 PepAppHostControl::PepAppHostControl()
 {
     m_ulRefCount = 0;
@@ -63,6 +67,18 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
 
     if (riid == IID_IHostMemoryManager)
     {
+        PepAppHostMemoryManager* pHostMemoryManager = new (std::nothrow) PepAppHostMemoryManager();
+
+        if (pHostMemoryManager)
+        {
+            pHostMemoryManager->AddRef();
+
+            *ppObject = pHostMemoryManager;
+
+            return S_OK;
+        }
+
+        return E_FAIL;
     }
     else if (riid == IID_IHostTaskManager)
     {

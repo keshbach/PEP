@@ -4,18 +4,20 @@
 
 #pragma once
 
-class PepAppHostControl : public IHostControl
+class PepAppHostMalloc : public IHostMalloc
 {
 private:
     ULONG m_ulRefCount;
+    HANDLE m_hHeap;
 
 public:
-    PepAppHostControl();
-    virtual ~PepAppHostControl();
+    PepAppHostMalloc(BOOL bThreadSafe, BOOL bExecutable);
+    virtual ~PepAppHostMalloc();
 
 private:
-    PepAppHostControl(const PepAppHostControl&);
-    PepAppHostControl& operator = (const PepAppHostControl&);
+    PepAppHostMalloc();
+    PepAppHostMalloc(const PepAppHostMalloc&);
+    PepAppHostMalloc& operator = (const PepAppHostMalloc&);
 
 // IUnknown
 public:
@@ -23,10 +25,11 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release();
     virtual HRESULT STDMETHODCALLTYPE QueryInterface(const IID& iid, void** ppv);
 
-// IHostControl
+// IHostMalloc
 public:
-    virtual HRESULT STDMETHODCALLTYPE GetHostManager(REFIID riid, void** ppObject);
-    virtual HRESULT STDMETHODCALLTYPE SetAppDomainManager(DWORD dwAppDomainID, IUnknown* pUnkAppDomainManager);
+    virtual HRESULT STDMETHODCALLTYPE Alloc(SIZE_T cbSize, EMemoryCriticalLevel eCriticalLevel, void** ppvMem);
+    virtual HRESULT STDMETHODCALLTYPE DebugAlloc(SIZE_T cbSize, EMemoryCriticalLevel eCriticalLevel, char* pszFileName, int iLineNo, _Outptr_result_maybenull_ void** ppvMem);
+    virtual HRESULT STDMETHODCALLTYPE Free(void* pvMem);
 };
 
 /////////////////////////////////////////////////////////////////////////////
