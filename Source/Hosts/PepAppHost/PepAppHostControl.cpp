@@ -9,6 +9,7 @@
 #include <new>
 
 #include "PepAppHostMemoryManager.h"
+#include "PepAppHostTaskManager.h"
 
 PepAppHostControl::PepAppHostControl()
 {
@@ -82,6 +83,18 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
     }
     else if (riid == IID_IHostTaskManager)
     {
+        PepAppHostTaskManager* pHostTaskManager = new (std::nothrow) PepAppHostTaskManager();
+
+        if (pHostTaskManager)
+        {
+            pHostTaskManager->AddRef();
+
+            *ppObject = pHostTaskManager;
+
+            return S_OK;
+        }
+
+        return E_FAIL;
     }
     else if (riid == IID_IHostThreadpoolManager)
     {

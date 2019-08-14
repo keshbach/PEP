@@ -16,6 +16,7 @@
 #include <strsafe.h>
 #include <combaseapi.h>
 #include <MetaHost.h>
+#include <CorError.h>
 
 /////////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2019-2019 Kevin Eshbach

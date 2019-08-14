@@ -119,11 +119,6 @@ HRESULT STDMETHODCALLTYPE PepAppHostMalloc::DebugAlloc(
 HRESULT STDMETHODCALLTYPE PepAppHostMalloc::Free(
   void* pvMem)
 {
-    if (pvMem == NULL)
-    {
-        return E_POINTER;
-    }
-
     if (m_hHeap == NULL)
     {
         return E_FAIL;

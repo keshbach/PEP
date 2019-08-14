@@ -223,6 +223,8 @@
     <ClInclude Include="PepAppHostControl.h" />
     <ClInclude Include="PepAppHostMalloc.h" />
     <ClInclude Include="PepAppHostMemoryManager.h" />
+    <ClInclude Include="PepAppHostTask.h" />
+    <ClInclude Include="PepAppHostTaskManager.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -238,6 +240,8 @@
     </ClCompile>
     <ClCompile Include="PepAppHostMalloc.cpp" />
     <ClCompile Include="PepAppHostMemoryManager.cpp" />
+    <ClCompile Include="PepAppHostTask.cpp" />
+    <ClCompile Include="PepAppHostTaskManager.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
