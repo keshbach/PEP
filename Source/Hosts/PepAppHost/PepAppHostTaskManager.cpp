@@ -115,6 +115,8 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::Sleep(
   DWORD dwMilliseconds,
   DWORD option)
 {
+    option;
+
     ::Sleep(dwMilliseconds);
 
     return S_OK;
@@ -123,18 +125,24 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::Sleep(
 HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::SwitchToTask(
   DWORD option)
 {
+    option;
+
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::SetUILocale(
   LCID lcid)
 {
+    lcid;
+
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::SetLocale(
   LCID lcid)
 {
+    lcid;
+
     return E_NOTIMPL;
 }
 
@@ -142,6 +150,8 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::CallNeedsHostHook(
   SIZE_T target,
   BOOL* pbCallNeedsHostHook)
 {
+    target;
+
     if (pbCallNeedsHostHook == NULL)
     {
         return E_POINTER;
@@ -155,6 +165,8 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::CallNeedsHostHook(
 HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::LeaveRuntime(
   SIZE_T target)
 {
+    target;
+
     return S_OK;
 }
 
@@ -196,12 +208,16 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::EndThreadAffinity(void)
 HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::SetStackGuarantee(
   ULONG guarantee)
 {
+    guarantee;
+
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::GetStackGuarantee(
   ULONG* pGuarantee)
 {
+    pGuarantee;
+
     return E_NOTIMPL;
 }
 

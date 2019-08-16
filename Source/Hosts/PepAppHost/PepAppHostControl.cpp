@@ -10,6 +10,9 @@
 
 #include "PepAppHostMemoryManager.h"
 #include "PepAppHostTaskManager.h"
+#include "PepAppHostThreadpoolManager.h"
+#include "PepAppHostIOCompletionManager.h"
+#include "PepAppHostSyncManager.h"
 
 PepAppHostControl::PepAppHostControl()
 {
@@ -98,12 +101,48 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
     }
     else if (riid == IID_IHostThreadpoolManager)
     {
+        PepAppHostThreadpoolManager* pHostThreadpoolManager = new (std::nothrow) PepAppHostThreadpoolManager();
+
+        if (pHostThreadpoolManager)
+        {
+            pHostThreadpoolManager->AddRef();
+
+            *ppObject = pHostThreadpoolManager;
+
+            return S_OK;
+        }
+
+        return E_FAIL;
     }
     else if (riid == IID_IHostIoCompletionManager)
     {
+        PepAppHostIOCompletionManager* pHostIOCompletionManager = new (std::nothrow) PepAppHostIOCompletionManager();
+
+        if (pHostIOCompletionManager)
+        {
+            pHostIOCompletionManager->AddRef();
+
+            *ppObject = pHostIOCompletionManager;
+
+            return S_OK;
+        }
+
+        return E_FAIL;
     }
     else if (riid == IID_IHostSyncManager)
     {
+        PepAppHostSyncManager* pHostSyncManager = new (std::nothrow) PepAppHostSyncManager();
+
+        if (pHostSyncManager)
+        {
+            pHostSyncManager->AddRef();
+
+            *ppObject = pHostSyncManager;
+
+            return S_OK;
+        }
+
+        return E_FAIL;
     }
     else if (riid == IID_IHostAssemblyManager)
     {

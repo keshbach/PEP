@@ -20,7 +20,7 @@ PepAppHostTask::PepAppHostTask(
 {
     m_ulRefCount = 0;
     m_pCLRTask = NULL;
-    m_hThread = ::CreateThread(NULL, 0, pStartAddress, pvParameter, CREATE_SUSPENDED, NULL);
+    m_hThread = ::CreateThread(NULL, dwStackSize, pStartAddress, pvParameter, CREATE_SUSPENDED, NULL);
 }
 
 PepAppHostTask::~PepAppHostTask()
@@ -102,6 +102,8 @@ HRESULT STDMETHODCALLTYPE PepAppHostTask::Join(
   DWORD dwMilliseconds,
   DWORD option)
 {
+    option;
+
     if (m_hThread)
     {
         switch (::WaitForSingleObject(m_hThread, dwMilliseconds))
