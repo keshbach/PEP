@@ -296,16 +296,24 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetPortSettings(
         return FALSE;
     }
 
-    if (pszPortDeviceName == NULL)
+    if (PortType != eUtPepCtrlNonePortType)
     {
-        return FALSE;
+        if (pszPortDeviceName == NULL)
+        {
+            return FALSE;
+        }
+
+        nPortDeviceNameLen = lstrlenW(pszPortDeviceName);
+
+        if (nPortDeviceNameLen == 0)
+        {
+            return FALSE;
+        }
     }
-
-    nPortDeviceNameLen = lstrlenW(pszPortDeviceName);
-
-    if (nPortDeviceNameLen == 0)
+    else
     {
-        return FALSE;
+        pszPortDeviceName = L"";
+        nPortDeviceNameLen = 0;
     }
 
     nPortSettingsLen = sizeof(TPepCtrlPortSettings) + (nPortDeviceNameLen * sizeof(WCHAR));
@@ -315,6 +323,8 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetPortSettings(
     {
         return FALSE;
     }
+
+    ZeroMemory(pPortSettings, nPortSettingsLen);
 
     switch (PortType)
     {

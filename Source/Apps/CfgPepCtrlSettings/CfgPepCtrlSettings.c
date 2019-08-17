@@ -28,11 +28,13 @@ typedef struct tagTTestData
 
 static int lReadDriverSettings(LPCWSTR pszArg1, LPCWSTR pszArg2);
 static int lWriteDriverSettings(LPCWSTR pszArg1, LPCWSTR pszArg2);
+static int lClearDriverSettings(LPCWSTR pszArg1, LPCWSTR pszArg2);
 
 #pragma region Local Variables
 static TTestData l_TestData[] = {
     {L"/config", L"read",  1, lReadDriverSettings},
     {L"/config", L"write", 3, lWriteDriverSettings},
+    {L"/config", L"clear", 1, lClearDriverSettings},
     {NULL,       NULL,     0, NULL}
 };
 #pragma endregion
@@ -197,6 +199,27 @@ static int lWriteDriverSettings(
     return 0;
 }
 
+static int lClearDriverSettings(
+  LPCWSTR pszArg1,
+  LPCWSTR pszArg2)
+{
+    pszArg1;
+    pszArg2;
+
+    wprintf(L"CfgPepCtrlSettings: Attempting to remove the existing driver port settings.\n");
+
+    if (!UtPepCtrlSetPortSettings(eUtPepCtrlNonePortType, L""))
+    {
+        wprintf(L"CfgPepCtrlSettings: Could not remove the existing driver's port settings.\n");
+
+        return -1;
+    }
+
+    wprintf(L"CfgPepCtrlSettings: Driver port settings cleared.\n");
+
+    return 0;
+}
+
 static VOID UTPEPCTRLAPI lDeviceChangeFunc(
   EUtPepCtrlDeviceChange DeviceChange)
 {
@@ -223,6 +246,7 @@ static int lDisplayHelp(void)
     wprintf(L"\n");
     wprintf(L"CfgPepCtrlSettings [/config read]\n");
     wprintf(L"                   [/config write \"Port Type\" \"Device Name\"]\n");
+    wprintf(L"                   [/config clear]\n");
     wprintf(L"\n");
     wprintf(L"    Port Configuration\n");
     wprintf(L"    /config\n");
@@ -231,6 +255,8 @@ static int lDisplayHelp(void)
     wprintf(L"        write         - Change the port settings\n");
     wprintf(L"        \"Port Type\"   - \"lpt\" or \"usb\"\n");
     wprintf(L"        \"Device Name\" - Name of the device\n");
+    wprintf(L"    /config\n");
+    wprintf(L"        clear         - Remove the existing port settings\n");
     wprintf(L"\n");
 
     return -1;
