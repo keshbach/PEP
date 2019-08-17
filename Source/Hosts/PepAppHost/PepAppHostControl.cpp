@@ -13,6 +13,10 @@
 #include "PepAppHostThreadpoolManager.h"
 #include "PepAppHostIOCompletionManager.h"
 #include "PepAppHostSyncManager.h"
+#include "PepAppHostGCManager.h"
+#include "PepAppHostAssemblyManager.h"
+#include "PepAppHostPolicyManager.h"
+#include "PepAppHostSecurityManager.h"
 
 PepAppHostControl::PepAppHostControl()
 {
@@ -146,15 +150,63 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
     }
     else if (riid == IID_IHostAssemblyManager)
     {
+        /*PepAppHostAssemblyManager* pHostAssemblyManager = new (std::nothrow) PepAppHostAssemblyManager();
+
+        if (pHostAssemblyManager)
+        {
+            pHostAssemblyManager->AddRef();
+
+            *ppObject = pHostAssemblyManager;
+
+            return S_OK;
+        }
+
+        return E_FAIL;*/
     }
     else if (riid == IID_IHostGCManager)
     {
+        PepAppHostGCManager* pHostGCManager = new (std::nothrow) PepAppHostGCManager();
+
+        if (pHostGCManager)
+        {
+            pHostGCManager->AddRef();
+
+            *ppObject = pHostGCManager;
+
+            return S_OK;
+        }
+
+        return E_FAIL;
     }
     else if (riid == IID_IHostPolicyManager)
     {
+        PepAppHostPolicyManager* pHostPolicyManager = new (std::nothrow) PepAppHostPolicyManager();
+
+        if (pHostPolicyManager)
+        {
+            pHostPolicyManager->AddRef();
+
+            *ppObject = pHostPolicyManager;
+
+            return S_OK;
+        }
+
+        return E_FAIL;
     }
     else if (riid == IID_IHostSecurityManager)
     {
+        PepAppHostSecurityManager* pHostSecurityManager = new (std::nothrow) PepAppHostSecurityManager();
+
+        if (pHostSecurityManager)
+        {
+            pHostSecurityManager->AddRef();
+
+            *ppObject = pHostSecurityManager;
+
+            return S_OK;
+        }
+
+        return E_FAIL;
     }
 
     return E_NOINTERFACE;
