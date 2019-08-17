@@ -256,7 +256,7 @@ INT PepAppExecute(
 
     SetupData.AppHostData.pUninitialize();
 
-    ::FreeLibrary(SetupData.AppHostData.hModule);
+    //::FreeLibrary(SetupData.AppHostData.hModule);
 
     lUninitialize();
 

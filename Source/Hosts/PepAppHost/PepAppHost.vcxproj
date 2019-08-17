@@ -220,13 +220,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\PepAppHost.h" />
+    <ClInclude Include="PepAppActionOnCLREvent.h" />
+    <ClInclude Include="PepAppHostAssemblyManager.h" />
     <ClInclude Include="PepAppHostAutoEvent.h" />
     <ClInclude Include="PepAppHostControl.h" />
     <ClInclude Include="PepAppHostCrst.h" />
+    <ClInclude Include="PepAppHostGCManager.h" />
     <ClInclude Include="PepAppHostIOCompletionManager.h" />
     <ClInclude Include="PepAppHostMalloc.h" />
     <ClInclude Include="PepAppHostManualEvent.h" />
     <ClInclude Include="PepAppHostMemoryManager.h" />
+    <ClInclude Include="PepAppHostPolicyManager.h" />
+    <ClInclude Include="PepAppHostSecurityContext.h" />
+    <ClInclude Include="PepAppHostSecurityManager.h" />
     <ClInclude Include="PepAppHostSemaphore.h" />
     <ClInclude Include="PepAppHostSyncManager.h" />
     <ClInclude Include="PepAppHostTask.h" />
@@ -237,10 +243,13 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="PepAppActionOnCLREvent.cpp" />
     <ClCompile Include="PepAppHost.cpp" />
+    <ClCompile Include="PepAppHostAssemblyManager.cpp" />
     <ClCompile Include="PepAppHostAutoEvent.cpp" />
     <ClCompile Include="PepAppHostControl.cpp" />
     <ClCompile Include="PepAppHostCrst.cpp" />
+    <ClCompile Include="PepAppHostGCManager.cpp" />
     <ClCompile Include="PepAppHostIOCompletionManager.cpp" />
     <ClCompile Include="PepAppHostMain.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -251,6 +260,9 @@
     <ClCompile Include="PepAppHostMalloc.cpp" />
     <ClCompile Include="PepAppHostManualEvent.cpp" />
     <ClCompile Include="PepAppHostMemoryManager.cpp" />
+    <ClCompile Include="PepAppHostPolicyManager.cpp" />
+    <ClCompile Include="PepAppHostSecurityContext.cpp" />
+    <ClCompile Include="PepAppHostSecurityManager.cpp" />
     <ClCompile Include="PepAppHostSemaphore.cpp" />
     <ClCompile Include="PepAppHostSyncManager.cpp" />
     <ClCompile Include="PepAppHostTask.cpp" />

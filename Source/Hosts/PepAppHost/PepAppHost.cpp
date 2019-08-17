@@ -10,6 +10,8 @@
 
 #include <new>
 
+#include "PepAppActionOnCLREvent.h"
+
 #pragma region "Public Functions"
 
 MExternC BOOL PEPAPPHOSTAPI PepAppHostInitialize(VOID)
@@ -28,7 +30,10 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
     ICLRMetaHost* pCLRMetaHost = NULL;
     ICLRRuntimeInfo* pCLRRuntimeInfo = NULL;
     ICLRRuntimeHost* pCLRRuntimeHost = NULL;
+    ICLRControl* pCLRControl = NULL;
+    ICLROnEventManager* pCLROnEventManager = NULL;
     PepAppHostControl* pPepAppHostControl = NULL;
+    PepAppActionOnCLREvent* pPepAppActionOnCLREvent = NULL;
 
     *pdwExitCode = 0;
 
@@ -90,8 +95,71 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
         return FALSE;
     }
 
+    if (S_OK != pCLRRuntimeHost->GetCLRControl(&pCLRControl))
+    {
+        pPepAppHostControl->Release();
+        pCLRRuntimeHost->Release();
+        pCLRRuntimeInfo->Release();
+        pCLRMetaHost->Release();
+
+        ::CoUninitialize();
+
+        return FALSE;
+    }
+
+    if (S_OK != pCLRControl->GetCLRManager(IID_ICLROnEventManager, (LPVOID*)&pCLROnEventManager))
+    {
+        pPepAppHostControl->Release();
+        pCLRRuntimeHost->Release();
+        pCLRRuntimeInfo->Release();
+        pCLRMetaHost->Release();
+
+        ::CoUninitialize();
+
+        return FALSE;
+    }
+
+    pPepAppActionOnCLREvent = new (std::nothrow) PepAppActionOnCLREvent();
+
+    if (pPepAppActionOnCLREvent)
+    {
+        pPepAppActionOnCLREvent->AddRef();
+
+        pCLROnEventManager->RegisterActionOnEvent(Event_DomainUnload, pPepAppActionOnCLREvent);
+        pCLROnEventManager->RegisterActionOnEvent(Event_ClrDisabled, pPepAppActionOnCLREvent);
+        pCLROnEventManager->RegisterActionOnEvent(Event_MDAFired, pPepAppActionOnCLREvent);
+        pCLROnEventManager->RegisterActionOnEvent(Event_StackOverflow, pPepAppActionOnCLREvent);
+        //pCLROnEventManager->RegisterActionOnEvent(MaxClrEvent, pPepAppActionOnCLREvent);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (S_OK != pCLRRuntimeHost->Start())
     {
+        if (pPepAppActionOnCLREvent)
+        {
+            pCLROnEventManager->UnregisterActionOnEvent(Event_DomainUnload, pPepAppActionOnCLREvent);
+            pCLROnEventManager->UnregisterActionOnEvent(Event_ClrDisabled, pPepAppActionOnCLREvent);
+            pCLROnEventManager->UnregisterActionOnEvent(Event_MDAFired, pPepAppActionOnCLREvent);
+            pCLROnEventManager->UnregisterActionOnEvent(Event_StackOverflow, pPepAppActionOnCLREvent);
+            //pCLROnEventManager->UnregisterActionOnEvent(MaxClrEvent, pPepAppActionOnCLREvent);
+
+            pPepAppActionOnCLREvent->Release();
+        }
+
+        pCLROnEventManager->Release();
+        pCLRControl->Release();
         pPepAppHostControl->Release();
         pCLRRuntimeHost->Release();
         pCLRRuntimeInfo->Release();
@@ -110,6 +178,19 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 
     pCLRRuntimeHost->Stop();
 
+    if (pPepAppActionOnCLREvent)
+    {
+        pCLROnEventManager->UnregisterActionOnEvent(Event_DomainUnload, pPepAppActionOnCLREvent);
+        pCLROnEventManager->UnregisterActionOnEvent(Event_ClrDisabled, pPepAppActionOnCLREvent);
+        pCLROnEventManager->UnregisterActionOnEvent(Event_MDAFired, pPepAppActionOnCLREvent);
+        pCLROnEventManager->UnregisterActionOnEvent(Event_StackOverflow, pPepAppActionOnCLREvent);
+        //pCLROnEventManager->UnregisterActionOnEvent(MaxClrEvent, pPepAppActionOnCLREvent);
+
+        pPepAppActionOnCLREvent->Release();
+    }
+
+    pCLROnEventManager->Release();
+    pCLRControl->Release();
     pPepAppHostControl->Release();
     pCLRRuntimeHost->Release();
     pCLRRuntimeInfo->Release();

@@ -90,7 +90,7 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
     }
     else if (riid == IID_IHostTaskManager)
     {
-        PepAppHostTaskManager* pHostTaskManager = new (std::nothrow) PepAppHostTaskManager();
+        /*PepAppHostTaskManager* pHostTaskManager = new (std::nothrow) PepAppHostTaskManager();
 
         if (pHostTaskManager)
         {
@@ -101,7 +101,7 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
             return S_OK;
         }
 
-        return E_FAIL;
+        return E_FAIL;*/
     }
     else if (riid == IID_IHostThreadpoolManager)
     {
