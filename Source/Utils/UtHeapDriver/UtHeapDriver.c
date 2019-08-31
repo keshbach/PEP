@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -13,7 +13,7 @@
 static ULONG l_MemPoolTag = 0;
 
 VOID UTHEAPDRIVERAPI UtInitMemPoolTag(
-  IN ULONG Tag)
+  _In_ ULONG Tag)
 {
     PAGED_CODE()
 
@@ -21,29 +21,46 @@ VOID UTHEAPDRIVERAPI UtInitMemPoolTag(
 }
 
 PVOID UTHEAPDRIVERAPI UtAllocPagedMem(
-  IN SIZE_T NumberOfBytes)
+  _In_ SIZE_T NumberOfBytes)
 {
     return ExAllocatePoolWithTag(PagedPool, NumberOfBytes, l_MemPoolTag);
 }
 
 PVOID UTHEAPDRIVERAPI UtAllocNonPagedMem(
-  IN SIZE_T NumberOfBytes)
+  _In_ SIZE_T NumberOfBytes)
 {
-    return ExAllocatePoolWithTag(NonPagedPool, NumberOfBytes, l_MemPoolTag);
+    POOL_TYPE PoolType = NonPagedPool;
+    RTL_OSVERSIONINFOW VersionInfo;
+
+    VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
+    
+    if (STATUS_SUCCESS == RtlGetVersion(&VersionInfo))
+    {
+        if (VersionInfo.dwMajorVersion > 6)
+        {
+            PoolType = NonPagedPoolNx;
+        }
+        else if (VersionInfo.dwMajorVersion == 6 && VersionInfo.dwMinorVersion >= 2)
+        {
+            PoolType = NonPagedPoolNx;
+        }
+    }
+
+    return ExAllocatePoolWithTag(PoolType, NumberOfBytes, l_MemPoolTag);
 }
 
 VOID UTHEAPDRIVERAPI UtFreePagedMem(
-  IN PVOID pvMem)
+  _In_ PVOID pvMem)
 {
-    ExFreePoolWithTag(pvMem, l_MemPoolTag | PROTECTED_POOL);
+    ExFreePoolWithTag(pvMem, l_MemPoolTag);
 }
 
 VOID UTHEAPDRIVERAPI UtFreeNonPagedMem(
-  IN PVOID pvMem)
+  _In_ PVOID pvMem)
 {
-    ExFreePoolWithTag(pvMem, l_MemPoolTag | PROTECTED_POOL);
+    ExFreePoolWithTag(pvMem, l_MemPoolTag);
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/

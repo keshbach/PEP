@@ -5,17 +5,15 @@
 #if !defined(UtHeapDriver_H)
 #define UtHeapDriver_H
 
-#include <Includes/UtExternC.h>
-
 #define UTHEAPDRIVERAPI __stdcall
 
-MExternC VOID UTHEAPDRIVERAPI UtInitMemPoolTag(IN ULONG Tag);
+VOID UTHEAPDRIVERAPI UtInitMemPoolTag(_In_ ULONG Tag);
 
-MExternC PVOID UTHEAPDRIVERAPI UtAllocPagedMem(IN SIZE_T NumberOfBytes);
-MExternC PVOID UTHEAPDRIVERAPI UtAllocNonPagedMem(IN SIZE_T NumberOfBytes);
+PVOID UTHEAPDRIVERAPI UtAllocPagedMem(_In_ SIZE_T NumberOfBytes);
+PVOID UTHEAPDRIVERAPI UtAllocNonPagedMem(_In_ SIZE_T NumberOfBytes);
 
-MExternC VOID UTHEAPDRIVERAPI UtFreePagedMem(IN PVOID pvMem);
-MExternC VOID UTHEAPDRIVERAPI UtFreeNonPagedMem(IN PVOID pvMem);
+VOID UTHEAPDRIVERAPI UtFreePagedMem(_In_ PVOID pvMem);
+VOID UTHEAPDRIVERAPI UtFreeNonPagedMem(_In_ PVOID pvMem);
 
 #endif /* !defined(UtHeapDriver_H) */
 
