@@ -22,7 +22,9 @@
 #define CPepCtrlStateRunning            0x0001
 #define CPepCtrlStateDeviceControl      0x0002
 #define CPepCtrlStateUnloading          0x0003
-#define CPepCtrlStateChangePortSettings 0x0004 
+#define CPepCtrlStateChangePortSettings 0x0004
+#define CPepCtrlStateDeviceArrived      0x0005
+#define CPepCtrlStateDeviceRemoved      0x0006
 
 struct tagTPepCtrlObject;
 
@@ -36,7 +38,7 @@ typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlReadBitPortFunc)(_In_ struct tagTPepCtrlOb
 typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlWritePortFunc)(_In_ struct tagTPepCtrlObject* pPortData,
                                                      _In_ PUCHAR pucData,
                                                      _In_ ULONG ulDataLen);
-typedef LPGUID(TPEPCTRLAPI *TPepCtrlGetDevInterfaceGuidFunc)(VOID);
+typedef LPGUID (TPEPCTRLAPI *TPepCtrlGetDevInterfaceGuidFunc)(VOID);
 
 typedef struct tagTPepCtrlFuncs
 {

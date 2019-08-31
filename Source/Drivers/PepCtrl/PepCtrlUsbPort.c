@@ -46,6 +46,7 @@ static GUID l_UsbPrintGuid = { 0 };
 
 #pragma region "Local Functions"
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 static NTSTATUS lUsbPortIoCompletion(
   _In_ PDEVICE_OBJECT pDeviceObject,
   _In_ PIRP pIrp,
@@ -561,6 +562,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
   _In_ TPepCtrlObject* pObject,
   _In_ LPCWSTR pszDeviceName)
@@ -600,6 +602,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TPEPCTRLAPI PepCtrlFreeUsbPort(
   _In_ TPepCtrlObject* pObject)
 {
@@ -616,6 +619,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlFreeUsbPort(
     return TRUE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 LPGUID TPEPCTRLAPI PepCtrlGetUsbPortDevInterfaceGuid(VOID)
 {
     PepCtrlLog("PepCtrlGetUsbPortDevInterfaceGuid entering.\n");

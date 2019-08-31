@@ -45,24 +45,82 @@ static DRIVER_CANCEL lDeviceControlCancelIrpRoutine;
 
 #pragma region "Local Functions"
 
+_IRQL_requires_min_(DISPATCH_LEVEL)
 static VOID lDeviceControlCancelIrpRoutine(
   _In_ _Out_ PDEVICE_OBJECT pDeviceObject,
   _In_ PIRP pIrp)
 {
+    BOOLEAN bQuit = FALSE;
 	TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
     PepCtrlLog("lDeviceControlCancelIrpRoutine entering.\n");
 
-	IoReleaseCancelSpinLock(pIrp->CancelIrql);
+    IoReleaseCancelSpinLock(pIrp->CancelIrql);
 
-    ExAcquireFastMutex(&pPortData->FastMutex);
+    while (!bQuit)
+    {
+        if (ExTryToAcquireFastMutex(&pPortData->FastMutex))
+        {
+            switch (pPortData->nState)
+            {
+                case CPepCtrlStateRunning:
+                    if (pPortData->pIrp == pIrp)
+                    {
+                        PepCtrlLog("lDeviceControlCancelIrpRoutine - Clearing out the existing device notification IRP.\n");
 
-	if (pPortData->pIrp == pIrp)
-	{
-		pPortData->pIrp = NULL;
-	}
+                        pPortData->pIrp = NULL;
+                    }
 
-	ExReleaseFastMutex(&pPortData->FastMutex);
+                    bQuit = TRUE;
+                    break;
+                case CPepCtrlStateUnloading:
+                case CPepCtrlStateDeviceArrived:
+                case CPepCtrlStateDeviceRemoved:
+                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Invalid state of %d\n",
+                               pPortData->nState);
+
+                    bQuit = TRUE;
+                    break;
+                case CPepCtrlStateDeviceControl:
+                case CPepCtrlStateChangePortSettings:
+                    break;
+                default:
+                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Unknown state of %d\n",
+                               pPortData->nState);
+
+                    bQuit = TRUE;
+                    break;
+            }
+
+            ExReleaseFastMutex(&pPortData->FastMutex);
+        }
+        else
+        {
+            switch (pPortData->nState)
+            {
+                case CPepCtrlStateUnloading:
+                    bQuit = TRUE;
+                    break;
+                case CPepCtrlStateRunning:
+                case CPepCtrlStateDeviceControl:
+                case CPepCtrlStateChangePortSettings:
+                    break;
+                case CPepCtrlStateDeviceArrived:
+                case CPepCtrlStateDeviceRemoved:
+                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Invalid state of %d\n",
+                                pPortData->nState);
+
+                    bQuit = TRUE;
+                    break;
+                default:
+                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Unknown state of %d\n",
+                        pPortData->nState);
+
+                    bQuit = TRUE;
+                    break;
+            }
+        }
+    }
 
 	pIrp->IoStatus.Status = STATUS_CANCELLED;
 	pIrp->IoStatus.Information = 0;
@@ -74,6 +132,7 @@ static VOID lDeviceControlCancelIrpRoutine(
 
 #pragma endregion
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -120,6 +179,7 @@ NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_SetVccMode(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -166,6 +226,7 @@ NTSTATUS PepCtrlDeviceControl_SetVccMode(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -212,6 +273,7 @@ NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_SetVppMode(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -258,6 +320,7 @@ NTSTATUS PepCtrlDeviceControl_SetVppMode(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_SetAddress(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -304,6 +367,7 @@ NTSTATUS PepCtrlDeviceControl_SetAddress(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_GetData(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -352,6 +416,7 @@ NTSTATUS PepCtrlDeviceControl_GetData(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_SetData(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -398,6 +463,7 @@ NTSTATUS PepCtrlDeviceControl_SetData(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_TriggerProgram(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -449,6 +515,7 @@ NTSTATUS PepCtrlDeviceControl_TriggerProgram(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_SetOutputEnable(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -495,6 +562,7 @@ NTSTATUS PepCtrlDeviceControl_SetOutputEnable(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -530,7 +598,7 @@ NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
 		{
 			Status = STATUS_ARRAY_BOUNDS_EXCEEDED;
 		}
-	}
+    }
 
 	pIrp->IoStatus.Status = Status;
 
@@ -539,6 +607,7 @@ NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_DeviceNotification(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -576,7 +645,7 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 		return Status;
 	}
 
-	if (pPortData->pIrp == NULL)
+    if (pPortData->pIrp == NULL)
 	{
         PepCtrlLog("PepCtrlDeviceControl_DeviceNotification - Saving off the IRP.\n");
 
@@ -592,7 +661,7 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 	}
 	else
 	{
-		pIrp->IoStatus.Status = Status;
+        pIrp->IoStatus.Status = Status;
 
 		IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 	}
@@ -600,6 +669,7 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_GetSettings(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData, 
@@ -671,6 +741,7 @@ NTSTATUS PepCtrlDeviceControl_GetSettings(
     return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_SetSettings(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
@@ -773,11 +844,11 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
         ulDeviceNameLen = 1;
     }
 
+    pPortData->nState = CPepCtrlStateChangePortSettings;
+
     if (pPortData->RegSettings.nPortType != CPepCtrlNoPortType)
     {
         PepCtrlLog("PepCtrlDeviceControl_SetSettings releasing the existing device.\n");
-
-        pPortData->nState = CPepCtrlStateChangePortSettings;
 
         if (PepCtrlPlugPlayUnregister(pPortData->pvPlugPlayData))
         {
@@ -787,8 +858,6 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
         {
             PepCtrlLog("PepCtrlDeviceControl_SetSettings - Could not unregister the Plug and Play notification.\n");
         }
-
-        pPortData->nState = CPepCtrlStateDeviceControl;
 
         pPortData->RegSettings.nPortType = CPepCtrlNoPortType;
     }
@@ -813,6 +882,8 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
     if (!PepCtrlWriteRegSettings(&RegistryPath, pPortSettings->nPortType,
                                  pPortSettings->cPortDeviceName))
     {
+        pPortData->nState = CPepCtrlStateDeviceControl;
+
         Status = STATUS_UNSUCCESSFUL;
 
         pIrp->IoStatus.Status = Status;
@@ -828,6 +899,8 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
     if (pszDeviceName == NULL)
     {
+        pPortData->nState = CPepCtrlStateDeviceControl;
+
         Status = STATUS_UNSUCCESSFUL;
 
         pIrp->IoStatus.Status = Status;
@@ -869,6 +942,8 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
             PepCtrlLog("PepCtrlDeviceControl_SetSettings - Plug and Play notification failed to register.\n");
         }
     }
+
+    pPortData->nState = CPepCtrlStateDeviceControl;
 
     Status = STATUS_SUCCESS;
 

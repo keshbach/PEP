@@ -44,6 +44,8 @@ static BOOLEAN lWriteRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueNa
 #endif
 
 #pragma region "Local Functions"
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lReadRegULongValue(
   _In_ HANDLE hRegKey,
   _In_ LPCWSTR pszValueName,
@@ -115,6 +117,7 @@ static BOOLEAN lReadRegULongValue(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lReadRegStringValue(
   _In_ HANDLE hRegKey,
   _In_ LPCWSTR pszValueName,
@@ -203,6 +206,7 @@ static BOOLEAN lReadRegStringValue(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWriteRegULongValue(
   _In_ HANDLE hRegKey,
   _In_ LPCWSTR pszValueName,
@@ -234,6 +238,7 @@ static BOOLEAN lWriteRegULongValue(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWriteRegStringValue(
   _In_ HANDLE hRegKey,
   _In_ LPCWSTR pszValueName,
@@ -269,6 +274,7 @@ static BOOLEAN lWriteRegStringValue(
 }
 #pragma endregion
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN PepCtrlReadRegSettings(
   _In_ PUNICODE_STRING pRegistryPath,
   _Out_ PULONG pulPortType,
@@ -338,6 +344,7 @@ BOOLEAN PepCtrlReadRegSettings(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN PepCtrlWriteRegSettings(
   _In_ PUNICODE_STRING pRegistryPath,
   _In_ ULONG ulPortType,

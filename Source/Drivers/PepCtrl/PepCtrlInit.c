@@ -27,9 +27,17 @@
 static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(_In_ PVOID pvContext, _Out_ PBOOLEAN pbValue);
 static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(_In_ PVOID pvContext, _In_ PUCHAR pucData, _In_ ULONG ulDataLen);
 static VOID __cdecl lPepLogicLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lPortDeviceArrived(_In_ TPepCtrlPortData* pPortData);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID lPortDeviceRemoved(_In_ TPepCtrlPortData* pPortData);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(_In_ PDEVICE_OBJECT pDeviceObject);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(_In_ PDEVICE_OBJECT pDeviceObject);
 
 #if defined(ALLOC_PRAGMA)
@@ -84,11 +92,12 @@ static VOID __cdecl lPepLogicLog(
 
     va_start(arguments, pszFormat);
 
-    PepCtrlLog(pszFormat, arguments);
+    PepCtrlLogV(pszFormat, arguments);
 
     va_end(arguments);
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lPortDeviceArrived(
   _In_ TPepCtrlPortData* pPortData)
 {
@@ -146,6 +155,7 @@ static BOOLEAN lPortDeviceArrived(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID lPortDeviceRemoved(
   _In_ TPepCtrlPortData* pPortData)
 {
@@ -198,12 +208,15 @@ static VOID lPortDeviceRemoved(
     PepCtrlLog("lPortDeviceRemoved leaving.\n");
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
   _In_ PDEVICE_OBJECT pDeviceObject)
 {
     BOOLEAN bResult = FALSE;
     BOOLEAN bQuit = FALSE;
+    BOOLEAN bCallPortArrivedFunc = FALSE;
     TPepCtrlPortData* pPortData;
+    LARGE_INTEGER Interval;
 
     PepCtrlLog("lPepPlugPlayDeviceArrived entering.\n");
 
@@ -218,7 +231,47 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
     {
         if (ExTryToAcquireFastMutex(&pPortData->FastMutex))
         {
-            bResult = lPortDeviceArrived(pPortData);
+            switch (pPortData->nState)
+            {
+                case CPepCtrlStateRunning:
+                    pPortData->nState = CPepCtrlStateDeviceArrived;
+
+                    bCallPortArrivedFunc = TRUE;
+                    break;
+                case CPepCtrlStateDeviceControl:
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unsupported state of CPepCtrlStateDeviceControl\n");
+                    break;
+                case CPepCtrlStateDeviceArrived:
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unsupported state of CPepCtrlStateDeviceArrived\n");
+                    break;
+                case CPepCtrlStateDeviceRemoved:
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unsupported state of CPepCtrlStateDeviceRemoved\n");
+                    break;
+                case CPepCtrlStateUnloading:
+                case CPepCtrlStateChangePortSettings:
+                    break;
+                default:
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unknown state of %d\n",
+                               pPortData->nState);
+                    break;
+            }
+
+            ExReleaseFastMutex(&pPortData->FastMutex);
+
+            if (bCallPortArrivedFunc)
+            {
+                bResult = lPortDeviceArrived(pPortData);
+            }
+
+            ExAcquireFastMutex(&pPortData->FastMutex);
+
+            if (pPortData->nState != CPepCtrlStateDeviceArrived)
+            {
+                PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: State should be CPepCtrlStateDeviceArrived not %d\n",
+                           pPortData->nState);
+            }
+
+            pPortData->nState = CPepCtrlStateRunning;
 
             ExReleaseFastMutex(&pPortData->FastMutex);
 
@@ -226,9 +279,26 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
         }
         else
         {
-            if (pPortData->nState == CPepCtrlStateUnloading)
+            switch (pPortData->nState)
             {
-                bQuit = TRUE;
+                case CPepCtrlStateRunning:
+                case CPepCtrlStateDeviceControl:
+                    Interval.QuadPart = -1;
+
+                    KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+                    break;
+                case CPepCtrlStateUnloading:
+                case CPepCtrlStateChangePortSettings:
+                case CPepCtrlStateDeviceArrived:
+                case CPepCtrlStateDeviceRemoved:
+                    bQuit = TRUE;
+                    break;
+                default:
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unknown state of %d\n",
+                               pPortData->nState);
+
+                    bQuit = TRUE;
+                    break;
             }
         }
     }
@@ -238,11 +308,14 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
   _In_ PDEVICE_OBJECT pDeviceObject)
 {
     BOOLEAN bQuit = FALSE;
+    BOOLEAN bCallPortRemovedFunc = FALSE;
     TPepCtrlPortData* pPortData;
+    LARGE_INTEGER Interval;
 
     PepCtrlLog("lPepPlugPlayDeviceRemoved entering.\n");
 
@@ -257,7 +330,47 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
     {
         if (ExTryToAcquireFastMutex(&pPortData->FastMutex))
         {
-            lPortDeviceRemoved(pPortData);
+            switch (pPortData->nState)
+            {
+                case CPepCtrlStateRunning:
+                    pPortData->nState = CPepCtrlStateDeviceRemoved;
+
+                    bCallPortRemovedFunc = TRUE;
+                    break;
+                case CPepCtrlStateDeviceControl:
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceControl\n");
+                    break;
+                case CPepCtrlStateDeviceArrived:
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceArrived\n");
+                    break;
+                case CPepCtrlStateDeviceRemoved:
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceRemoved\n");
+                    break;
+                case CPepCtrlStateUnloading:
+                case CPepCtrlStateChangePortSettings:
+                    break;
+                default:
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unknown state of %d\n",
+                               pPortData->nState);
+                    break;
+            }
+
+            ExReleaseFastMutex(&pPortData->FastMutex);
+
+            if (bCallPortRemovedFunc)
+            {
+                lPortDeviceRemoved(pPortData);
+            }
+
+            ExAcquireFastMutex(&pPortData->FastMutex);
+
+            if (pPortData->nState != CPepCtrlStateDeviceRemoved)
+            {
+                PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: State should be CPepCtrlStateDeviceRemoved not %d\n",
+                          pPortData->nState);
+            }
+
+            pPortData->nState = CPepCtrlStateRunning;
 
             ExReleaseFastMutex(&pPortData->FastMutex);
 
@@ -265,12 +378,28 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
         }
         else
         {
-            if (pPortData->nState == CPepCtrlStateUnloading ||
-                pPortData->nState == CPepCtrlStateChangePortSettings)
+            switch (pPortData->nState)
             {
-                lPortDeviceRemoved(pPortData);
+                case CPepCtrlStateRunning:
+                case CPepCtrlStateDeviceControl:
+                    Interval.QuadPart = -1;
 
-                bQuit = TRUE;
+                    KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+                    break;
+                case CPepCtrlStateUnloading:
+                case CPepCtrlStateChangePortSettings:
+                    lPortDeviceRemoved(pPortData);
+
+                    bQuit = TRUE;
+                    break;
+                case CPepCtrlStateDeviceArrived:
+                case CPepCtrlStateDeviceRemoved:
+                    bQuit = TRUE;
+                    break;
+                default:
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unknown state of %d\n",
+                               pPortData->nState);
+                    break;
             }
         }
     }
@@ -280,6 +409,7 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
 
 #pragma endregion
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN PepCtrlInitPortData(
   _In_ PDRIVER_OBJECT pDriverObject,
   _In_ PDEVICE_OBJECT pDeviceObject,
@@ -324,7 +454,7 @@ BOOLEAN PepCtrlInitPortData(
 
     PepCtrlLog("PepCtrlInitPortData - Allocating memory for the registry path.\n");
 
-    pPortData->RegSettings.pszRegistryPath = (LPWSTR)UtAllocPagedMem((pRegistryPath->Length + 1) * sizeof(WCHAR));
+    pPortData->RegSettings.pszRegistryPath = (LPWSTR)UtAllocPagedMem(pRegistryPath->Length + sizeof(WCHAR));
 
     if (pPortData->RegSettings.pszRegistryPath == NULL)
     {
@@ -340,9 +470,7 @@ BOOLEAN PepCtrlInitPortData(
     PepCtrlLog("PepCtrlInitPortData - Memory allocated for the registry path.\n");
 
     RtlCopyMemory(pPortData->RegSettings.pszRegistryPath, pRegistryPath->Buffer,
-                  pRegistryPath->Length * sizeof(WCHAR));
-
-    *(pPortData->RegSettings.pszRegistryPath + pRegistryPath->Length) = 0;
+                  pRegistryPath->Length + sizeof(WCHAR));
 
     PepCtrlLog("PepCtrlInitPortData - Reading the registry settings.\n");
 
@@ -409,6 +537,7 @@ BOOLEAN PepCtrlInitPortData(
     return TRUE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID PepCtrlUninitPortData(
   _In_ TPepCtrlPortData* pPortData)
 {
@@ -450,6 +579,7 @@ VOID PepCtrlUninitPortData(
     PepCtrlLog("PepCtrlUninitPortData leaving.\n");
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID PepCtrlInitPortTypeFuncs(
   _In_ TPepCtrlPortData* pPortData)
 {

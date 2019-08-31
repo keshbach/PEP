@@ -77,13 +77,28 @@ typedef struct tagTPepCtrlPlugPlayDeviceInterfaceChangeEntry
 
 #pragma endregion
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lDoesSymbolicLinkNameMatchDeviceName(_In_ PUNICODE_STRING pSymbolicLinkName, _In_ PCWSTR pszDeviceName);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lAllocDeviceInterfaceChangeEntry(_In_ EPepCtrlPlugPlayDeviceInterfaceChangeType ChangeType, _In_ PUNICODE_STRING pSymbolicLinkName);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lPopDeviceInterfaceChangeEntry(_In_ TPepCtrlPlugPlayData* pPlugPlayData);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lPushDeviceInterfaceChangeEntry(_In_ TPepCtrlPlugPlayData* pPlugPlayData, _In_ EPepCtrlPlugPlayDeviceInterfaceChangeType ChangeType, _In_ PUNICODE_STRING pSymbolicLinkName);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID lEmptyDeviceInterfaceChangeList(_In_ TPepCtrlPlugPlayData* pPlugPlayData);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID lProcessDeviceInterfaceChangeEntry(_In_ TPepCtrlPlugPlayData* pPlugPlayData, _In_ TPepCtrlPlugPlayDeviceInterfaceChangeEntry* pDeviceInterfaceChangeEntry);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static KSTART_ROUTINE lDeviceInterfaceChangeThreadStart;
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static DRIVER_NOTIFICATION_CALLBACK_ROUTINE lDeviceInterfaceChange;
 
 #if defined(ALLOC_PRAGMA)
@@ -104,6 +119,7 @@ static DRIVER_NOTIFICATION_CALLBACK_ROUTINE lDeviceInterfaceChange;
 
 #pragma region "Local Functions"
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lDoesSymbolicLinkNameMatchDeviceName(
   _In_ PUNICODE_STRING pSymbolicLinkName,
   _In_ PCWSTR pszDeviceName)
@@ -218,33 +234,39 @@ static BOOLEAN lDoesSymbolicLinkNameMatchDeviceName(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lAllocDeviceInterfaceChangeEntry(
   _In_ EPepCtrlPlugPlayDeviceInterfaceChangeType ChangeType,
   _In_ PUNICODE_STRING pSymbolicLinkName)
 {
     TPepCtrlPlugPlayDeviceInterfaceChangeEntry* pDeviceInterfaceChangeEntry;
+    SIZE_T DeviceInterfaceChangeEntryLen;
 
     PepCtrlLog("lAllocDeviceInterfaceChangeEntry entering.\n");
 
     PAGED_CODE()
 
-    PepCtrlLog("lAllocDeviceInterfaceChangeEntry - Allocating memory for the entry.\n");
+    DeviceInterfaceChangeEntryLen = sizeof(TPepCtrlPlugPlayDeviceInterfaceChangeEntry) + pSymbolicLinkName->Length;
 
-    pDeviceInterfaceChangeEntry = (TPepCtrlPlugPlayDeviceInterfaceChangeEntry*)UtAllocPagedMem(sizeof(TPepCtrlPlugPlayDeviceInterfaceChangeEntry) +
-                                                                                                   (pSymbolicLinkName->Length * sizeof(WCHAR)));
+    PepCtrlLog("lAllocDeviceInterfaceChangeEntry - Allocating memory for the entry (Allocating %d bytes).\n",
+               (ULONG)DeviceInterfaceChangeEntryLen);
+
+    pDeviceInterfaceChangeEntry = (TPepCtrlPlugPlayDeviceInterfaceChangeEntry*)UtAllocPagedMem(DeviceInterfaceChangeEntryLen);
 
     if (pDeviceInterfaceChangeEntry)
     {
         PepCtrlLog("lAllocDeviceInterfaceChangeEntry - Successfully allocated memory for the device interface change entry pointer: 0x%p\n",
                    pDeviceInterfaceChangeEntry);
 
+        RtlZeroMemory(pDeviceInterfaceChangeEntry, DeviceInterfaceChangeEntryLen);
+
         pDeviceInterfaceChangeEntry->ChangeType = ChangeType;
         pDeviceInterfaceChangeEntry->SymbolicLinkName.Buffer = pDeviceInterfaceChangeEntry->cSymbolicLinkName;
         pDeviceInterfaceChangeEntry->SymbolicLinkName.Length = pSymbolicLinkName->Length;
-        pDeviceInterfaceChangeEntry->SymbolicLinkName.MaximumLength = pSymbolicLinkName->Length + 1;
+        pDeviceInterfaceChangeEntry->SymbolicLinkName.MaximumLength = pSymbolicLinkName->Length + sizeof(WCHAR);
 
-        RtlStringCchCopyW(pDeviceInterfaceChangeEntry->cSymbolicLinkName, pSymbolicLinkName->Length + 1,
-                          pSymbolicLinkName->Buffer);
+        RtlCopyMemory(pDeviceInterfaceChangeEntry->cSymbolicLinkName, pSymbolicLinkName->Buffer,
+                      pSymbolicLinkName->Length);
     }
     else
     {
@@ -256,6 +278,7 @@ static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lAllocDeviceInterfaceChangeEn
     return pDeviceInterfaceChangeEntry;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID lEmptyDeviceInterfaceChangeList(
   _In_ TPepCtrlPlugPlayData* pPlugPlayData)
 {
@@ -291,6 +314,7 @@ static VOID lEmptyDeviceInterfaceChangeList(
     PepCtrlLog("lEmptyDeviceInterfaceChangeList leaving.\n");
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lPopDeviceInterfaceChangeEntry(
   _In_ TPepCtrlPlugPlayData* pPlugPlayData)
 {
@@ -336,6 +360,7 @@ static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lPopDeviceInterfaceChangeEntr
     return pDeviceInterfaceChangeEntry;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lPushDeviceInterfaceChangeEntry(
   _In_ TPepCtrlPlugPlayData* pPlugPlayData,
   _In_ EPepCtrlPlugPlayDeviceInterfaceChangeType ChangeType,
@@ -372,11 +397,13 @@ static BOOLEAN lPushDeviceInterfaceChangeEntry(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID lProcessDeviceInterfaceChangeEntry(
   _In_ TPepCtrlPlugPlayData* pPlugPlayData,
   _In_ TPepCtrlPlugPlayDeviceInterfaceChangeEntry* pDeviceInterfaceChangeEntry)
 {
     UNICODE_STRING SymbolicLinkName;
+    SIZE_T SymbolicLinkNameLen;
 
     PepCtrlLog("lProcessDeviceInterfaceChangeEntry entering.\n");
 
@@ -395,16 +422,21 @@ static VOID lProcessDeviceInterfaceChangeEntry(
             {
                 PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device arrived matches the requested device.\n");
 
-                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Allocating memory for the symbolic link name.\n");
+                SymbolicLinkNameLen = pDeviceInterfaceChangeEntry->SymbolicLinkName.Length + sizeof(WCHAR);
 
-                pPlugPlayData->pszSymbolicLinkName = (PWSTR)UtAllocPagedMem((pDeviceInterfaceChangeEntry->SymbolicLinkName.Length + 1) * sizeof(WCHAR));
+                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Allocating memory for the symbolic link name.  (Allocating %d bytes)\n",
+                           (ULONG)SymbolicLinkNameLen);
+
+                pPlugPlayData->pszSymbolicLinkName = (PWSTR)UtAllocPagedMem(SymbolicLinkNameLen);
 
                 if (pPlugPlayData->pszSymbolicLinkName)
                 {
                     PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Memory allocated for the symbolic link name.\n");
 
-                    RtlStringCchCopyW(pPlugPlayData->pszSymbolicLinkName, pDeviceInterfaceChangeEntry->SymbolicLinkName.Length + 1,
-                                      pDeviceInterfaceChangeEntry->SymbolicLinkName.Buffer);
+                    RtlZeroMemory(pPlugPlayData->pszSymbolicLinkName, SymbolicLinkNameLen);
+
+                    RtlCopyMemory(pPlugPlayData->pszSymbolicLinkName, pDeviceInterfaceChangeEntry->SymbolicLinkName.Buffer,
+                                  pDeviceInterfaceChangeEntry->SymbolicLinkName.Length);
 
                     PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Attempting to allocate the device.\n");
 
@@ -479,6 +511,7 @@ static VOID lProcessDeviceInterfaceChangeEntry(
     PepCtrlLog("lProcessDeviceInterfaceChangeEntry leaving.\n");
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID lDeviceInterfaceChangeThreadStart(
   _In_ PVOID pvStartContext)
 {
@@ -492,16 +525,19 @@ static VOID lDeviceInterfaceChangeThreadStart(
 
     PAGED_CODE()
 
+    PepCtrlLog("lDeviceInterfaceChangeThreadStart - Plug 'n Play Data Pointer: 0x%p\n",
+               pPlugPlayData);
+
     Timeout.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
     while (!bQuit)
     {
         Status = KeWaitForSingleObject(&pPlugPlayData->QuitDeviceInterfaceChangeThreadEvent,
-                                       Executive, KernelMode, TRUE, &Timeout);
+                                       Executive, KernelMode, FALSE, &Timeout);
 
         if (Status == STATUS_SUCCESS)
         {
-            PepCtrlLog("lDeviceInterfaceChangeThreadStart - quitting the thread.\n");
+            PepCtrlLog("lDeviceInterfaceChangeThreadStart - Thread told to quit.\n");
 
             bQuit = TRUE;
         }
@@ -526,6 +562,7 @@ static VOID lDeviceInterfaceChangeThreadStart(
     PepCtrlLog("lDeviceInterfaceChangeThreadStart leaving.\n");
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static NTSTATUS lDeviceInterfaceChange(
   _In_ PVOID pvNotificationStructure,
   _In_ PVOID pvContext)
@@ -594,28 +631,33 @@ static NTSTATUS lDeviceInterfaceChange(
 
 #pragma endregion
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 PVOID PepCtrlPlugPlayAlloc(
   _In_ PDRIVER_OBJECT pDriverObject,
   _In_ PDEVICE_OBJECT pDeviceObject,
   _In_ TPepCtrlPlugPlayDeviceArrivedFunc pDeviceArrivedFunc,
   _In_ TPepCtrlPlugPlayDeviceRemovedFunc pDeviceRemovedFunc)
 {
+    SIZE_T PlugPlayDataLen;
     TPepCtrlPlugPlayData* pPlugPlayData;
 
     PepCtrlLog("PepCtrlPlugPlayAlloc entering.\n");
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlPlugPlayAlloc - Attempting to allocate memory for the Plug 'n Play Data.\n");
+    PlugPlayDataLen = sizeof(TPepCtrlPlugPlayData);
 
-    pPlugPlayData = (TPepCtrlPlugPlayData*)UtAllocPagedMem(sizeof(TPepCtrlPlugPlayData));
+    PepCtrlLog("PepCtrlPlugPlayAlloc - Attempting to allocate memory for the Plug 'n Play Data.  (Allocating %d bytes)\n",
+               (ULONG)PlugPlayDataLen);
+
+    pPlugPlayData = (TPepCtrlPlugPlayData*)UtAllocNonPagedMem(PlugPlayDataLen);
 
     if (pPlugPlayData)
     {
         PepCtrlLog("PepCtrlPlugPlayAlloc - Memory allocated for the Plug 'n Play Data.  (Data Pointer: 0x%p)\n",
                    pPlugPlayData);
 
-        RtlZeroMemory(pPlugPlayData, sizeof(TPepCtrlPlugPlayData));
+        RtlZeroMemory(pPlugPlayData, PlugPlayDataLen);
 
         pPlugPlayData->pDriverObject = pDriverObject;
         pPlugPlayData->pDeviceObject = pDeviceObject;
@@ -636,6 +678,7 @@ PVOID PepCtrlPlugPlayAlloc(
     return pPlugPlayData;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID PepCtrlPlugPlayFree(
   PVOID pvData)
 {
@@ -648,13 +691,14 @@ VOID PepCtrlPlugPlayFree(
     PepCtrlLog("PepCtrlPlugPlayFree - Freeing the memory for the Plug 'n Play Data  (Pointer: 0x%p).\n",
                pPlugPlayData);
 
-    UtFreePagedMem(pPlugPlayData);
+    UtFreeNonPagedMem(pPlugPlayData);
 
     PepCtrlLog("PepCtrlPlugPlayFree - Memory freed for the Plug 'n Play Data.\n");
 
     PepCtrlLog("PepCtrlPlugPlayFree leaving.\n");
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN PepCtrlPlugPlayRegister(
   _In_ LPGUID pGuid,
   _In_ PCWSTR pszDeviceName,
@@ -726,6 +770,7 @@ BOOLEAN PepCtrlPlugPlayRegister(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN PepCtrlPlugPlayUnregister(
   _In_ PVOID pvData)
 {
@@ -795,6 +840,7 @@ BOOLEAN PepCtrlPlugPlayUnregister(
     return TRUE;
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 BOOLEAN PepCtrlPlugPlayIsDevicePresent(
   _In_ PVOID pvData)
 {

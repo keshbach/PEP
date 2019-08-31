@@ -194,6 +194,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN bQuit = TRUE;
     PIO_STACK_LOCATION pIrpSp;
     PVOID pvInBuf, pvOutBuf;
     ULONG ulInBufLen, ulOutBufLen, ulIndex;
@@ -202,6 +203,44 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
     PAGED_CODE()
 
     PepCtrlLog("lPepCtrlIrpDeviceControl entering.\n");
+
+    ExAcquireFastMutex(&pPortData->FastMutex);
+
+    switch (pPortData->nState)
+    {
+        case CPepCtrlStateRunning:
+            pPortData->nState = CPepCtrlStateDeviceControl;
+
+            bQuit = FALSE;
+            break;
+        case CPepCtrlStateDeviceControl:
+        case CPepCtrlStateUnloading:
+        case CPepCtrlStateChangePortSettings:
+        case CPepCtrlStateDeviceArrived:
+        case CPepCtrlStateDeviceRemoved:
+            PepCtrlLog("lPepCtrlIrpDeviceControl - Invalid state of %d\n",
+                       pPortData->nState);
+            break;
+        default:
+            PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: Unknown state of %d\n",
+                       pPortData->nState);
+            break;
+    }
+
+    ExReleaseFastMutex(&pPortData->FastMutex);
+
+    if (bQuit)
+    {
+        Status = STATUS_UNSUCCESSFUL;
+
+        pIrp->IoStatus.Status = Status;
+
+        IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+        PepCtrlLog("lPepCtrlIrpDeviceControl leaving (Invalid state).\n");
+
+        return Status;
+    }
 
     pIrpSp = IoGetCurrentIrpStackLocation(pIrp);
 
@@ -221,25 +260,33 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
     {
         if (l_DeviceControlFuncs[ulIndex].ulIOControlCode == pIrpSp->Parameters.DeviceIoControl.IoControlCode)
         {
-            ExAcquireFastMutex(&pPortData->FastMutex);
-
-            pPortData->nState = CPepCtrlStateDeviceControl;
+            PepCtrlLog("lPepCtrlIrpDeviceControl - Function found for I/O Control Code: 0x%X.\n",
+                       pIrpSp->Parameters.DeviceIoControl.IoControlCode);
 
             bFuncFound = TRUE;
 
             Status = l_DeviceControlFuncs[ulIndex].DeviceControlFunc(pIrp, pPortData, pvInBuf,
                                                                      ulInBufLen, pvOutBuf,
                                                                      ulOutBufLen);
-
-            pPortData->nState = CPepCtrlStateRunning;
-
-            ExReleaseFastMutex(&pPortData->FastMutex);
         }
     }
 
+    ExAcquireFastMutex(&pPortData->FastMutex);
+
+    if (pPortData->nState != CPepCtrlStateDeviceControl)
+    {
+        PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: State should be CPepCtrlStateDeviceControl not %d\n",
+                   pPortData->nState);
+    }
+
+    pPortData->nState = CPepCtrlStateRunning;
+
+    ExReleaseFastMutex(&pPortData->FastMutex);
+
     if (bFuncFound == FALSE)
     {
-        PepCtrlLog("lPepCtrlIrpDeviceControl - Unsupported I/O Control Code\n");
+        PepCtrlLog("lPepCtrlIrpDeviceControl - Unsupported I/O Control Code: 0x%X\n",
+                   pIrpSp->Parameters.DeviceIoControl.IoControlCode);
 
         Status = STATUS_UNSUCCESSFUL;
 
@@ -271,6 +318,8 @@ static VOID lPepCtrlDriverUnload(
 
         pPortData->nState = CPepCtrlStateUnloading;
 
+        ExReleaseFastMutex(&pPortData->FastMutex);
+
         if (PepCtrlPlugPlayUnregister(pPortData->pvPlugPlayData))
         {
             PepCtrlLog("lPepCtrlDriverUnload - Plug and Play notification unregistered.\n");
@@ -280,7 +329,6 @@ static VOID lPepCtrlDriverUnload(
             PepCtrlLog("lPepCtrlDriverUnload - Could not unregister the Plug and Play notification.\n");
         }
 
-        ExReleaseFastMutex(&pPortData->FastMutex);
     }
 
     PepCtrlUninitPortData(pPortData);
@@ -314,7 +362,7 @@ NTSTATUS __stdcall DriverEntry(
     PDEVICE_OBJECT pDeviceObject;
     NTSTATUS status;
 
-    //PepCtrlLogOpenFile(L"\\DosDevices\\C:\\git\\pep\\pepctrl.log");
+    //PepCtrlLogOpenFile(L"\\??\\C:\\pepctrl.log");
 
     PepCtrlLog("DriverEntry entering");
 
@@ -348,10 +396,14 @@ NTSTATUS __stdcall DriverEntry(
     {
         PepCtrlLog("DriverEntry leaving (Could not create the symbolic link.  (0x%X))\n", status);
 
+        PepCtrlLog("DriverEntry - Deleting the device.\n");
+
         IoDeleteDevice(pDeviceObject);
 
         return status;
     }
+
+    PepCtrlLog("DriverEntry - Device Object pointer: 0x%p\n", pDeviceObject);
 
     pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 

@@ -14,6 +14,7 @@
 #pragma alloc_text (PAGE, PepCtrlThreadStop)
 #endif
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN PepCtrlThreadStart(
   _In_ PKSTART_ROUTINE pStartRoutine,
   _In_ PVOID pvContext,
@@ -43,6 +44,7 @@ BOOLEAN PepCtrlThreadStart(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN PepCtrlThreadStop(
   _In_ HANDLE hThread)
 {
