@@ -261,19 +261,19 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
             if (bCallPortArrivedFunc)
             {
                 bResult = lPortDeviceArrived(pPortData);
+
+                ExAcquireFastMutex(&pPortData->FastMutex);
+
+                if (pPortData->nState != CPepCtrlStateDeviceArrived)
+                {
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: State should be CPepCtrlStateDeviceArrived not %d\n",
+                               pPortData->nState);
+                }
+
+                pPortData->nState = CPepCtrlStateRunning;
+
+                ExReleaseFastMutex(&pPortData->FastMutex);
             }
-
-            ExAcquireFastMutex(&pPortData->FastMutex);
-
-            if (pPortData->nState != CPepCtrlStateDeviceArrived)
-            {
-                PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: State should be CPepCtrlStateDeviceArrived not %d\n",
-                           pPortData->nState);
-            }
-
-            pPortData->nState = CPepCtrlStateRunning;
-
-            ExReleaseFastMutex(&pPortData->FastMutex);
 
             bQuit = TRUE;
         }
@@ -316,6 +316,7 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
     BOOLEAN bCallPortRemovedFunc = FALSE;
     TPepCtrlPortData* pPortData;
     LARGE_INTEGER Interval;
+    INT32 nOriginalState;
 
     PepCtrlLog("lPepPlugPlayDeviceRemoved entering.\n");
 
@@ -330,9 +331,12 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
     {
         if (ExTryToAcquireFastMutex(&pPortData->FastMutex))
         {
+            nOriginalState = pPortData->nState;
+
             switch (pPortData->nState)
             {
                 case CPepCtrlStateRunning:
+                case CPepCtrlStateUnloading:
                     pPortData->nState = CPepCtrlStateDeviceRemoved;
 
                     bCallPortRemovedFunc = TRUE;
@@ -346,7 +350,6 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
                 case CPepCtrlStateDeviceRemoved:
                     PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceRemoved\n");
                     break;
-                case CPepCtrlStateUnloading:
                 case CPepCtrlStateChangePortSettings:
                     break;
                 default:
@@ -360,19 +363,19 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
             if (bCallPortRemovedFunc)
             {
                 lPortDeviceRemoved(pPortData);
+
+                ExAcquireFastMutex(&pPortData->FastMutex);
+
+                if (pPortData->nState != CPepCtrlStateDeviceRemoved)
+                {
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: State should be CPepCtrlStateDeviceRemoved not %d\n",
+                              pPortData->nState);
+                }
+
+                pPortData->nState = nOriginalState;
+
+                ExReleaseFastMutex(&pPortData->FastMutex);
             }
-
-            ExAcquireFastMutex(&pPortData->FastMutex);
-
-            if (pPortData->nState != CPepCtrlStateDeviceRemoved)
-            {
-                PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: State should be CPepCtrlStateDeviceRemoved not %d\n",
-                          pPortData->nState);
-            }
-
-            pPortData->nState = CPepCtrlStateRunning;
-
-            ExReleaseFastMutex(&pPortData->FastMutex);
 
             bQuit = TRUE;
         }
