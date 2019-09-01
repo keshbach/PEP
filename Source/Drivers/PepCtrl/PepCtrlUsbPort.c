@@ -24,7 +24,10 @@
    Local Functions
 */
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lResetUsbPort(_In_ TPepCtrlObject* pObject);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lReadDeviceId(_In_ TPepCtrlObject* pObject);
 
 #ifdef ALLOC_PRAGMA
@@ -68,6 +71,7 @@ static NTSTATUS lUsbPortIoCompletion(
 	return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lResetUsbPort(
   _In_ TPepCtrlObject* pObject)
 {
@@ -189,6 +193,7 @@ static BOOLEAN lResetUsbPort(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lReadDeviceId(
   _In_ TPepCtrlObject* pObject)
 {
@@ -313,6 +318,7 @@ static BOOLEAN lReadDeviceId(
 
 #pragma endregion
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
   _In_ TPepCtrlObject* pObject,
   _Out_ PBOOLEAN pbValue)
@@ -435,6 +441,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
   _In_ TPepCtrlObject* pObject,
   _In_ PUCHAR pucData,

@@ -5,9 +5,11 @@
 #if !defined(PepCtrlUsbPort_H)
 #define PepCtrlUsbPort_H
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(_In_ TPepCtrlObject* pObject,
                                           _Out_ PBOOLEAN pbValue);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(_In_ TPepCtrlObject* pObject,
                                         _In_ PUCHAR pucData,
                                         _In_ ULONG ulDataLen);
