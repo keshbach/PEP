@@ -22,10 +22,14 @@
 #include "PepCtrlPlugPlay.h"
 #include "PepCtrlInit.h"
 
+#pragma region "Constants"
+
 #define CPepCtrlMemPoolTag 'pep'
 
 #define CPepCtrlInternalDeviceName L"\\Device\\PepCtrl"
 #define CPepCtrlInternalDosDeviceName L"\\DosDevices\\PepCtrl"
+
+#pragma endregion
 
 DRIVER_INITIALIZE DriverEntry;
 
@@ -53,6 +57,8 @@ static DRIVER_UNLOAD lPepCtrlDriverUnload;
 #pragma alloc_text (PAGE, lPepCtrlDriverUnload)
 #endif
 
+#pragma region "Type Defs"
+
 typedef NTSTATUS (*TDeviceControlFunc)(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
 
 typedef struct tagTDeviceControlFuncs
@@ -60,6 +66,13 @@ typedef struct tagTDeviceControlFuncs
     ULONG ulIOControlCode;
     TDeviceControlFunc DeviceControlFunc;
 } TDeviceControlFuncs;
+
+#pragma endregion
+
+#pragma region "Local Variables"
+
+#pragma data_seg("PAGEDATA")
+#pragma bss_seg("PAGEBSS")
 
 static TDeviceControlFuncs l_DeviceControlFuncs[] = {
     {IOCTL_PEPCTRL_SET_PROGRAMMER_MODE, &PepCtrlDeviceControl_SetProgrammerMode},
@@ -75,6 +88,11 @@ static TDeviceControlFuncs l_DeviceControlFuncs[] = {
     {IOCTL_PEPCTRL_DEVICE_NOTIFICATION, &PepCtrlDeviceControl_DeviceNotification},
     {IOCTL_PEPCTRL_GET_SETTINGS,        &PepCtrlDeviceControl_GetSettings},
     {IOCTL_PEPCTRL_SET_SETTINGS,        &PepCtrlDeviceControl_SetSettings} };
+
+#pragma data_seg()
+#pragma bss_seg()
+
+#pragma endregion
 
 #pragma region "Local Functions"
 

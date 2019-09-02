@@ -24,8 +24,12 @@
 
 #include <Includes/UtMacros.h>
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(_In_ PVOID pvContext, _Out_ PBOOLEAN pbValue);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(_In_ PVOID pvContext, _In_ PUCHAR pucData, _In_ ULONG ulDataLen);
+
 static VOID __cdecl lPepLogicLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -55,6 +59,7 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(_In_ PDEVICE_OBJECT pD
 
 #pragma region "Local Functions"
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(
   _In_ PVOID pvContext,
   _Out_ PBOOLEAN pbValue)
@@ -69,6 +74,7 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(
     return pPortData->Funcs.pReadBitPortFunc(&pPortData->Object, pbValue);
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
   _In_ PVOID pvContext,
   _In_ PUCHAR pucData,

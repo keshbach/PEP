@@ -43,7 +43,13 @@ static BOOLEAN lReadDeviceId(_In_ TPepCtrlObject* pObject);
 
 #pragma region "Local Variables"
 
-static GUID l_UsbPrintGuid = { 0 };
+#pragma data_seg("PAGEDATA")
+#pragma bss_seg("PAGEBSS")
+
+static GUID l_UsbPrintGuid;
+
+#pragma data_seg()
+#pragma bss_seg()
 
 #pragma endregion
 

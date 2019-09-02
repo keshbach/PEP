@@ -57,9 +57,15 @@ static BOOLEAN lAllocParallelPort(_In_ PDEVICE_OBJECT pDeviceObject);
 #pragma alloc_text (PAGE, PepCtrlGetParallelPortDevInterfaceGuid)
 #endif
 
-#pragma region "Location Variables"
+#pragma region "Local Variables"
 
-static GUID l_ParallelGuid = { 0 };
+#pragma data_seg("PAGEDATA")
+#pragma bss_seg("PAGEBSS")
+
+static GUID l_ParallelGuid;
+
+#pragma data_seg()
+#pragma bss_seg()
 
 #pragma endregion
 

@@ -12,6 +12,7 @@
 
 #if !defined(NDEBUG)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lFlushFile();
 
 #if defined(ALLOC_PRAGMA)
@@ -21,9 +22,19 @@ static BOOLEAN lFlushFile();
 #pragma alloc_text (PAGE, lFlushFile)
 #endif
 
+#pragma region "Local Variables"
+
 static CHAR l_cBuffer[5121]; // max 512 buffer according to windows documentation on DbgPrint
 
+#pragma data_seg("PAGEDATA")
+#pragma bss_seg("PAGEBSS")
+
 static HANDLE l_hFile = NULL;
+
+#pragma data_seg()
+#pragma bss_seg()
+
+#pragma endregion
 
 #pragma region "Local Functions"
 

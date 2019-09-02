@@ -29,9 +29,16 @@
 
 #pragma endregion
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lReadRegULongValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ ULONG ulDefaultValue, _In_ _Out_ PULONG pulValue);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lReadRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ LPCWSTR pszDefaultValue, _Out_ LPWSTR* ppszValue);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWriteRegULongValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ ULONG ulValue);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWriteRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ LPCWSTR pszValue);
 
 #if defined(ALLOC_PRAGMA)
