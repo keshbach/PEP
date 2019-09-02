@@ -155,17 +155,40 @@ typedef struct tagTPepInternalLogicData
 
 #pragma region "Local Function Declarations"
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWritePortData(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 ucData, _In_ UINT8 ucUnit);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lReadByteFromProgrammer(_In_ TUtPepLogicData* pLogicData, _Out_ UINT8* pByte);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWriteByteToProgrammer(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 ucByte);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lSetProgrammerAddress(_In_ TUtPepLogicData* pLogicData, _In_ UINT32 ulAddress);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lSetProgrammerVppMode(_In_ TUtPepLogicData* pLogicData);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static UINT8 lPinPulseModeToData(_In_ TUtPepLogicData* pLogicData, _In_ UINT32 nPinPulseMode);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static UINT8 lVppModeToData(_In_ TUtPepLogicData* pLogicData, _In_ UINT32 nVppMode);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lResetProgrammerState(_In_ TUtPepLogicData* pLogicData);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lEnableProgrammerReadMode(_In_ TUtPepLogicData* pLogicData);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lEnableProgrammerWriteMode(_In_ TUtPepLogicData* pLogicData);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWaitForProgramPulse(_In_ TUtPepLogicData* pLogicData);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lInitModes(_In_ TPepInternalLogicData* pInternalData);
 
 #pragma endregion
@@ -206,6 +229,7 @@ static BOOLEAN lInitModes(_In_ TPepInternalLogicData* pInternalData);
   Local Functions
 */
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWritePortData(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT8 nData,
@@ -233,6 +257,7 @@ static BOOLEAN lWritePortData(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lReadByteFromProgrammer(
   _In_ TUtPepLogicData* pLogicData,
   _Out_ UINT8* pnByte)
@@ -279,6 +304,7 @@ static BOOLEAN lReadByteFromProgrammer(
     return TRUE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWriteByteToProgrammer(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT8 nByte)
@@ -303,6 +329,7 @@ static BOOLEAN lWriteByteToProgrammer(
     return FALSE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lSetProgrammerAddress(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nAddress)
@@ -399,6 +426,7 @@ static BOOLEAN lSetProgrammerAddress(
     return TRUE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lSetProgrammerVppMode(
   _In_ TUtPepLogicData* pLogicData)
 {
@@ -417,6 +445,7 @@ static BOOLEAN lSetProgrammerVppMode(
                           CUnit5_AddressLines12To19AndVppMode);
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static UINT8 lPinPulseModeToData(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nPinPulseMode)
@@ -441,6 +470,7 @@ static UINT8 lPinPulseModeToData(
     }
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static UINT8 lVppModeToData(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nVppMode)
@@ -466,6 +496,7 @@ static UINT8 lVppModeToData(
     return CUtPepLogic12VDCVppMode;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lResetProgrammerState(
   _In_ TUtPepLogicData* pLogicData)
 {
@@ -492,6 +523,7 @@ static BOOLEAN lResetProgrammerState(
     return FALSE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lEnableProgrammerReadMode(
   _In_ TUtPepLogicData* pLogicData)
 {
@@ -517,6 +549,7 @@ static BOOLEAN lEnableProgrammerReadMode(
     return FALSE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lEnableProgrammerWriteMode(
   _In_ TUtPepLogicData* pLogicData)
 {
@@ -544,6 +577,7 @@ static BOOLEAN lEnableProgrammerWriteMode(
     return FALSE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWaitForProgramPulse(
   _In_ TUtPepLogicData* pLogicData)
 {
@@ -641,6 +675,7 @@ static BOOLEAN lWaitForProgramPulse(
     return FALSE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lInitModes(
   _In_ TPepInternalLogicData* pInternalData)
 {
@@ -658,6 +693,7 @@ static BOOLEAN lInitModes(
 
 #pragma region "Public Functions"
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext()
 {
     TPepInternalLogicData* pLogicData;
@@ -669,7 +705,7 @@ PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext()
 #if defined(BUILD_USER_LIB)
     pLogicData = (TPepInternalLogicData*)UtAllocMem(sizeof(TPepInternalLogicData));
 #elif defined(BUILD_DRIVER_LIB)
-    pLogicData = (TPepInternalLogicData*)UtAllocNonPagedMem(sizeof(TPepInternalLogicData));
+    pLogicData = (TPepInternalLogicData*)UtAllocPagedMem(sizeof(TPepInternalLogicData));
 #endif
 
     pLogicData->nLastAddress = 0xFFFFFFFF;
@@ -679,6 +715,7 @@ PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext()
     return pLogicData;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID TUTPEPLOGICAPI UtPepLogicFreeLogicContext(
   _In_ PVOID pvLogicContext)
 {
@@ -693,6 +730,7 @@ VOID TUTPEPLOGICAPI UtPepLogicFreeLogicContext(
 #endif
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetProgrammerMode(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nProgrammerMode)
@@ -737,6 +775,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetProgrammerMode(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVccMode(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nVccMode)
@@ -788,6 +827,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVccMode(
 	return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nPinPulseMode)
@@ -868,6 +908,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
 	return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVppMode(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nVppMode)
@@ -917,6 +958,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVppMode(
 	return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddress(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nAddress)
@@ -930,6 +972,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddress(
     return lSetProgrammerAddress(pLogicData, nAddress);
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicGetData(
   _In_ TUtPepLogicData* pLogicData,
   _Out_ UINT8* pnData)
@@ -952,6 +995,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicGetData(
     return lReadByteFromProgrammer(pLogicData, pnData);
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetData(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT8 nData)
@@ -974,6 +1018,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetData(
     return lWriteByteToProgrammer(pLogicData, nData);
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
   _In_ TUtPepLogicData* pLogicData,
   _Out_ PBOOLEAN pbSuccess)
@@ -1051,6 +1096,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nOutputEnable)
@@ -1078,6 +1124,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
                           CUnit7_Programmer);
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
   _In_ TUtPepLogicData* pLogicData)
 {
