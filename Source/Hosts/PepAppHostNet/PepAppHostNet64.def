@@ -1,0 +1,11 @@
+;
+;  Copyright (C) 2019-2019 Kevin Eshbach
+;
+
+LIBRARY PepAppHostNet BASE=0x400370000
+EXPORTS
+    PepAppHostNetExecuteInAppDomain @ 1
+
+;
+;  Copyright (C) 2019-2019 Kevin Eshbach
+;

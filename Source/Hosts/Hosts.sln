@@ -5,10 +5,16 @@ VisualStudioVersion = 15.0.28307.645
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HostsBuilder", "HostsBuilder\HostsBuilder.vcxproj", "{F52C7CC8-53FD-400F-88EB-872B8A4436D2}"
 	ProjectSection(ProjectDependencies) = postProject
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9} = {3DEB565F-BBBD-4615-A417-697C0AEDD5F9}
 		{8265EF86-D38C-4596-98B7-C0228541F75F} = {8265EF86-D38C-4596-98B7-C0228541F75F}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PepAppHost", "PepAppHost\PepAppHost.vcxproj", "{8265EF86-D38C-4596-98B7-C0228541F75F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9} = {3DEB565F-BBBD-4615-A417-697C0AEDD5F9}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PepAppHostNet", "PepAppHostNet\PepAppHostNet.vcxproj", "{3DEB565F-BBBD-4615-A417-697C0AEDD5F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +40,14 @@ Global
 		{8265EF86-D38C-4596-98B7-C0228541F75F}.Release|x64.Build.0 = Release|x64
 		{8265EF86-D38C-4596-98B7-C0228541F75F}.Release|x86.ActiveCfg = Release|Win32
 		{8265EF86-D38C-4596-98B7-C0228541F75F}.Release|x86.Build.0 = Release|Win32
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9}.Debug|x64.ActiveCfg = Debug|x64
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9}.Debug|x64.Build.0 = Debug|x64
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9}.Debug|x86.ActiveCfg = Debug|Win32
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9}.Debug|x86.Build.0 = Debug|Win32
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9}.Release|x64.ActiveCfg = Release|x64
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9}.Release|x64.Build.0 = Release|x64
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9}.Release|x86.ActiveCfg = Release|Win32
+		{3DEB565F-BBBD-4615-A417-697C0AEDD5F9}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
