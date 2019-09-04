@@ -4,15 +4,26 @@
 
 #include "stdafx.h"
 
+#include <Hosts/PepAppHostData.h>
+
+#include "PepAppNet.h"
+
 extern "C"
 {
 
 HRESULT __stdcall PepAppHostNetExecuteInAppDomain(
   void* cookie)
 {
+    TPepAppHostData* pPepAppHostData = (TPepAppHostData*)cookie;
+    Pep::Application::Startup^ Startup = gcnew Pep::Application::Startup();
     System::Reflection::Assembly^ assembly;
     array<System::Type^>^ typesArray;
     System::Reflection::MethodInfo^ MethodInfo;
+
+    pPepAppHostData->dwExitCode = Startup->Execute();
+
+
+
 
     ::OutputDebugString(L"PepAppHostNetExecuteInAppDomain entering\n");
 

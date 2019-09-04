@@ -5,6 +5,7 @@
 #include "stdafx.h"
 
 #include <Hosts/PepAppHost.h>
+#include <Hosts/PepAppHostData.h>
 
 #include "PepAppHostControl.h"
 
@@ -30,7 +31,7 @@ typedef HRESULT (__stdcall* TPepAppHostNetExecuteInAppDomainFunc)(void* cookie);
 
 #pragma region "Structures"
 
-typedef struct tagTPepAppHostData
+typedef struct tagTPepAppHostRuntimeData
 {
     BOOL bCOMInitialized;
     BOOL bRuntimeStarted;
@@ -46,11 +47,13 @@ typedef struct tagTPepAppHostData
 
     HMODULE hHostNetLibrary;
     TPepAppHostNetExecuteInAppDomainFunc pPepAppHostNetExecuteInAppDomain;
-} TPepAppHostData;
+} TPepAppHostRuntimeData;
 
 #pragma endregion
 
 #pragma region "Local Variables"
+
+static TPepAppHostRuntimeData l_PepAppHostRuntimeData;
 
 static TPepAppHostData l_PepAppHostData;
 
@@ -58,138 +61,134 @@ static TPepAppHostData l_PepAppHostData;
 
 #pragma region "Local Functions"
 
-static BOOL lUninitialize(_In_ TPepAppHostData* pPepAppHostData);
+static BOOL lUninitialize(_In_ TPepAppHostRuntimeData* pPepAppHostRuntimeData);
 
 static BOOL lInitialize(
-  _In_ TPepAppHostData* pPepAppHostData)
+  _In_ TPepAppHostRuntimeData* pPepAppHostRuntimeData)
 {
     if (S_OK != ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED))
     {
         return FALSE;
     }
 
-    pPepAppHostData->bCOMInitialized = TRUE;
+    pPepAppHostRuntimeData->bCOMInitialized = TRUE;
 
     if (S_OK != ::CLRCreateInstance(CLSID_CLRMetaHost, IID_ICLRMetaHost,
-                                    (LPVOID*)&pPepAppHostData->pCLRMetaHost))
+                                    (LPVOID*)&pPepAppHostRuntimeData->pCLRMetaHost))
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    if (S_OK != pPepAppHostData->pCLRMetaHost->GetRuntime(CNetFrameworkRuntimeVersion, IID_ICLRRuntimeInfo,
-                                                          (LPVOID*)&pPepAppHostData->pCLRRuntimeInfo))
+    if (S_OK != pPepAppHostRuntimeData->pCLRMetaHost->GetRuntime(CNetFrameworkRuntimeVersion,
+                                                                 IID_ICLRRuntimeInfo,
+                                                                 (LPVOID*)&pPepAppHostRuntimeData->pCLRRuntimeInfo))
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    if (S_OK != pPepAppHostData->pCLRRuntimeInfo->GetInterface(CLSID_CLRRuntimeHost, IID_ICLRRuntimeHost,
-                                                               (LPVOID*)&pPepAppHostData->pCLRRuntimeHost))
+    if (S_OK != pPepAppHostRuntimeData->pCLRRuntimeInfo->GetInterface(CLSID_CLRRuntimeHost,
+                                                                      IID_ICLRRuntimeHost,
+                                                                      (LPVOID*)&pPepAppHostRuntimeData->pCLRRuntimeHost))
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    pPepAppHostData->pPepAppHostControl = new (std::nothrow) PepAppHostControl();
+    pPepAppHostRuntimeData->pPepAppHostControl = new (std::nothrow) PepAppHostControl();
 
-    if (pPepAppHostData->pPepAppHostControl == NULL)
+    if (pPepAppHostRuntimeData->pPepAppHostControl == NULL)
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    pPepAppHostData->pPepAppHostControl->AddRef();
+    pPepAppHostRuntimeData->pPepAppHostControl->AddRef();
 
-    if (S_OK != pPepAppHostData->pCLRRuntimeHost->SetHostControl(pPepAppHostData->pPepAppHostControl))
+    if (S_OK != pPepAppHostRuntimeData->pCLRRuntimeHost->SetHostControl(pPepAppHostRuntimeData->pPepAppHostControl))
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    if (S_OK != pPepAppHostData->pCLRRuntimeHost->GetCLRControl(&pPepAppHostData->pCLRControl))
+    if (S_OK != pPepAppHostRuntimeData->pCLRRuntimeHost->GetCLRControl(&pPepAppHostRuntimeData->pCLRControl))
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    if (S_OK != pPepAppHostData->pCLRControl->GetCLRManager(IID_ICLROnEventManager,
-                                                            (LPVOID*)&pPepAppHostData->pCLROnEventManager))
+    if (S_OK != pPepAppHostRuntimeData->pCLRControl->GetCLRManager(IID_ICLROnEventManager,
+                                                                   (LPVOID*)&pPepAppHostRuntimeData->pCLROnEventManager))
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    pPepAppHostData->pPepAppActionOnCLREvent = new (std::nothrow) PepAppActionOnCLREvent();
+    pPepAppHostRuntimeData->pPepAppActionOnCLREvent = new (std::nothrow) PepAppActionOnCLREvent();
 
-    if (pPepAppHostData->pPepAppActionOnCLREvent == NULL)
+    if (pPepAppHostRuntimeData->pPepAppActionOnCLREvent == NULL)
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    pPepAppHostData->pPepAppActionOnCLREvent->AddRef();
+    pPepAppHostRuntimeData->pPepAppActionOnCLREvent->AddRef();
 
-    pPepAppHostData->pCLROnEventManager->RegisterActionOnEvent(Event_DomainUnload, pPepAppHostData->pPepAppActionOnCLREvent);
-    pPepAppHostData->pCLROnEventManager->RegisterActionOnEvent(Event_ClrDisabled, pPepAppHostData->pPepAppActionOnCLREvent);
-    pPepAppHostData->pCLROnEventManager->RegisterActionOnEvent(Event_MDAFired, pPepAppHostData->pPepAppActionOnCLREvent);
-    pPepAppHostData->pCLROnEventManager->RegisterActionOnEvent(Event_StackOverflow, pPepAppHostData->pPepAppActionOnCLREvent);
-    //pPepAppHostData->pCLROnEventManager->RegisterActionOnEvent(MaxClrEvent, pPepAppHostData->pPepAppActionOnCLREvent);
+    pPepAppHostRuntimeData->pCLROnEventManager->RegisterActionOnEvent(Event_DomainUnload, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
+    pPepAppHostRuntimeData->pCLROnEventManager->RegisterActionOnEvent(Event_ClrDisabled, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
+    pPepAppHostRuntimeData->pCLROnEventManager->RegisterActionOnEvent(Event_MDAFired, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
+    pPepAppHostRuntimeData->pCLROnEventManager->RegisterActionOnEvent(Event_StackOverflow, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
+    //pPepAppHostRuntimeData->pCLROnEventManager->RegisterActionOnEvent(MaxClrEvent, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
 
-    if (S_OK != pPepAppHostData->pCLRControl->GetCLRManager(IID_ICLRPolicyManager,
-                                                            (LPVOID*)&pPepAppHostData->pCLRPolicyManager))
+    if (S_OK != pPepAppHostRuntimeData->pCLRControl->GetCLRManager(IID_ICLRPolicyManager,
+                                                                   (LPVOID*)&pPepAppHostRuntimeData->pCLRPolicyManager))
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    pPepAppHostData->pCLRPolicyManager->SetUnhandledExceptionPolicy(eHostDeterminedPolicy);
+    pPepAppHostRuntimeData->pCLRPolicyManager->SetUnhandledExceptionPolicy(eHostDeterminedPolicy);
 
-    if (S_OK != pPepAppHostData->pCLRControl->GetCLRManager(IID_ICLRHostProtectionManager,
-                                                            (LPVOID*)&pPepAppHostData->pCLRHostProtectionManager))
+    if (S_OK != pPepAppHostRuntimeData->pCLRControl->GetCLRManager(IID_ICLRHostProtectionManager,
+                                                                   (LPVOID*)&pPepAppHostRuntimeData->pCLRHostProtectionManager))
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    pPepAppHostData->pCLRHostProtectionManager->SetProtectedCategories(eNoChecks);
+    pPepAppHostRuntimeData->pCLRHostProtectionManager->SetProtectedCategories(eNoChecks);
 
-
-
-
-
-
-
-    if (S_OK != pPepAppHostData->pCLRRuntimeHost->Start())
+    if (S_OK != pPepAppHostRuntimeData->pCLRRuntimeHost->Start())
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
 
-    pPepAppHostData->bRuntimeStarted = TRUE;
+    pPepAppHostRuntimeData->bRuntimeStarted = TRUE;
 
-    pPepAppHostData->hHostNetLibrary = ::LoadLibrary(CPepAppHostNetLibraryName);
+    pPepAppHostRuntimeData->hHostNetLibrary = ::LoadLibrary(CPepAppHostNetLibraryName);
 
-    if (pPepAppHostData->hHostNetLibrary)
+    if (pPepAppHostRuntimeData->hHostNetLibrary)
     {
-        pPepAppHostData->pPepAppHostNetExecuteInAppDomain = (TPepAppHostNetExecuteInAppDomainFunc)::GetProcAddress(pPepAppHostData->hHostNetLibrary, CPepAppHostNetExecuteInAppDomainFuncName);
+        pPepAppHostRuntimeData->pPepAppHostNetExecuteInAppDomain = (TPepAppHostNetExecuteInAppDomainFunc)::GetProcAddress(pPepAppHostRuntimeData->hHostNetLibrary, CPepAppHostNetExecuteInAppDomainFuncName);
     }
 
-    if (pPepAppHostData->hHostNetLibrary == NULL ||
-        pPepAppHostData->pPepAppHostNetExecuteInAppDomain == NULL)
+    if (pPepAppHostRuntimeData->hHostNetLibrary == NULL ||
+        pPepAppHostRuntimeData->pPepAppHostNetExecuteInAppDomain == NULL)
     {
-        lUninitialize(pPepAppHostData);
+        lUninitialize(pPepAppHostRuntimeData);
 
         return FALSE;
     }
@@ -198,97 +197,97 @@ static BOOL lInitialize(
 }
 
 static BOOL lUninitialize(
-  _In_ TPepAppHostData* pPepAppHostData)
+  _In_ TPepAppHostRuntimeData* pPepAppHostRuntimeData)
 {
-    if (pPepAppHostData->bRuntimeStarted)
+    if (pPepAppHostRuntimeData->bRuntimeStarted)
     {
-        pPepAppHostData->pCLRRuntimeHost->Stop();
+        pPepAppHostRuntimeData->pCLRRuntimeHost->Stop();
 
-        pPepAppHostData->bRuntimeStarted = FALSE;
+        pPepAppHostRuntimeData->bRuntimeStarted = FALSE;
     }
 
-    if (pPepAppHostData->hHostNetLibrary)
+    if (pPepAppHostRuntimeData->hHostNetLibrary)
     {
-        ::FreeLibrary(pPepAppHostData->hHostNetLibrary);
+        ::FreeLibrary(pPepAppHostRuntimeData->hHostNetLibrary);
 
-        pPepAppHostData->hHostNetLibrary = NULL;
-        pPepAppHostData->pPepAppHostNetExecuteInAppDomain = NULL;
+        pPepAppHostRuntimeData->hHostNetLibrary = NULL;
+        pPepAppHostRuntimeData->pPepAppHostNetExecuteInAppDomain = NULL;
     }
 
-    if (pPepAppHostData->pCLRHostProtectionManager)
+    if (pPepAppHostRuntimeData->pCLRHostProtectionManager)
     {
-        pPepAppHostData->pCLRHostProtectionManager->Release();
+        pPepAppHostRuntimeData->pCLRHostProtectionManager->Release();
 
-        pPepAppHostData->pCLRHostProtectionManager = NULL;
+        pPepAppHostRuntimeData->pCLRHostProtectionManager = NULL;
     }
 
-    if (pPepAppHostData->pCLRPolicyManager)
+    if (pPepAppHostRuntimeData->pCLRPolicyManager)
     {
-        pPepAppHostData->pCLRPolicyManager->Release();
+        pPepAppHostRuntimeData->pCLRPolicyManager->Release();
 
-        pPepAppHostData->pCLRPolicyManager = NULL;
+        pPepAppHostRuntimeData->pCLRPolicyManager = NULL;
     }
 
-    if (pPepAppHostData->pPepAppActionOnCLREvent)
+    if (pPepAppHostRuntimeData->pPepAppActionOnCLREvent)
     {
-        pPepAppHostData->pCLROnEventManager->UnregisterActionOnEvent(Event_DomainUnload, pPepAppHostData->pPepAppActionOnCLREvent);
-        pPepAppHostData->pCLROnEventManager->UnregisterActionOnEvent(Event_ClrDisabled, pPepAppHostData->pPepAppActionOnCLREvent);
-        pPepAppHostData->pCLROnEventManager->UnregisterActionOnEvent(Event_MDAFired, pPepAppHostData->pPepAppActionOnCLREvent);
-        pPepAppHostData->pCLROnEventManager->UnregisterActionOnEvent(Event_StackOverflow, pPepAppHostData->pPepAppActionOnCLREvent);
-        //pPepAppHostData->pCLROnEventManager->UnregisterActionOnEvent(MaxClrEvent, pPepAppHostData->pPepAppActionOnCLREvent);
+        pPepAppHostRuntimeData->pCLROnEventManager->UnregisterActionOnEvent(Event_DomainUnload, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
+        pPepAppHostRuntimeData->pCLROnEventManager->UnregisterActionOnEvent(Event_ClrDisabled, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
+        pPepAppHostRuntimeData->pCLROnEventManager->UnregisterActionOnEvent(Event_MDAFired, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
+        pPepAppHostRuntimeData->pCLROnEventManager->UnregisterActionOnEvent(Event_StackOverflow, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
+        //pPepAppHostRuntimeData->pCLROnEventManager->UnregisterActionOnEvent(MaxClrEvent, pPepAppHostRuntimeData->pPepAppActionOnCLREvent);
 
-        pPepAppHostData->pPepAppActionOnCLREvent->Release();
+        pPepAppHostRuntimeData->pPepAppActionOnCLREvent->Release();
 
-        pPepAppHostData->pPepAppActionOnCLREvent = NULL;
+        pPepAppHostRuntimeData->pPepAppActionOnCLREvent = NULL;
     }
 
-    if (pPepAppHostData->pCLROnEventManager)
+    if (pPepAppHostRuntimeData->pCLROnEventManager)
     {
-        pPepAppHostData->pCLROnEventManager->Release();
+        pPepAppHostRuntimeData->pCLROnEventManager->Release();
 
-        pPepAppHostData->pCLROnEventManager = NULL;
+        pPepAppHostRuntimeData->pCLROnEventManager = NULL;
     }
 
-    if (pPepAppHostData->pCLRControl)
+    if (pPepAppHostRuntimeData->pCLRControl)
     {
-        pPepAppHostData->pCLRControl->Release();
+        pPepAppHostRuntimeData->pCLRControl->Release();
 
-        pPepAppHostData->pCLRControl = NULL;
+        pPepAppHostRuntimeData->pCLRControl = NULL;
     }
 
-    if (pPepAppHostData->pPepAppHostControl)
+    if (pPepAppHostRuntimeData->pPepAppHostControl)
     {
-        pPepAppHostData->pPepAppHostControl->Release();
+        pPepAppHostRuntimeData->pPepAppHostControl->Release();
 
-        pPepAppHostData->pPepAppHostControl = NULL;
+        pPepAppHostRuntimeData->pPepAppHostControl = NULL;
     }
 
-    if (pPepAppHostData->pCLRRuntimeHost)
+    if (pPepAppHostRuntimeData->pCLRRuntimeHost)
     {
-        pPepAppHostData->pCLRRuntimeHost->Release();
+        pPepAppHostRuntimeData->pCLRRuntimeHost->Release();
 
-        pPepAppHostData->pCLRRuntimeHost = NULL;
+        pPepAppHostRuntimeData->pCLRRuntimeHost = NULL;
     }
 
-    if (pPepAppHostData->pCLRRuntimeInfo)
+    if (pPepAppHostRuntimeData->pCLRRuntimeInfo)
     {
-        pPepAppHostData->pCLRRuntimeInfo->Release();
+        pPepAppHostRuntimeData->pCLRRuntimeInfo->Release();
 
-        pPepAppHostData->pCLRRuntimeInfo = NULL;
+        pPepAppHostRuntimeData->pCLRRuntimeInfo = NULL;
     }
 
-    if (pPepAppHostData->pCLRMetaHost)
+    if (pPepAppHostRuntimeData->pCLRMetaHost)
     {
-        pPepAppHostData->pCLRMetaHost->Release();
+        pPepAppHostRuntimeData->pCLRMetaHost->Release();
 
-        pPepAppHostData->pCLRMetaHost = NULL;
+        pPepAppHostRuntimeData->pCLRMetaHost = NULL;
     }
 
-    if (pPepAppHostData->bCOMInitialized)
+    if (pPepAppHostRuntimeData->bCOMInitialized)
     {
         ::CoUninitialize();
 
-        pPepAppHostData->bCOMInitialized = FALSE;
+        pPepAppHostRuntimeData->bCOMInitialized = FALSE;
     }
 
     return TRUE;
@@ -300,6 +299,7 @@ static BOOL lUninitialize(
 
 MExternC BOOL PEPAPPHOSTAPI PepAppHostInitialize(VOID)
 {
+    ::ZeroMemory(&l_PepAppHostRuntimeData, sizeof(l_PepAppHostRuntimeData));
     ::ZeroMemory(&l_PepAppHostData, sizeof(l_PepAppHostData));
 
     return TRUE;
@@ -315,16 +315,16 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 {
     *pdwExitCode = 0;
 
-    lInitialize(&l_PepAppHostData);
+    lInitialize(&l_PepAppHostRuntimeData);
 
 
 
     
     DWORD dwAppDomainId = 0;
 
-    l_PepAppHostData.pCLRRuntimeHost->GetCurrentAppDomainId(&dwAppDomainId);
+    l_PepAppHostRuntimeData.pCLRRuntimeHost->GetCurrentAppDomainId(&dwAppDomainId);
 
-    l_PepAppHostData.pCLRRuntimeHost->ExecuteInAppDomain(dwAppDomainId, l_PepAppHostData.pPepAppHostNetExecuteInAppDomain /*lExecuteInAppDomain*/, NULL);
+    l_PepAppHostRuntimeData.pCLRRuntimeHost->ExecuteInAppDomain(dwAppDomainId, l_PepAppHostRuntimeData.pPepAppHostNetExecuteInAppDomain /*lExecuteInAppDomain*/, &l_PepAppHostData);
     
 
 
@@ -340,13 +340,13 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 
 
 
-    lUninitialize(&l_PepAppHostData);
+    lUninitialize(&l_PepAppHostRuntimeData);
 
 
 
 
 
-    *pdwExitCode = (DWORD)-1;
+    *pdwExitCode = l_PepAppHostData.dwExitCode;
 
     return TRUE;
 }

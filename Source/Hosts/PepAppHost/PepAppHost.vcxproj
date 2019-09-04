@@ -220,6 +220,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\PepAppHost.h" />
+    <ClInclude Include="..\PepAppHostData.h" />
     <ClInclude Include="PepAppActionOnCLREvent.h" />
     <ClInclude Include="PepAppHostAssemblyManager.h" />
     <ClInclude Include="PepAppHostAutoEvent.h" />
