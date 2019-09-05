@@ -107,12 +107,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AboutForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AboutForm.Designer.cs">
-      <DependentUpon>AboutForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="PepMainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -121,10 +115,6 @@
     </Compile>
     <Compile Include="PepAppNet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="AboutForm.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>AboutForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="PepMainForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>PepMainForm.cs</DependentUpon>
