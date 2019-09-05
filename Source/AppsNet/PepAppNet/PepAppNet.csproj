@@ -113,18 +113,6 @@
     <Compile Include="AboutForm.Designer.cs">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="ConfigToolForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ConfigToolForm.Designer.cs">
-      <DependentUpon>ConfigToolForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ListToolsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ListToolsForm.Designer.cs">
-      <DependentUpon>ListToolsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="PepMainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -136,13 +124,6 @@
     <EmbeddedResource Include="AboutForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>AboutForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ConfigToolForm.resx">
-      <DependentUpon>ConfigToolForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ListToolsForm.resx">
-      <DependentUpon>ListToolsForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="PepMainForm.resx">
       <SubType>Designer</SubType>
