@@ -107,18 +107,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PepMainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PepMainForm.Designer.cs">
-      <DependentUpon>PepMainForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="PepAppNet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="PepMainForm.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>PepMainForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

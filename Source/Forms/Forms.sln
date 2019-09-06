@@ -12,6 +12,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenZipForms", "OpenZipForms\OpenZipForms.csproj", "{F307922A-1A5C-4285-8EB5-5E8CAE4FF928}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PepForms", "PepForms\PepForms.csproj", "{036560CA-6F40-45B7-8112-302EC7959A15}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F307922A-1A5C-4285-8EB5-5E8CAE4FF928} = {F307922A-1A5C-4285-8EB5-5E8CAE4FF928}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
