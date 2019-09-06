@@ -19,8 +19,8 @@ namespace Pep
                 //  Change assembly information settings for your application through either:
                 //  - Project->Properties->Application->Assembly Information
                 //  - AssemblyInfo.cs
-                this.Text = String.Format("About {0}", AssemblyTitle);
-                this.labelProductName.Text = AssemblyProduct;
+                this.Text = String.Format("About {0}", "PEP"/*AssemblyTitle*/);
+                this.labelProductName.Text = "PEP"/*AssemblyProduct*/;
                 this.labelProductVersion.Text = String.Format("v{0}", AssemblyVersion);
                 this.labelProductCopyright.Text = AssemblyCopyright;
             }
