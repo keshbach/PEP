@@ -123,11 +123,11 @@
     <Compile Include="ListToolsForm.Designer.cs">
       <DependentUpon>ListToolsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="PepMainForm.cs">
+    <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="PepMainForm.Designer.cs">
-      <DependentUpon>PepMainForm.cs</DependentUpon>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="SelectDeviceForm.cs">
       <SubType>Form</SubType>
@@ -172,8 +172,8 @@
     <EmbeddedResource Include="ListToolsForm.resx">
       <DependentUpon>ListToolsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PepMainForm.resx">
-      <DependentUpon>PepMainForm.cs</DependentUpon>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SelectDeviceForm.resx">
       <DependentUpon>SelectDeviceForm.cs</DependentUpon>
