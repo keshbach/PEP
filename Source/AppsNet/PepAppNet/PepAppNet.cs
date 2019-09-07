@@ -17,7 +17,7 @@ namespace Pep
             static void Main()
             {
                 Common.Process.Running AppRunning;
-                Pep.Forms.PepMainForm AppForm;
+                Pep.Forms.MainForm AppForm;
 
                 AppRunning = new Common.Process.Running(System.Windows.Forms.Application.ProductName);
 
@@ -30,7 +30,7 @@ namespace Pep
                     {
                         Pep.Controls.Config.Initialize();
 
-                        AppForm = new Pep.Forms.PepMainForm();
+                        AppForm = new Pep.Forms.MainForm();
 
                         System.Windows.Forms.Application.AddMessageFilter(AppForm);
 
