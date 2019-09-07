@@ -5,7 +5,7 @@
     <runtime>
       <description>
         Create PEP Setup File Script v1.00
-        Copyright (C) 2014-2018 Kevin Eshbach
+        Copyright (C) 2014-2019 Kevin Eshbach
         All Rights Reserved
 
         This script creates the setup file for the application.
@@ -30,7 +30,9 @@
     </resource>
     
     <resource id="AppFiles">
-        PepAppNet.exe
+        PepApp.exe
+        PepAppHost.dll
+        PepAppHostNet.dll
         OpenZipForms.dll
         PepForms.dll
         UiCtrlsNet.dll

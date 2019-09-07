@@ -1,7 +1,7 @@
 Shortcut	Directory_	Name	Component_	Target	Arguments	Description	Hotkey	Icon_	IconIndex	ShowCmd	WkDir	DisplayResourceDLL	DisplayResourceId	DescriptionResourceDLL	DescriptionResourceId
 s72	s72	l128	s72	s72	S255	L255	I2	S72	I2	I2	S72	S100	I4	S100	I4
 Shortcut	Shortcut
-PepAppShortcut	PEPProgramMenuFolder	PEP	ApplicationComponent	ApplicationFeature				PepAppNet.exe	0						
+PepAppShortcut	PEPProgramMenuFolder	PEP	ApplicationComponent	ApplicationFeature				PepApp.exe	0						
 AdapterSchematicShortcut1	PEPAdaptersMenuFolder	2532AD~1|2532 ADAPTER SCHEMATIC	AdapterSchematicsComponent	[#_2532_ADAPTER_SCHEMATIC.pdf]											
 AdapterSchematicShortcut2	PEPAdaptersMenuFolder	2564AD~1|2564 ADAPTER SCHEMATIC	AdapterSchematicsComponent	[#_2564_ADAPTER_SCHEMATIC.pdf]											
 AdapterSchematicShortcut3	PEPAdaptersMenuFolder	74S288~1|74S288 Adapter Schematics	AdapterSchematicsComponent	[#_74S288_Adapter_Schematics.pdf]											

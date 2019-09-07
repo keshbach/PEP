@@ -11,7 +11,7 @@
 #include <windows.h>
 #include <Strsafe.h>
 
-#using <System.Core.dll>
+#using <System.dll>
 
 /////////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2019-2019 Kevin Eshbach

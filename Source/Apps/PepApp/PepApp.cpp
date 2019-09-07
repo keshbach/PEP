@@ -30,6 +30,11 @@
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostInitializeFunc)(VOID);
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostUninitializeFunc)(VOID);
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostExecuteFunc)(_Out_ LPDWORD pdwExitCode);
+typedef BOOL (PEPAPPHOSTAPI* TPepAppHostSetPluginPath)(_In_ LPCWSTR pszPluginPath);
+
+typedef VOID (STDAPICALLTYPE *TPathRemoveExtensionW)(_Inout_ LPWSTR pszPath);
+typedef BOOL (STDAPICALLTYPE *TPathRemoveFileSpecW)(_Inout_ LPWSTR pszPath);
+typedef BOOL (STDAPICALLTYPE *TPathAppendW)(_Inout_ LPWSTR pszPath, _In_ LPCWSTR pszMore);
 
 #pragma endregion
 
@@ -41,6 +46,7 @@ typedef struct tagTPepAppHostData
     TPepAppHostInitializeFunc pInitialize;
     TPepAppHostUninitializeFunc pUninitialize;
     TPepAppHostExecuteFunc pExecute;
+    TPepAppHostSetPluginPath pSetPluginPath;
 } TPepAppHostData;
 
 typedef struct tagTSetupData
@@ -166,10 +172,12 @@ static DWORD WINAPI lRunSetupThreadProc(
     pSetupData->AppHostData.pInitialize = (TPepAppHostInitializeFunc)::GetProcAddress(pSetupData->AppHostData.hModule, "PepAppHostInitialize");
     pSetupData->AppHostData.pUninitialize = (TPepAppHostUninitializeFunc)::GetProcAddress(pSetupData->AppHostData.hModule, "PepAppHostUninitialize");
     pSetupData->AppHostData.pExecute = (TPepAppHostExecuteFunc)::GetProcAddress(pSetupData->AppHostData.hModule, "PepAppHostExecute");
+    pSetupData->AppHostData.pSetPluginPath = (TPepAppHostSetPluginPath)::GetProcAddress(pSetupData->AppHostData.hModule, "PepAppHostSetPluginPath");
 
     if (pSetupData->AppHostData.pInitialize == NULL ||
         pSetupData->AppHostData.pUninitialize == NULL ||
-        pSetupData->AppHostData.pExecute == NULL || 
+        pSetupData->AppHostData.pExecute == NULL ||
+        pSetupData->AppHostData.pSetPluginPath == NULL ||
         pSetupData->AppHostData.pInitialize() == FALSE)
     {
         ::FreeLibrary(pSetupData->AppHostData.hModule);
@@ -181,12 +189,53 @@ static DWORD WINAPI lRunSetupThreadProc(
         return FALSE;
     }
 
-
-
-
     PepAppSplashDialogQuitMessagePump();
 
     return TRUE;
+}
+
+static BOOL lSetPluginPath(
+    TPepAppHostData* pPepAppHostData)
+{
+    WCHAR cPluginPath[MAX_PATH];
+    DWORD dwResult;
+    HMODULE hModule;
+    TPathRemoveExtensionW pPathRemoveExtension;
+    TPathRemoveFileSpecW pPathRemoveFileSpec;
+    TPathAppendW pPathAppend;
+
+    dwResult = ::GetModuleFileName(::GetModuleHandle(NULL), cPluginPath, MArrayLen(cPluginPath));
+
+    if (dwResult == ERROR_INSUFFICIENT_BUFFER)
+    {
+        return FALSE;
+    }
+
+    hModule = ::LoadLibraryW(L"shlwapi.dll");
+
+    if (hModule == NULL)
+    {
+        return FALSE;
+    }
+
+    pPathRemoveExtension = (TPathRemoveExtensionW)::GetProcAddress(hModule, "PathRemoveExtensionW");
+    pPathRemoveFileSpec = (TPathRemoveFileSpecW)::GetProcAddress(hModule, "PathRemoveFileSpecW");
+    pPathAppend = (TPathAppendW)::GetProcAddress(hModule, "PathAppendW");
+
+    if (pPathRemoveExtension == NULL || pPathRemoveFileSpec == NULL || pPathAppend == NULL)
+    {
+        ::FreeLibrary(hModule);
+
+        return FALSE;
+    }
+
+    pPathRemoveExtension(cPluginPath);
+    pPathRemoveFileSpec(cPluginPath);
+    pPathAppend(cPluginPath, L"Plugins");
+
+    ::FreeLibrary(hModule);
+
+    return pPepAppHostData->pSetPluginPath(cPluginPath);
 }
 
 #pragma endregion
@@ -248,6 +297,11 @@ INT PepAppExecute(
     PepAppSplashDialogDestroy();
 
     if (dwExitCode == FALSE)
+    {
+        return 1;
+    }
+
+    if (FALSE == lSetPluginPath(&SetupData.AppHostData))
     {
         return 1;
     }

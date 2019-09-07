@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -304,48 +304,6 @@ static void lRunProcessThreadFunc(
     delete RunProcessThreadData;
 }
 
-Common::Process::Running::Running()
-{
-}
-
-Common::Process::Running::Running(
-  System::String^ sAppName) :
-  m_bAlreadyRunning(false)
-{
-	System::Boolean bCreatedNew = false;
-
-	m_AppMutex = gcnew System::Threading::Mutex(false, sAppName, bCreatedNew);
-
-	if (bCreatedNew == false)
-	{
-		m_bAlreadyRunning = true;
-	}
-}
-
-Common::Process::Running::~Running()
-{
-#if !defined(NDEBUG)
-    if (m_AppMutex != nullptr)
-    {
-        throw gcnew System::ApplicationException(L"Common::Process::Running() was not destroyed.");
-    }
-#endif
-
-    Close();
-}
-
-void Common::Process::Running::Close()
-{
-	if (m_AppMutex != nullptr)
-	{
-		m_AppMutex->Close();
-
-        delete m_AppMutex;
-
-		m_AppMutex = nullptr;
-	}
-}
-
 System::Boolean Common::Process::LaunchAndCaptureProcessOutput(
 	System::String^ sApplication,
 	System::String^ sArguments,
@@ -448,5 +406,5 @@ System::Boolean Common::Process::StopCaptureAppOutput()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

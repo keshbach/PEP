@@ -7,6 +7,8 @@
 #include <Hosts/PepAppHost.h>
 #include <Hosts/PepAppHostData.h>
 
+#include <Utils/UtHeapProcess.h>
+
 #include "PepAppHostControl.h"
 
 #include <new>
@@ -313,40 +315,42 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostUninitialize(VOID)
 MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
   _Out_ LPDWORD pdwExitCode)
 {
+    DWORD dwAppDomainId = 0;
+
     *pdwExitCode = 0;
 
     lInitialize(&l_PepAppHostRuntimeData);
 
-
-
-    
-    DWORD dwAppDomainId = 0;
-
     l_PepAppHostRuntimeData.pCLRRuntimeHost->GetCurrentAppDomainId(&dwAppDomainId);
 
-    l_PepAppHostRuntimeData.pCLRRuntimeHost->ExecuteInAppDomain(dwAppDomainId, l_PepAppHostRuntimeData.pPepAppHostNetExecuteInAppDomain /*lExecuteInAppDomain*/, &l_PepAppHostData);
-    
-
-
-
-
-    /*
-    pCLRRuntimeHost->ExecuteInDefaultAppDomain(L"C:\\git\\PEP\\Source\\bin\\Debug\\x86\\PepAppNet.exe",
-                                               L"Pep.Application.Startup",
-                                               L"Test",
-                                               L"",
-                                               pdwExitCode);
-    */
-
-
+    l_PepAppHostRuntimeData.pCLRRuntimeHost->ExecuteInAppDomain(dwAppDomainId, l_PepAppHostRuntimeData.pPepAppHostNetExecuteInAppDomain, &l_PepAppHostData);
 
     lUninitialize(&l_PepAppHostRuntimeData);
 
-
-
-
+    if (l_PepAppHostData.pszPluginPath)
+    {
+        UtFreeMem((LPVOID)l_PepAppHostData.pszPluginPath);
+    }
 
     *pdwExitCode = l_PepAppHostData.dwExitCode;
+
+    return TRUE;
+}
+
+MExternC BOOL PEPAPPHOSTAPI PepAppHostSetPluginPath(
+  _In_ LPCWSTR pszPluginPath)
+{
+    INT nPluginPathLen = ::lstrlenW(pszPluginPath) + 1;
+    LPWSTR pszNewPluginPath = (LPWSTR)UtAllocMem(nPluginPathLen * sizeof(WCHAR));
+
+    if (pszNewPluginPath == NULL)
+    {
+        return FALSE;
+    }
+
+    ::StringCchCopyW(pszNewPluginPath, nPluginPathLen, pszPluginPath);
+
+    l_PepAppHostData.pszPluginPath = pszNewPluginPath;
 
     return TRUE;
 }

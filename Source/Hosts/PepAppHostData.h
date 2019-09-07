@@ -20,6 +20,7 @@
 typedef struct tagTPepAppHostData
 {
     DWORD dwExitCode;
+    LPCWSTR pszPluginPath;
 } TPepAppHostData;
 
 #if defined(_MSC_VER)
