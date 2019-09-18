@@ -6,8 +6,8 @@ Source/bin/
 
 # .NET Compiler Output Directories
 
-Source/AppsNet/PepAppNet/obj/
 Source/AppsNet/RebaserAppNet/obj/
+Source/AppsNet/UpdateAssemblyVersionAppNet/obj/
 Source/Forms/OpenZipForms/obj/
 Source/Forms/PepForms/obj/
 
