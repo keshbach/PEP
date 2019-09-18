@@ -1,9 +1,8 @@
 /***************************************************************************/
-/*  Copyright (C) 2009-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
@@ -36,6 +35,93 @@ namespace RebaserAppNet
         private static System.String[] s_DllFilesExclude = {"zlibvc", "zlib", "RebaserNet", "PepCustomActions"};
         #endregion
 
+        #region "Properties"
+        private static string AssemblyTitle
+        {
+            get
+            {
+                // Get all Title attributes on this assembly
+                object[] attributes = System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(System.Reflection.AssemblyTitleAttribute), false);
+                // If there is at least one Title attribute
+                if (attributes.Length > 0)
+                {
+                    // Select the first one
+                    System.Reflection.AssemblyTitleAttribute titleAttribute = (System.Reflection.AssemblyTitleAttribute)attributes[0];
+                    // If it is not an empty string, return it
+                    if (titleAttribute.Title != "")
+                        return titleAttribute.Title;
+                }
+                // If there was no Title attribute, or if the Title attribute was the empty string, return the .exe name
+                return System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+            }
+        }
+
+        private static string AssemblyVersion
+        {
+            get
+            {
+                return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            }
+        }
+
+        private static string AssemblyDescription
+        {
+            get
+            {
+                // Get all Description attributes on this assembly
+                object[] attributes = System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(System.Reflection.AssemblyDescriptionAttribute), false);
+                // If there aren't any Description attributes, return an empty string
+                if (attributes.Length == 0)
+                    return "";
+                // If there is a Description attribute, return its value
+                return ((System.Reflection.AssemblyDescriptionAttribute)attributes[0]).Description;
+            }
+        }
+
+        private static string AssemblyProduct
+        {
+            get
+            {
+                // Get all Product attributes on this assembly
+                object[] attributes = System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(System.Reflection.AssemblyProductAttribute), false);
+                // If there aren't any Product attributes, return an empty string
+                if (attributes.Length == 0)
+                    return "";
+                // If there is a Product attribute, return its value
+                return ((System.Reflection.AssemblyProductAttribute)attributes[0]).Product;
+            }
+        }
+
+        private static string AssemblyCopyright
+        {
+            get
+            {
+                // Get all Copyright attributes on this assembly
+                object[] attributes = System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(System.Reflection.AssemblyCopyrightAttribute), false);
+                // If there aren't any Copyright attributes, return an empty string
+                if (attributes.Length == 0)
+                    return "";
+                // If there is a Copyright attribute, return its value
+                return ((System.Reflection.AssemblyCopyrightAttribute)attributes[0]).Copyright;
+            }
+        }
+
+        private static string AssemblyCompany
+        {
+            get
+            {
+                // Get all Company attributes on this assembly
+                object[] attributes = System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(System.Reflection.AssemblyCompanyAttribute), false);
+                // If there aren't any Company attributes, return an empty string
+                if (attributes.Length == 0)
+                    return "";
+                // If there is a Company attribute, return its value
+                return ((System.Reflection.AssemblyCompanyAttribute)attributes[0]).Company;
+            }
+        }
+        #endregion
+
+        #region "Private Helpers"
         private static void RebaseFile(
             System.String sFile,
             System.String sSymbolPath,
@@ -257,8 +343,8 @@ namespace RebaserAppNet
         private static void DisplayHelp()
         {
             System.Console.WriteLine();
-            System.Console.WriteLine("Rebaser v1.00");
-            System.Console.WriteLine("Copyright (C) 2009-2018 Kevin Eshbach");
+            System.Console.WriteLine("Rebase DLL's and Update Def Files v{0}", AssemblyVersion);
+            System.Console.WriteLine(AssemblyCopyright);
             System.Console.WriteLine();
             System.Console.WriteLine("RebaserAppNet \"Root Path\" \"Binary Path\" \"Base Address\"");
             System.Console.WriteLine();
@@ -267,13 +353,17 @@ namespace RebaserAppNet
             System.Console.WriteLine("    \"Base Address\" - Starting address in hex (Example: 0xF00D)");
             System.Console.WriteLine();
         }
-        
+        #endregion
+
+        #region "Main"
         static void Main(string[] args)
         {
             System.String sRootPath, sBinaryPath, sBasePath, sFileName;
             System.String[] sDllFiles;
             System.UInt64 nBaseAddress, nTmpBaseAddress;
             System.IO.FileInfo FileInfo;
+
+            System.Console.OutputEncoding = Encoding.UTF8;
 
             if (args.Length != 3)
             {
@@ -392,9 +482,10 @@ namespace RebaserAppNet
 
             System.Environment.Exit(0);
         }
+        #endregion
     }
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2009-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2019 Kevin Eshbach                                  */
 /***************************************************************************/
