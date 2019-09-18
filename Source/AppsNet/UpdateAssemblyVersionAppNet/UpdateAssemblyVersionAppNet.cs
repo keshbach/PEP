@@ -11,6 +11,8 @@ namespace UpdateAssemblyVersionAppNet
     class Program
     {
         #region "Constants"
+        private static System.Text.Encoding ANSI = Encoding.GetEncoding(1252);
+
         private static System.String CAssemblyTitle = "AssemblyTitle";
         private static System.String CAssemblyCopyright = "AssemblyCopyright";
         private static System.String CAssemblyVersion = "AssemblyVersion";
@@ -18,8 +20,9 @@ namespace UpdateAssemblyVersionAppNet
         #endregion
 
         #region "Structures"
-        private struct TFileData
+        private struct TAssemblyData
         {
+            public System.String sKeyword;
             public System.String sValue;
             public System.Int32 nLineNumber;
         }
@@ -135,7 +138,7 @@ namespace UpdateAssemblyVersionAppNet
         private static System.Boolean ParseVersionFileName(
             System.String sVersionFileName)
         {
-            System.IO.StreamReader StreamReader = new System.IO.StreamReader(sVersionFileName);
+            System.IO.StreamReader StreamReader = new System.IO.StreamReader(sVersionFileName, ANSI);
             System.String sLine, sKeyword, sValue;
 
             while ((sLine = StreamReader.ReadLine()) != null)
@@ -194,16 +197,31 @@ namespace UpdateAssemblyVersionAppNet
             }
         }
 
+        private static Nullable<TAssemblyData> FindAssemblyDataFromKeyword(
+            System.String sKeyword,
+            System.Collections.Generic.List<TAssemblyData> AssemblyDataList)
+        {
+            foreach (TAssemblyData AssemblyData in AssemblyDataList)
+            {
+                if (AssemblyData.sKeyword == sKeyword)
+                {
+                    return AssemblyData;
+                }
+            }
+
+            return null;
+        }
+
         private static void ReadAssemblyFile(
             System.String sFile,
-            out System.Collections.Generic.Dictionary<System.String, TFileData> AssemblyDict)
+            out System.Collections.Generic.List<TAssemblyData> AssemblyDataList)
         {
-            System.IO.StreamReader StreamReader = new System.IO.StreamReader(sFile);
+            System.IO.StreamReader StreamReader = new System.IO.StreamReader(sFile, ANSI);
             System.Int32 nLineNumber = 1;
             System.String sLine, sKeyword, sValue;
-            TFileData FileData;
+            TAssemblyData AssemblyData;
 
-            AssemblyDict = new System.Collections.Generic.Dictionary<System.String, TFileData>();
+            AssemblyDataList = new System.Collections.Generic.List<TAssemblyData>();
 
             while ((sLine = StreamReader.ReadLine()) != null)
             {
@@ -211,12 +229,13 @@ namespace UpdateAssemblyVersionAppNet
                 {
                     ParseAssemblyStatement(sLine, out sKeyword, out sValue);
 
-                    FileData = new TFileData();
+                    AssemblyData = new TAssemblyData();
 
-                    FileData.sValue = sValue;
-                    FileData.nLineNumber = nLineNumber;
+                    AssemblyData.sKeyword = sKeyword;
+                    AssemblyData.sValue = sValue;
+                    AssemblyData.nLineNumber = nLineNumber;
 
-                    AssemblyDict.Add(sKeyword, FileData);
+                    AssemblyDataList.Add(AssemblyData);
                 }
 
                 ++nLineNumber;
@@ -227,32 +246,34 @@ namespace UpdateAssemblyVersionAppNet
 
         private static System.Boolean WriteAssemblyFile(
             System.String sFile,
-            System.Collections.Generic.Dictionary<System.String, TFileData> AssemblyDict)
+            System.Collections.Generic.List<TAssemblyData> AssemblyDataList)
         {
-            System.IO.StreamReader StreamReader = new System.IO.StreamReader(sFile);
+            System.IO.StreamReader StreamReader = new System.IO.StreamReader(sFile, ANSI);
             System.Int32 nLineNumber = 1;
             System.String sLine, sTempFile;
             System.IO.StreamWriter StreamWriter;
 
             sTempFile = System.IO.Path.GetTempFileName();
 
-            StreamWriter = new System.IO.StreamWriter(sTempFile);
+            StreamWriter = new System.IO.StreamWriter(sTempFile, false, ANSI);
 
             while ((sLine = StreamReader.ReadLine()) != null)
             {
-                foreach (TFileData FileData in AssemblyDict.Values)
+                foreach (TAssemblyData AssemblyData in AssemblyDataList)
                 {
-                    if (FileData.nLineNumber == nLineNumber)
+                    if (AssemblyData.nLineNumber == nLineNumber)
                     {
-                        if (FileData.sValue == CAssemblyCopyright)
+                        if (AssemblyData.sKeyword == CAssemblyCopyright)
                         {
                             sLine = System.String.Format("[assembly: AssemblyCopyright({0})]", s_sCopyright);
                         }
-                        else if (FileData.sValue == CAssemblyVersion)
+                        else if (AssemblyData.sKeyword == CAssemblyVersion)
                         {
+                            sLine = System.String.Format("[assembly: AssemblyVersion(\"{0}.{1}.0.0\")]", s_sMajorVersion, s_sMinorVersion);
                         }
-                        else if (FileData.sValue == CAssemblyFileVersion)
+                        else if (AssemblyData.sKeyword == CAssemblyFileVersion)
                         {
+                            sLine = System.String.Format("[assembly: AssemblyFileVersion(\"{0}.{1}.0.0\")]", s_sMajorVersion, s_sMinorVersion);
                         }
                     }
                 }
@@ -265,29 +286,55 @@ namespace UpdateAssemblyVersionAppNet
             StreamReader.Close();
             StreamWriter.Close();
 
-            // move temp file
+            try
+            {
+                System.IO.File.Copy(sTempFile, sFile, true);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine();
+                System.Console.WriteLine("Failed to copy the file \"{0}\" to \"{1}\".", sTempFile, sFile);
+                System.Console.WriteLine("Exception: {0}", ex.Message);
+                System.Console.WriteLine();
 
-            System.IO.File.Delete(sTempFile);
-
+                return false;
+            }
+            finally
+            {
+                try
+                {
+                    System.IO.File.Delete(sTempFile);
+                }
+                catch (Exception)
+                {
+                }
+            }
+            
             return true;
         }
 
         private static void UpdateAssemblyFiles()
         {
-            System.Collections.Generic.Dictionary<System.String, TFileData> AssemblyDict;
+            System.Collections.Generic.List<TAssemblyData> AssemblyDataList;
+            Nullable<TAssemblyData> AssemblyData;
 
             foreach (System.String sFile in m_AssemblyFileCollection)
             {
-                ReadAssemblyFile(sFile, out AssemblyDict);
+                ReadAssemblyFile(sFile, out AssemblyDataList);
 
-                if (AssemblyDict.ContainsKey(CAssemblyTitle))
+                AssemblyData = FindAssemblyDataFromKeyword(CAssemblyTitle, AssemblyDataList);
+
+                if (AssemblyData.HasValue)
                 {
-                    if (!IsAssemblyExcluded(AssemblyDict[CAssemblyTitle].sValue))
+                    if (!IsAssemblyExcluded(AssemblyData.Value.sValue))
                     {
                         System.Console.WriteLine();
                         System.Console.Write("Updating the assembly file \"{0}\"...", sFile);
 
-                        System.Console.WriteLine(WriteAssemblyFile(sFile, AssemblyDict) ? "Successful" : "Failed");
+                        if (WriteAssemblyFile(sFile, AssemblyDataList))
+                        {
+                            System.Console.WriteLine("Successful");
+                        }
                     }
                     else
                     {
@@ -314,6 +361,8 @@ namespace UpdateAssemblyVersionAppNet
         static void Main(string[] args)
         {
             System.String sRootPath, sVersionFileName;
+
+            System.Console.OutputEncoding = Encoding.UTF8;
 
             if (args.Length != 2)
             {
@@ -354,6 +403,9 @@ namespace UpdateAssemblyVersionAppNet
                 System.Console.WriteLine("Updating assembly files.");
 
                 UpdateAssemblyFiles();
+
+                System.Console.WriteLine();
+                System.Console.WriteLine("Finished updating the assembly files.");
             }
 
             catch (System.Exception e)
@@ -361,7 +413,7 @@ namespace UpdateAssemblyVersionAppNet
                 System.Console.WriteLine("Failed");
                 System.Console.WriteLine();
                 System.Console.WriteLine("Exception Occurred");
-                System.Console.WriteLine("Message: " + e.Message);
+                System.Console.WriteLine("Message: {0}", e.Message);
                 System.Console.WriteLine();
 
                 System.Environment.Exit(1);
