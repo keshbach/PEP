@@ -94,6 +94,8 @@ static BOOLEAN lResetUsbPort(
 
     PepCtrlLog("lResetUsbPort - Initializing event\n");
 
+	RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
+
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     PepCtrlLog("lResetUsbPort - Building Device IO Control Request\n");
@@ -216,6 +218,8 @@ static BOOLEAN lReadDeviceId(
     PepCtrlLog("lReadDeviceId entering.\n");
 
     PepCtrlLog("lReadDeviceId - Initializing event\n");
+
+	RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
@@ -342,6 +346,8 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
 
     PepCtrlLog("PepCtrlReadBitUsbPort - Initializing event\n");
 
+	RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
+
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     PepCtrlLog("PepCtrlReadBitUsbPort - Building Device IO Control Request\n");
@@ -465,6 +471,8 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
     PepCtrlLog("PepCtrlWriteUsbPort entering.\n");
 
     PepCtrlLog("PepCtrlWriteUsbPort - Initializing event\n");
+
+	RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
