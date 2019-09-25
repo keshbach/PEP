@@ -311,7 +311,7 @@ namespace OpenZip
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Open Zip File";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.OpenZipForm_FormClosed);
-            this.Load += new System.EventHandler(this.OpenZipForm2_Load);
+            this.Load += new System.EventHandler(this.OpenZipForm_Load);
             this.splitContainerFolderFile.Panel1.ResumeLayout(false);
             this.splitContainerFolderFile.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerFolderFile)).EndInit();

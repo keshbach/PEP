@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-/*  Copyright (C) 2014-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -10,12 +10,15 @@ namespace OpenZip
     {
         public partial class OpenZipForm : System.Windows.Forms.Form
         {
+            #region "Enumerations"
             public enum EOpenMode
             {
                 Open,
                 SaveAs
             };
+            #endregion
 
+            #region "Structures"
             private struct TTreeViewExpandDragDropData
             {
                 public System.Windows.Forms.Timer Timer;
@@ -50,13 +53,17 @@ namespace OpenZip
                 public System.DateTime ModDateTime;
                 public System.String sComment;
             }
+            #endregion
 
+            #region "Delegates"
             private delegate void DelegateTreeViewSort();
             private DelegateTreeViewSort m_DelegateTreeViewSort;
 
             private delegate void DelegateListViewSort();
             private DelegateListViewSort m_DelegateListViewSort;
+            #endregion
 
+            #region "Constants"
             private const System.String CZipFileImageName = "ZipFile";
 
             private const System.String CSizeFormat = "###,###,##0";
@@ -73,7 +80,9 @@ namespace OpenZip
 
             private System.String m_sZipFile = null;
             private Common.Zip.File m_ZipFile = null;
+            #endregion
 
+            #region "Member Variables"
             private EOpenMode m_OpenMode = EOpenMode.Open;
 
             private System.String m_sCurrentPath = System.IO.Path.DirectorySeparatorChar.ToString();
@@ -81,7 +90,9 @@ namespace OpenZip
 
             private System.Boolean m_bAllowOverwrite = false;
             private System.Boolean m_bEditingSelectFileNameOnly = true;
+            #endregion
 
+            #region "Static Variables"
             private static System.Windows.Forms.TreeNode s_DragSelectedTreeNode = null;
             private static System.Windows.Forms.TreeNode s_DragTreeNode = null;
             private static System.Windows.Forms.ListViewItem s_DragListViewItem = null;
@@ -91,7 +102,9 @@ namespace OpenZip
             private static TListViewScrollDragDropData s_ListViewScrollDragDropData = new TListViewScrollDragDropData();
 
             private static System.Collections.Generic.Dictionary<System.Windows.Forms.ListViewItem, System.Windows.Forms.TreeNode> s_DragListViewItemToTreeNodeDict = null;
+            #endregion
 
+            #region "Properties"
             public System.String ZipFile
             {
                 set
@@ -158,7 +171,9 @@ namespace OpenZip
                     m_bEditingSelectFileNameOnly = value;
                 }
             }
+            #endregion
 
+            #region "Constructor"
             public OpenZipForm()
             {
                 m_DelegateTreeViewSort = new DelegateTreeViewSort(OnTreeViewSort);
@@ -166,6 +181,7 @@ namespace OpenZip
 
                 InitializeComponent();
             }
+            #endregion
 
             private void TreeViewSort()
             {
@@ -2055,7 +2071,8 @@ namespace OpenZip
                 }
             }
 
-            private void OpenZipForm2_Load(
+            #region "Form Event Handlers"
+            private void OpenZipForm_Load(
                 object sender,
                 System.EventArgs e)
             {
@@ -2104,7 +2121,9 @@ namespace OpenZip
 
                 m_ZipFile = null;
             }
+            #endregion
 
+            #region "Button Click Event Handlers"
             private void buttonOK_Click(
                 object sender,
                 EventArgs e)
@@ -2130,6 +2149,11 @@ namespace OpenZip
 
                     m_sCurrentPath = sb.ToString();
 
+                    if (m_sCurrentPath.Length > 0 && m_sCurrentPath[0] == System.IO.Path.DirectorySeparatorChar)
+                    {
+                        m_sCurrentPath = m_sCurrentPath.Remove(0, 1);
+                    }
+
                     m_sSelection = System.IO.Path.Combine(m_sCurrentPath, listViewFolderFile.SelectedItems[0].Text);
                 }
                 else
@@ -2143,7 +2167,9 @@ namespace OpenZip
                     m_sCurrentPath = System.IO.Path.GetDirectoryName(sNewPath);
                 }
             }
+            #endregion
 
+            #region "Tree View Event Handlers"
             private void treeViewFolder_AfterSelect(
                 object sender,
                 System.Windows.Forms.TreeViewEventArgs e)
@@ -2464,7 +2490,9 @@ namespace OpenZip
                     System.Diagnostics.Debug.Assert(false, "Unknown drop operation.");
                 }
             }
+            #endregion
 
+            #region "List View Event Handlers"
             private void listViewFolderFile_AfterLabelEdit(
                 object sender,
                 System.Windows.Forms.LabelEditEventArgs e)
@@ -2884,14 +2912,18 @@ namespace OpenZip
                     System.Diagnostics.Debug.Assert(false, "Unknown drop operation.");
                 }
             }
+            #endregion
 
+            #region "Text Box Event Handlers"
             private void textBoxFileName_TextChanged(
                 object sender,
                 System.EventArgs e)
             {
                 VerifyFileName();
             }
+            #endregion
 
+            #region "Tool Strip Menu Item Event Handlers"
             private void toolStripMenuItemTreeViewNewFolder_Click(
                 object sender,
                 System.EventArgs e)
@@ -2999,7 +3031,9 @@ namespace OpenZip
                     }
                 }
             }
+            #endregion
 
+            #region "Context Menu Event Handlers"
             private void contextMenuStripListView_Opening(
                 object sender,
                 System.ComponentModel.CancelEventArgs e)
@@ -3019,10 +3053,11 @@ namespace OpenZip
                     toolStripMenuItemListViewProperties.Visible = false;                    
                 }
             }
+            #endregion
         }
     }
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2014-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2019 Kevin Eshbach                                  */
 /***************************************************************************/
