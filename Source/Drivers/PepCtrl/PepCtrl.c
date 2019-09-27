@@ -29,6 +29,8 @@
 #define CPepCtrlInternalDeviceName L"\\Device\\PepCtrl"
 #define CPepCtrlInternalDosDeviceName L"\\DosDevices\\PepCtrl"
 
+#define CTimeoutMs 50
+
 #pragma endregion
 
 DRIVER_INITIALIZE DriverEntry;
@@ -212,42 +214,85 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
-    BOOLEAN bQuit = TRUE;
+    BOOLEAN bQuitFunc = TRUE;
+	BOOLEAN bMonitorState = TRUE;
     PIO_STACK_LOCATION pIrpSp;
     PVOID pvInBuf, pvOutBuf;
     ULONG ulInBufLen, ulOutBufLen, ulIndex;
-    BOOLEAN bFuncFound;
+    BOOLEAN bFuncFound, bExecuteSleep;
+	LARGE_INTEGER SleepInteger;
 
     PAGED_CODE()
 
     PepCtrlLog("lPepCtrlIrpDeviceControl entering.\n");
 
-    ExAcquireFastMutex(&pPortData->FastMutex);
+	pIrpSp = IoGetCurrentIrpStackLocation(pIrp);
 
-    switch (pPortData->nState)
+	pIrp->IoStatus.Information = 0;
+
+    while (bMonitorState)
     {
-        case CPepCtrlStateRunning:
-            pPortData->nState = CPepCtrlStateDeviceControl;
+		bExecuteSleep = FALSE;
 
-            bQuit = FALSE;
-            break;
-        case CPepCtrlStateDeviceControl:
-        case CPepCtrlStateUnloading:
-        case CPepCtrlStateChangePortSettings:
-        case CPepCtrlStateDeviceArrived:
-        case CPepCtrlStateDeviceRemoved:
-            PepCtrlLog("lPepCtrlIrpDeviceControl - Invalid state of %d\n",
-                       pPortData->nState);
-            break;
-        default:
-            PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: Unknown state of %d\n",
-                       pPortData->nState);
-            break;
+        ExAcquireFastMutex(&pPortData->FastMutex);
+
+        switch (pPortData->nState)
+        {
+            case CPepCtrlStateRunning:
+                pPortData->nState = CPepCtrlStateDeviceControl;
+
+                bQuitFunc = FALSE;
+                bMonitorState = FALSE;
+                break;
+            case CPepCtrlStateDeviceArrived:
+            case CPepCtrlStateDeviceRemoved:
+				PepCtrlLog("lPepCtrlIrpDeviceControl - State of %d detected for I/O Control Code: 0x%X.\n",
+                           pPortData->nState, pIrpSp->Parameters.DeviceIoControl.IoControlCode);
+
+				if (pIrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_PEPCTRL_GET_DEVICE_STATUS ||
+					pIrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_PEPCTRL_DEVICE_NOTIFICATION)
+                {
+					if (!pIrp->Cancel)
+					{
+						bExecuteSleep = TRUE;
+					}
+					else
+					{
+						bMonitorState = FALSE;
+					}
+				}
+				else
+				{
+					bMonitorState = FALSE;
+				}
+                break;
+            case CPepCtrlStateDeviceControl:
+            case CPepCtrlStateUnloading:
+            case CPepCtrlStateChangePortSettings:
+                bMonitorState = FALSE;
+
+                PepCtrlLog("lPepCtrlIrpDeviceControl - Invalid state of %d for I/O Control Code: 0x%X.\n",
+                           pPortData->nState, pIrpSp->Parameters.DeviceIoControl.IoControlCode);
+                break;
+            default:
+                bMonitorState = FALSE;
+
+                PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: Unknown state of %d for I/O Control Code: 0x%X.\n",
+                           pPortData->nState, pIrpSp->Parameters.DeviceIoControl.IoControlCode);
+                break;
+        }
+
+        ExReleaseFastMutex(&pPortData->FastMutex);
+
+		if (bExecuteSleep)
+		{
+			SleepInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
+
+			KeDelayExecutionThread(KernelMode, FALSE, &SleepInteger);
+		}
     }
 
-    ExReleaseFastMutex(&pPortData->FastMutex);
-
-    if (bQuit)
+    if (bQuitFunc)
     {
         Status = STATUS_UNSUCCESSFUL;
 
@@ -259,10 +304,6 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 
         return Status;
     }
-
-    pIrpSp = IoGetCurrentIrpStackLocation(pIrp);
-
-    pIrp->IoStatus.Information = 0;
 
     ulInBufLen = pIrpSp->Parameters.DeviceIoControl.InputBufferLength;
     ulOutBufLen = pIrpSp->Parameters.DeviceIoControl.OutputBufferLength;
@@ -293,8 +334,8 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 
     if (pPortData->nState != CPepCtrlStateDeviceControl)
     {
-        PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: State should be CPepCtrlStateDeviceControl not %d\n",
-                   pPortData->nState);
+        PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: State should be CPepCtrlStateDeviceControl not %d for I/O Control Code: 0x%X.\n",
+                   pPortData->nState, pIrpSp->Parameters.DeviceIoControl.IoControlCode);
     }
 
     pPortData->nState = CPepCtrlStateRunning;
