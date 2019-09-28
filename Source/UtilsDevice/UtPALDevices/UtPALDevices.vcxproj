@@ -28,6 +28,7 @@
     <ClCompile Include="UtPalDeviceTerm.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\UtPALDevices.h" />
     <ClInclude Include="UtPalDeviceAdapter.h" />
     <ClInclude Include="UtPalDeviceCombinatorial.h" />
     <ClInclude Include="UtPalDeviceDefs.h" />

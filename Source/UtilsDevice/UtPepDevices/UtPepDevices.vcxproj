@@ -29,6 +29,9 @@
   <ItemGroup>
     <ResourceCompile Include="UtPepDevices.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\UtPepDevices.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{961083AF-068C-421E-90DF-2CB7881E33D7}</ProjectGuid>

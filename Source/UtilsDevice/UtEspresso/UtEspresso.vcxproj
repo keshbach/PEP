@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\UtEspresso.h" />
     <ClInclude Include="espresso_cofactor.h" />
     <ClInclude Include="espresso_compl.h" />
     <ClInclude Include="espresso_contain.h" />

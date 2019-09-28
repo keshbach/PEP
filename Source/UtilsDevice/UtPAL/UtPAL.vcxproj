@@ -32,6 +32,7 @@
     <ResourceCompile Include="UtPAL.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\UtPAL.h" />
     <ClInclude Include="MatchTerms.h" />
     <ClInclude Include="Quine-McClusky.h" />
   </ItemGroup>
