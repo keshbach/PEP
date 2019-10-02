@@ -6,7 +6,7 @@
 
 #include "Config.h"
 
-#include <UtilsPepNet/UiPepCtrls/UiPepCtrls.h>
+#include <UtilsPep/UiPepCtrls/UiPepCtrls.h>
 
 System::Boolean Pep::Controls::Config::Initialize()
 {

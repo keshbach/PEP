@@ -602,7 +602,7 @@ static VOID lDrawWindow(
     pbyBuffer = lIncrementBuffer(pbyBuffer, nBufferLen, nCurAddress,
                                  pData->nDataOrganization);
 
-    nBufferLen -= (pbyBuffer - pData->pbyBuffer);
+    nBufferLen -= (ULONG)(pbyBuffer - pData->pbyBuffer);
 
 	for (UINT nCurRow = 0; nCurRow < nTotalRows; ++nCurRow)
     {
@@ -664,7 +664,7 @@ static VOID lDrawWindow(
 
         pbyBuffer = lIncrementBuffer(pbyBuffer, nBufferLen, nDataPerRow, pData->nDataOrganization);
 
-        nBufferLen = pData->nBufferLen - (pbyBuffer - pData->pbyBuffer);
+        nBufferLen = pData->nBufferLen - (ULONG)(pbyBuffer - pData->pbyBuffer);
 
         UtFreeMem(pszTmpBuffer);
 

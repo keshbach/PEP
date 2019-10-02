@@ -7,17 +7,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UtilsPepNetBuilder", "Utils
 	ProjectSection(ProjectDependencies) = postProject
 		{808C2923-4AC3-43AA-8E6C-EE1EB49F844F} = {808C2923-4AC3-43AA-8E6C-EE1EB49F844F}
 		{CBED243E-37FE-4822-B784-F0548F8F1109} = {CBED243E-37FE-4822-B784-F0548F8F1109}
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED} = {1F72AA5B-24B6-4519-9126-CAF5C4D76BED}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UtPepNet", "UtPepNet\UtPepNet.vcxproj", "{808C2923-4AC3-43AA-8E6C-EE1EB49F844F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UiPepCtrlsNet", "UiPepCtrlsNet\UiPepCtrlsNet.vcxproj", "{CBED243E-37FE-4822-B784-F0548F8F1109}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED} = {1F72AA5B-24B6-4519-9126-CAF5C4D76BED}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UiPepCtrls", "UiPepCtrls\UiPepCtrls.vcxproj", "{1F72AA5B-24B6-4519-9126-CAF5C4D76BED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,14 +45,6 @@ Global
 		{CBED243E-37FE-4822-B784-F0548F8F1109}.Release|x64.Build.0 = Release|x64
 		{CBED243E-37FE-4822-B784-F0548F8F1109}.Release|x86.ActiveCfg = Release|Win32
 		{CBED243E-37FE-4822-B784-F0548F8F1109}.Release|x86.Build.0 = Release|Win32
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED}.Debug|x64.ActiveCfg = Debug|x64
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED}.Debug|x64.Build.0 = Debug|x64
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED}.Debug|x86.ActiveCfg = Debug|Win32
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED}.Debug|x86.Build.0 = Debug|Win32
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED}.Release|x64.ActiveCfg = Release|x64
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED}.Release|x64.Build.0 = Release|x64
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED}.Release|x86.ActiveCfg = Release|Win32
-		{1F72AA5B-24B6-4519-9126-CAF5C4D76BED}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

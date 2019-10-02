@@ -5,7 +5,7 @@
 #include "StdAfx.h"
 #include "BufferViewer.h"
 
-#include <UtilsPepNet/UiPepCtrls/UiBufferViewerCtrl.h>
+#include <UtilsPep/UiPepCtrls/UiBufferViewerCtrl.h>
 
 #pragma unmanaged
 
