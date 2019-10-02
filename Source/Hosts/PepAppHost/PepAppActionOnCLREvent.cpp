@@ -53,9 +53,12 @@ HRESULT STDMETHODCALLTYPE PepAppActionOnCLREvent::QueryInterface(
 #pragma region "IActionOnCLREvent"
 
 HRESULT STDMETHODCALLTYPE PepAppActionOnCLREvent::OnEvent(
-  EClrEvent event,
+  EClrEvent Event,
   PVOID pvData)
 {
+    Event;
+    pvData;
+
     return S_OK;
 }
 
