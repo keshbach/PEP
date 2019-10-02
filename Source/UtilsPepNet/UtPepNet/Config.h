@@ -4,13 +4,11 @@
 
 #pragma once
 
-#include "IDeviceChange.h"
-
 namespace Pep
 {
 	namespace Programmer
 	{
-        public ref class Config sealed
+        public ref class Config abstract sealed
 		{
         public:
             enum class EPortType

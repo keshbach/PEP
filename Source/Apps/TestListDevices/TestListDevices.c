@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -343,15 +343,6 @@ static int lListDevices(void)
     ULONG ulDeviceCount, ulIndex;
     TDevice Device;
 
-    wprintf(L"Calling UtPALInitialize\n");
-
-    if (FALSE == UtPALInitialize())
-    {
-        wprintf(L"UtPALUnitialize call has failed.\n");
-
-        return -1;
-    }
-
     GetModuleFileName(GetModuleHandleW(NULL), cPath, MArrayLen(cPath));
 
     PathRemoveFileSpec(cPath);
@@ -398,15 +389,6 @@ End:
     if (FALSE == UtPepDevicesUninitialize())
     {
         wprintf(L"UtPepDevicesUninitialize call has failed.\n");
-
-        nResult = -1;
-    }
-
-    wprintf(L"Calling UtPALUninitialize.\n");
-
-    if (FALSE == UtPALUninitialize())
-    {
-        wprintf(L"UtPALUninitialize call has failed.\n");
 
         nResult = -1;
     }
@@ -549,5 +531,5 @@ int _cdecl wmain(int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/

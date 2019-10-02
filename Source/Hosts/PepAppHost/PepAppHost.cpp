@@ -327,30 +327,7 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 
     lUninitialize(&l_PepAppHostRuntimeData);
 
-    if (l_PepAppHostData.pszPluginPath)
-    {
-        UtFreeMem((LPVOID)l_PepAppHostData.pszPluginPath);
-    }
-
     *pdwExitCode = l_PepAppHostData.dwExitCode;
-
-    return TRUE;
-}
-
-MExternC BOOL PEPAPPHOSTAPI PepAppHostSetPluginPath(
-  _In_ LPCWSTR pszPluginPath)
-{
-    INT nPluginPathLen = ::lstrlenW(pszPluginPath) + 1;
-    LPWSTR pszNewPluginPath = (LPWSTR)UtAllocMem(nPluginPathLen * sizeof(WCHAR));
-
-    if (pszNewPluginPath == NULL)
-    {
-        return FALSE;
-    }
-
-    ::StringCchCopyW(pszNewPluginPath, nPluginPathLen, pszPluginPath);
-
-    l_PepAppHostData.pszPluginPath = pszNewPluginPath;
 
     return TRUE;
 }

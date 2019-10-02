@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2012-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2012-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -346,19 +346,7 @@ static void lRunMinimizerTest(
 
 static int lRunTest1()
 {
-    if (UtPALInitialize() == FALSE)
-    {
-        wprintf(L"UtPAL could not be initialized.\n");
-
-        return -1;
-    }
-
     lRunMinimizerTest(l_ppszSampleTerms1);
-
-    if (UtPALUninitialize() == FALSE)
-    {
-        wprintf(L"UtPAL could not be uninitialized.\n");
-    }
 
     return 0;
 }
@@ -414,5 +402,5 @@ int _cdecl wmain(int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2012-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2012-2019 Kevin Eshbach                                  */
 /***************************************************************************/

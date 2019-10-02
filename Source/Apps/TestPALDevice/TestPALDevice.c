@@ -401,15 +401,6 @@ static int lReadDevice(
 
     lInitDeviceIOFuncs(&DeviceIOFuncs);
 
-    wprintf(L"Calling UtPALInitialize.\n");
-
-    if (FALSE == UtPALInitialize())
-    {
-        wprintf(L"Call to UtPALInitialize has failed.\n");
-
-        return -1;
-    }
-
     GetModuleFileNameW(GetModuleHandle(NULL), cPath, MArrayLen(cPath));
 
     PathRemoveFileSpecW(cPath);
@@ -614,13 +605,6 @@ EndPepDevicesUninit:
     if (FALSE == UtPepDevicesUninitialize())
     {
         wprintf(L"Call to UtPepDevicesUninitialize has failed.\n");
-    }
-
-    wprintf(L"Calling UtPALUninitialize\n");
-
-    if (FALSE == UtPALUninitialize())
-    {
-        wprintf(L"Call to UtPALUninitialize has failed.\n");
     }
 
     return nResult;

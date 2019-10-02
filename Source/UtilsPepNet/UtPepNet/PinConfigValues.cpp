@@ -1,8 +1,10 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "StdAfx.h"
+
+#include <UtilsDevice/UtPepDevices.h>
 
 #include "PinConfigValues.h"
 
@@ -20,7 +22,7 @@ Pep::Programmer::PinConfigValues::~PinConfigValues()
 }
 
 Pep::Programmer::PinConfigValues::PinConfigValues(
-  const TDevicePinConfigValues* pDevicePinConfigValues) :
+  _In_ const TDevicePinConfigValues* pDevicePinConfigValues) :
   m_nPin(pDevicePinConfigValues->nPin),
   m_TypesArray(nullptr),
   m_PolaritiesArray(nullptr)
@@ -47,5 +49,5 @@ Pep::Programmer::PinConfigValues::PinConfigValues(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

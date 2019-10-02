@@ -17,11 +17,17 @@
 
 #include <Utils/UtHeapProcess.h>
 
+#include <UtilsDevice/UtPepDevices.h>
+
 #include <Hosts/PepAppHost.h>
 
 #pragma region Constants
 
 #define CPepAppRunningMutexName L"PepAppRunningMutex"
+
+// Command Line Arguments definitions
+
+#define CPluginsArgument L"/plugins"
 
 #pragma endregion
 
@@ -30,11 +36,15 @@
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostInitializeFunc)(VOID);
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostUninitializeFunc)(VOID);
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostExecuteFunc)(_Out_ LPDWORD pdwExitCode);
-typedef BOOL (PEPAPPHOSTAPI* TPepAppHostSetPluginPath)(_In_ LPCWSTR pszPluginPath);
 
-typedef VOID (STDAPICALLTYPE *TPathRemoveExtensionW)(_Inout_ LPWSTR pszPath);
-typedef BOOL (STDAPICALLTYPE *TPathRemoveFileSpecW)(_Inout_ LPWSTR pszPath);
-typedef BOOL (STDAPICALLTYPE *TPathAppendW)(_Inout_ LPWSTR pszPath, _In_ LPCWSTR pszMore);
+typedef VOID (STDAPICALLTYPE *TPathRemoveExtensionWFunc)(_Inout_ LPWSTR pszPath);
+typedef BOOL (STDAPICALLTYPE *TPathRemoveFileSpecWFunc)(_Inout_ LPWSTR pszPath);
+typedef BOOL (STDAPICALLTYPE *TPathAppendWFunc)(_Inout_ LPWSTR pszPath, _In_ LPCWSTR pszMore);
+
+typedef LPWSTR* (STDAPICALLTYPE *TCommandLineToArgvWFunc)(_In_ LPCWSTR pszCmdLine, _Out_ int* pNumArgs);
+
+typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesInitializeFunc)(_In_ LPCWSTR pszPluginPath);
+typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesUninitializeFunc)(VOID);
 
 #pragma endregion
 
@@ -46,14 +56,21 @@ typedef struct tagTPepAppHostData
     TPepAppHostInitializeFunc pInitialize;
     TPepAppHostUninitializeFunc pUninitialize;
     TPepAppHostExecuteFunc pExecute;
-    TPepAppHostSetPluginPath pSetPluginPath;
 } TPepAppHostData;
+
+typedef struct tagTPepDeviceData
+{
+	HMODULE hModule;
+	TUtPepDevicesInitializeFunc pInitialize;
+	TUtPepDevicesUninitializeFunc pUninitialize;
+} TPepDeviceData;
 
 typedef struct tagTSetupData
 {
     HINSTANCE hInstance;
     LPCWSTR pszArguments;
     TPepAppHostData AppHostData;
+	TPepDeviceData DeviceData;
 } TSetupData;
 
 #pragma endregion
@@ -128,12 +145,142 @@ static VOID lUninitialize()
     l_hAppRunningMutex = NULL;
 }
 
+static BOOL lInitializePepAppHostData(
+  _In_ TPepAppHostData* pPepAppHostData)
+{
+	pPepAppHostData->hModule = ::LoadLibrary(L"PepAppHost.dll");
+
+	if (pPepAppHostData->hModule == NULL)
+	{
+		return FALSE;
+	}
+
+	pPepAppHostData->pInitialize = (TPepAppHostInitializeFunc)::GetProcAddress(pPepAppHostData->hModule, "PepAppHostInitialize");
+	pPepAppHostData->pUninitialize = (TPepAppHostUninitializeFunc)::GetProcAddress(pPepAppHostData->hModule, "PepAppHostUninitialize");
+	pPepAppHostData->pExecute = (TPepAppHostExecuteFunc)::GetProcAddress(pPepAppHostData->hModule, "PepAppHostExecute");
+
+	if (pPepAppHostData->pInitialize == NULL ||
+		pPepAppHostData->pUninitialize == NULL ||
+		pPepAppHostData->pExecute == NULL)
+	{
+		::FreeLibrary(pPepAppHostData->hModule);
+
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static BOOL lUninitializePepAppHostData(
+  _In_ TPepAppHostData* pPepAppHostData)
+{
+	pPepAppHostData;
+
+	// Cannot free the library because there is no way to unload the .NET Framework.
+
+	//::FreeLibrary(pPepAppHostData->hModule);
+
+	return TRUE;
+}
+
+static BOOL lInitializeDeviceData(
+  _In_ TPepDeviceData* pDeviceData)
+{
+	pDeviceData->hModule = ::LoadLibrary(L"UtPepDevices.dll");
+
+	if (pDeviceData->hModule == NULL)
+	{
+		return FALSE;
+	}
+
+	pDeviceData->pInitialize = (TUtPepDevicesInitializeFunc)::GetProcAddress(pDeviceData->hModule, "UtPepDevicesInitialize");
+	pDeviceData->pUninitialize = (TUtPepDevicesUninitializeFunc)::GetProcAddress(pDeviceData->hModule, "UtPepDevicesUninitialize");
+
+	if (pDeviceData->pInitialize == NULL ||
+		pDeviceData->pUninitialize == NULL)
+	{
+		::FreeLibrary(pDeviceData->hModule);
+
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static BOOL lUninitializeDeviceData(
+  _In_ TPepDeviceData* pDeviceData)
+{
+	::FreeLibrary(pDeviceData->hModule);
+
+	return TRUE;
+}
+
+static BOOL lInitializePepDevices(
+  _In_ TPepDeviceData* pDeviceData,
+  _In_ LPCWSTR pszPluginPath)
+{
+	BOOL bResult;
+	WCHAR cPluginPath[MAX_PATH];
+	DWORD dwResult;
+	HMODULE hModule;
+	TPathRemoveExtensionWFunc pPathRemoveExtension;
+	TPathRemoveFileSpecWFunc pPathRemoveFileSpec;
+	TPathAppendWFunc pPathAppend;
+
+	if (pszPluginPath)
+	{
+		bResult = pDeviceData->pInitialize(pszPluginPath);
+	}
+	else
+	{
+		dwResult = ::GetModuleFileName(::GetModuleHandle(NULL), cPluginPath, MArrayLen(cPluginPath));
+
+		if (dwResult == ERROR_INSUFFICIENT_BUFFER)
+		{
+			return FALSE;
+		}
+
+		hModule = ::LoadLibraryW(L"shlwapi.dll");
+
+		if (hModule == NULL)
+		{
+			return FALSE;
+		}
+
+		pPathRemoveExtension = (TPathRemoveExtensionWFunc)::GetProcAddress(hModule, "PathRemoveExtensionW");
+		pPathRemoveFileSpec = (TPathRemoveFileSpecWFunc)::GetProcAddress(hModule, "PathRemoveFileSpecW");
+		pPathAppend = (TPathAppendWFunc)::GetProcAddress(hModule, "PathAppendW");
+
+		if (pPathRemoveExtension == NULL || pPathRemoveFileSpec == NULL || pPathAppend == NULL)
+		{
+			::FreeLibrary(hModule);
+
+			return FALSE;
+		}
+
+		pPathRemoveExtension(cPluginPath);
+		pPathRemoveFileSpec(cPluginPath);
+		pPathAppend(cPluginPath, L"Plugins");
+
+		::FreeLibrary(hModule);
+
+		bResult = pDeviceData->pInitialize(cPluginPath);
+	}
+
+	return bResult;
+}
+
 static DWORD WINAPI lRunSetupThreadProc(
   _In_ LPVOID pvParameter)
 {
     DWORD dwResult = 0;
     TSetupData* pSetupData = (TSetupData*)pvParameter;
-    BOOL bAlreadyRunning;
+	LPCWSTR pszPluginPath = NULL;
+	LPWSTR* ppszArgs;
+	INT nTotalArgs;
+	BOOL bAlreadyRunning;
+	HMODULE hModule;
+	TCommandLineToArgvWFunc pCommandLineToArgv;
 
     if (!lIsSupportedOperatingSystem())
     {
@@ -158,84 +305,133 @@ static DWORD WINAPI lRunSetupThreadProc(
         return FALSE;
     }
 
-    pSetupData->AppHostData.hModule = ::LoadLibrary(L"PepAppHost.dll");
+	hModule = ::LoadLibraryW(L"shell32.dll");
 
-    if (pSetupData->AppHostData.hModule == NULL)
-    {
-        PepAppSplashDialogDisplayUnknownError();
+	if (hModule == NULL)
+	{
+		PepAppSplashDialogDisplayUnknownError();
+
+		lUninitialize();
+
+		return FALSE;
+	}
+
+	pCommandLineToArgv = (TCommandLineToArgvWFunc)::GetProcAddress(hModule, "CommandLineToArgvW");
+
+	if (pCommandLineToArgv == NULL)
+	{
+		::FreeLibrary(hModule);
+
+		PepAppSplashDialogDisplayUnknownError();
+
+		lUninitialize();
+
+		return FALSE;
+	}
+
+	ppszArgs = pCommandLineToArgv(pSetupData->pszArguments, &nTotalArgs);
+
+	::FreeModule(hModule);
+
+	if (ppszArgs == NULL)
+	{
+		PepAppSplashDialogDisplayUnknownError();
+
+		lUninitialize();
+
+		return FALSE;
+	}
+
+	if (nTotalArgs > 1)
+	{
+		if (nTotalArgs == 3)
+		{
+			if (::lstrcmpi(ppszArgs[1], CPluginsArgument) == 0)
+			{
+			    pszPluginPath = ppszArgs[2];
+			}
+			else
+			{
+				::LocalFree(ppszArgs);
+
+				PepAppSplashDialogDisplayCommandLineHelp();
+
+				lUninitialize();
+
+				return FALSE;
+			}
+		}
+		else
+		{
+			::LocalFree(ppszArgs);
+
+			PepAppSplashDialogDisplayCommandLineHelp();
+
+			lUninitialize();
+
+			return FALSE;
+		}
+	}
+
+	if (FALSE == lInitializePepAppHostData(&pSetupData->AppHostData))
+	{
+		::LocalFree(ppszArgs);
+		
+		PepAppSplashDialogDisplayUnknownError();
 
         lUninitialize();
 
         return FALSE;
     }
 
-    pSetupData->AppHostData.pInitialize = (TPepAppHostInitializeFunc)::GetProcAddress(pSetupData->AppHostData.hModule, "PepAppHostInitialize");
-    pSetupData->AppHostData.pUninitialize = (TPepAppHostUninitializeFunc)::GetProcAddress(pSetupData->AppHostData.hModule, "PepAppHostUninitialize");
-    pSetupData->AppHostData.pExecute = (TPepAppHostExecuteFunc)::GetProcAddress(pSetupData->AppHostData.hModule, "PepAppHostExecute");
-    pSetupData->AppHostData.pSetPluginPath = (TPepAppHostSetPluginPath)::GetProcAddress(pSetupData->AppHostData.hModule, "PepAppHostSetPluginPath");
+	if (FALSE == lInitializeDeviceData(&pSetupData->DeviceData))
+	{
+		lUninitializePepAppHostData(&pSetupData->AppHostData);
 
-    if (pSetupData->AppHostData.pInitialize == NULL ||
-        pSetupData->AppHostData.pUninitialize == NULL ||
-        pSetupData->AppHostData.pExecute == NULL ||
-        pSetupData->AppHostData.pSetPluginPath == NULL ||
-        pSetupData->AppHostData.pInitialize() == FALSE)
-    {
-        ::FreeLibrary(pSetupData->AppHostData.hModule);
+		::LocalFree(ppszArgs);
 
-        PepAppSplashDialogDisplayUnknownError();
+		PepAppSplashDialogDisplayUnknownError();
 
-        lUninitialize();
+		lUninitialize();
 
-        return FALSE;
-    }
+		return FALSE;
+	}
+
+	if (FALSE == lInitializePepDevices(&pSetupData->DeviceData, pszPluginPath))
+	{
+		lUninitializeDeviceData(&pSetupData->DeviceData);
+		lUninitializePepAppHostData(&pSetupData->AppHostData);
+
+		::LocalFree(ppszArgs);
+
+		PepAppSplashDialogDisplayUnknownError();
+
+		lUninitialize();
+
+		return FALSE;
+	}
+
+	if (FALSE == pSetupData->AppHostData.pInitialize())
+	{
+		pSetupData->DeviceData.pUninitialize();
+
+		lUninitializeDeviceData(&pSetupData->DeviceData);
+		lUninitializePepAppHostData(&pSetupData->AppHostData);
+
+		::LocalFree(ppszArgs);
+
+		PepAppSplashDialogDisplayUnknownError();
+
+		lUninitialize();
+
+		return FALSE;
+	}
+
+	::LocalFree(ppszArgs);
 
     PepAppSplashDialogQuitMessagePump();
 
     return TRUE;
-}
-
-static BOOL lSetPluginPath(
-    TPepAppHostData* pPepAppHostData)
-{
-    WCHAR cPluginPath[MAX_PATH];
-    DWORD dwResult;
-    HMODULE hModule;
-    TPathRemoveExtensionW pPathRemoveExtension;
-    TPathRemoveFileSpecW pPathRemoveFileSpec;
-    TPathAppendW pPathAppend;
-
-    dwResult = ::GetModuleFileName(::GetModuleHandle(NULL), cPluginPath, MArrayLen(cPluginPath));
-
-    if (dwResult == ERROR_INSUFFICIENT_BUFFER)
-    {
-        return FALSE;
-    }
-
-    hModule = ::LoadLibraryW(L"shlwapi.dll");
-
-    if (hModule == NULL)
-    {
-        return FALSE;
-    }
-
-    pPathRemoveExtension = (TPathRemoveExtensionW)::GetProcAddress(hModule, "PathRemoveExtensionW");
-    pPathRemoveFileSpec = (TPathRemoveFileSpecW)::GetProcAddress(hModule, "PathRemoveFileSpecW");
-    pPathAppend = (TPathAppendW)::GetProcAddress(hModule, "PathAppendW");
-
-    if (pPathRemoveExtension == NULL || pPathRemoveFileSpec == NULL || pPathAppend == NULL)
-    {
-        ::FreeLibrary(hModule);
-
-        return FALSE;
-    }
-
-    pPathRemoveExtension(cPluginPath);
-    pPathRemoveFileSpec(cPluginPath);
-    pPathAppend(cPluginPath, L"Plugins");
-
-    ::FreeLibrary(hModule);
-
-    return pPepAppHostData->pSetPluginPath(cPluginPath);
 }
 
 #pragma endregion
@@ -246,12 +442,12 @@ INT PepAppExecute(
   _In_ HINSTANCE hInstance,
   _In_z_ LPCWSTR pszArguments)
 {
-    HANDLE hThread;
-    TSetupData SetupData;
-    DWORD dwThreadId, dwExitCode;
+	TSetupData* pSetupData = (TSetupData*)UtAllocMem(sizeof(TSetupData));
+	HANDLE hThread;
+	DWORD dwThreadId, dwExitCode;
     LPCWSTR pszAppTitle, pszMessage;
 
-    if (!PepAppSplashDialogCreate(hInstance))
+	if (!PepAppSplashDialogCreate(hInstance))
     {
         pszAppTitle = UtPepAppAllocString(IDS_APPTITLE);
         pszMessage = UtPepAppAllocString(IDS_CANNOTCREATEAPPWINDOW);
@@ -264,10 +460,10 @@ INT PepAppExecute(
         return 1;
     }
 
-    SetupData.hInstance = hInstance;
-    SetupData.pszArguments = pszArguments;
+    pSetupData->hInstance = hInstance;
+    pSetupData->pszArguments = pszArguments;
 
-    hThread = ::CreateThread(NULL, 0, lRunSetupThreadProc, &SetupData, 0, &dwThreadId);
+    hThread = ::CreateThread(NULL, 0, lRunSetupThreadProc, pSetupData, 0, &dwThreadId);
 
     if (hThread == NULL)
     {
@@ -280,6 +476,8 @@ INT PepAppExecute(
         UtPepAppFreeString(pszMessage);
 
         PepAppSplashDialogDestroy();
+
+		UtFreeMem(pSetupData);
 
         return 1;
     }
@@ -301,16 +499,14 @@ INT PepAppExecute(
         return 1;
     }
 
-    if (FALSE == lSetPluginPath(&SetupData.AppHostData))
-    {
-        return 1;
-    }
+    pSetupData->AppHostData.pExecute(&dwExitCode);
 
-    SetupData.AppHostData.pExecute(&dwExitCode);
+	pSetupData->DeviceData.pUninitialize();
 
-    SetupData.AppHostData.pUninitialize();
+	lUninitializeDeviceData(&pSetupData->DeviceData);
+	lUninitializePepAppHostData(&pSetupData->AppHostData);
 
-    //::FreeLibrary(SetupData.AppHostData.hModule);
+	UtFreeMem(pSetupData);
 
     lUninitialize();
 

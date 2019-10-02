@@ -1,12 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
-
-#include <UtilsDevice/UtPepDevices.h>
-
-#include "IDeviceIO.h"
 
 namespace Pep
 {
@@ -69,9 +65,9 @@ namespace Pep
 			}
 
 		internal:
-			ROMData(const TROMData* pROMData,
-				TUtPepDevicesInitFunc pInitDeviceFunc,
-				TUtPepDevicesUninitFunc pUninitDeviceFunc);
+			ROMData(_In_ const TROMData* pROMData,
+                    _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
+                    _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc);
 			~ROMData();
 
 		private:
@@ -99,5 +95,5 @@ namespace Pep
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

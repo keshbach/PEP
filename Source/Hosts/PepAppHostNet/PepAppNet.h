@@ -14,7 +14,7 @@ namespace Pep
             Startup();
 
         public:
-            System::UInt32 Execute(System::String^ sPluginPath);
+            System::UInt32 Execute();
         };
     }
 }

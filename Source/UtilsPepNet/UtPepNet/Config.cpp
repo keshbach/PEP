@@ -4,6 +4,8 @@
 
 #include "StdAfx.h"
 
+#include "IDeviceChange.h"
+
 #include "Config.h"
 
 #include <Config/UtPepCtrl.h>

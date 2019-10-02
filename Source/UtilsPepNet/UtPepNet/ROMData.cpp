@@ -1,61 +1,15 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
-#include "StdAfx.h"
+#include "Stdafx.h"
+
+#include <UtilsDevice/UtPepDevices.h>
+
+#include "IDeviceIO.h"
 
 #include "ROMData.h"
 #include "UtDeviceIO.h"
-
-#pragma unmanaged
-static VOID lReadROMDevice(
-  LPBYTE pbyData,
-  ULONG ulDataLen,
-  TDeviceIOFuncs* pDeviceIOFuncs,
-  TUtPepDevicesReadDeviceFunc pReadDeviceFunc,
-  TUtPepDevicesInitFunc pInitDeviceFunc,
-  TUtPepDevicesUninitFunc pUninitDeviceFunc)
-{
-    if (pInitDeviceFunc())
-    {
-        pReadDeviceFunc(pDeviceIOFuncs, pbyData, ulDataLen);
-
-        pUninitDeviceFunc();
-    }
-}
-
-static VOID lProgramROMDevice(
-  LPBYTE pbyData,
-  ULONG ulDataLen,
-  TDeviceIOFuncs* pDeviceIOFuncs,
-  TUtPepDevicesProgramDeviceFunc pProgramDeviceFunc,
-  TUtPepDevicesInitFunc pInitDeviceFunc,
-  TUtPepDevicesUninitFunc pUninitDeviceFunc)
-{
-    if (pInitDeviceFunc())
-    {
-        pProgramDeviceFunc(pDeviceIOFuncs, pbyData, ulDataLen);
-
-        pUninitDeviceFunc();
-    }
-}
-
-static VOID lVerifyROMDevice(
-  LPBYTE pbyData,
-  ULONG ulDataLen,
-  TDeviceIOFuncs* pDeviceIOFuncs,
-  TUtPepDevicesVerifyDeviceFunc pVerifyDeviceFunc,
-  TUtPepDevicesInitFunc pInitDeviceFunc,
-  TUtPepDevicesUninitFunc pUninitDeviceFunc)
-{
-    if (pInitDeviceFunc())
-    {
-        pVerifyDeviceFunc(pDeviceIOFuncs, pbyData, ulDataLen);
-
-        pUninitDeviceFunc();
-    }
-}
-#pragma managed
 
 Pep::Programmer::ROMData::ROMData()
 {
@@ -75,9 +29,9 @@ Pep::Programmer::ROMData::~ROMData()
 }
 
 Pep::Programmer::ROMData::ROMData(
-  const TROMData* pROMData,
-  TUtPepDevicesInitFunc pInitDeviceFunc,
-  TUtPepDevicesUninitFunc pUninitDeviceFunc) :
+  _In_ const TROMData* pROMData,
+  _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
+  _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc) :
   m_pReadDeviceFunc(pROMData->pReadDeviceFunc),
   m_pProgramDeviceFunc(pROMData->pProgramDeviceFunc),
   m_pVerifyDeviceFunc(pROMData->pVerifyDeviceFunc),
@@ -134,9 +88,12 @@ void Pep::Programmer::ROMData::ReadDevice(
 
 	Pep::Programmer::UtDeviceIO::SetCurrentDeviceIO(pDeviceIO);
 
-    lReadROMDevice(pbyData, byData->Length, pDeviceIOFuncs,
-                   m_pReadDeviceFunc, m_pInitDeviceFunc,
-                   m_pUninitDeviceFunc);
+	if (m_pInitDeviceFunc())
+	{
+		m_pReadDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+
+		m_pUninitDeviceFunc();
+	}
 }
 
 void Pep::Programmer::ROMData::ProgramDevice(
@@ -148,9 +105,12 @@ void Pep::Programmer::ROMData::ProgramDevice(
 
 	Pep::Programmer::UtDeviceIO::SetCurrentDeviceIO(pDeviceIO);
 
-    lProgramROMDevice(pbyData, byData->Length, pDeviceIOFuncs,
-                      m_pProgramDeviceFunc, m_pInitDeviceFunc,
-                      m_pUninitDeviceFunc);
+	if (m_pInitDeviceFunc())
+	{
+		m_pProgramDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+
+		m_pUninitDeviceFunc();
+	}
 }
 
 void Pep::Programmer::ROMData::VerifyDevice(
@@ -162,11 +122,14 @@ void Pep::Programmer::ROMData::VerifyDevice(
 
 	Pep::Programmer::UtDeviceIO::SetCurrentDeviceIO(pDeviceIO);
 
-    lVerifyROMDevice(pbyData, byData->Length, pDeviceIOFuncs,
-                     m_pVerifyDeviceFunc, m_pInitDeviceFunc,
-                     m_pUninitDeviceFunc);
+	if (m_pInitDeviceFunc())
+	{
+		m_pVerifyDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+
+		m_pUninitDeviceFunc();
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

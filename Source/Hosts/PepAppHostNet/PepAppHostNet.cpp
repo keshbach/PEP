@@ -13,7 +13,7 @@ static VOID lExecutePepApp(
 {
     Pep::Application::Startup^ Startup = gcnew Pep::Application::Startup();
 
-    pPepAppHostData->dwExitCode = Startup->Execute(gcnew System::String(pPepAppHostData->pszPluginPath));
+    pPepAppHostData->dwExitCode = Startup->Execute();
 }
 
 extern "C"

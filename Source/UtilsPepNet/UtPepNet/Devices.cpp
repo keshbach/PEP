@@ -1,61 +1,16 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
-#include "StdAfx.h"
+#include "Stdafx.h"
+
+#include <UtilsDevice/UtPepDevices.h>
+#include <UtilsDevice/UtPAL.h>
+
+#include "Plugin.h"
+#include "Device.h"
 
 #include "Devices.h"
-
-#include "UtilsDevice/UtPAL.h"
-
-System::Boolean Pep::Programmer::Devices::Initialize(
-  System::String^ sPluginPath)
-{
-    System::Boolean bResult = false;
-    pin_ptr<const wchar_t> pszPluginPath = PtrToStringChars(sPluginPath);
-
-    if (UtPepDevicesInitialize(pszPluginPath))
-    {
-        UtPALInitialize();
-
-        s_PluginsList = gcnew System::Collections::Generic::List<Pep::Programmer::Plugin^>();
-        s_DevicesList = gcnew System::Collections::Generic::List<Pep::Programmer::Device^>();
-
-        bResult = true;
-    }
-
-    return bResult;
-}
-
-System::Boolean Pep::Programmer::Devices::Uninitialize()
-{
-    if (s_DevicesList != nullptr)
-    {
-        for each (Pep::Programmer::Device^ Device in s_DevicesList)
-        {
-            Device->Close();
-        }
-
-        s_DevicesList->Clear();
-
-        delete s_DevicesList;
-
-        s_DevicesList = nullptr;
-    }
-
-    if (s_PluginsList != nullptr)
-    {
-        s_PluginsList->Clear();
-
-        delete s_PluginsList;
-
-        s_PluginsList = nullptr;
-    }
-
-    UtPALUninitialize();
-
-    return UtPepDevicesUninitialize() ? true : false;
-}
 
 System::Boolean Pep::Programmer::Devices::InitializePALFuseMap(
   array<System::Byte>^ byData)
@@ -65,55 +20,73 @@ System::Boolean Pep::Programmer::Devices::InitializePALFuseMap(
     return UtPALClearFuseMap(pbyData, byData->Length) ? true : false;
 }
 
-void Pep::Programmer::Devices::InitPluginsList(void)
+System::Collections::Generic::List<Pep::Programmer::Plugin^>^ Pep::Programmer::Devices::CreatePluginsList()
 {
-    Pep::Programmer::Plugin^ pPlugin;
-    ULONG ulPluginCount;
-    LPCWSTR pszName;
-    WORD wProductMajorVersion, wProductMinorVersion;
-    WORD wProductBuildVersion, wProductPrivateVersion;
+	System::Collections::Generic::List<Pep::Programmer::Plugin^>^ PluginList;
+	Pep::Programmer::Plugin^ pPlugin;
+	ULONG ulPluginCount;
+	LPCWSTR pszName;
+	WORD wProductMajorVersion, wProductMinorVersion;
+	WORD wProductBuildVersion, wProductPrivateVersion;
 
-    if (TRUE == UtPepDevicesGetPluginCount(&ulPluginCount))
-    {
-        for (ULONG ulIndex = 0; ulIndex < ulPluginCount; ++ulIndex)
-        {
-            if (TRUE == UtPepDevicesGetPluginName(ulIndex, &pszName) &&
-                TRUE == UtPepDevicesGetPluginVersion(ulIndex, &wProductMajorVersion,
+	if (TRUE == UtPepDevicesGetPluginCount(&ulPluginCount))
+	{
+		PluginList = gcnew System::Collections::Generic::List<Pep::Programmer::Plugin^>(ulPluginCount);
+
+		for (ULONG ulIndex = 0; ulIndex < ulPluginCount; ++ulIndex)
+		{
+			if (TRUE == UtPepDevicesGetPluginName(ulIndex, &pszName) &&
+				TRUE == UtPepDevicesGetPluginVersion(ulIndex, &wProductMajorVersion,
                                                      &wProductMinorVersion,
                                                      &wProductBuildVersion,
                                                      &wProductPrivateVersion))
-            {
-                pPlugin = gcnew Pep::Programmer::Plugin(pszName, wProductMajorVersion,
- 													    wProductMinorVersion,
- 													    wProductBuildVersion,
- 													    wProductPrivateVersion);
-      
-                s_PluginsList->Add(pPlugin);
-            }
-        }
-    }
+			{
+				pPlugin = gcnew Pep::Programmer::Plugin(pszName, wProductMajorVersion,
+                                                        wProductMinorVersion,
+                                                        wProductBuildVersion,
+                                                        wProductPrivateVersion);
+
+				PluginList->Add(pPlugin);
+			}
+		}
+	}
+	else
+	{
+		PluginList = gcnew System::Collections::Generic::List<Pep::Programmer::Plugin^>(0);
+	}
+
+	return PluginList;
 }
 
-void Pep::Programmer::Devices::InitDevicesList(void)
+System::Collections::Generic::List<Pep::Programmer::Device^>^ Pep::Programmer::Devices::CreateDevicesList()
 {
+	System::Collections::Generic::List<Pep::Programmer::Device^>^ DeviceList;
 	Pep::Programmer::Device^ pDevice;
-    ULONG ulDeviceCount;
-    TDevice Device;
+	ULONG ulDeviceCount;
+	TDevice Device;
 
-    if (TRUE == UtPepDevicesGetDeviceCount(&ulDeviceCount))
-    {
-        for (ULONG ulIndex = 0; ulIndex < ulDeviceCount; ++ulIndex)
-        {
-            if (TRUE == UtPepDevicesGetDevice(ulIndex, &Device))
-            {
+	if (TRUE == UtPepDevicesGetDeviceCount(&ulDeviceCount))
+	{
+		DeviceList = gcnew System::Collections::Generic::List<Pep::Programmer::Device^>(ulDeviceCount);
+
+		for (ULONG ulIndex = 0; ulIndex < ulDeviceCount; ++ulIndex)
+		{
+			if (TRUE == UtPepDevicesGetDevice(ulIndex, &Device))
+			{
 				pDevice = gcnew Pep::Programmer::Device(&Device);
-      
-                s_DevicesList->Add(pDevice);
-            }
-        }
-    }
+
+				DeviceList->Add(pDevice);
+			}
+		}
+	}
+	else
+	{
+		DeviceList = gcnew System::Collections::Generic::List<Pep::Programmer::Device^>(0);
+	}
+
+	return DeviceList;
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

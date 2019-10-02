@@ -15,8 +15,6 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostUninitialize(VOID);
 
 MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(_Out_ LPDWORD pdwExitCode);
 
-MExternC BOOL PEPAPPHOSTAPI PepAppHostSetPluginPath(_In_ LPCWSTR pszPluginPath);
-
 #endif /* end of PepAppHost_H */
 
 /***************************************************************************/

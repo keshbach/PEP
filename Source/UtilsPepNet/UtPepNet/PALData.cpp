@@ -1,8 +1,15 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
-#include "StdAfx.h"
+#include "Stdafx.h"
+
+#include <UtilsDevice/UtPepDevices.h>
+
+#include "IDeviceIO.h"
+
+#include "PinConfigValues.h"
+#include "PinConfig.h"
 
 #include "PALData.h"
 #include "UtDeviceIO.h"
@@ -13,131 +20,12 @@
 
 #include <Includes/UtMacros.h>
 
-#pragma unmanaged
-static LPVOID lUnmanagedUtAllocMem(
-  ULONG ulBytes)
-{
-    return UtAllocMem(ulBytes);
-}
-
-static TPALData* lUnmanagedAllocPALData(
-  const TPALData* pPALData)
-{
-    TPALData* pNewPALData = (TPALData*)UtAllocMem(sizeof(TPALData));
-
-    if (pNewPALData)
-    {
-        ::CopyMemory(pNewPALData, pPALData, sizeof(TPALData));
-    }
-
-    return pNewPALData;
-}
-
-static VOID lUnmanagedFreePALData(
-  TPALData* pPALData)
-{
-    UtFreeMem(pPALData);
-}
-
-static BOOL lUnmanagedFreeDevicePinConfigs(
-  TDevicePinConfig* pDevicePinConfigs)
-{
-    if (pDevicePinConfigs)
-    {
-        UtFreeMem(pDevicePinConfigs);
-    }
-
-    return TRUE;
-}
-
-static VOID lUnmanagedReadPALDevice(
-  LPBYTE pbyData,
-  ULONG ulDataLen,
-  TDevicePinConfig* pDevicePinConfigs,
-  ULONG ulTotalDevicePinConfigs,
-  TDeviceIOFuncs* pDeviceIOFuncs,
-  TUtPepDevicesSetDevicePinConfigsFunc pSetDevicePinConfigsFunc,
-  TUtPepDevicesReadDeviceFunc pReadDeviceFunc,
-  TUtPepDevicesInitFunc pInitDeviceFunc,
-  TUtPepDevicesUninitFunc pUninitDeviceFunc)
-{
-    if (pInitDeviceFunc())
-    {
-        if (pSetDevicePinConfigsFunc(pDevicePinConfigs, ulTotalDevicePinConfigs))
-        {
-            pReadDeviceFunc(pDeviceIOFuncs, pbyData, ulDataLen);
-        }
-
-        pUninitDeviceFunc();
-    }
-}
-
-static BOOL lUnmanagedWriteJEDFile(
-  TPALData* pPALData,
-  LPBYTE pbyData,
-  ULONG ulDataLen,
-  LPCWSTR pszDeviceName,
-  UINT nPinCount,
-  LPCWSTR pszFile)
-{
-    return UtPALWriteFuseMapToJEDFile(pPALData, pbyData, ulDataLen,
-                                      pszDeviceName, nPinCount, pszFile);
-}
-
-static LPWSTR lUnmanagedAllocJEDFile(
-  TPALData* pPALData,
-  LPBYTE pbyData,
-  ULONG ulDataLen,
-  LPCWSTR pszDeviceName,
-  UINT nPinCount)
-{
-    LPWSTR pszText;
-    ULONG ulTextLen;
-    BOOL bResult;
-
-    bResult = UtPALFuseMapText(pPALData, pbyData, ulDataLen,
-                               pszDeviceName, nPinCount, NULL, &ulTextLen);
-
-    if (bResult == FALSE)
-    {
-        return NULL;
-    }
-
-    pszText = (LPWSTR)lUnmanagedUtAllocMem(ulTextLen * sizeof(WCHAR));
-
-    if (pszText == NULL)
-    {
-        return NULL;
-    }
-
-    bResult = UtPALFuseMapText(pPALData, pbyData, ulDataLen,
-                               pszDeviceName, nPinCount, pszText,
-                               &ulTextLen);
-
-    return pszText;
-}
-
-static VOID lUnmanagedFreeJEDFile(
-  LPWSTR pszText)
-{
-    UtFreeMem(pszText);
-}
-
-static ULONG lUnmanagedGetFuseMapSize(
-  const TPALData* pPALData)
-{
-    ULONG ulFuseMapSize = 0;
-
-    UtPALGetFuseMapSize(pPALData, &ulFuseMapSize);
-
-    return ulFuseMapSize;
-}
-#pragma managed
+#pragma region "Local Functions"
 
 static TDevicePinConfig* lAllocDevicePinConfigs(
-  TDevicePinConfigValues* pDevicePinConfigValues,
-  UINT nDevicePinConfigValuesCount,
-  array<Pep::Programmer::PinConfig^>^ PinConfigArray)
+  _In_ TDevicePinConfigValues* pDevicePinConfigValues,
+  _In_ UINT nDevicePinConfigValuesCount,
+  _In_ array<Pep::Programmer::PinConfig^>^ PinConfigArray)
 {
     TDevicePinConfig* pDevicePinConfigs = NULL;
     TDevicePinConfigValues* pTmpDevicePinConfigValues;
@@ -145,7 +33,7 @@ static TDevicePinConfig* lAllocDevicePinConfigs(
     System::Diagnostics::Debug::Assert(nDevicePinConfigValuesCount == (UINT)PinConfigArray->Length,
                                        L"Config Pin Data not the same length as the device pin config values.");
 
-    pDevicePinConfigs = (TDevicePinConfig*)lUnmanagedUtAllocMem(sizeof(TDevicePinConfig) * PinConfigArray->Length);
+    pDevicePinConfigs = (TDevicePinConfig*)UtAllocMem(sizeof(TDevicePinConfig) * PinConfigArray->Length);
 
     for (System::Int32 nIndex = 0; nIndex < PinConfigArray->Length; ++nIndex)
     {
@@ -183,14 +71,20 @@ static TDevicePinConfig* lAllocDevicePinConfigs(
     return pDevicePinConfigs;
 }
 
+inline static void lFreeDevicePinConfigs(
+  _In_ TDevicePinConfig* pDevicePinConfig)
+{
+    UtFreeMem(pDevicePinConfig);
+}
+
+#pragma endregion
+
 Pep::Programmer::PALData::PALData(
-  const TPALData* pPALData,
-  TUtPepDevicesInitFunc pInitDeviceFunc,
-  TUtPepDevicesUninitFunc pUninitDeviceFunc,
-  LPCWSTR pszDeviceName,
-  UINT nPinCount) :
-  m_pSetDevicePinConfigsFunc(pPALData->pSetDevicePinConfigsFunc),
-  m_pReadDeviceFunc(pPALData->pReadDeviceFunc),
+  _In_ const TPALData* pPALData,
+  _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
+  _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc,
+  _In_ LPCWSTR pszDeviceName,
+  _In_ UINT nPinCount) :
   m_pInitDeviceFunc(pInitDeviceFunc),
   m_pUninitDeviceFunc(pUninitDeviceFunc),
   m_pPALData(NULL),
@@ -198,9 +92,13 @@ Pep::Programmer::PALData::PALData(
   m_nPinCount(nPinCount),
   m_nFuseMapSize(0)
 {
-    m_pPALData = lUnmanagedAllocPALData(pPALData);
+	ULONG ulFuseMapSize = 0;
 
-    m_nFuseMapSize = lUnmanagedGetFuseMapSize(pPALData);
+	m_pPALData = pPALData;
+
+	UtPALGetFuseMapSize(pPALData, &ulFuseMapSize);
+
+	m_nFuseMapSize = ulFuseMapSize;
 
 	m_PinConfigValuesArray = gcnew array<Pep::Programmer::PinConfigValues^>(pPALData->nDevicePinConfigValuesCount);
 
@@ -211,7 +109,7 @@ Pep::Programmer::PALData::PALData(
 
     if (m_pInitDeviceFunc && m_pUninitDeviceFunc)
     {
-        if (m_pSetDevicePinConfigsFunc && m_pReadDeviceFunc)
+        if (m_pPALData->pSetDevicePinConfigsFunc && m_pPALData->pReadDeviceFunc)
         {
 			m_ReadDeviceDelegate = gcnew ReadDeviceDelegate(this, &Pep::Programmer::PALData::ReadDevice);
         }
@@ -233,13 +131,6 @@ Pep::Programmer::PALData::~PALData()
 
     m_PinConfigValuesArray = nullptr;
     m_ReadDeviceDelegate = nullptr;
-
-    this->!PALData();
-}
-
-Pep::Programmer::PALData::!PALData()
-{
-    Close();
 }
 
 void Pep::Programmer::PALData::ReadDevice(
@@ -249,22 +140,28 @@ void Pep::Programmer::PALData::ReadDevice(
 {
     pin_ptr<System::Byte> pbyData = &byData[0];
     TDeviceIOFuncs* pDeviceIOFuncs = Pep::Programmer::UtDeviceIO::GetDeviceIOFuncs();
-    TDevicePinConfig* pDevicePinConfigs;
+    TDevicePinConfig* pDevicePinConfig;
 
-    pDevicePinConfigs = lAllocDevicePinConfigs(m_pPALData->pDevicePinConfigValues,
-                                               m_pPALData->nDevicePinConfigValuesCount,
-                                               PinConfigArray);
+    pDevicePinConfig = lAllocDevicePinConfigs(m_pPALData->pDevicePinConfigValues,
+                                              m_pPALData->nDevicePinConfigValuesCount,
+                                              PinConfigArray);
 
-	Pep::Programmer::UtDeviceIO::SetCurrentDeviceIO(pDeviceIO);
+	if (pDevicePinConfig)
+	{
+		Pep::Programmer::UtDeviceIO::SetCurrentDeviceIO(pDeviceIO);
 
-    lUnmanagedReadPALDevice(pbyData, byData->Length, pDevicePinConfigs,
-                            PinConfigArray->Length, pDeviceIOFuncs,
-                            m_pSetDevicePinConfigsFunc,
-                            m_pReadDeviceFunc,
-                            m_pInitDeviceFunc,
-                            m_pUninitDeviceFunc);
+		if (m_pInitDeviceFunc())
+		{
+			if (m_pPALData->pSetDevicePinConfigsFunc(pDevicePinConfig, PinConfigArray->Length))
+			{
+				m_pPALData->pReadDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+			}
 
-    lUnmanagedFreeDevicePinConfigs(pDevicePinConfigs);
+			m_pUninitDeviceFunc();
+		}
+
+		lFreeDevicePinConfigs(pDevicePinConfig);
+	}
 }
 
 System::Boolean Pep::Programmer::PALData::WriteJEDFile(
@@ -273,12 +170,9 @@ System::Boolean Pep::Programmer::PALData::WriteJEDFile(
 {
     pin_ptr<const wchar_t> pszFile = PtrToStringChars(sFile);
     pin_ptr<System::Byte> pbyData = &byData[0];
-    BOOL bResult;
 
-    bResult = lUnmanagedWriteJEDFile(m_pPALData, pbyData, byData->Length,
-                                     m_pszDeviceName, m_nPinCount, pszFile);
-
-    return (bResult == TRUE) ? true : false;
+	return UtPALWriteFuseMapToJEDFile(m_pPALData, pbyData, byData->Length,
+                                      m_pszDeviceName, m_nPinCount, pszFile) ? true : false;
 }
 
 System::Boolean Pep::Programmer::PALData::WriteJEDText(
@@ -287,34 +181,38 @@ System::Boolean Pep::Programmer::PALData::WriteJEDText(
 {
     pin_ptr<System::Byte> pbyData = &byData[0];
     LPWSTR pszText;
+	ULONG ulTextLen;
 
     sText = L"";
 
-    pszText = lUnmanagedAllocJEDFile(m_pPALData, pbyData, byData->Length,
-                                     m_pszDeviceName, m_nPinCount);
+	if (FALSE == UtPALFuseMapText(m_pPALData, pbyData, byData->Length,
+                                  m_pszDeviceName, m_nPinCount, NULL, &ulTextLen))
+	{
+		return false;
+	}
 
-    if (pszText == NULL)
-    {
-        return false;
-    }
+	pszText = (LPWSTR)UtAllocMem(ulTextLen * sizeof(WCHAR));
+
+	if (pszText == NULL)
+	{
+		return false;
+	}
+
+	if (FALSE == UtPALFuseMapText(m_pPALData, pbyData, byData->Length,
+                                  m_pszDeviceName, m_nPinCount, pszText, &ulTextLen))
+	{
+		UtFreeMem(pszText);
+
+		return false;
+	}
 
     sText = gcnew System::String(pszText);
 
-    lUnmanagedFreeJEDFile(pszText);
+	UtFreeMem(pszText);
 
     return true;
 }
 
-void Pep::Programmer::PALData::Close()
-{
-    if (m_pPALData)
-    {
-        lUnmanagedFreePALData(m_pPALData);
-
-        m_pPALData = NULL;
-    }
-}
-
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

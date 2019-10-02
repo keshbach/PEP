@@ -1,45 +1,15 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyrig(t (C) 2007-2014 Kevin Eshbach
+//  Copyrig(t (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
-#include "StdAfx.h"
+#include "Stdafx.h"
+
+#include <UtilsDevice/UtPepDevices.h>
+
+#include "IDeviceIO.h"
 
 #include "RAMData.h"
 #include "UtDeviceIO.h"
-
-#pragma unmanaged
-static VOID lWriteRAMDevice(
-  LPBYTE pbyData,
-  ULONG ulDataLen,
-  TDeviceIOFuncs* pDeviceIOFuncs,
-  TUtPepDevicesWriteDeviceFunc pWriteDeviceFunc,
-  TUtPepDevicesInitFunc pInitDeviceFunc,
-  TUtPepDevicesUninitFunc pUninitDeviceFunc)
-{
-    if (pInitDeviceFunc())
-    {
-        pWriteDeviceFunc(pDeviceIOFuncs, pbyData, ulDataLen);
-
-        pUninitDeviceFunc();
-    }
-}
-
-static VOID lVerifyRAMDevice(
-  LPBYTE pbyData,
-  ULONG ulDataLen,
-  TDeviceIOFuncs* pDeviceIOFuncs,
-  TUtPepDevicesVerifyDeviceFunc pVerifyDeviceFunc,
-  TUtPepDevicesInitFunc pInitDeviceFunc,
-  TUtPepDevicesUninitFunc pUninitDeviceFunc)
-{
-    if (pInitDeviceFunc())
-    {
-        pVerifyDeviceFunc(pDeviceIOFuncs, pbyData, ulDataLen);
-
-        pUninitDeviceFunc();
-    }
-}
-#pragma managed
 
 Pep::Programmer::RAMData::RAMData()
 {
@@ -55,9 +25,9 @@ Pep::Programmer::RAMData::~RAMData()
 }
 
 Pep::Programmer::RAMData::RAMData(
-  const TRAMData* pRAMData,
-  TUtPepDevicesInitFunc pInitDeviceFunc,
-  TUtPepDevicesUninitFunc pUninitDeviceFunc) :
+  _In_ const TRAMData* pRAMData,
+  _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
+  _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc) :
   m_pWriteDeviceFunc(pRAMData->pWriteDeviceFunc),
   m_pVerifyDeviceFunc(pRAMData->pVerifyDeviceFunc),
   m_pInitDeviceFunc(pInitDeviceFunc),
@@ -102,9 +72,12 @@ void Pep::Programmer::RAMData::WriteDevice(
 
 	Pep::Programmer::UtDeviceIO::SetCurrentDeviceIO(pDeviceIO);
 
-    lWriteRAMDevice(pbyData, byData->Length, pDeviceIOFuncs,
-                    m_pWriteDeviceFunc, m_pInitDeviceFunc,
-                    m_pUninitDeviceFunc);
+	if (m_pInitDeviceFunc())
+	{
+		m_pWriteDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+
+		m_pUninitDeviceFunc();
+	}
 }
 
 void Pep::Programmer::RAMData::VerifyDevice(
@@ -116,11 +89,14 @@ void Pep::Programmer::RAMData::VerifyDevice(
 
 	Pep::Programmer::UtDeviceIO::SetCurrentDeviceIO(pDeviceIO);
 
-    lVerifyRAMDevice(pbyData, byData->Length, pDeviceIOFuncs,
-                     m_pVerifyDeviceFunc, m_pInitDeviceFunc,
-                     m_pUninitDeviceFunc);
+	if (m_pInitDeviceFunc())
+	{
+		m_pVerifyDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+
+		m_pUninitDeviceFunc();
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

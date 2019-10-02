@@ -1,12 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyrigit (C) 2007-2014 Kevin Eshbach
+//  Copyrigit (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
-
-#include <UtilsDevice/UtPepDevices.h>
-
-#include "IDeviceIO.h"
 
 namespace Pep
 {
@@ -52,9 +48,9 @@ namespace Pep
 			}
 
 		internal:
-			RAMData(const TRAMData* pRAMData,
-				TUtPepDevicesInitFunc pInitDeviceFunc,
-				TUtPepDevicesUninitFunc pUninitDeviceFunc);
+			RAMData(_In_ const TRAMData* pRAMData,
+                    _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
+                    _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc);
 			~RAMData();
 
 		private:
@@ -78,5 +74,5 @@ namespace Pep
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

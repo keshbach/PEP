@@ -1,48 +1,24 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
-#include "StdAfx.h"
+#include "Stdafx.h"
+
+#include <UtilsDevice/UtPepDevices.h>
 
 #include "Device.h"
+
+#include "IDeviceIO.h"
+
+#include "PinConfigValues.h"
+#include "PinConfig.h"
+
 #include "ROMData.h"
 #include "RAMData.h"
 #include "PALData.h"
 
-#pragma unmanaged
-
-static LPCWSTR lUnmanagedUtPepDevicesGetDeviceTypeName(
-  EDeviceType DeviceType)
-{
-    return UtPepDevicesGetDeviceTypeName(DeviceType);
-}
-
-static LPCWSTR lUnmanagedUtPepDevicesGetDevicePackageName(
-  EDevicePackage DevicePackage)
-{
-    return UtPepDevicesGetDevicePackageName(DevicePackage);
-}
-
-static LPCTSTR lUnmanagedUtPepDevicesAllocPinDiagram(
-  EDevicePackage DevicePackage,
-  LPCWSTR* ppszPinNames,
-  INT nPinCount)
-{
-    return UtPepDevicesAllocPinDiagram(DevicePackage,
-                                       ppszPinNames,
-                                       nPinCount);
-}
-
-static VOID lUnmanagedUtPepDevicesFreePinDiagram(
-  LPCWSTR pszPinDiagram)
-{
-    UtPepDevicesFreePinDiagram(pszPinDiagram);
-}
-
-#pragma managed
-
 Pep::Programmer::Device::Device(
-  const TDevice* pDevice)
+  _In_ const TDevice* pDevice)
 {
     ULONG ulTotalDipSwitches;
     LPCWSTR pszPinDiagram;
@@ -51,8 +27,8 @@ Pep::Programmer::Device::Device(
                              sizeof(pDevice->bDipSwitches[0]);
 
     m_sName          = gcnew System::String(pDevice->pszName);
-    m_sDeviceType    = gcnew System::String(lUnmanagedUtPepDevicesGetDeviceTypeName(pDevice->DeviceType));
-	m_sDevicePackage = gcnew System::String(lUnmanagedUtPepDevicesGetDevicePackageName(pDevice->DevicePackage));
+    m_sDeviceType    = gcnew System::String(UtPepDevicesGetDeviceTypeName(pDevice->DeviceType));
+	m_sDevicePackage = gcnew System::String(UtPepDevicesGetDevicePackageName(pDevice->DevicePackage));
     m_nPinCount      = pDevice->nPinCount;
 	m_sPinNames      = gcnew array<System::String^>(pDevice->nPinCount);
     m_bDipSwitches   = gcnew array<System::Boolean>(ulTotalDipSwitches);
@@ -113,22 +89,20 @@ Pep::Programmer::Device::Device(
             break;
     }
 
-    pszPinDiagram = lUnmanagedUtPepDevicesAllocPinDiagram(pDevice->DevicePackage,
-                                                          pDevice->ppszPinNames,
-                                                          pDevice->nPinCount);
+    pszPinDiagram = UtPepDevicesAllocPinDiagram(pDevice->DevicePackage,
+                                                pDevice->ppszPinNames,
+                                                pDevice->nPinCount);
 
     if (pszPinDiagram)
     {
         m_sPinNamesDiagram = gcnew System::String(pszPinDiagram);
 
-        lUnmanagedUtPepDevicesFreePinDiagram(pszPinDiagram);
+		UtPepDevicesFreePinDiagram(pszPinDiagram);
     }
 }
 
 Pep::Programmer::Device::~Device()
 {
-    this->!Device();
-
     delete m_sName;
     delete m_sDeviceType;
     delete m_sDevicePackage;
@@ -147,36 +121,9 @@ Pep::Programmer::Device::~Device()
     m_sAdapter = nullptr;
     m_sMessage = nullptr;
     m_bDipSwitches = nullptr;
-}
-
-Pep::Programmer::Device::!Device()
-{
-    Close();
-}
-
-void Pep::Programmer::Device::Close()
-{
-    if (m_pDeviceData != nullptr)
-    {
-        if (m_pDeviceData->GetType() == Pep::Programmer::PALData::typeid)
-        {
-            ((Pep::Programmer::PALData^)m_pDeviceData)->Close();
-        }
-        else if (m_pDeviceData->GetType() == Pep::Programmer::ROMData::typeid)
-        {
-        }
-        else if (m_pDeviceData->GetType() == Pep::Programmer::RAMData::typeid)
-        {
-        }
-        else
-        {
-            System::Diagnostics::Debug::Assert(false, L"Unknown Device Data");
-        }
-
-        m_pDeviceData = nullptr;
-    }
+	m_pDeviceData = nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

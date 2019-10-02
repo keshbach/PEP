@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -8,13 +8,12 @@
 #include "UtPalDeviceAdapter.h"
 
 #include <UtilsDevice/UtPepDevices.h>
-#include <UtilsDevice/UtPAL.h>
 
 #include <Utils/UtHeap.h>
 
 BOOL UtPALDeviceInit(VOID)
 {
-    if (!UtPALDeviceAdapterInit() || !UtPALInitialize())
+    if (!UtPALDeviceAdapterInit())
     {
         return FALSE;
     }
@@ -24,11 +23,9 @@ BOOL UtPALDeviceInit(VOID)
 
 BOOL UtPALDeviceUninit(VOID)
 {
-    UtPALUninitialize();
-
     return UtUninitHeap() ? TRUE : FALSE;
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
 /***************************************************************************/

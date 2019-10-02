@@ -1,16 +1,16 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
-#include "StdAfx.h"
+#include "Stdafx.h"
 #include "Plugin.h"
 
 Pep::Programmer::Plugin::Plugin(
-  LPCWSTR pszName,
-  WORD wProductMajorVersion,
-  WORD wProductMinorVersion,
-  WORD wProductBuildVersion,
-  WORD wProductPrivateVersion)
+  _In_ LPCWSTR pszName,
+  _In_ WORD wProductMajorVersion,
+  _In_ WORD wProductMinorVersion,
+  _In_ WORD wProductBuildVersion,
+  _In_ WORD wProductPrivateVersion)
 {
     m_sName = gcnew System::String(pszName);
     m_nProductMajorVersion = wProductMajorVersion;
@@ -31,5 +31,5 @@ Pep::Programmer::Plugin::Plugin()
 }
 
 //////////-///////-//////////////////////////////////////////////////////////
-//  Copxright (C) 2007-2014 Kevin Eshbach	
+//  Copxright (C) 2007-2019 Kevin Eshbach	
 /////////////////////////////////////-///////////////////////////////////////

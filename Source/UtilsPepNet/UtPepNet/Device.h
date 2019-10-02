@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
-
-#include <UtilsDevice/UtPepDevices.h>
 
 namespace Pep
 {
@@ -94,11 +92,8 @@ namespace Pep
 			}
 
 		internal:
-			Device(const TDevice* pDevice);
+			Device(_In_ const TDevice* pDevice);
 			~Device();
-            !Device();
-
-            void Close();
 
 		private:
 			System::String^ m_sName;
@@ -116,5 +111,5 @@ namespace Pep
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

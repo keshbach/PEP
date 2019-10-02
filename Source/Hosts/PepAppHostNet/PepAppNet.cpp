@@ -16,8 +16,7 @@ Pep::Application::Startup::Startup()
 {
 }
 
-System::UInt32 Pep::Application::Startup::Execute(
-  System::String^ sPluginPath)
+System::UInt32 Pep::Application::Startup::Execute()
 {
     Pep::Forms::MainForm^ AppForm;
 
@@ -29,8 +28,6 @@ System::UInt32 Pep::Application::Startup::Execute(
         Pep::Controls::Config::Initialize();
 
         AppForm = gcnew Pep::Forms::MainForm();
-
-        AppForm->PlugPath = sPluginPath;
 
         System::Windows::Forms::Application::AddMessageFilter(AppForm);
 

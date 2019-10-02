@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
  
 #pragma once
@@ -52,11 +52,11 @@ namespace Pep
 			}
 
 		internal:
-			Plugin(LPCWSTR pszName,
-					WORD wProductMajorVersion,
-					WORD wProtuctMinorVersion,
-					WORD wProductBuildVersion,
-					WORD wProductPrivateVersion);
+			Plugin(_In_ LPCWSTR pszName,
+                   _In_ WORD wProductMajorVersion,
+                   _In_ WORD wProtuctMinorVersion,
+                   _In_ WORD wProductBuildVersion,
+                   _In_ WORD wProductPrivateVersion);
 			~Plugin();
 
 		private:
@@ -73,5 +73,5 @@ namespace Pep
 };
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

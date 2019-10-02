@@ -1,15 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
-
-#include <UtilsDevice/UtPepDevices.h>
-
-#include "IDeviceIO.h"
-
-#include "PinConfigValues.h"
-#include "PinConfig.h"
 
 namespace Pep
 {
@@ -46,15 +39,12 @@ namespace Pep
 			}
 
 		internal:
-			PALData(const TPALData* pPALData,
-                    TUtPepDevicesInitFunc pInitDeviceFunc,
-                    TUtPepDevicesUninitFunc pUninitDeviceFunc,
-                    LPCWSTR pszDeviceName,
-                    UINT nPinCount);
+			PALData(_In_ const TPALData* pPALData,
+                    _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
+                    _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc,
+                    _In_ LPCWSTR pszDeviceName,
+                    _In_ UINT nPinCount);
 			~PALData();
-			!PALData();
-
-            void Close();
 
         public:
 			System::Boolean WriteJEDFile(System::String^ sFile, array<System::Byte>^ byData);
@@ -67,11 +57,9 @@ namespace Pep
 			System::UInt32 m_nFuseMapSize;
 			array<Pep::Programmer::PinConfigValues^>^ m_PinConfigValuesArray;
 			ReadDeviceDelegate^ m_ReadDeviceDelegate;
-			TUtPepDevicesSetDevicePinConfigsFunc m_pSetDevicePinConfigsFunc;
-			TUtPepDevicesReadDeviceFunc m_pReadDeviceFunc;
 			TUtPepDevicesInitFunc m_pInitDeviceFunc;
 			TUtPepDevicesUninitFunc m_pUninitDeviceFunc;
-			TPALData* m_pPALData;
+			const TPALData* m_pPALData;
 			LPCWSTR m_pszDeviceName;
 			UINT m_nPinCount;
 		};
@@ -79,5 +67,5 @@ namespace Pep
 };
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
-
-#include <UtilsDevice/UtPepDevices.h>
 
 namespace Pep
 {
@@ -38,7 +36,7 @@ namespace Pep
 			}
 
 		internal:
-			PinConfigValues(const TDevicePinConfigValues* pDevicePinConfigValues);
+			PinConfigValues(_In_ const TDevicePinConfigValues* pDevicePinConfigValues);
 			~PinConfigValues();
 
 		private:
@@ -53,5 +51,5 @@ namespace Pep
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2014 Kevin Eshbach
+//  Copyright (C) 2007-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

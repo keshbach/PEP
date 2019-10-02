@@ -7,7 +7,6 @@ EXPORTS
     PepAppHostInitialize @ 1
     PepAppHostUninitialize @ 2
     PepAppHostExecute @ 3
-    PepAppHostSetPluginPath @ 4
 
 ;
 ;  Copyright (C) 2019-2019 Kevin Eshbach
