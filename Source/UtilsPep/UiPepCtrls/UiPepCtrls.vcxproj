@@ -259,8 +259,8 @@
     <ResourceCompile Include="UiPepCtrls.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\UiPepCtrls.h" />
     <ClInclude Include="UiBufferViewerCtrl.h" />
-    <ClInclude Include="UiPepCtrls.h" />
     <ClInclude Include="UiPepCtrlsUtil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
