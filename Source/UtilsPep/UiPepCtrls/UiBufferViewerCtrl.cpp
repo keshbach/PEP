@@ -1,8 +1,10 @@
 /***************************************************************************/
-/*  Copyright (C) 2010-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
-#include "UiBufferViewerCtrl.h"
+#include <windows.h>
+
+#include <UtilsPep/UiPepCtrls.h>
 
 #include "UiPepCtrlsUtil.h"
 
@@ -718,7 +720,7 @@ static LRESULT lOnGetBuffer(
         return FALSE;
     }
 
-    ::CopyMemory(pBufferViewerMem->pbyBuffer, pData->pbyBuffer,
+    ::CopyMemory((LPBYTE)pBufferViewerMem->pbyBuffer, pData->pbyBuffer,
                  pData->nBufferLen);
 
     pBufferViewerMem->nBufferLen = pData->nBufferLen;
@@ -1212,5 +1214,5 @@ VOID UiBufferViewerCtrlUnregister(VOID)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2010-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
 /***************************************************************************/
