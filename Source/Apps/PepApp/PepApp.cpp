@@ -19,6 +19,8 @@
 
 #include <UtilsDevice/UtPepDevices.h>
 
+#include <UtilsPep/UiPepCtrls.h>
+
 #include <Hosts/PepAppHost.h>
 
 #pragma region Constants
@@ -46,6 +48,9 @@ typedef LPWSTR* (STDAPICALLTYPE *TCommandLineToArgvWFunc)(_In_ LPCWSTR pszCmdLin
 typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesInitializeFunc)(_In_ LPCWSTR pszPluginPath);
 typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesUninitializeFunc)(VOID);
 
+typedef VOID (UIPEPCTRLSAPI* TUiPepCtrlsInitializeFunc)(VOID);
+typedef VOID (UIPEPCTRLSAPI* TUiPepCtrlsUninitializeFunc)(VOID);
+
 #pragma endregion
 
 #pragma region Structures
@@ -65,12 +70,20 @@ typedef struct tagTPepDeviceData
 	TUtPepDevicesUninitializeFunc pUninitialize;
 } TPepDeviceData;
 
+typedef struct tagTPepCtrlsData
+{
+	HMODULE hModule;
+	TUiPepCtrlsInitializeFunc pInitialize;
+	TUiPepCtrlsUninitializeFunc pUninitialize;
+} TPepCtrlsData;
+
 typedef struct tagTSetupData
 {
     HINSTANCE hInstance;
     LPCWSTR pszArguments;
     TPepAppHostData AppHostData;
 	TPepDeviceData DeviceData;
+	TPepCtrlsData CtrlsData;
 } TSetupData;
 
 #pragma endregion
@@ -211,6 +224,38 @@ static BOOL lUninitializeDeviceData(
   _In_ TPepDeviceData* pDeviceData)
 {
 	::FreeLibrary(pDeviceData->hModule);
+
+	return TRUE;
+}
+
+static BOOL lInitializeCtrlsData(
+  _In_ TPepCtrlsData* pCtrlsData)
+{
+	pCtrlsData->hModule = ::LoadLibrary(L"UiPepCtrls.dll");
+
+	if (pCtrlsData->hModule == NULL)
+	{
+		return FALSE;
+	}
+
+	pCtrlsData->pInitialize = (TUiPepCtrlsInitializeFunc)::GetProcAddress(pCtrlsData->hModule, "UiPepCtrlsInitialize");
+	pCtrlsData->pUninitialize = (TUiPepCtrlsUninitializeFunc)::GetProcAddress(pCtrlsData->hModule, "UiPepCtrlsUninitialize");
+
+	if (pCtrlsData->pInitialize == NULL ||
+		pCtrlsData->pUninitialize == NULL)
+	{
+		::FreeLibrary(pCtrlsData->hModule);
+
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static BOOL lUninitializeCtrlsData(
+	_In_ TPepCtrlsData* pCtrlsData)
+{
+	::FreeLibrary(pCtrlsData->hModule);
 
 	return TRUE;
 }
@@ -397,7 +442,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 		return FALSE;
 	}
 
-	if (FALSE == lInitializePepDevices(&pSetupData->DeviceData, pszPluginPath))
+	if (FALSE == lInitializeCtrlsData(&pSetupData->CtrlsData))
 	{
 		lUninitializeDeviceData(&pSetupData->DeviceData);
 		lUninitializePepAppHostData(&pSetupData->AppHostData);
@@ -411,10 +456,29 @@ static DWORD WINAPI lRunSetupThreadProc(
 		return FALSE;
 	}
 
+	if (FALSE == lInitializePepDevices(&pSetupData->DeviceData, pszPluginPath))
+	{
+		lUninitializeCtrlsData(&pSetupData->CtrlsData);
+		lUninitializeDeviceData(&pSetupData->DeviceData);
+		lUninitializePepAppHostData(&pSetupData->AppHostData);
+
+		::LocalFree(ppszArgs);
+
+		PepAppSplashDialogDisplayUnknownError();
+
+		lUninitialize();
+
+		return FALSE;
+	}
+
+	pSetupData->CtrlsData.pInitialize();
+
 	if (FALSE == pSetupData->AppHostData.pInitialize())
 	{
+		pSetupData->CtrlsData.pUninitialize();
 		pSetupData->DeviceData.pUninitialize();
 
+		lUninitializeCtrlsData(&pSetupData->CtrlsData);
 		lUninitializeDeviceData(&pSetupData->DeviceData);
 		lUninitializePepAppHostData(&pSetupData->AppHostData);
 
@@ -501,8 +565,10 @@ INT PepAppExecute(
 
     pSetupData->AppHostData.pExecute(&dwExitCode);
 
+	pSetupData->CtrlsData.pUninitialize();
 	pSetupData->DeviceData.pUninitialize();
 
+	lUninitializeCtrlsData(&pSetupData->CtrlsData);
 	lUninitializeDeviceData(&pSetupData->DeviceData);
 	lUninitializePepAppHostData(&pSetupData->AppHostData);
 

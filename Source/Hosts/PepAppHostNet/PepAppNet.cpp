@@ -9,7 +9,6 @@
 #using <System.Windows.Forms.dll>
 
 #using "UiUtilNet.dll"
-#using "UiPepCtrlsNet.dll"
 #using "PepForms.dll"
 
 Pep::Application::Startup::Startup()
@@ -25,8 +24,6 @@ System::UInt32 Pep::Application::Startup::Execute()
         System::Windows::Forms::Application::EnableVisualStyles();
         System::Windows::Forms::Application::SetCompatibleTextRenderingDefault(false);
 
-        Pep::Controls::Config::Initialize();
-
         AppForm = gcnew Pep::Forms::MainForm();
 
         System::Windows::Forms::Application::AddMessageFilter(AppForm);
@@ -34,8 +31,6 @@ System::UInt32 Pep::Application::Startup::Execute()
         Common::Forms::Application::Run(AppForm);
 
         System::Windows::Forms::Application::RemoveMessageFilter(AppForm);
-
-        Pep::Controls::Config::Uninitialize();
     }
     catch (System::Exception^ exception)
     {
