@@ -16,6 +16,7 @@
 #define WM_QUITDIALOG (WM_USER + 1)
 #define WM_DISPLAYMESSAGEBOX (WM_USER + 2)
 #define WM_DISPLAYMESSAGE (WM_USER + 3)
+#define WM_EXECUTE (WM_USER + 4)
 
 #define CMessageDelayMilliseconds (2 * 1000)
 
@@ -33,6 +34,17 @@ enum EMessageBoxDescription
     embdInstallAlreadyRunning,
     embdInstallError
 };
+
+#pragma endregion
+
+#pragma region "Structures"
+
+typedef struct tagTPepAppSplashDialogExecuteData
+{
+	TPepAppSplashDialogExecuteFunc pExecute;
+	LPVOID pvData;
+	HANDLE hEvent;
+} TPepAppSplashDialogExecuteData;
 
 #pragma endregion
 
@@ -119,6 +131,16 @@ static INT_PTR lHandleDisplayMessageMessage(
     return 0;
 }
 
+static INT_PTR lHandleExecuteMessage(
+  TPepAppSplashDialogExecuteData* pExecuteData)
+{
+	pExecuteData->pExecute(pExecuteData->pvData);
+
+	::SetEvent(pExecuteData->hEvent);
+
+	return 0;
+}
+
 #pragma endregion
 
 #pragma region Dialog Callback
@@ -139,6 +161,8 @@ static INT_PTR CALLBACK lModelessDialogProc(
             return lHandleDisplayMessageBoxMessage(hWnd, (EMessageBoxDescription)wParam);
         case WM_DISPLAYMESSAGE:
             return lHandleDisplayMessageMessage(hWnd, (LPCWSTR)lParam);
+		case WM_EXECUTE:
+			return lHandleExecuteMessage((TPepAppSplashDialogExecuteData*)lParam);
         case WM_INITDIALOG:
             return lHandleInitDialogMessage(hWnd);
     }
@@ -230,6 +254,23 @@ VOID PepAppSplashDialogDisplayMessage(
     ::SendMessage(l_hModelessDialog, WM_DISPLAYMESSAGE, 0, (LPARAM)pszMessage);
 
     ::Sleep(CMessageDelayMilliseconds);
+}
+
+VOID PepAppSplashDialogExecute(
+  _In_ TPepAppSplashDialogExecuteFunc pExecute,
+  _In_ LPVOID pvData)
+{
+	TPepAppSplashDialogExecuteData ExecuteData;
+
+	ExecuteData.pExecute = pExecute;
+	ExecuteData.pvData = pvData;
+	ExecuteData.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+
+	::PostMessage(l_hModelessDialog, WM_EXECUTE, 0, (LPARAM)&ExecuteData);
+
+	::WaitForSingleObject(ExecuteData.hEvent, INFINITE);
+
+	::CloseHandle(ExecuteData.hEvent);
 }
 
 #pragma endregion

@@ -315,6 +315,22 @@ static BOOL lInitializePepDevices(
 	return bResult;
 }
 
+static VOID PEPAPPSPLASHDIALOGEXECUTEAPI lExecuteInitializeControls(
+  _In_ PVOID pvData)
+{
+	TPepCtrlsData* pCtrlsData = (TPepCtrlsData*)pvData;
+
+	pCtrlsData->pInitialize();
+}
+
+static VOID PEPAPPSPLASHDIALOGEXECUTEAPI lExecuteUninitializeControls(
+  _In_ PVOID pvData)
+{
+	TPepCtrlsData* pCtrlsData = (TPepCtrlsData*)pvData;
+
+	pCtrlsData->pUninitialize();
+}
+
 static DWORD WINAPI lRunSetupThreadProc(
   _In_ LPVOID pvParameter)
 {
@@ -471,11 +487,12 @@ static DWORD WINAPI lRunSetupThreadProc(
 		return FALSE;
 	}
 
-	pSetupData->CtrlsData.pInitialize();
+	PepAppSplashDialogExecute(lExecuteInitializeControls, &pSetupData->CtrlsData);
 
 	if (FALSE == pSetupData->AppHostData.pInitialize())
 	{
-		pSetupData->CtrlsData.pUninitialize();
+		PepAppSplashDialogExecute(lExecuteUninitializeControls, &pSetupData->CtrlsData);
+
 		pSetupData->DeviceData.pUninitialize();
 
 		lUninitializeCtrlsData(&pSetupData->CtrlsData);
