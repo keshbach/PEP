@@ -715,6 +715,10 @@ BOOLEAN PepCtrlPlugPlayRegister(
     PepCtrlLog("PepCtrlPlugPlayRegister - Plug 'n Play Data pointer: 0x%p\n",
                pPlugPlayData);
 
+	PepCtrlLog("PepCtrlPlugPlayRegister - Clearing the quit device interface change thread event.\n");
+
+	KeClearEvent(&pPlugPlayData->QuitDeviceInterfaceChangeThreadEvent);
+
     PepCtrlLog("PepCtrlPlugPlayRegister - Creating the device interface change thread.\n");
 
     if (FALSE == PepCtrlThreadStart(lDeviceInterfaceChangeThreadStart, pPlugPlayData,
