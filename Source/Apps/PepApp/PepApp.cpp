@@ -6,7 +6,7 @@
 #include "Resource.h"
 #include "PepApp.h"
 
-#include "PepAppSplashDialog.h"
+#include "PepAppSplashWindow.h"
 
 #include "UtPepApp.h"
 
@@ -315,7 +315,7 @@ static BOOL lInitializePepDevices(
 	return bResult;
 }
 
-static VOID PEPAPPSPLASHDIALOGEXECUTEAPI lExecuteInitializeControls(
+static VOID PEPAPPSPLASHWINDOWEXECUTEAPI lExecuteInitializeControls(
   _In_ PVOID pvData)
 {
 	TPepCtrlsData* pCtrlsData = (TPepCtrlsData*)pvData;
@@ -323,7 +323,7 @@ static VOID PEPAPPSPLASHDIALOGEXECUTEAPI lExecuteInitializeControls(
 	pCtrlsData->pInitialize();
 }
 
-static VOID PEPAPPSPLASHDIALOGEXECUTEAPI lExecuteUninitializeControls(
+static VOID PEPAPPSPLASHWINDOWEXECUTEAPI lExecuteUninitializeControls(
   _In_ PVOID pvData)
 {
 	TPepCtrlsData* pCtrlsData = (TPepCtrlsData*)pvData;
@@ -334,7 +334,6 @@ static VOID PEPAPPSPLASHDIALOGEXECUTEAPI lExecuteUninitializeControls(
 static DWORD WINAPI lRunSetupThreadProc(
   _In_ LPVOID pvParameter)
 {
-    DWORD dwResult = 0;
     TSetupData* pSetupData = (TSetupData*)pvParameter;
 	LPCWSTR pszPluginPath = NULL;
 	LPWSTR* ppszArgs;
@@ -345,21 +344,21 @@ static DWORD WINAPI lRunSetupThreadProc(
 
     if (!lIsSupportedOperatingSystem())
     {
-        PepAppSplashDialogDisplayUnsupportedOS();
+        PepAppSplashWindowDisplayUnsupportedOS();
 
         return FALSE;
     }
 
     if (!lInitialize(&bAlreadyRunning))
     {
-        PepAppSplashDialogDisplayUnknownError();
+        PepAppSplashWindowDisplayUnknownError();
 
         return FALSE;
     }
 
     if (bAlreadyRunning)
     {
-        PepAppSplashDialogDisplayAppAlreadyRunning();
+        PepAppSplashWindowDisplayAppAlreadyRunning();
 
         lUninitialize();
 
@@ -370,7 +369,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 
 	if (hModule == NULL)
 	{
-		PepAppSplashDialogDisplayUnknownError();
+		PepAppSplashWindowDisplayUnknownError();
 
 		lUninitialize();
 
@@ -383,7 +382,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 	{
 		::FreeLibrary(hModule);
 
-		PepAppSplashDialogDisplayUnknownError();
+		PepAppSplashWindowDisplayUnknownError();
 
 		lUninitialize();
 
@@ -396,7 +395,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 
 	if (ppszArgs == NULL)
 	{
-		PepAppSplashDialogDisplayUnknownError();
+		PepAppSplashWindowDisplayUnknownError();
 
 		lUninitialize();
 
@@ -415,7 +414,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 			{
 				::LocalFree(ppszArgs);
 
-				PepAppSplashDialogDisplayCommandLineHelp();
+				PepAppSplashWindowDisplayCommandLineHelp();
 
 				lUninitialize();
 
@@ -426,7 +425,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 		{
 			::LocalFree(ppszArgs);
 
-			PepAppSplashDialogDisplayCommandLineHelp();
+			PepAppSplashWindowDisplayCommandLineHelp();
 
 			lUninitialize();
 
@@ -438,7 +437,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 	{
 		::LocalFree(ppszArgs);
 		
-		PepAppSplashDialogDisplayUnknownError();
+		PepAppSplashWindowDisplayUnknownError();
 
         lUninitialize();
 
@@ -451,7 +450,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 
 		::LocalFree(ppszArgs);
 
-		PepAppSplashDialogDisplayUnknownError();
+		PepAppSplashWindowDisplayUnknownError();
 
 		lUninitialize();
 
@@ -465,7 +464,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 
 		::LocalFree(ppszArgs);
 
-		PepAppSplashDialogDisplayUnknownError();
+		PepAppSplashWindowDisplayUnknownError();
 
 		lUninitialize();
 
@@ -480,18 +479,18 @@ static DWORD WINAPI lRunSetupThreadProc(
 
 		::LocalFree(ppszArgs);
 
-		PepAppSplashDialogDisplayUnknownError();
+		PepAppSplashWindowDisplayPluginsLoadFailed();
 
 		lUninitialize();
 
 		return FALSE;
 	}
 
-	PepAppSplashDialogExecute(lExecuteInitializeControls, &pSetupData->CtrlsData);
+	PepAppSplashWindowExecute(lExecuteInitializeControls, &pSetupData->CtrlsData);
 
 	if (FALSE == pSetupData->AppHostData.pInitialize())
 	{
-		PepAppSplashDialogExecute(lExecuteUninitializeControls, &pSetupData->CtrlsData);
+		PepAppSplashWindowExecute(lExecuteUninitializeControls, &pSetupData->CtrlsData);
 
 		pSetupData->DeviceData.pUninitialize();
 
@@ -501,7 +500,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 
 		::LocalFree(ppszArgs);
 
-		PepAppSplashDialogDisplayUnknownError();
+		PepAppSplashWindowDisplayUnknownError();
 
 		lUninitialize();
 
@@ -510,7 +509,7 @@ static DWORD WINAPI lRunSetupThreadProc(
 
 	::LocalFree(ppszArgs);
 
-    PepAppSplashDialogQuitMessagePump();
+    PepAppSplashWindowQuitMessagePump();
 
     return TRUE;
 }
@@ -528,7 +527,7 @@ INT PepAppExecute(
 	DWORD dwThreadId, dwExitCode;
     LPCWSTR pszAppTitle, pszMessage;
 
-	if (!PepAppSplashDialogCreate(hInstance))
+	if (!PepAppSplashWindowCreate(hInstance))
     {
         pszAppTitle = UtPepAppAllocString(IDS_APPTITLE);
         pszMessage = UtPepAppAllocString(IDS_CANNOTCREATEAPPWINDOW);
@@ -549,23 +548,23 @@ INT PepAppExecute(
     if (hThread == NULL)
     {
         pszAppTitle = UtPepAppAllocString(IDS_APPTITLE);
-        pszMessage = UtPepAppAllocString(IDS_CANNOTCREATEINSTALLTHREAD);
+        pszMessage = UtPepAppAllocString(IDS_CANNOTCREATEWORKERTHREAD);
 
         ::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
 
         UtPepAppFreeString(pszAppTitle);
         UtPepAppFreeString(pszMessage);
 
-        PepAppSplashDialogDestroy();
+        PepAppSplashWindowDestroy(hInstance);
 
 		UtFreeMem(pSetupData);
 
         return 1;
     }
 
-    UtSetThreadName(dwThreadId, "Setup Thread");
+    UtSetThreadName(dwThreadId, "App Thread");
 
-    PepAppSplashDialogMessagePump();
+    PepAppSplashWindowMessagePump();
 
     ::WaitForSingleObject(hThread, INFINITE);
 
@@ -573,7 +572,7 @@ INT PepAppExecute(
 
     ::CloseHandle(hThread);
 
-    PepAppSplashDialogDestroy();
+    PepAppSplashWindowDestroy(hInstance);
 
     if (dwExitCode == FALSE)
     {

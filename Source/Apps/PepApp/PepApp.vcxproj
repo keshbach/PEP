@@ -248,7 +248,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="PepApp.h" />
-    <ClInclude Include="PepAppSplashDialog.h" />
+    <ClInclude Include="PepAppSplashWindow.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -256,7 +256,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PepApp.cpp" />
-    <ClCompile Include="PepAppSplashDialog.cpp" />
+    <ClCompile Include="PepAppSplashWindow.cpp" />
     <ClCompile Include="PepSetupMain.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -271,6 +271,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="PepApp.ico" />
+    <Image Include="Splash.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
