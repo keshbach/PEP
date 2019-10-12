@@ -82,7 +82,7 @@ static LRESULT lHandleEraseBackgroundMessage(
 
 	hMemDC = ::CreateCompatibleDC(hDC);
 
-	hBitmap = ::LoadBitmap((HINSTANCE)::GetWindowLongPtr(hWnd, GWL_HINSTANCE),
+	hBitmap = ::LoadBitmap((HINSTANCE)::GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
 		                   MAKEINTRESOURCE(IDB_SPLASH));
 
 	::SaveDC(hMemDC);
