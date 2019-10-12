@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2011-2014 Kevin Eshbach
+//  Copyright (C) 2011-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -11,11 +11,10 @@ namespace Common
 		public ref class TempFileManager sealed
 		{
 		public:
-			static System::Boolean Initialize(System::String^% sErrorMsg);
-			static System::Boolean Uninitialize(System::String^% sErrorMsg);
+			static System::Boolean Initialize();
+			static System::Boolean Uninitialize();
 			static System::Boolean CreateTempFile(System::String^ sExtension,
-												  System::String^% sTempFile,
-												  System::String^% sErrorMsg);
+												  System::String^% sTempFile);
 
 		private:
 			static System::Collections::Specialized::StringCollection^ s_TempFilesStringColl = nullptr;
@@ -24,5 +23,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

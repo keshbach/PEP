@@ -8,6 +8,7 @@
 
 #using <System.Windows.Forms.dll>
 
+#using "UtilNet.dll"
 #using "UiUtilNet.dll"
 #using "PepForms.dll"
 
@@ -18,6 +19,10 @@ Pep::Application::Startup::Startup()
 System::UInt32 Pep::Application::Startup::Execute()
 {
     Pep::Forms::MainForm^ AppForm;
+
+	if (!Common::IO::TempFileManager::Initialize())
+	{
+	}
 
     try
     {
@@ -44,6 +49,10 @@ System::UInt32 Pep::Application::Startup::Execute()
             System::Windows::Forms::MessageBoxButtons::OK,
             System::Windows::Forms::MessageBoxIcon::Error);
     }
+
+	if (!Common::IO::TempFileManager::Uninitialize())
+	{
+	}
 
     return 0;
 }
