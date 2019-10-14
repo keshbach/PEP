@@ -142,6 +142,11 @@ void Pep::Programmer::PALData::ReadDevice(
     TDeviceIOFuncs* pDeviceIOFuncs = Pep::Programmer::UtDeviceIO::GetDeviceIOFuncs();
     TDevicePinConfig* pDevicePinConfig;
 
+	if (UtInitHeap() == FALSE)
+	{
+		return;
+	}
+
     pDevicePinConfig = lAllocDevicePinConfigs(m_pPALData->pDevicePinConfigValues,
                                               m_pPALData->nDevicePinConfigValuesCount,
                                               PinConfigArray);
@@ -162,6 +167,8 @@ void Pep::Programmer::PALData::ReadDevice(
 
 		lFreeDevicePinConfigs(pDevicePinConfig);
 	}
+
+	UtUninitHeap();
 }
 
 System::Boolean Pep::Programmer::PALData::WriteJEDFile(

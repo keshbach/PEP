@@ -70,17 +70,10 @@ static BOOL lUnmanagedIsDevicePresent(VOID)
 System::Boolean Pep::Programmer::Config::Initialize(
   Pep::Programmer::IDeviceChange^ pDeviceChange)
 {
-    if (UtInitHeap() == FALSE)
-    {
-        return false;
-    }
-
     s_pDeviceChange = pDeviceChange;
 
     if (lUnmanagedInitializePepCtrl() == FALSE)
     {
-        UtUninitHeap();
-
         return false;
     }
 
@@ -89,8 +82,6 @@ System::Boolean Pep::Programmer::Config::Initialize(
 
 System::Boolean Pep::Programmer::Config::Uninitialize()
 {
-    UtUninitHeap();
-
     s_pDeviceChange = nullptr;
 
     return (lUnmanagedUninitializePepCtrl() == TRUE) ? true : false;
@@ -113,7 +104,8 @@ System::Boolean Pep::Programmer::Config::GetPortConfig(
     sPortDeviceName = L"";
 
     if (!UtPepCtrlGetPortType(&PepCtrlPortType) ||
-        !UtPepCtrlGetPortDeviceName(NULL, &nPortDeviceNameLen))
+        !UtPepCtrlGetPortDeviceName(NULL, &nPortDeviceNameLen) ||
+		!UtInitHeap())
     {
         return false;
     }
@@ -122,7 +114,9 @@ System::Boolean Pep::Programmer::Config::GetPortConfig(
 
     if (pszPortDeviceName == NULL)
     {
-        return false;
+		UtUninitHeap();
+		
+		return false;
     }
 
     if (UtPepCtrlGetPortDeviceName(pszPortDeviceName, &nPortDeviceNameLen))
@@ -131,6 +125,8 @@ System::Boolean Pep::Programmer::Config::GetPortConfig(
     }
 
     UtFreeMem(pszPortDeviceName);
+
+	UtUninitHeap();
 
     switch (PepCtrlPortType)
     {
