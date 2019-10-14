@@ -171,6 +171,8 @@ static LRESULT lHandleCreateMessage(
 {
 	TPepAppSplashWindowData* pData = (TPepAppSplashWindowData*)UtAllocMem(sizeof(TPepAppSplashWindowData));
 
+	pCreateStruct;
+
 	if (pData != NULL)
 	{
 		pData->hBitmap = ::LoadBitmap((HINSTANCE)::GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
