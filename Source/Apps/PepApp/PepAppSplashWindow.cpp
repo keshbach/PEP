@@ -7,7 +7,7 @@
 #include "PepAppSplashWindow.h"
 #include "UtPepApp.h"
 
-#include "Utils/UtHeapProcess.h"
+#include <Utils/UtHeapProcess.h>
 
 #include <Includes/UtVersion.h>
 
@@ -44,6 +44,11 @@ enum EMessageBoxDescription
 
 #pragma region "Structures"
 
+typedef struct tagTPepAppSplashWindowData 
+{
+    HBITMAP hBitmap;
+} TPepAppSplashWindowData;
+
 typedef struct tagTPepAppSplashWindowExecuteData
 {
 	TPepAppSplashWindowExecuteFunc pExecute;
@@ -77,25 +82,23 @@ static LRESULT lHandleEraseBackgroundMessage(
   _In_ HWND hWnd,
   _In_ HDC hDC)
 {
+	TPepAppSplashWindowData* pData = (TPepAppSplashWindowData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
 	HDC hMemDC;
-	HBITMAP hBitmap;
 
-	hMemDC = ::CreateCompatibleDC(hDC);
+	if (pData)
+	{
+        hMemDC = ::CreateCompatibleDC(hDC);
 
-	hBitmap = ::LoadBitmap((HINSTANCE)::GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
-		                   MAKEINTRESOURCE(IDB_SPLASH));
+        ::SaveDC(hMemDC);
 
-	::SaveDC(hMemDC);
+        ::SelectObject(hMemDC, pData->hBitmap);
 
-	::SelectObject(hMemDC, hBitmap);
+        ::BitBlt(hDC, 0, 0, CSplashWindowWidth, CSplashWindowHeight, hMemDC, 0, 0, SRCCOPY);
 
-	::BitBlt(hDC, 0, 0, CSplashWindowWidth, CSplashWindowHeight, hMemDC, 0, 0, SRCCOPY);
+        ::RestoreDC(hMemDC, -1);
 
-	::RestoreDC(hMemDC, -1);
-
-	::DeleteObject(hBitmap);
-
-	::DeleteDC(hMemDC);
+        ::DeleteDC(hMemDC);
+	}
 
 	return 1;
 }
@@ -153,11 +156,50 @@ static LRESULT lHandleDisplayMessageBoxMessage(
 }
 
 static LRESULT lHandleExecuteMessage(
-  TPepAppSplashWindowExecuteData* pExecuteData)
+  _In_ TPepAppSplashWindowExecuteData* pExecuteData)
 {
 	pExecuteData->pExecute(pExecuteData->pvData);
 
 	::SetEvent(pExecuteData->hEvent);
+
+	return 0;
+}
+
+static LRESULT lHandleCreateMessage(
+  _In_ HWND hWnd,
+  _In_ LPCREATESTRUCT pCreateStruct)
+{
+	TPepAppSplashWindowData* pData = (TPepAppSplashWindowData*)UtAllocMem(sizeof(TPepAppSplashWindowData));
+
+	if (pData != NULL)
+	{
+		pData->hBitmap = ::LoadBitmap((HINSTANCE)::GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
+                                      MAKEINTRESOURCE(IDB_SPLASH));
+
+		if (pData->hBitmap == NULL)
+		{
+			UtFreeMem(pData);
+
+			pData = NULL;
+		}
+	}
+
+	::SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pData);
+
+	return 0;
+}
+
+static LRESULT lHandleDestroyMessage(
+  _In_ HWND hWnd)
+{
+	TPepAppSplashWindowData* pData = (TPepAppSplashWindowData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+
+	if (pData)
+	{
+		::DeleteObject(pData->hBitmap);
+
+		UtFreeMem(pData);
+	}
 
 	return 0;
 }
@@ -184,7 +226,11 @@ static LRESULT CALLBACK lWindowProc(
             return lHandleDisplayMessageBoxMessage(hWnd, (EMessageBoxDescription)wParam);
         case WM_EXECUTE:
             return lHandleExecuteMessage((TPepAppSplashWindowExecuteData*)lParam);
-    }
+		case WM_CREATE:
+			return lHandleCreateMessage(hWnd, (LPCREATESTRUCT)lParam);
+		case WM_DESTROY:
+			return lHandleDestroyMessage(hWnd);
+	}
 
 	return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
@@ -205,7 +251,7 @@ BOOL PepAppSplashWindowCreate(
 	WndClassEx.style = CS_HREDRAW | CS_VREDRAW | CS_NOCLOSE;
 	WndClassEx.lpfnWndProc= lWindowProc;
 	WndClassEx.cbClsExtra = 0;
-	WndClassEx.cbWndExtra = 0;
+	WndClassEx.cbWndExtra = sizeof(TPepAppSplashWindowData*);
 	WndClassEx.hInstance = hInstance;
 	WndClassEx.hIcon = NULL;
 	WndClassEx.hCursor = ::LoadCursor(NULL, IDC_WAIT);
