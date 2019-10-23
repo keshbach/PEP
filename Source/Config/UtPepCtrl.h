@@ -13,7 +13,11 @@
 #error Need to specify how to enable byte aligned structure padding
 #endif
 
+#pragma region "Constants"
+
 #define UTPEPCTRLAPI __stdcall
+
+#pragma endregion
 
 #pragma region "Enumerations"
 
@@ -67,7 +71,13 @@ typedef enum tagEUtPepCtrlDeviceChange
 
 #pragma endregion
 
+#pragma region "Type Definitions"
+
 typedef VOID (UTPEPCTRLAPI *TUtPepCtrlDeviceChangeFunc)(_In_ EUtPepCtrlDeviceChange DeviceChange);
+
+#pragma endregion
+
+#pragma region "Structures"
 
 typedef struct tagTUtPepCtrlReadUserData
 {
@@ -81,6 +91,8 @@ typedef struct tagTUtPepCtrlProgramUserData
     UINT32 nAddress;
     BOOL bPerformProgram;
 } TUtPepCtrlProgramUserData;
+
+#pragma endregion
 
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlInitialize(_In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlUninitialize(VOID);
