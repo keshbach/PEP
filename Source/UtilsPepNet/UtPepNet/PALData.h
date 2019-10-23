@@ -51,7 +51,9 @@ namespace Pep
 			System::Boolean WriteJEDText(array<System::Byte>^ byData, System::String^% sText);
 
 		private:
-			void ReadDevice(Pep::Programmer::IDeviceIO^ pDeviceIO, array<System::Byte>^ byData, array<PinConfig^>^ PinConfigArray);
+			void ReadDevice(_In_ Pep::Programmer::IDeviceIO^ pDeviceIO, _In_ array<System::Byte>^ byData, _In_ array<PinConfig^>^ PinConfigArray);
+
+			void InitPALData(_In_ TPALData* pPALData);
 
 		private:
 			System::UInt32 m_nFuseMapSize;
@@ -59,7 +61,24 @@ namespace Pep
 			ReadDeviceDelegate^ m_ReadDeviceDelegate;
 			TUtPepDevicesInitFunc m_pInitDeviceFunc;
 			TUtPepDevicesUninitFunc m_pUninitDeviceFunc;
-			const TPALData* m_pPALData;
+
+			// TPALData members
+
+			TDevicePinConfigValues* m_pDevicePinConfigValues;
+			UINT m_nDevicePinConfigValuesCount;
+			TDevicePinFuseRows* m_pDevicePinFuseRows;
+			UINT m_nDevicePinFuseRowsCount;
+			TDevicePinFuseColumns* m_pDevicePinFuseColumns;
+			UINT m_nDevicePinFuseColumnsCount;
+			TUtPepDevicesGetFuseMapSizeFunc m_pGetFuseMapSizeFunc;
+			TUtPepDevicesConfigFuseMapFunc m_pConfigFuseMapFunc;
+			TUtPepDevicesSetDevicePinConfigsFunc m_pSetDevicePinConfigsFunc;
+			TUtPepDevicesAllocFuseMapTextFunc m_pAllocFuseMapTextFunc;
+			TUtPepDevicesFreeFuseMapTextFunc m_pFreeFuseMapTextFunc;
+			TUtPepDevicesAllocSampleFuseMapTextFunc m_pAllocSampleFuseMapTextFunc;
+			TUtPepDevicesFreeSampleFuseMapTextFunc m_pFreeSampleFuseMapTextFunc;
+			TUtPepDevicesReadDeviceFunc m_pReadDeviceFunc;
+
 			LPCWSTR m_pszDeviceName;
 			UINT m_nPinCount;
 		};

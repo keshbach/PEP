@@ -10,6 +10,7 @@
 
 #using "UtilNet.dll"
 #using "UiUtilNet.dll"
+#using "UtPepNet.dll"
 #using "PepForms.dll"
 
 Pep::Application::Startup::Startup()
@@ -31,12 +32,16 @@ System::UInt32 Pep::Application::Startup::Execute()
 
         AppForm = gcnew Pep::Forms::MainForm();
 
+		Pep::Programmer::Config::Initialize(AppForm);
+
         System::Windows::Forms::Application::AddMessageFilter(AppForm);
 
         Common::Forms::Application::Run(AppForm);
 
         System::Windows::Forms::Application::RemoveMessageFilter(AppForm);
-    }
+
+		Pep::Programmer::Config::Uninitialize();
+	}
     catch (System::Exception^ exception)
     {
         System::String^ sMsg;

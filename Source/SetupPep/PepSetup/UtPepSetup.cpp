@@ -37,7 +37,6 @@ _Ret_maybenull_z_ LPCWSTR UtPepSetupAllocString(
                                   MAKEINTRESOURCE((nResourceId / 16) + 1),
                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
 
-
     if (hResource == NULL)
     {
         return NULL;

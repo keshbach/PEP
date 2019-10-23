@@ -14,82 +14,56 @@
 
 #include <assert.h>
 
-static VOID lManagedPepCtrlArrived(VOID)
-{
-    Pep::Programmer::Config::GetDeviceChange()->DeviceChange(Pep::Programmer::IDeviceChange::ENotification::Arrived);
-}
+#pragma region "Local Functions"
 
-static VOID lManagedPepCtrlRemoved(VOID)
-{
-	Pep::Programmer::Config::GetDeviceChange()->DeviceChange(Pep::Programmer::IDeviceChange::ENotification::Removed);
-}
-
-#pragma unmanaged
-
-static VOID UTPEPCTRLAPI lUnmanagedPepCtrlDeviceChange(
+static VOID UTPEPCTRLAPI lPepCtrlDeviceChange(
   EUtPepCtrlDeviceChange DeviceChange)
 {
     switch (DeviceChange)
     {
         case eUtPepCtrlDeviceArrived:
-            lManagedPepCtrlArrived();
-            break;
+			Pep::Programmer::Config::GetDeviceChange()->DeviceChange(Pep::Programmer::IDeviceChange::ENotification::Arrived);
+			break;
         case eUtPepCtrlDeviceRemoved:
-            lManagedPepCtrlRemoved();
-            break;
+			Pep::Programmer::Config::GetDeviceChange()->DeviceChange(Pep::Programmer::IDeviceChange::ENotification::Removed);
+			break;
         default:
-            assert(0);
+			System::Diagnostics::Debug::Assert(false, "Unknown device change");
             break;
     }
 }
 
-static BOOL lUnmanagedInitializePepCtrl(VOID)
-{
-    return UtPepCtrlInitialize(&lUnmanagedPepCtrlDeviceChange);
-}
+#pragma endregion
 
-static BOOL lUnmanagedUninitializePepCtrl(VOID)
-{
-    return UtPepCtrlUninitialize();
-}
-
-static BOOL lUnmanagedIsDevicePresent(VOID)
-{
-    BOOL bPresent;
-
-    if (UtPepCtrlIsDevicePresent(&bPresent))
-    {
-        return bPresent;
-    }
-
-    return FALSE;
-}
-
-#pragma managed
-
-System::Boolean Pep::Programmer::Config::Initialize(
+void Pep::Programmer::Config::Initialize(
   Pep::Programmer::IDeviceChange^ pDeviceChange)
 {
-    s_pDeviceChange = pDeviceChange;
-
-    if (lUnmanagedInitializePepCtrl() == FALSE)
+	if (UtPepCtrlInitialize(&lPepCtrlDeviceChange))
     {
-        return false;
+		s_pDeviceChange = pDeviceChange;
+		s_bInitialized = true;
     }
-
-    return true;
 }
 
-System::Boolean Pep::Programmer::Config::Uninitialize()
+void Pep::Programmer::Config::Uninitialize()
 {
-    s_pDeviceChange = nullptr;
+	if (s_bInitialized)
+	{
+		s_pDeviceChange = nullptr;
+		s_bInitialized = false;
 
-    return (lUnmanagedUninitializePepCtrl() == TRUE) ? true : false;
+		UtPepCtrlUninitialize();
+	}
 }
 
 System::Boolean Pep::Programmer::Config::Reset()
 {
-    return UtPepCtrlReset() ? true : false;
+	if (s_bInitialized)
+	{
+		return UtPepCtrlReset() ? true : false;
+	}
+
+	return false;
 }
 
 System::Boolean Pep::Programmer::Config::GetPortConfig(
@@ -102,6 +76,11 @@ System::Boolean Pep::Programmer::Config::GetPortConfig(
 
     PortType = Config::EPortType::None;
     sPortDeviceName = L"";
+
+	if (!s_bInitialized)
+	{
+		return false;
+	}
 
     if (!UtPepCtrlGetPortType(&PepCtrlPortType) ||
         !UtPepCtrlGetPortDeviceName(NULL, &nPortDeviceNameLen) ||
@@ -151,6 +130,11 @@ System::Boolean Pep::Programmer::Config::SetPortConfig(
     pin_ptr<const wchar_t> pszPortDeviceName = PtrToStringChars(sPortDeviceName);
     EUtPepCtrlPortType PepCtrlPortType;
 
+	if (!s_bInitialized)
+	{
+		return false;
+	}
+
     switch (PortType)
     {
         case Config::EPortType::None:
@@ -176,9 +160,16 @@ Pep::Programmer::IDeviceChange^ Pep::Programmer::Config::GetDeviceChange()
 
 System::Boolean Pep::Programmer::Config::GetDevicePresent()
 {
-    System::Boolean bResult;
+    System::Boolean bResult = false;
+	BOOL bPresent;
 
-    bResult = (lUnmanagedIsDevicePresent() == TRUE) ? true : false;
+	if (s_bInitialized)
+	{
+		if (UtPepCtrlIsDevicePresent(&bPresent))
+		{
+			return bPresent ? true : false;
+		}
+	}
 
     return bResult;
 }

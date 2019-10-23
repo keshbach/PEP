@@ -31,20 +31,26 @@ namespace Pep
 				}
 			}
 
+			static property System::Boolean Initialized
+			{
+				System::Boolean get()
+				{
+					return s_bInitialized;
+				}
+			}
+
 		public:
 			/// <summary>
 			/// Initializes the PEP device driver.
 			/// </summary>
-			/// <returns>Returns true if successful.</returns>
 
-			static System::Boolean Initialize(Pep::Programmer::IDeviceChange^ pDeviceChange);
+			static void Initialize(Pep::Programmer::IDeviceChange^ pDeviceChange);
 
 			/// <summary>
 			/// Uninitializes the PEP device driver.
 			/// </summary>
-			/// <returns>Returns true if successful.</returns>
 
-			static System::Boolean Uninitialize();
+			static void Uninitialize();
 
 			/// <summary>
 			/// Resets the PEP device driver.  (Use before executing a device operation.)
@@ -78,6 +84,7 @@ namespace Pep
 
 		private:
 			static Pep::Programmer::IDeviceChange^ s_pDeviceChange = nullptr;
+			static System::Boolean s_bInitialized = false;
 		};
     }
 }

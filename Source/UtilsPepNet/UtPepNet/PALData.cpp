@@ -87,14 +87,25 @@ Pep::Programmer::PALData::PALData(
   _In_ UINT nPinCount) :
   m_pInitDeviceFunc(pInitDeviceFunc),
   m_pUninitDeviceFunc(pUninitDeviceFunc),
-  m_pPALData(NULL),
+  m_pDevicePinConfigValues(pPALData->pDevicePinConfigValues),
+  m_nDevicePinConfigValuesCount(pPALData->nDevicePinConfigValuesCount),
+  m_pDevicePinFuseRows(pPALData->pDevicePinFuseRows),
+  m_nDevicePinFuseRowsCount(pPALData->nDevicePinFuseRowsCount),
+  m_pDevicePinFuseColumns(pPALData->pDevicePinFuseColumns),
+  m_nDevicePinFuseColumnsCount(pPALData->nDevicePinFuseColumnsCount),
+  m_pGetFuseMapSizeFunc(pPALData->pGetFuseMapSizeFunc),
+  m_pConfigFuseMapFunc(pPALData->pConfigFuseMapFunc),
+  m_pSetDevicePinConfigsFunc(pPALData->pSetDevicePinConfigsFunc),
+  m_pAllocFuseMapTextFunc(pPALData->pAllocFuseMapTextFunc),
+  m_pFreeFuseMapTextFunc(pPALData->pFreeFuseMapTextFunc),
+  m_pAllocSampleFuseMapTextFunc(pPALData->pAllocSampleFuseMapTextFunc),
+  m_pFreeSampleFuseMapTextFunc(pPALData->pFreeSampleFuseMapTextFunc),
+  m_pReadDeviceFunc(pPALData->pReadDeviceFunc),
   m_pszDeviceName(pszDeviceName),
   m_nPinCount(nPinCount),
   m_nFuseMapSize(0)
 {
 	ULONG ulFuseMapSize = 0;
-
-	m_pPALData = pPALData;
 
 	UtPALGetFuseMapSize(pPALData, &ulFuseMapSize);
 
@@ -109,7 +120,7 @@ Pep::Programmer::PALData::PALData(
 
     if (m_pInitDeviceFunc && m_pUninitDeviceFunc)
     {
-        if (m_pPALData->pSetDevicePinConfigsFunc && m_pPALData->pReadDeviceFunc)
+        if (m_pSetDevicePinConfigsFunc && m_pReadDeviceFunc)
         {
 			m_ReadDeviceDelegate = gcnew ReadDeviceDelegate(this, &Pep::Programmer::PALData::ReadDevice);
         }
@@ -133,22 +144,90 @@ Pep::Programmer::PALData::~PALData()
     m_ReadDeviceDelegate = nullptr;
 }
 
-void Pep::Programmer::PALData::ReadDevice(
-  Pep::Programmer::IDeviceIO^ pDeviceIO,
+System::Boolean Pep::Programmer::PALData::WriteJEDFile(
+  System::String^ sFile,
+  array<System::Byte>^ byData)
+{
+    pin_ptr<const wchar_t> pszFile = PtrToStringChars(sFile);
+    pin_ptr<System::Byte> pbyData = &byData[0];
+	TPALData PALData;
+
+	InitPALData(&PALData);
+
+	return UtPALWriteFuseMapToJEDFile(&PALData, pbyData, byData->Length,
+                                      m_pszDeviceName, m_nPinCount, pszFile) ? true : false;
+}
+
+System::Boolean Pep::Programmer::PALData::WriteJEDText(
   array<System::Byte>^ byData,
-  array<Pep::Programmer::PinConfig^>^ PinConfigArray)
+  System::String^% sText)
 {
     pin_ptr<System::Byte> pbyData = &byData[0];
-    TDeviceIOFuncs* pDeviceIOFuncs = Pep::Programmer::UtDeviceIO::GetDeviceIOFuncs();
-    TDevicePinConfig* pDevicePinConfig;
+    LPWSTR pszText;
+	ULONG ulTextLen;
+	TPALData PALData;
+
+    sText = L"";
+
+	InitPALData(&PALData);
+
+	if (UtInitHeap() == FALSE)
+	{
+		return false;
+	}
+
+	if (FALSE == UtPALFuseMapText(&PALData, pbyData, byData->Length,
+                                  m_pszDeviceName, m_nPinCount, NULL, &ulTextLen))
+	{
+		UtUninitHeap();
+
+		return false;
+	}
+
+	pszText = (LPWSTR)UtAllocMem(ulTextLen * sizeof(WCHAR));
+
+	if (pszText == NULL)
+	{
+		UtUninitHeap();
+
+		return false;
+	}
+
+	if (FALSE == UtPALFuseMapText(&PALData, pbyData, byData->Length,
+                                  m_pszDeviceName, m_nPinCount, pszText, &ulTextLen))
+	{
+		UtFreeMem(pszText);
+
+		UtUninitHeap();
+
+		return false;
+	}
+
+    sText = gcnew System::String(pszText);
+
+	UtFreeMem(pszText);
+
+	UtUninitHeap();
+
+    return true;
+}
+
+void Pep::Programmer::PALData::ReadDevice(
+  _In_ Pep::Programmer::IDeviceIO^ pDeviceIO,
+  _In_ array<System::Byte>^ byData,
+  _In_ array<Pep::Programmer::PinConfig^>^ PinConfigArray)
+{
+	pin_ptr<System::Byte> pbyData = &byData[0];
+	TDeviceIOFuncs* pDeviceIOFuncs = Pep::Programmer::UtDeviceIO::GetDeviceIOFuncs();
+	TDevicePinConfig* pDevicePinConfig;
 
 	if (UtInitHeap() == FALSE)
 	{
 		return;
 	}
 
-    pDevicePinConfig = lAllocDevicePinConfigs(m_pPALData->pDevicePinConfigValues,
-                                              m_pPALData->nDevicePinConfigValuesCount,
+	pDevicePinConfig = lAllocDevicePinConfigs(m_pDevicePinConfigValues,
+                                              m_nDevicePinConfigValuesCount,
                                               PinConfigArray);
 
 	if (pDevicePinConfig)
@@ -157,9 +236,9 @@ void Pep::Programmer::PALData::ReadDevice(
 
 		if (m_pInitDeviceFunc())
 		{
-			if (m_pPALData->pSetDevicePinConfigsFunc(pDevicePinConfig, PinConfigArray->Length))
+			if (m_pSetDevicePinConfigsFunc(pDevicePinConfig, PinConfigArray->Length))
 			{
-				m_pPALData->pReadDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+				m_pReadDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
 			}
 
 			m_pUninitDeviceFunc();
@@ -171,53 +250,23 @@ void Pep::Programmer::PALData::ReadDevice(
 	UtUninitHeap();
 }
 
-System::Boolean Pep::Programmer::PALData::WriteJEDFile(
-  System::String^ sFile,
-  array<System::Byte>^ byData)
+void Pep::Programmer::PALData::InitPALData(
+  _In_ TPALData* pPALData)
 {
-    pin_ptr<const wchar_t> pszFile = PtrToStringChars(sFile);
-    pin_ptr<System::Byte> pbyData = &byData[0];
-
-	return UtPALWriteFuseMapToJEDFile(m_pPALData, pbyData, byData->Length,
-                                      m_pszDeviceName, m_nPinCount, pszFile) ? true : false;
-}
-
-System::Boolean Pep::Programmer::PALData::WriteJEDText(
-  array<System::Byte>^ byData,
-  System::String^% sText)
-{
-    pin_ptr<System::Byte> pbyData = &byData[0];
-    LPWSTR pszText;
-	ULONG ulTextLen;
-
-    sText = L"";
-
-	if (FALSE == UtPALFuseMapText(m_pPALData, pbyData, byData->Length,
-                                  m_pszDeviceName, m_nPinCount, NULL, &ulTextLen))
-	{
-		return false;
-	}
-
-	pszText = (LPWSTR)UtAllocMem(ulTextLen * sizeof(WCHAR));
-
-	if (pszText == NULL)
-	{
-		return false;
-	}
-
-	if (FALSE == UtPALFuseMapText(m_pPALData, pbyData, byData->Length,
-                                  m_pszDeviceName, m_nPinCount, pszText, &ulTextLen))
-	{
-		UtFreeMem(pszText);
-
-		return false;
-	}
-
-    sText = gcnew System::String(pszText);
-
-	UtFreeMem(pszText);
-
-    return true;
+	pPALData->pDevicePinConfigValues = m_pDevicePinConfigValues;
+	pPALData->nDevicePinConfigValuesCount = m_nDevicePinConfigValuesCount;
+	pPALData->pDevicePinFuseRows = m_pDevicePinFuseRows;
+	pPALData->nDevicePinFuseRowsCount = m_nDevicePinFuseRowsCount;
+	pPALData->pDevicePinFuseColumns = m_pDevicePinFuseColumns;
+	pPALData->nDevicePinFuseColumnsCount = m_nDevicePinFuseColumnsCount;
+	pPALData->pGetFuseMapSizeFunc = m_pGetFuseMapSizeFunc;
+	pPALData->pConfigFuseMapFunc = m_pConfigFuseMapFunc;
+	pPALData->pSetDevicePinConfigsFunc = m_pSetDevicePinConfigsFunc;
+	pPALData->pAllocFuseMapTextFunc = m_pAllocFuseMapTextFunc;
+	pPALData->pFreeFuseMapTextFunc = m_pFreeFuseMapTextFunc;
+	pPALData->pAllocSampleFuseMapTextFunc = m_pAllocSampleFuseMapTextFunc;
+	pPALData->pFreeSampleFuseMapTextFunc = m_pFreeSampleFuseMapTextFunc;
+	pPALData->pReadDeviceFunc = m_pReadDeviceFunc;
 }
 
 /////////////////////////////////////////////////////////////////////////////
