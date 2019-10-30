@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2014 Kevin Eshbach
+//  Copyright (C) 2013-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -65,7 +65,8 @@ Common::Forms::FileSaveDialog::FileSaveDialog() :
   m_sFileName(nullptr),
   m_sDefaultExtension(nullptr),
   m_FileTypesList(nullptr),
-  m_nSelectedFileType(0)
+  m_nSelectedFileType(0),
+  m_ClientGuid(nullptr)
 {
 }
 
@@ -81,6 +82,7 @@ System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialog(
     FILEOPENDIALOGOPTIONS FileOpenDialogOptions;
     COMDLG_FILTERSPEC* pFilterSpecs;
     pin_ptr<const wchar_t> pszFileName, pszDefaultExtension;
+	GUID Guid;
 
     if (!lCreateFileSaveDialog(&pFileSaveDialog))
     {
@@ -183,6 +185,13 @@ System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialog(
         }
     }
 
+	if (m_ClientGuid != nullptr)
+	{
+		lConvertSystemGuidToGUID(m_ClientGuid, &Guid);
+
+		pFileSaveDialog->SetClientGuid(Guid);
+	}
+
     switch (pFileSaveDialog->Show((HWND)Owner->Handle.ToPointer()))
     {
         case S_OK:
@@ -203,5 +212,5 @@ System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialog(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2014 Kevin Eshbach
+//  Copyright (C) 2013-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

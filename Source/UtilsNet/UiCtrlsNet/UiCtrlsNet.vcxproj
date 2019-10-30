@@ -123,12 +123,13 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ptrustmd.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>msvcmrtd.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiCtrlsNet.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <FixedBaseAddress />
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
@@ -154,12 +155,13 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ptrustmd.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>msvcmrtd.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiCtrlsNet64.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <FixedBaseAddress />
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
@@ -190,13 +192,14 @@
       <OptimizeReferences>
       </OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ptrustm.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcmrt.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiCtrlsNet.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <FixedBaseAddress />
       <LinkTimeCodeGeneration />
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
@@ -227,13 +230,14 @@
       <OptimizeReferences>
       </OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ptrustm.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcmrt.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiCtrlsNet64.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <FixedBaseAddress />
       <LinkTimeCodeGeneration />
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>

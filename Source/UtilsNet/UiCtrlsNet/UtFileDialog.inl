@@ -1,62 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2014 Kevin Eshbach
+//  Copyright (C) 2013-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
-#pragma unmanaged
 
-static HANDLE l_hHeap = NULL;
-
-static BOOL lInitHeap(VOID)
-{
-    if (l_hHeap == NULL)
-    {
-        l_hHeap = ::HeapCreate(0, 0, 0);
-
-        if (l_hHeap)
-        {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
-static BOOL lUninitHeap(VOID)
-{
-    BOOL bResult = FALSE;
-
-    if (l_hHeap)
-    {
-        bResult = ::HeapDestroy(l_hHeap);
-
-        l_hHeap = NULL;
-    }
-
-    return bResult;
-}
-
-static LPVOID lAllocMem(
-    ULONG ulMemLen)
-{
-    if (l_hHeap)
-    {
-        return ::HeapAlloc(l_hHeap, HEAP_ZERO_MEMORY, ulMemLen);
-    }
-
-    return NULL;
-}
-
-static BOOL lFreeMem(
-    LPVOID pvMem)
-{
-    if (l_hHeap)
-    {
-        return ::HeapFree(l_hHeap, 0, pvMem);
-    }
-
-    return FALSE;
-}
-
-#pragma managed
+#include <Utils/UtHeap.h>
 
 static COMDLG_FILTERSPEC* lAllocFilterSpecs(
     System::Collections::Generic::List<Common::Forms::FileTypeItem^>^ FileTypesList)
@@ -64,22 +10,26 @@ static COMDLG_FILTERSPEC* lAllocFilterSpecs(
     COMDLG_FILTERSPEC* pFilterSpecs;
     pin_ptr<const wchar_t> pszName;
     pin_ptr<const wchar_t> pszFilters;
-    INT nNameLen, nFiltersLen;
+    INT nNameLen, nFiltersLen, nFilterSpecsLen;
     Common::Forms::FileTypeItem^ FileTypeItem;
 
-    if (FALSE == lInitHeap())
+    if (FALSE == UtInitHeap())
     {
         return NULL;
     }
 
-    pFilterSpecs = (COMDLG_FILTERSPEC*)lAllocMem(FileTypesList->Count * sizeof(COMDLG_FILTERSPEC));
+	nFilterSpecsLen = FileTypesList->Count * sizeof(COMDLG_FILTERSPEC);
+
+    pFilterSpecs = (COMDLG_FILTERSPEC*)UtAllocMem(nFilterSpecsLen);
 
     if (!pFilterSpecs)
     {
-        lUninitHeap();
+        UtUninitHeap();
 
         return NULL;
     }
+
+	::ZeroMemory(pFilterSpecs, nFilterSpecsLen);
 
     for (int nIndex = 0; nIndex < FileTypesList->Count; ++nIndex)
     {
@@ -91,19 +41,17 @@ static COMDLG_FILTERSPEC* lAllocFilterSpecs(
         nNameLen = FileTypeItem->Name->Length + 1;
         nFiltersLen = FileTypeItem->Filters->Length + 1;
 
-        pFilterSpecs[nIndex].pszName = (LPWSTR)lAllocMem(nNameLen * sizeof(WCHAR));
-        pFilterSpecs[nIndex].pszSpec = (LPWSTR)lAllocMem(nFiltersLen * sizeof(WCHAR));
+        pFilterSpecs[nIndex].pszName = (LPWSTR)UtAllocMem(nNameLen * sizeof(WCHAR));
+        pFilterSpecs[nIndex].pszSpec = (LPWSTR)UtAllocMem(nFiltersLen * sizeof(WCHAR));
 
         if (pFilterSpecs[nIndex].pszName)
         {
-            ::StringCchCopyW((LPWSTR)pFilterSpecs[nIndex].pszName, nNameLen,
-                pszName);
+            ::StringCchCopyW((LPWSTR)pFilterSpecs[nIndex].pszName, nNameLen, pszName);
         }
 
         if (pFilterSpecs[nIndex].pszSpec)
         {
-            ::StringCchCopyW((LPWSTR)pFilterSpecs[nIndex].pszSpec, nFiltersLen,
-                pszFilters);
+            ::StringCchCopyW((LPWSTR)pFilterSpecs[nIndex].pszSpec, nFiltersLen, pszFilters);
         }
     }
 
@@ -116,13 +64,13 @@ static void lFreeFilterSpecs(
 {
     for (INT nIndex = 0; nIndex < nTotalFilterSpecs; ++nIndex)
     {
-        lFreeMem((LPWSTR)pFilterSpecs[nIndex].pszName);
-        lFreeMem((LPWSTR)pFilterSpecs[nIndex].pszSpec);
+        UtFreeMem((LPWSTR)pFilterSpecs[nIndex].pszName);
+        UtFreeMem((LPWSTR)pFilterSpecs[nIndex].pszSpec);
     }
 
-    lFreeMem(pFilterSpecs);
+    UtFreeMem(pFilterSpecs);
 
-    lUninitHeap();
+    UtUninitHeap();
 }
 
 static System::String^ lGetFileSysDisplayName(
@@ -141,6 +89,13 @@ static System::String^ lGetFileSysDisplayName(
     return sResult;
 }
 
+static void lConvertSystemGuidToGUID(System::Guid^ Guid, LPGUID pGuid)
+{
+	pin_ptr<const wchar_t> pszGuid = PtrToStringChars(Guid->ToString());
+
+	::CLSIDFromString(pszGuid, pGuid);
+}
+
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2014 Kevin Eshbach
+//  Copyright (C) 2013-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

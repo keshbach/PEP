@@ -13,13 +13,22 @@
 #using "UtPepNet.dll"
 #using "PepForms.dll"
 
+#pragma region "Constants"
+
+#define CRegistryKey L"Software\\Kevin Eshbach\\PepApp\\3.00"
+
+#define CFormLocationsName L"FormLocations"
+
+#pragma endregion
+
 Pep::Application::Startup::Startup()
 {
 }
 
 System::UInt32 Pep::Application::Startup::Execute()
 {
-    Pep::Forms::MainForm^ AppForm;
+	System::String^ sFormLocationsRegistryKey = System::String::Format(L"{0}\\{1}", CRegistryKey, CFormLocationsName);
+	Pep::Forms::MainForm^ AppForm;
 
 	if (!Common::IO::TempFileManager::Initialize())
 	{
@@ -30,7 +39,9 @@ System::UInt32 Pep::Application::Startup::Execute()
         System::Windows::Forms::Application::EnableVisualStyles();
         System::Windows::Forms::Application::SetCompatibleTextRenderingDefault(false);
 
-        AppForm = gcnew Pep::Forms::MainForm();
+        AppForm = gcnew Pep::Forms::MainForm(CRegistryKey, sFormLocationsRegistryKey);
+
+		gcnew Common::Forms::FormLocation(AppForm, sFormLocationsRegistryKey);
 
 		Pep::Programmer::Config::Initialize(AppForm);
 

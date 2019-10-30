@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2014 Kevin Eshbach
+//  Copyright (C) 2013-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -99,7 +99,8 @@ Common::Forms::FileOpenDialog::FileOpenDialog() :
   m_sFolder(nullptr),
   m_FolderCollection(nullptr),
   m_FileTypesList(nullptr),
-  m_nSelectedFileType(0)
+  m_nSelectedFileType(0),
+  m_ClientGuid(nullptr)
 {
 }
 
@@ -117,6 +118,7 @@ System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialog(
     COMDLG_FILTERSPEC* pFilterSpecs;
     pin_ptr<const wchar_t> pszFileName;
     pin_ptr<const wchar_t> pszFolder;
+	GUID Guid;
 
     if (!lCreateFileOpenDialog(&pFileOpenDialog))
     {
@@ -217,6 +219,13 @@ System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialog(
         }
     }
 
+	if (m_ClientGuid != nullptr)
+	{
+		lConvertSystemGuidToGUID(m_ClientGuid, &Guid);
+
+		pFileOpenDialog->SetClientGuid(Guid);
+	}
+
     switch (pFileOpenDialog->Show((HWND)Owner->Handle.ToPointer()))
     {
         case S_OK:
@@ -258,5 +267,5 @@ System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialog(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2014 Kevin Eshbach
+//  Copyright (C) 2013-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2014 Kevin Eshbach
+//  Copyright (C) 2013-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -192,6 +192,22 @@ namespace Common
                 }
             }
 
+			/// <summary>
+			/// Client GUID used to store the dialog's last position and size.
+			/// </summary>
+			property System::Guid^ ClientGuid
+			{
+				System::Guid^ get()
+				{
+					return m_ClientGuid;
+				}
+
+				void set(System::Guid^ value)
+				{
+					m_ClientGuid = value;
+				}
+			}
+
         public:
             FileOpenDialog();
 
@@ -219,10 +235,11 @@ namespace Common
             System::Collections::Specialized::StringCollection^ m_FolderCollection;
             System::Collections::Generic::List<Common::Forms::FileTypeItem^>^ m_FileTypesList;
             System::UInt32 m_nSelectedFileType;
-        };
+			System::Guid^ m_ClientGuid;
+		};
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2014 Kevin Eshbach
+//  Copyright (C) 2013-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

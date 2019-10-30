@@ -266,6 +266,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="FormLocation.cpp" />
     <ClCompile Include="MenuItemHelp.cpp" />
     <ClCompile Include="MenuItemHelpList.cpp" />
     <ClCompile Include="MyApplicationContext.cpp" />
@@ -300,6 +301,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="FormLocation.h" />
     <ClInclude Include="MenuItemHelp.h" />
     <ClInclude Include="MenuItemHelpList.h" />
     <ClInclude Include="MyApplicationContext.h" />
