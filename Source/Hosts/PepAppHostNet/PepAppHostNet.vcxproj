@@ -219,11 +219,13 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="PepAppHostNetAppDomainManager.h" />
     <ClInclude Include="PepAppNet.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PepAppHostNet.cpp" />
+    <ClCompile Include="PepAppHostNetAppDomainManager.cpp" />
     <ClCompile Include="PepAppHostNetMain.c">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>

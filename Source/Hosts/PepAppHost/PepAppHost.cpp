@@ -112,14 +112,31 @@ static BOOL lInitialize(
 
     pPepAppHostRuntimeData->pPepAppHostControl->AddRef();
 
+
+
+
+
+
+	if (S_OK != pPepAppHostRuntimeData->pCLRRuntimeHost->GetCLRControl(&pPepAppHostRuntimeData->pCLRControl))
+	{
+		lUninitialize(pPepAppHostRuntimeData);
+
+		return FALSE;
+	}
+
+/*
+	HRESULT hResult;
+
+	hResult = pPepAppHostRuntimeData->pCLRControl->SetAppDomainManagerType(L"C:\\git\\PEP\\Source\\bin\\Debug\\x86\\PepAppHostNet.dll",
+	                                                                       L"Pep.Application.PepAppHostNetAppDomainManager");
+
+	if (hResult != S_OK)
+	{
+		::OutputDebugString(L"error");
+	}
+*/
+
     if (S_OK != pPepAppHostRuntimeData->pCLRRuntimeHost->SetHostControl(pPepAppHostRuntimeData->pPepAppHostControl))
-    {
-        lUninitialize(pPepAppHostRuntimeData);
-
-        return FALSE;
-    }
-
-    if (S_OK != pPepAppHostRuntimeData->pCLRRuntimeHost->GetCLRControl(&pPepAppHostRuntimeData->pCLRControl))
     {
         lUninitialize(pPepAppHostRuntimeData);
 
@@ -319,7 +336,10 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 
     *pdwExitCode = 0;
 
-    lInitialize(&l_PepAppHostRuntimeData);
+	if (FALSE == lInitialize(&l_PepAppHostRuntimeData))
+	{
+		return FALSE;
+	}
 
     l_PepAppHostRuntimeData.pCLRRuntimeHost->GetCurrentAppDomainId(&dwAppDomainId);
 

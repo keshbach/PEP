@@ -223,7 +223,9 @@
     <ClInclude Include="..\PepAppHostData.h" />
     <ClInclude Include="PepAppActionOnCLREvent.h" />
     <ClInclude Include="PepAppHostAssemblyManager.h" />
+    <ClInclude Include="PepAppHostAssemblyStore.h" />
     <ClInclude Include="PepAppHostAutoEvent.h" />
+    <ClInclude Include="PepAppHostCLRAssemblyReferenceList.h" />
     <ClInclude Include="PepAppHostControl.h" />
     <ClInclude Include="PepAppHostCrst.h" />
     <ClInclude Include="PepAppHostGCManager.h" />
@@ -251,7 +253,9 @@
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <ClCompile Include="PepAppHostAssemblyManager.cpp" />
+    <ClCompile Include="PepAppHostAssemblyStore.cpp" />
     <ClCompile Include="PepAppHostAutoEvent.cpp" />
+    <ClCompile Include="PepAppHostCLRAssemblyReferenceList.cpp" />
     <ClCompile Include="PepAppHostControl.cpp" />
     <ClCompile Include="PepAppHostCrst.cpp" />
     <ClCompile Include="PepAppHostGCManager.cpp" />

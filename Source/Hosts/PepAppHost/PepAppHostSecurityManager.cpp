@@ -97,7 +97,7 @@ HRESULT STDMETHODCALLTYPE PepAppHostSecurityManager::GetSecurityContext(
         return E_POINTER;
     }
 
-    pPepAppHostSecurityContext = new PepAppHostSecurityContext(eContextType);
+    pPepAppHostSecurityContext = new (std::nothrow) PepAppHostSecurityContext(eContextType);
 
     if (pPepAppHostSecurityContext)
     {

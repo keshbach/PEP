@@ -18,6 +18,8 @@
 #include <MetaHost.h>
 #include <CorError.h>
 #include <cor.h>
+#include <isolation.h>
+#include <fusion.h>
 
 /////////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2019-2019 Kevin Eshbach

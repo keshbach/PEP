@@ -150,7 +150,7 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
     }
     else if (riid == IID_IHostAssemblyManager)
     {
-        /*PepAppHostAssemblyManager* pHostAssemblyManager = new (std::nothrow) PepAppHostAssemblyManager();
+        PepAppHostAssemblyManager* pHostAssemblyManager = new (std::nothrow) PepAppHostAssemblyManager();
 
         if (pHostAssemblyManager)
         {
@@ -161,7 +161,7 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
             return S_OK;
         }
 
-        return E_FAIL;*/
+        return E_FAIL;
     }
     else if (riid == IID_IHostGCManager)
     {
