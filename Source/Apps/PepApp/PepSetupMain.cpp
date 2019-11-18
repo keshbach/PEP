@@ -6,10 +6,12 @@
 #include "PepApp.h"
 #include "UtPepApp.h"
 
-int CALLBACK WinMain(
+#include <cstdlib>
+
+int CALLBACK wWinMain(
   _In_ HINSTANCE hInstance,
   _In_opt_ HINSTANCE hPrevInstance,
-  _In_ LPSTR pszCmdLine,
+  _In_ LPWSTR pszCmdLine,
   _In_ int nCmdShow)
 {
     hPrevInstance;
@@ -18,7 +20,7 @@ int CALLBACK WinMain(
 
     UtPepAppSetInstance(hInstance);
 
-    return PepAppExecute(hInstance, ::GetCommandLineW());
+    return PepAppExecute(hInstance, __argc, __wargv);
 }
 
 /////////////////////////////////////////////////////////////////////////////
