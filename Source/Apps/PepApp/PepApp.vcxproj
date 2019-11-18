@@ -256,8 +256,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PepApp.cpp" />
+    <ClCompile Include="PepAppMain.cpp" />
     <ClCompile Include="PepAppSplashWindow.cpp" />
-    <ClCompile Include="PepSetupMain.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
