@@ -30,10 +30,17 @@
 // Command Line Arguments definitions
 
 #define CPluginsArgument L"/plugins"
+#define CDisableDPIArgument L"/disabledpi"
 
 #pragma endregion
 
 #pragma region Typedefs
+
+typedef BOOL (WINAPI* TSetProcessDPIAware)(VOID);
+
+typedef HRESULT (STDAPICALLTYPE* TSetProcessDpiAwareness)(PROCESS_DPI_AWARENESS value);
+
+typedef BOOL (WINAPI* TSetProcessDpiAwarenessContext)(DPI_AWARENESS_CONTEXT value);
 
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostInitializeFunc)(VOID);
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostUninitializeFunc)(VOID);
@@ -42,8 +49,6 @@ typedef BOOL (PEPAPPHOSTAPI* TPepAppHostExecuteFunc)(_Out_ LPDWORD pdwExitCode);
 typedef VOID (STDAPICALLTYPE *TPathRemoveExtensionWFunc)(_Inout_ LPWSTR pszPath);
 typedef BOOL (STDAPICALLTYPE *TPathRemoveFileSpecWFunc)(_Inout_ LPWSTR pszPath);
 typedef BOOL (STDAPICALLTYPE *TPathAppendWFunc)(_Inout_ LPWSTR pszPath, _In_ LPCWSTR pszMore);
-
-typedef LPWSTR* (STDAPICALLTYPE *TCommandLineToArgvWFunc)(_In_ LPCWSTR pszCmdLine, _Out_ int* pNumArgs);
 
 typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesInitializeFunc)(_In_ LPCWSTR pszPluginPath);
 typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesUninitializeFunc)(VOID);
@@ -77,14 +82,14 @@ typedef struct tagTPepCtrlsData
 	TUiPepCtrlsUninitializeFunc pUninitialize;
 } TPepCtrlsData;
 
-typedef struct tagTSetupData
+typedef struct tagTPepAppData
 {
     HINSTANCE hInstance;
-    LPCWSTR pszArguments;
+	LPCWSTR pszPluginPath;
     TPepAppHostData AppHostData;
 	TPepDeviceData DeviceData;
 	TPepCtrlsData CtrlsData;
-} TSetupData;
+} TPepAppData;
 
 #pragma endregion
 
@@ -96,22 +101,114 @@ static HANDLE l_hAppRunningMutex = NULL;
 
 #pragma region "Local Functions"
 
-static BOOL lIsSupportedOperatingSystem(VOID)
+static void lDisplayUnsupportedOS()
 {
-    DWORDLONG nConditionMask(0);
-    OSVERSIONINFOEX VersionInfoEx;
+	LPCWSTR pszAppTitle, pszMessage;
 
-    VersionInfoEx.dwOSVersionInfoSize = sizeof(VersionInfoEx);
-    VersionInfoEx.dwMajorVersion = 6; // set to 6 for vista and above
-    VersionInfoEx.dwMinorVersion = 1; // set for Windows 7 and above
+	pszAppTitle = UtPepAppAllocString(IDS_APPTITLE);
+	pszMessage = UtPepAppAllocString(IDS_UNSUPPORTEDWINDOWSVERSION);
 
-    nConditionMask = ::VerSetConditionMask(nConditionMask, VER_MAJORVERSION,
-                                           VER_GREATER_EQUAL);
-    nConditionMask = ::VerSetConditionMask(nConditionMask, VER_MINORVERSION,
-                                           VER_GREATER_EQUAL);
+	::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
 
-    return ::VerifyVersionInfo(&VersionInfoEx, VER_MAJORVERSION | VER_MINORVERSION,
-                               nConditionMask);
+	UtPepAppFreeString(pszAppTitle);
+	UtPepAppFreeString(pszMessage);
+}
+
+static VOID lDisplayCommandLineHelp()
+{
+	LPCWSTR pszAppTitle, pszMessage;
+
+    pszAppTitle = UtPepAppAllocString(IDS_APPTITLE);
+	pszMessage = UtPepAppAllocString(IDS_COMMANDLINEHELP);
+
+	::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
+
+	UtPepAppFreeString(pszAppTitle);
+	UtPepAppFreeString(pszMessage);
+}
+
+static void lDisplayCannotCreateAppWindow()
+{
+	LPCWSTR pszAppTitle, pszMessage;
+
+	pszAppTitle = UtPepAppAllocString(IDS_APPTITLE);
+	pszMessage = UtPepAppAllocString(IDS_CANNOTCREATEAPPWINDOW);
+
+	::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
+
+	UtPepAppFreeString(pszAppTitle);
+	UtPepAppFreeString(pszMessage);
+}
+
+static void lDisplayCannotCreateWorkerThread()
+{
+	LPCWSTR pszAppTitle, pszMessage;
+
+	pszAppTitle = UtPepAppAllocString(IDS_APPTITLE);
+	pszMessage = UtPepAppAllocString(IDS_CANNOTCREATEWORKERTHREAD);
+
+	::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
+
+	UtPepAppFreeString(pszAppTitle);
+	UtPepAppFreeString(pszMessage);
+}
+
+static VOID lEnableDPIAwareness(VOID)
+{
+	HMODULE hModule;
+	TSetProcessDPIAware pSetProcessDPIAware;
+	TSetProcessDpiAwarenessContext pSetProcessDpiAwarenessContext;
+	TSetProcessDpiAwareness pSetProcessDpiAwareness;
+
+	// Check for Windows 10
+
+    hModule = ::LoadLibraryW(L"user32.dll");
+
+	pSetProcessDpiAwarenessContext = (TSetProcessDpiAwarenessContext)::GetProcAddress(hModule, "SetProcessDpiAwarenessContext");
+
+	if (pSetProcessDpiAwarenessContext)
+	{
+		if (!pSetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+		{
+			pSetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+		}
+	
+        ::FreeLibrary(hModule);
+
+        return;
+    }
+
+    ::FreeLibrary(hModule);
+
+	// Check for Windows 8.1
+
+	hModule = ::LoadLibraryW(L"shcore.dll");
+
+	pSetProcessDpiAwareness = (TSetProcessDpiAwareness)::GetProcAddress(hModule, "SetProcessDpiAwareness");
+
+	if (pSetProcessDpiAwareness)
+	{
+        pSetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+
+		::FreeLibrary(hModule);
+
+		return;
+	}
+
+	::FreeLibrary(hModule);
+
+	// Check for Vista
+
+	hModule = ::LoadLibraryW(L"user32.dll");
+
+	pSetProcessDPIAware = (TSetProcessDPIAware)::GetProcAddress(hModule, "SetProcessDPIAware");
+
+	if (pSetProcessDPIAware)
+	{
+		pSetProcessDPIAware();
+	}
+
+	::FreeLibrary(hModule);
 }
 
 static BOOL lInitialize(
@@ -334,20 +431,8 @@ static VOID PEPAPPSPLASHWINDOWEXECUTEAPI lExecuteUninitializeControls(
 static DWORD WINAPI lRunSetupThreadProc(
   _In_ LPVOID pvParameter)
 {
-    TSetupData* pSetupData = (TSetupData*)pvParameter;
-	LPCWSTR pszPluginPath = NULL;
-	LPWSTR* ppszArgs;
-	INT nTotalArgs;
+	TPepAppData* pPepAppData = (TPepAppData*)pvParameter;
 	BOOL bAlreadyRunning;
-	HMODULE hModule;
-	TCommandLineToArgvWFunc pCommandLineToArgv;
-
-    if (!lIsSupportedOperatingSystem())
-    {
-        PepAppSplashWindowDisplayUnsupportedOS();
-
-        return FALSE;
-    }
 
     if (!lInitialize(&bAlreadyRunning))
     {
@@ -365,78 +450,8 @@ static DWORD WINAPI lRunSetupThreadProc(
         return FALSE;
     }
 
-	hModule = ::LoadLibraryW(L"shell32.dll");
-
-	if (hModule == NULL)
+	if (FALSE == lInitializePepAppHostData(&pPepAppData->AppHostData))
 	{
-		PepAppSplashWindowDisplayUnknownError();
-
-		lUninitialize();
-
-		return FALSE;
-	}
-
-	pCommandLineToArgv = (TCommandLineToArgvWFunc)::GetProcAddress(hModule, "CommandLineToArgvW");
-
-	if (pCommandLineToArgv == NULL)
-	{
-		::FreeLibrary(hModule);
-
-		PepAppSplashWindowDisplayUnknownError();
-
-		lUninitialize();
-
-		return FALSE;
-	}
-
-	ppszArgs = pCommandLineToArgv(pSetupData->pszArguments, &nTotalArgs);
-
-	::FreeModule(hModule);
-
-	if (ppszArgs == NULL)
-	{
-		PepAppSplashWindowDisplayUnknownError();
-
-		lUninitialize();
-
-		return FALSE;
-	}
-
-	if (nTotalArgs > 1)
-	{
-		if (nTotalArgs == 3)
-		{
-			if (::lstrcmpi(ppszArgs[1], CPluginsArgument) == 0)
-			{
-			    pszPluginPath = ppszArgs[2];
-			}
-			else
-			{
-				::LocalFree(ppszArgs);
-
-				PepAppSplashWindowDisplayCommandLineHelp();
-
-				lUninitialize();
-
-				return FALSE;
-			}
-		}
-		else
-		{
-			::LocalFree(ppszArgs);
-
-			PepAppSplashWindowDisplayCommandLineHelp();
-
-			lUninitialize();
-
-			return FALSE;
-		}
-	}
-
-	if (FALSE == lInitializePepAppHostData(&pSetupData->AppHostData))
-	{
-		::LocalFree(ppszArgs);
-		
 		PepAppSplashWindowDisplayUnknownError();
 
         lUninitialize();
@@ -444,11 +459,9 @@ static DWORD WINAPI lRunSetupThreadProc(
         return FALSE;
     }
 
-	if (FALSE == lInitializeDeviceData(&pSetupData->DeviceData))
+	if (FALSE == lInitializeDeviceData(&pPepAppData->DeviceData))
 	{
-		lUninitializePepAppHostData(&pSetupData->AppHostData);
-
-		::LocalFree(ppszArgs);
+		lUninitializePepAppHostData(&pPepAppData->AppHostData);
 
 		PepAppSplashWindowDisplayUnknownError();
 
@@ -457,12 +470,10 @@ static DWORD WINAPI lRunSetupThreadProc(
 		return FALSE;
 	}
 
-	if (FALSE == lInitializeCtrlsData(&pSetupData->CtrlsData))
+	if (FALSE == lInitializeCtrlsData(&pPepAppData->CtrlsData))
 	{
-		lUninitializeDeviceData(&pSetupData->DeviceData);
-		lUninitializePepAppHostData(&pSetupData->AppHostData);
-
-		::LocalFree(ppszArgs);
+		lUninitializeDeviceData(&pPepAppData->DeviceData);
+		lUninitializePepAppHostData(&pPepAppData->AppHostData);
 
 		PepAppSplashWindowDisplayUnknownError();
 
@@ -471,13 +482,11 @@ static DWORD WINAPI lRunSetupThreadProc(
 		return FALSE;
 	}
 
-	if (FALSE == lInitializePepDevices(&pSetupData->DeviceData, pszPluginPath))
+	if (FALSE == lInitializePepDevices(&pPepAppData->DeviceData, pPepAppData->pszPluginPath))
 	{
-		lUninitializeCtrlsData(&pSetupData->CtrlsData);
-		lUninitializeDeviceData(&pSetupData->DeviceData);
-		lUninitializePepAppHostData(&pSetupData->AppHostData);
-
-		::LocalFree(ppszArgs);
+		lUninitializeCtrlsData(&pPepAppData->CtrlsData);
+		lUninitializeDeviceData(&pPepAppData->DeviceData);
+		lUninitializePepAppHostData(&pPepAppData->AppHostData);
 
 		PepAppSplashWindowDisplayPluginsLoadFailed();
 
@@ -486,19 +495,17 @@ static DWORD WINAPI lRunSetupThreadProc(
 		return FALSE;
 	}
 
-	PepAppSplashWindowExecute(lExecuteInitializeControls, &pSetupData->CtrlsData);
+	PepAppSplashWindowExecute(lExecuteInitializeControls, &pPepAppData->CtrlsData);
 
-	if (FALSE == pSetupData->AppHostData.pInitialize())
+	if (FALSE == pPepAppData->AppHostData.pInitialize())
 	{
-		PepAppSplashWindowExecute(lExecuteUninitializeControls, &pSetupData->CtrlsData);
+		PepAppSplashWindowExecute(lExecuteUninitializeControls, &pPepAppData->CtrlsData);
 
-		pSetupData->DeviceData.pUninitialize();
+		pPepAppData->DeviceData.pUninitialize();
 
-		lUninitializeCtrlsData(&pSetupData->CtrlsData);
-		lUninitializeDeviceData(&pSetupData->DeviceData);
-		lUninitializePepAppHostData(&pSetupData->AppHostData);
-
-		::LocalFree(ppszArgs);
+		lUninitializeCtrlsData(&pPepAppData->CtrlsData);
+		lUninitializeDeviceData(&pPepAppData->DeviceData);
+		lUninitializePepAppHostData(&pPepAppData->AppHostData);
 
 		PepAppSplashWindowDisplayUnknownError();
 
@@ -506,8 +513,6 @@ static DWORD WINAPI lRunSetupThreadProc(
 
 		return FALSE;
 	}
-
-	::LocalFree(ppszArgs);
 
     PepAppSplashWindowQuitMessagePump();
 
@@ -520,44 +525,93 @@ static DWORD WINAPI lRunSetupThreadProc(
 
 INT PepAppExecute(
   _In_ HINSTANCE hInstance,
-  _In_z_ LPCWSTR pszArguments)
+  _In_ INT nTotalArgs,
+  _In_z_ LPWSTR* ppszArgs)
 {
-	TSetupData* pSetupData = (TSetupData*)UtAllocMem(sizeof(TSetupData));
+	TPepAppData* pPepAppData = (TPepAppData*)UtAllocMem(sizeof(TPepAppData));
 	HANDLE hThread;
 	DWORD dwThreadId, dwExitCode;
-    LPCWSTR pszAppTitle, pszMessage;
+	INT nArgIndex;
+	BOOL bDisableDPI, bDisplayHelp;
+
+	if (!IsWindows7OrGreater())
+	{
+		lDisplayUnsupportedOS();
+
+		return 1;
+	}
+
+	pPepAppData = (TPepAppData*)UtAllocMem(sizeof(TPepAppData));
+
+	::ZeroMemory(pPepAppData, sizeof(TPepAppData));
+
+	nArgIndex = 1;
+	bDisableDPI = FALSE;
+	bDisplayHelp = FALSE;
+
+	while (nArgIndex < nTotalArgs && bDisplayHelp == FALSE)
+	{
+		if (::lstrcmpi(ppszArgs[nArgIndex], CPluginsArgument) == 0)
+		{
+			++nArgIndex;
+
+			if (nArgIndex < nTotalArgs)
+			{
+				pPepAppData->pszPluginPath = ppszArgs[nArgIndex];
+
+				++nArgIndex;
+			}
+			else
+			{
+				bDisplayHelp = TRUE;
+			}
+		}
+		else if (::lstrcmpi(ppszArgs[nArgIndex], CDisableDPIArgument) == 0)
+		{
+			bDisableDPI = TRUE;
+
+			++nArgIndex;
+		}
+		else 
+		{
+			bDisplayHelp = TRUE;
+		}
+	}
+
+	if (bDisplayHelp == TRUE)
+	{
+		UtFreeMem(pPepAppData);
+
+		lDisplayCommandLineHelp();
+
+		return 1;
+	}
+
+	if (bDisableDPI == FALSE)
+	{
+		lEnableDPIAwareness();
+	}
 
 	if (!PepAppSplashWindowCreate(hInstance))
     {
-        pszAppTitle = UtPepAppAllocString(IDS_APPTITLE);
-        pszMessage = UtPepAppAllocString(IDS_CANNOTCREATEAPPWINDOW);
+		lDisplayCannotCreateAppWindow();
 
-        ::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
-
-        UtPepAppFreeString(pszAppTitle);
-        UtPepAppFreeString(pszMessage);
+		UtFreeMem(pPepAppData);
 
         return 1;
     }
 
-    pSetupData->hInstance = hInstance;
-    pSetupData->pszArguments = pszArguments;
+    pPepAppData->hInstance = hInstance;
 
-    hThread = ::CreateThread(NULL, 0, lRunSetupThreadProc, pSetupData, 0, &dwThreadId);
+    hThread = ::CreateThread(NULL, 0, lRunSetupThreadProc, pPepAppData, 0, &dwThreadId);
 
     if (hThread == NULL)
     {
-        pszAppTitle = UtPepAppAllocString(IDS_APPTITLE);
-        pszMessage = UtPepAppAllocString(IDS_CANNOTCREATEWORKERTHREAD);
-
-        ::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
-
-        UtPepAppFreeString(pszAppTitle);
-        UtPepAppFreeString(pszMessage);
+		lDisplayCannotCreateWorkerThread();
 
         PepAppSplashWindowDestroy(hInstance);
 
-		UtFreeMem(pSetupData);
+		UtFreeMem(pPepAppData);
 
         return 1;
     }
@@ -576,19 +630,21 @@ INT PepAppExecute(
 
     if (dwExitCode == FALSE)
     {
-        return 1;
+		UtFreeMem(pPepAppData);
+		
+		return 1;
     }
 
-    pSetupData->AppHostData.pExecute(&dwExitCode);
+    pPepAppData->AppHostData.pExecute(&dwExitCode);
 
-	pSetupData->CtrlsData.pUninitialize();
-	pSetupData->DeviceData.pUninitialize();
+	pPepAppData->CtrlsData.pUninitialize();
+	pPepAppData->DeviceData.pUninitialize();
 
-	lUninitializeCtrlsData(&pSetupData->CtrlsData);
-	lUninitializeDeviceData(&pSetupData->DeviceData);
-	lUninitializePepAppHostData(&pSetupData->AppHostData);
+	lUninitializeCtrlsData(&pPepAppData->CtrlsData);
+	lUninitializeDeviceData(&pPepAppData->DeviceData);
+	lUninitializePepAppHostData(&pPepAppData->AppHostData);
 
-	UtFreeMem(pSetupData);
+	UtFreeMem(pPepAppData);
 
     lUninitialize();
 

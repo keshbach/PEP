@@ -15,6 +15,10 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <strsafe.h>
+#include <shellapi.h>
+#include <shellscalingapi.h>
+
+#include <versionhelpers.h>
 
 #if !defined(LPCBYTE)
 typedef const BYTE *LPCBYTE;
