@@ -57,7 +57,8 @@ enum EInstallResult
 typedef struct tagTInstallData
 {
     HINSTANCE hInstance;
-    LPCWSTR pszArguments;
+    LPCWSTR pszMSIFile;
+	LPCWSTR pszLogFile;
 } TInstallData;
 
 #pragma endregion
@@ -69,6 +70,58 @@ static HANDLE l_hAppRunningMutex = NULL;
 #pragma endregion
 
 #pragma region Local Functions
+
+static void lDisplayUnsupportedOS()
+{
+	LPCWSTR pszAppTitle, pszMessage;
+
+	pszAppTitle = UtPepSetupAllocString(IDS_APPTITLE);
+	pszMessage = UtPepSetupAllocString(IDS_UNSUPPORTEDWINDOWSVERSION);
+
+	::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
+
+	UtPepSetupFreeString(pszAppTitle);
+	UtPepSetupFreeString(pszMessage);
+}
+
+static VOID lDisplayCommandLineHelp()
+{
+	LPCWSTR pszAppTitle, pszMessage;
+
+	pszAppTitle = UtPepSetupAllocString(IDS_APPTITLE);
+	pszMessage = UtPepSetupAllocString(IDS_COMMANDLINEHELP);
+
+	::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
+
+	UtPepSetupFreeString(pszAppTitle);
+	UtPepSetupFreeString(pszMessage);
+}
+
+static void lDisplayCannotCreateAppWindow()
+{
+	LPCWSTR pszAppTitle, pszMessage;
+
+	pszAppTitle = UtPepSetupAllocString(IDS_APPTITLE);
+	pszMessage = UtPepSetupAllocString(IDS_CANNOTCREATEAPPWINDOW);
+
+	::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
+
+	UtPepSetupFreeString(pszAppTitle);
+	UtPepSetupFreeString(pszMessage);
+}
+
+static void lDisplayCannotCreateWorkerThread()
+{
+	LPCWSTR pszAppTitle, pszMessage;
+
+	pszAppTitle = UtPepSetupAllocString(IDS_APPTITLE);
+	pszMessage = UtPepSetupAllocString(IDS_CANNOTCREATEINSTALLTHREAD);
+
+	::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
+
+	UtPepSetupFreeString(pszAppTitle);
+	UtPepSetupFreeString(pszMessage);
+}
 
 static VOID lDisplayRebootFailureMessage(
   _In_ DWORD dwErrorCode)
@@ -341,24 +394,6 @@ static BOOL lExecuteInstall(
     return bResult;
 }
 
-static BOOL lIsSupportedOperatingSystem(VOID)
-{
-    DWORDLONG nConditionMask(0);
-    OSVERSIONINFOEX VersionInfoEx;
-
-    VersionInfoEx.dwOSVersionInfoSize = sizeof(VersionInfoEx);
-    VersionInfoEx.dwMajorVersion = 6; // set to 6 for vista and above
-    VersionInfoEx.dwMinorVersion = 1; // set for Windows 7 and above
-
-    nConditionMask = ::VerSetConditionMask(nConditionMask, VER_MAJORVERSION,
-                                           VER_GREATER_EQUAL);
-    nConditionMask = ::VerSetConditionMask(nConditionMask, VER_MINORVERSION,
-                                           VER_GREATER_EQUAL);
-
-    return ::VerifyVersionInfo(&VersionInfoEx, VER_MAJORVERSION | VER_MINORVERSION,
-                               nConditionMask);
-}
-
 static BOOL lIsProductAlreadyInstalled(
   _In_ LPGUID pProductGuid,
   _Out_writes_bytes_(sizeof(BOOL)) LPBOOL pbAlreadyInstalled)
@@ -535,18 +570,9 @@ static DWORD WINAPI lRunInstallThreadProc(
     DWORD dwResult = 0;
     TInstallData* pInstallData = (TInstallData*)pvParameter;
     EInstallResult InstallResult = eirNone;
-    LPWSTR* ppszArgs;
-    INT nTotalArgs;
     BOOL bAlreadyRunning, bAlreadyInstalled, bRebootAllowed, bUninstall;
     LPCWSTR pszMessage;
     GUID ProductCodeGuid;
-
-    if (!lIsSupportedOperatingSystem())
-    {
-        PepSetupModelessDialogDisplayUnsupportedOS();
-
-        return 1;
-    }
 
     if (!lInitialize(&bAlreadyRunning))
     {
@@ -558,17 +584,6 @@ static DWORD WINAPI lRunInstallThreadProc(
     if (bAlreadyRunning)
     {
         PepSetupModelessDialogDisplayAppAlreadyRunning();
-
-        lUninitialize();
-
-        return 1;
-    }
-
-    ppszArgs = ::CommandLineToArgvW(pInstallData->pszArguments, &nTotalArgs);
-
-    if (ppszArgs == NULL)
-    {
-        PepSetupModelessDialogDisplayUnknownError();
 
         lUninitialize();
 
@@ -588,8 +603,6 @@ static DWORD WINAPI lRunInstallThreadProc(
     {
         PepSetupModelessDialogDisplayUnknownError();
 
-        ::LocalFree(ppszArgs);
-
         lUninitialize();
 
         return 1;
@@ -598,98 +611,49 @@ static DWORD WINAPI lRunInstallThreadProc(
     if (lGetMsiProductCode(PepSetupGetPepSetupMsiFile(), &ProductCodeGuid) &&
         lIsProductAlreadyInstalled(&ProductCodeGuid, &bAlreadyInstalled))
     {
-        if (nTotalArgs == 3)
-        {
-            if (::lstrcmpi(ppszArgs[1], CExtractMsiArgument) == 0)
-            {
-                if (!::CopyFile(PepSetupGetPepSetupMsiFile(), ppszArgs[2], TRUE))
-                {
-                    PepSetupModelessDialogDisplayFailedExtractError();
+		if (pInstallData->pszMSIFile)
+		{
+			if (!::CopyFile(PepSetupGetPepSetupMsiFile(), pInstallData->pszMSIFile, TRUE))
+			{
+				PepSetupModelessDialogDisplayFailedExtractError();
 
-                    dwResult = 1;
-                }
-            }
-            else if (::lstrcmpi(ppszArgs[1], CLogSetupArgument) == 0)
-            {
-                if (!bAlreadyInstalled)
-                {
-                    lAddRebootPrivileges(ppszArgs[2]);
+				dwResult = 1;
+			}
+		}
+		else
+		{
+			if (!bAlreadyInstalled)
+			{
+				lAddRebootPrivileges(pInstallData->pszLogFile);
 
-                    if (!PepSetupInstallNetFrameworkRedist(ppszArgs[2]) ||
-                        !PepSetupInstallVisualStudioRedist(ppszArgs[2]) ||
-                        !lExecuteInstall(PepSetupGetPepSetupMsiFile(), ppszArgs[2], &InstallResult))
-                    {
-                        dwResult = 1;
-                    }
-                }
-                else
-                {
-                    PepSetupModelessDialogDisplayUninstallPrompt(&bUninstall);
+				if (!PepSetupInstallNetFrameworkRedist(pInstallData->pszLogFile) ||
+					!PepSetupInstallVisualStudioRedist(pInstallData->pszLogFile) ||
+					!lExecuteInstall(PepSetupGetPepSetupMsiFile(), pInstallData->pszLogFile, &InstallResult))
+				{
+					dwResult = 1;
+				}
+			}
+			else
+			{
+				PepSetupModelessDialogDisplayUninstallPrompt(&bUninstall);
 
-                    if (bUninstall)
-                    {
-                        pszMessage = UtPepSetupAllocString(IDS_UNINSTALLING);
+				if (bUninstall)
+				{
+					pszMessage = UtPepSetupAllocString(IDS_UNINSTALLING);
 
-                        if (pszMessage)
-                        {
-                            PepSetupModelessDialogDisplayMessage(pszMessage);
+					if (pszMessage)
+					{
+						PepSetupModelessDialogDisplayMessage(pszMessage);
 
-                            UtPepSetupFreeString(pszMessage);
-                        }
+						UtPepSetupFreeString(pszMessage);
+					}
 
-                        lUninstallProduct(&ProductCodeGuid);
-                    }
+					lUninstallProduct(&ProductCodeGuid);
+				}
 
-                    dwResult = 1;
-                }
-            }
-            else
-            {
-                PepSetupModelessDialogDisplayCommandLineHelp();
-
-                dwResult = 1;
-            }
-        }
-        else if (nTotalArgs == 1)
-        {
-            if (!bAlreadyInstalled)
-            {
-                lAddRebootPrivileges(NULL);
-
-                if (!PepSetupInstallNetFrameworkRedist(NULL) ||
-                    !PepSetupInstallVisualStudioRedist(NULL) ||
-                    !lExecuteInstall(PepSetupGetPepSetupMsiFile(), NULL, &InstallResult))
-                {
-                    dwResult = 1;
-                }
-            }
-            else
-            {
-                PepSetupModelessDialogDisplayUninstallPrompt(&bUninstall);
-
-                if (bUninstall)
-                {
-                    pszMessage = UtPepSetupAllocString(IDS_UNINSTALLING);
-
-                    if (pszMessage)
-                    {
-                        PepSetupModelessDialogDisplayMessage(pszMessage);
-
-                        UtPepSetupFreeString(pszMessage);
-                    }
-
-                    lUninstallProduct(&ProductCodeGuid);
-                }
-
-                dwResult = 1;
-            }
-        }
-        else
-        {
-            PepSetupModelessDialogDisplayCommandLineHelp();
-
-            dwResult = 1;
-        }
+				dwResult = 1;
+			}
+		}
     }
     else
     {
@@ -699,8 +663,6 @@ static DWORD WINAPI lRunInstallThreadProc(
     }
 
     PepSetupResourcesUninitialize();
-
-    ::LocalFree(ppszArgs);
 
     if (dwResult == 0)
     {
@@ -752,40 +714,92 @@ static DWORD WINAPI lRunInstallThreadProc(
 
 INT PepSetupExecuteInstall(
   _In_ HINSTANCE hInstance,
-  _In_z_ LPCWSTR pszArguments)
+  _In_ INT nTotalArgs,
+  _In_z_ LPWSTR* ppszArgs)
 {
     HANDLE hThread;
     TInstallData InstallData;
     DWORD dwThreadId, dwExitCode;
-    LPCWSTR pszAppTitle, pszMessage;
+	INT nArgIndex;
+	BOOL bDisplayHelp;
+
+	if (!IsWindows7OrGreater())
+	{
+		lDisplayUnsupportedOS();
+
+		return 1;
+	}
+
+	::ZeroMemory(&InstallData, sizeof(InstallData));
+
+	nArgIndex = 1;
+	bDisplayHelp = FALSE;
+
+	while (nArgIndex < nTotalArgs && bDisplayHelp == FALSE)
+	{
+		if (::lstrcmpi(ppszArgs[nArgIndex], CExtractMsiArgument) == 0)
+		{
+			++nArgIndex;
+
+			if (nArgIndex < nTotalArgs)
+			{
+                InstallData.pszMSIFile = ppszArgs[nArgIndex];
+
+				if (nArgIndex + 1 < nTotalArgs)
+				{
+					bDisplayHelp = TRUE;
+				}
+			}
+			else
+			{
+				bDisplayHelp = TRUE;
+			}
+		}
+		else if (::lstrcmpi(ppszArgs[nArgIndex], CLogSetupArgument) == 0)
+		{
+			++nArgIndex;
+
+			if (nArgIndex < nTotalArgs)
+			{
+				InstallData.pszLogFile = ppszArgs[nArgIndex];
+
+				if (nArgIndex + 1 < nTotalArgs)
+				{
+					bDisplayHelp = TRUE;
+				}
+			}
+			else
+			{
+				bDisplayHelp = TRUE;
+			}
+		}
+		else
+		{
+			bDisplayHelp = TRUE;
+		}
+	}
+
+	if (bDisplayHelp == TRUE)
+	{
+		lDisplayCommandLineHelp();
+
+		return 1;
+	}
 
     if (!PepSetupModelessDialogCreate(hInstance))
     {
-        pszAppTitle = UtPepSetupAllocString(IDS_APPTITLE);
-        pszMessage = UtPepSetupAllocString(IDS_CANNOTCREATEAPPWINDOW);
-
-        ::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
-
-        UtPepSetupFreeString(pszAppTitle);
-        UtPepSetupFreeString(pszMessage);
+		lDisplayCannotCreateAppWindow();
 
         return 1;
     }
 
     InstallData.hInstance = hInstance;
-    InstallData.pszArguments = pszArguments;
 
     hThread = ::CreateThread(NULL, 0, lRunInstallThreadProc, &InstallData, 0, &dwThreadId);
 
     if (hThread == NULL)
     {
-        pszAppTitle = UtPepSetupAllocString(IDS_APPTITLE);
-        pszMessage = UtPepSetupAllocString(IDS_CANNOTCREATEINSTALLTHREAD);
-
-        ::MessageBox(NULL, pszMessage, pszAppTitle, MB_OK | MB_ICONINFORMATION);
-
-        UtPepSetupFreeString(pszAppTitle);
-        UtPepSetupFreeString(pszMessage);
+		lDisplayCannotCreateWorkerThread();
 
         PepSetupModelessDialogDestroy();
 

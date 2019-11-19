@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2018 Kevin Eshbach
+//  Copyright (C) 2018-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -12,10 +12,8 @@ VOID PepSetupModelessDialogMessagePump();
 VOID PepSetupModelessDialogQuitMessagePump();
 
 VOID PepSetupModelessDialogDisplayAppAlreadyRunning();
-VOID PepSetupModelessDialogDisplayUnsupportedOS();
 VOID PepSetupModelessDialogDisplayUnknownError();
 VOID PepSetupModelessDialogDisplayFailedExtractError();
-VOID PepSetupModelessDialogDisplayCommandLineHelp();
 VOID PepSetupModelessDialogDisplayInstallAlreadyRunning();
 VOID PepSetupModelessDialogDisplayInstallError();
 
@@ -28,5 +26,5 @@ VOID PepSetupModelessDialogDisplayRebootFailed(_In_ DWORD dwErrorCode);
 VOID PepSetupModelessDialogDisplayUninstallPrompt(_Out_writes_bytes_(sizeof(BOOL)) LPBOOL pbUninstall);
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2018 Kevin Eshbach
+//  Copyright (C) 2018-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

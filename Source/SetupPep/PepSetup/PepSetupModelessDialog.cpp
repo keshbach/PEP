@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2018 Kevin Eshbach
+//  Copyright (C) 2018-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -29,10 +29,8 @@
 enum EMessageBoxDescription
 {
     embdAppAlreadyRunning,
-    embdUnsupportedOS,
     embdUnknownError,
     embdFailedExtract,
-    embdCommandLineHelp,
     embdInstallAlreadyRunning,
     embdInstallError
 };
@@ -80,17 +78,11 @@ static INT_PTR lHandleDisplayMessageBoxMessage(
         case embdAppAlreadyRunning:
             nMessageId = IDS_APPLICATIONALREADYRUNNING;
             break;
-        case embdUnsupportedOS:
-            nMessageId = IDS_UNSUPPORTEDWINDOWSVERSION;
-            break;
         case embdUnknownError:
             nMessageId = IDS_UNKNOWNERROR;
             break;
         case embdFailedExtract:
             nMessageId = IDS_MSICOULDNOTBECOPIED;
-            break;
-        case embdCommandLineHelp:
-            nMessageId = IDS_COMMANDLINEHELP;
             break;
         case embdInstallAlreadyRunning:
             nMessageId = IDS_ANOTHERINSTALLATIONRUNNING;
@@ -297,11 +289,6 @@ VOID PepSetupModelessDialogDisplayAppAlreadyRunning()
     ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdAppAlreadyRunning, 0);
 }
 
-VOID PepSetupModelessDialogDisplayUnsupportedOS()
-{
-    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdUnsupportedOS, 0);
-}
-
 VOID PepSetupModelessDialogDisplayUnknownError()
 {
     ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdUnknownError, 0);
@@ -310,11 +297,6 @@ VOID PepSetupModelessDialogDisplayUnknownError()
 VOID PepSetupModelessDialogDisplayFailedExtractError()
 {
     ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdFailedExtract, 0);
-}
-
-VOID PepSetupModelessDialogDisplayCommandLineHelp()
-{
-    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdCommandLineHelp, 0);
 }
 
 VOID PepSetupModelessDialogDisplayInstallAlreadyRunning()
@@ -356,5 +338,5 @@ VOID PepSetupModelessDialogDisplayUninstallPrompt(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2018 Kevin Eshbach
+//  Copyright (C) 2018-2019 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
