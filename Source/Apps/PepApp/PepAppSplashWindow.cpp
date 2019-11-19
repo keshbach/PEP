@@ -33,10 +33,8 @@
 enum EMessageBoxDescription
 {
     embdAppAlreadyRunning,
-    embdUnsupportedOS,
     embdUnknownError,
     embdFailedExtract,
-    embdCommandLineHelp,
 	embdPluginsLoadFailed
 };
 
@@ -126,14 +124,8 @@ static LRESULT lHandleDisplayMessageBoxMessage(
         case embdAppAlreadyRunning:
             nMessageId = IDS_APPLICATIONALREADYRUNNING;
             break;
-        case embdUnsupportedOS:
-            nMessageId = IDS_UNSUPPORTEDWINDOWSVERSION;
-            break;
         case embdUnknownError:
             nMessageId = IDS_UNKNOWNERROR;
-            break;
-        case embdCommandLineHelp:
-            nMessageId = IDS_COMMANDLINEHELP;
             break;
 		case embdPluginsLoadFailed:
 			nMessageId = IDS_PLUGINSLOADFAILED;
@@ -325,19 +317,9 @@ VOID PepAppSplashWindowDisplayAppAlreadyRunning()
     ::PostMessage(l_hSplashWindow, WM_DISPLAYMESSAGEBOX, embdAppAlreadyRunning, 0);
 }
 
-VOID PepAppSplashWindowDisplayUnsupportedOS()
-{
-    ::PostMessage(l_hSplashWindow, WM_DISPLAYMESSAGEBOX, embdUnsupportedOS, 0);
-}
-
 VOID PepAppSplashWindowDisplayUnknownError()
 {
     ::PostMessage(l_hSplashWindow, WM_DISPLAYMESSAGEBOX, embdUnknownError, 0);
-}
-
-VOID PepAppSplashWindowDisplayCommandLineHelp()
-{
-    ::PostMessage(l_hSplashWindow, WM_DISPLAYMESSAGEBOX, embdCommandLineHelp, 0);
 }
 
 VOID PepAppSplashWindowDisplayPluginsLoadFailed()

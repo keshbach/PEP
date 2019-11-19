@@ -16,9 +16,7 @@ VOID PepAppSplashWindowMessagePump();
 VOID PepAppSplashWindowQuitMessagePump();
 
 VOID PepAppSplashWindowDisplayAppAlreadyRunning();
-VOID PepAppSplashWindowDisplayUnsupportedOS();
 VOID PepAppSplashWindowDisplayUnknownError();
-VOID PepAppSplashWindowDisplayCommandLineHelp();
 VOID PepAppSplashWindowDisplayPluginsLoadFailed();
 
 VOID PepAppSplashWindowExecute(_In_ TPepAppSplashWindowExecuteFunc pExecute, _In_ LPVOID pvData);
