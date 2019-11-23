@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-/*  Copyright (C) 2010-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -10,6 +10,10 @@ namespace Pep
     {
         internal partial class ConfigToolForm : System.Windows.Forms.Form
         {
+            #region "Constants"
+            private const string CFileOpenDialogClientGuid = "{A23DC3B8-0F1A-431A-B1BF-E70DF2FCAD9D}";
+            #endregion
+
             #region "Member Variables"
             private System.String m_sDescription = "";
             private System.String m_sApplication = "";
@@ -101,6 +105,7 @@ namespace Pep
                 OpenFileDialog.SelectedFileType = 1;
                 OpenFileDialog.SelectMultipleItems = false;
                 OpenFileDialog.ShowHidden = false;
+                OpenFileDialog.ClientGuid = System.Guid.ParseExact(CFileOpenDialogClientGuid, "B");
 
                 if (OpenFileDialog.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
@@ -138,5 +143,5 @@ namespace Pep
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2010-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
 /***************************************************************************/
