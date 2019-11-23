@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-/*  Copyright (C) 2010-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -11,7 +11,7 @@ namespace Pep
         public partial class ListToolsForm : System.Windows.Forms.Form
         {
             #region "Member Variables"
-            private System.Collections.ArrayList m_ToolDataCollection = new System.Collections.ArrayList();
+            private System.Collections.Generic.List<TToolData> m_ToolDataList = new System.Collections.Generic.List<TToolData>();
             #endregion
 
             #region "Structures"
@@ -24,16 +24,16 @@ namespace Pep
             #endregion
 
             #region "Properties"
-            public System.Collections.ArrayList ToolDataCollection
+            public System.Collections.Generic.List<TToolData> ToolDataList
             {
                 get
                 {
-                    return m_ToolDataCollection;
+                    return m_ToolDataList;
                 }
 
                 set
                 {
-                    m_ToolDataCollection = value;
+                    m_ToolDataList = value;
                 }
             }
             #endregion
@@ -48,17 +48,13 @@ namespace Pep
             #region "Event Handlers"
             private void ListToolsForm_Load(object sender, EventArgs e)
             {
-                System.Collections.IEnumerator Enum = m_ToolDataCollection.GetEnumerator();
                 System.Int32 nIndex = 1;
                 System.Windows.Forms.ListViewItem ListItem;
-                TToolData ToolData;
 
                 listViewTools.BeginUpdate();
 
-                while (Enum.MoveNext())
+                foreach (TToolData ToolData in m_ToolDataList)
                 {
-                    ToolData = (TToolData)Enum.Current;
-
                     ListItem = listViewTools.Items.Add(nIndex.ToString());
 
                     ListItem.SubItems.Add(ToolData.sDescription);
@@ -85,7 +81,7 @@ namespace Pep
                     buttonUp.Enabled = false;
                 }
 
-                if (e.ItemIndex < m_ToolDataCollection.Count - 1)
+                if (e.ItemIndex < m_ToolDataList.Count - 1)
                 {
                     buttonDown.Enabled = true;
                 }
@@ -97,9 +93,7 @@ namespace Pep
 
             private void listViewTools_MouseDoubleClick(object sender, System.Windows.Forms.MouseEventArgs e)
             {
-                System.Windows.Forms.ListViewHitTestInfo HitTestInfo;
-
-                HitTestInfo = listViewTools.HitTest(e.Location);
+                System.Windows.Forms.ListViewHitTestInfo HitTestInfo = listViewTools.HitTest(e.Location);
 
                 EditItem(HitTestInfo.Item);
             }
@@ -161,9 +155,7 @@ namespace Pep
             private void buttonEdit_Click(object sender, EventArgs e)
             {
                 System.Int32 nIndex = listViewTools.FocusedItem.Index;
-                System.Windows.Forms.ListViewItem ListItem;
-
-                ListItem = (System.Windows.Forms.ListViewItem)listViewTools.Items[nIndex];
+                System.Windows.Forms.ListViewItem ListItem = listViewTools.Items[nIndex];
 
                 EditItem(ListItem);
             }
@@ -171,12 +163,8 @@ namespace Pep
             private void buttonClear_Click(object sender, EventArgs e)
             {
                 System.Int32 nIndex = listViewTools.FocusedItem.Index;
-                System.Windows.Forms.ListViewItem ListItem;
-                TToolData ToolData;
-
-                ListItem = (System.Windows.Forms.ListViewItem)listViewTools.Items[nIndex];
-
-                ToolData = (TToolData)ListItem.Tag;
+                System.Windows.Forms.ListViewItem ListItem = listViewTools.Items[nIndex];
+                TToolData ToolData = (TToolData)ListItem.Tag;
 
                 ToolData.sDescription = "";
                 ToolData.sApplication = "";
@@ -193,18 +181,11 @@ namespace Pep
 
             private void buttonOK_Click(object sender, EventArgs e)
             {
-                System.Collections.IEnumerator Enum;
-                System.Windows.Forms.ListViewItem ListItem;
+                m_ToolDataList.Clear();
 
-                m_ToolDataCollection.Clear();
-
-                Enum = listViewTools.Items.GetEnumerator();
-
-                while (Enum.MoveNext())
+                foreach (System.Windows.Forms.ListViewItem ListViewItem in listViewTools.Items)
                 {
-                    ListItem = (System.Windows.Forms.ListViewItem)Enum.Current;
-
-                    m_ToolDataCollection.Add(ListItem.Tag);
+                    m_ToolDataList.Add((TToolData)ListViewItem.Tag);
                 }
             }
             #endregion
@@ -214,9 +195,7 @@ namespace Pep
                 System.Windows.Forms.ListViewItem ListItem)
             {
                 Pep.Forms.ConfigToolForm ConfigTool = new Pep.Forms.ConfigToolForm();
-                TToolData ToolData;
-
-                ToolData = (TToolData)ListItem.Tag;
+                TToolData ToolData = (TToolData)ListItem.Tag;
 
                 ConfigTool.Description = ToolData.sDescription;
                 ConfigTool.Application = ToolData.sApplication;
@@ -244,5 +223,5 @@ namespace Pep
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2010-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
 /***************************************************************************/
