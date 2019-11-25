@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-/*  Copyright (C) 2013-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2013-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -10,8 +10,11 @@ namespace Pep
     {
         public partial class FillBufferForm : System.Windows.Forms.Form
         {
+            #region "Member Variables"
             private System.Byte m_byValue = 0;
+            #endregion
 
+            #region "Properties"
             public System.Byte Value
             {
                 get
@@ -19,12 +22,16 @@ namespace Pep
                     return m_byValue;
                 }
             }
+            #endregion
 
+            #region "Constructor"
             public FillBufferForm()
             {
                 InitializeComponent();
             }
+            #endregion
 
+            #region "Event Handlers"
             private void FillBufferForm_Load(object sender, EventArgs e)
             {
                 VerifyValue();
@@ -43,7 +50,9 @@ namespace Pep
             private void buttonCancel_Click(object sender, EventArgs e)
             {
             }
+            #endregion
 
+            #region "Internal Helpers"
             private void VerifyValue()
             {
                 System.Boolean bEnable = false;
@@ -53,7 +62,7 @@ namespace Pep
                 {
                     nValue = System.Convert.ToInt16(maskedTextBoxValue.Text);
 
-                    if (nValue < (System.Int16)System.Byte.MaxValue)
+                    if (nValue <= (System.Int16)System.Byte.MaxValue)
                     {
                         bEnable = true;
                     }
@@ -61,10 +70,11 @@ namespace Pep
 
                 buttonOK.Enabled = bEnable;
             }
+            #endregion
         }
     }
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2013-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2013-2019 Kevin Eshbach                                  */
 /***************************************************************************/
