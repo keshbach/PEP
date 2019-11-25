@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -10,6 +10,7 @@ namespace Pep
     {
         public partial class ViewBufferForm : System.Windows.Forms.Form
         {
+            #region "Structures"
             private struct TOrganizationData
             {
                 public System.String sName;
@@ -23,14 +24,19 @@ namespace Pep
                     DataOrganization = DataOrganizationVal;
                 }
             }
+            #endregion
 
+            #region "Member Variables"
             private TOrganizationData[] m_DataOrganization = {
-            new TOrganizationData("Ascii",              Pep.Forms.BufferViewer.EDataOrganization.Ascii),
-            new TOrganizationData("Byte",               Pep.Forms.BufferViewer.EDataOrganization.Byte),
-            new TOrganizationData("Word Big Endian",    Pep.Forms.BufferViewer.EDataOrganization.WordBigEndian),
-            new TOrganizationData("Word Little Endian", Pep.Forms.BufferViewer.EDataOrganization.WordLittleEndian)};
-            private byte[] m_byBuffer = null;
+                new TOrganizationData("Ascii",              Pep.Forms.BufferViewer.EDataOrganization.Ascii),
+                new TOrganizationData("Byte",               Pep.Forms.BufferViewer.EDataOrganization.Byte),
+                new TOrganizationData("Word Big Endian",    Pep.Forms.BufferViewer.EDataOrganization.WordBigEndian),
+                new TOrganizationData("Word Little Endian", Pep.Forms.BufferViewer.EDataOrganization.WordLittleEndian)};
 
+            private byte[] m_byBuffer = null;
+            #endregion
+
+            #region "Properties"
             public byte[] Buffer
             {
                 get
@@ -47,12 +53,16 @@ namespace Pep
                     }
                 }
             }
+            #endregion
 
+            #region "Constructor"
             public ViewBufferForm()
             {
                 InitializeComponent();
             }
+            #endregion
 
+            #region "Event Handlers"
             private void ViewBufferForm_Load(object sender, EventArgs e)
             {
                 for (System.Int32 nIndex = 0; nIndex < m_DataOrganization.Length; ++nIndex)
@@ -94,10 +104,11 @@ namespace Pep
                     bufferViewer.EndUpdate();
                 }
             }
+            #endregion
         }
     }
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2014 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
 /***************************************************************************/
