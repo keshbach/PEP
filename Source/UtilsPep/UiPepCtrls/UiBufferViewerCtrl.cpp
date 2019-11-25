@@ -10,12 +10,16 @@
 
 #include <Utils/UtHeap.h>
 
+#include <Includes/UtMacros.h>
+
 #include <strsafe.h>
 #include <windowsx.h>
 #include <uxtheme.h>
 #include <vssym32.h>
 
 #include <assert.h>
+
+#pragma region "Constants"
 
 #define CFontName L"Courier New"
 
@@ -38,6 +42,10 @@
 
 #define CThemeClassName L"EditStyle;Edit"
 
+#pragma endregion
+
+#pragma region "Structures"
+
 typedef struct tagTBufferViewerCtrlData
 {
     LPBYTE pbyBuffer;
@@ -53,6 +61,8 @@ typedef struct tagTBufferViewerCtrlData
     ULONG nStartAddress;
     HTHEME hTheme;
 } TBufferViewerCtrlData;
+
+#pragma endregion
 
 static HFONT lCreateFont(
   int nFontPtSize)
@@ -73,9 +83,7 @@ static HFONT lCreateFont(
     LogFont.lfPitchAndFamily = FF_MODERN;
     LogFont.lfOutPrecision   = OUT_TT_PRECIS;
 
-    ::StringCchCopyW(LogFont.lfFaceName,
-                     sizeof(LogFont.lfFaceName) / sizeof(LogFont.lfFaceName[0]),
-                     CFontName);
+    ::StringCchCopyW(LogFont.lfFaceName, MArrayLen(LogFont.lfFaceName), CFontName);
 
     return ::CreateFontIndirectW(&LogFont);
 }
@@ -187,8 +195,7 @@ static VOID lDrawAddressForRow(
 {
     WCHAR cBuffer[CAddressTotalChars + 1];
 
-    ::StringCchPrintfW(cBuffer, sizeof(cBuffer) / sizeof(cBuffer[0]),
-		               CAddressFormat, nAddress);
+    ::StringCchPrintfW(cBuffer, MArrayLen(cBuffer), CAddressFormat, nAddress);
 
 	::SetTextColor(hDC, crText);
     ::SetBkColor(hDC, crBack);
@@ -364,16 +371,14 @@ static LPWSTR lAllocBufferByteOrganization(
             *(pszNewBuffer + (nNewBufferLen - CByteTotalChars)) = L' ';
         }
 
-        ::StringCchPrintfW(cBuffer, sizeof(cBuffer) / sizeof(cBuffer[0]),
-		                   CByteFormat, (INT)*pbyBuffer);
+        ::StringCchPrintfW(cBuffer, MArrayLen(cBuffer), CByteFormat, (INT)*pbyBuffer);
 
         nNewBufferLen += CByteTotalChars;
 
         pszNewBuffer = (LPWSTR)UtReAllocMem(pszNewBuffer, nNewBufferLen * sizeof(WCHAR));
 
         ::StringCchCopy(pszNewBuffer + (nNewBufferLen - (CByteTotalChars + 1)),
-                        sizeof(cBuffer) / sizeof(cBuffer[0]),
-                        cBuffer);
+                        MArrayLen(cBuffer), cBuffer);
 
         ++pbyBuffer;
 
@@ -413,16 +418,14 @@ static LPWSTR lAllocBufferWordBigEndianOrganization(
         nTmpValue = (INT)*pbyBuffer << 8;
         nTmpValue |= (INT)*(pbyBuffer + 1);
 
-        ::StringCchPrintfW(cBuffer, sizeof(cBuffer) / sizeof(cBuffer[0]),
-		                   CWordFormat, nTmpValue);
+        ::StringCchPrintfW(cBuffer, MArrayLen(cBuffer), CWordFormat, nTmpValue);
 
         nNewBufferLen += CWordTotalChars;
 
         pszNewBuffer = (LPWSTR)UtReAllocMem(pszNewBuffer, nNewBufferLen * sizeof(WCHAR));
 
         ::StringCchCopy(pszNewBuffer + (nNewBufferLen - (CWordTotalChars + 1)),
-                        sizeof(cBuffer) / sizeof(cBuffer[0]),
-                        cBuffer);
+                        MArrayLen(cBuffer), cBuffer);
 
         pbyBuffer += 2;
 
@@ -462,16 +465,14 @@ static LPWSTR lAllocBufferWordLittleEndianOrganization(
         nTmpValue = (INT)*pbyBuffer;
         nTmpValue |= (INT)*(pbyBuffer + 1) << 8;
 
-        ::StringCchPrintfW(cBuffer, sizeof(cBuffer) / sizeof(cBuffer[0]),
-		                   CWordFormat, nTmpValue);
+        ::StringCchPrintfW(cBuffer, MArrayLen(cBuffer), CWordFormat, nTmpValue);
 
         nNewBufferLen += CWordTotalChars;
 
         pszNewBuffer = (LPWSTR)UtReAllocMem(pszNewBuffer, nNewBufferLen * sizeof(WCHAR));
 
         ::StringCchCopy(pszNewBuffer + (nNewBufferLen - (CWordTotalChars + 1)),
-                        sizeof(cBuffer) / sizeof(cBuffer[0]),
-                        cBuffer);
+                        MArrayLen(cBuffer), cBuffer);
 
         pbyBuffer += 2;
 
@@ -589,7 +590,7 @@ static VOID lDrawWindow(
     Point[1].x = ClientRect.right;
     Point[1].y = ClientRect.bottom;
 
-    ::DPtoLP(hDC, Point, sizeof(Point) / sizeof(Point[0]));
+    ::DPtoLP(hDC, Point, MArrayLen(Point));
 
     pbyBuffer = pData->pbyBuffer;
     nBufferLen = pData->nBufferLen;
@@ -980,11 +981,13 @@ static LRESULT lOnVScrollMsg(
     UINT nDataPerRow;
     SCROLLINFO ScrollInfo;
 
+	nPos;
+
     nDataPerRow = lCalcDataPerRow(pData->nTotalVisibleColumns,
                                   pData->nDataOrganization);
 
     ScrollInfo.cbSize = sizeof(ScrollInfo);
-    ScrollInfo.fMask = SIF_POS;
+    ScrollInfo.fMask = SIF_POS | SIF_TRACKPOS;
 
     ::GetScrollInfo(hWnd, SB_VERT, &ScrollInfo);
 
@@ -1019,7 +1022,7 @@ static LRESULT lOnVScrollMsg(
             }
             break;
         case SB_THUMBTRACK:
-            ScrollInfo.nPos = nPos;
+            ScrollInfo.nPos = ScrollInfo.nTrackPos;
             break;
     }
 
