@@ -29,13 +29,13 @@ BOOL UTPEPANALYZEAPI UtPepAnalyzeIsEmpty(
 BOOL UTPEPANALYZEAPI UtPepAnalyzeCheckStuckBits(
   _In_ LPCBYTE pbyData,
   _In_ UINT32 nDataLen,
-  _Out_ UINT32* pnBitStucks)
+  _Out_ UINT32* pnBitsStuck)
 {
 	UINT32 nHighBitSetMask = 0;
 	UINT32 nLowBitSetMask = 0;
 	UINT32 nMask;
 
-	*pnBitStucks = 0;
+	*pnBitsStuck = 0;
 
 	for (UINT32 nMaskPos = 0; nMaskPos < 8; ++nMaskPos)
 	{
@@ -60,11 +60,11 @@ BOOL UTPEPANALYZEAPI UtPepAnalyzeCheckStuckBits(
 
 		if ((nHighBitSetMask & nMask) && (nLowBitSetMask & nMask) == 0)
 		{
-			*pnBitStucks |= nMask;
+			*pnBitsStuck |= nMask;
 		}
 		else if ((nHighBitSetMask & nMask) == 0 && (nLowBitSetMask & nMask))
 		{
-			*pnBitStucks |= (nMask << 8);
+			*pnBitsStuck |= (nMask << 8);
 		}
 	}
 

@@ -34,7 +34,7 @@ extern "C"
 
 BOOL UTPEPANALYZEAPI UtPepAnalyzeIsEmpty(_In_ LPCBYTE pbyData, _In_ UINT32 nDataLen, _Out_ LPBOOL pbIsEmpty);
 
-BOOL UTPEPANALYZEAPI UtPepAnalyzeCheckStuckBits(_In_ LPCBYTE pbyData, _In_ UINT32 nDataLen, _Out_ UINT32* pnBitStucks);
+BOOL UTPEPANALYZEAPI UtPepAnalyzeCheckStuckBits(_In_ LPCBYTE pbyData, _In_ UINT32 nDataLen, _Out_ UINT32* pnBitsStuck);
 
 BOOL UTPEPANALYZEAPI UtPepAnalyzeIsOverdump(_In_ LPCBYTE pbyData, _In_ UINT32 nDataLen, _Out_ LPBOOL pbIsOverdump);
 
