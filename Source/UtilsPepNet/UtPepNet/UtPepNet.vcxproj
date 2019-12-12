@@ -105,7 +105,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../..%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -120,7 +120,7 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
     <Link>
-      <AdditionalDependencies>ptrustmd.lib;ole32.lib;UtPepCtrl.lib;UtPepDevices.lib;UtHeap.lib;UtPAL.lib</AdditionalDependencies>
+      <AdditionalDependencies>ptrustmd.lib;ole32.lib;UtPepCtrl.lib;UtPepDevices.lib;UtPepAnalyze.lib;UtHeap.lib;UtPAL.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcmrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UtPepNet.def</ModuleDefinitionFile>
@@ -143,7 +143,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../..%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -158,7 +158,7 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
     <Link>
-      <AdditionalDependencies>ptrustmd.lib;ole32.lib;UtPepCtrl.lib;UtPepDevices.lib;UtHeap.lib;UtPAL.lib</AdditionalDependencies>
+      <AdditionalDependencies>ptrustmd.lib;ole32.lib;UtPepCtrl.lib;UtPepDevices.lib;UtPepAnalyze.lib;UtHeap.lib;UtPAL.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcmrtd.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UtPepNet64.def</ModuleDefinitionFile>
@@ -179,7 +179,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../..%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -195,7 +195,7 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
     <Link>
-      <AdditionalDependencies>ptrustm.lib;ole32.lib;UtPepCtrl.lib;UtPepDevices.lib;UtHeap.lib;UtPAL.lib</AdditionalDependencies>
+      <AdditionalDependencies>ptrustm.lib;ole32.lib;UtPepCtrl.lib;UtPepDevices.lib;UtPepAnalyze.lib;UtHeap.lib;UtPAL.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcmrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UtPepNet.def</ModuleDefinitionFile>
@@ -217,7 +217,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../..%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -233,7 +233,7 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
     <Link>
-      <AdditionalDependencies>ptrustm.lib;ole32.lib;UtPepCtrl.lib;UtPepDevices.lib;UtHeap.lib;UtPAL.lib</AdditionalDependencies>
+      <AdditionalDependencies>ptrustm.lib;ole32.lib;UtPepCtrl.lib;UtPepDevices.lib;UtPepAnalyze.lib;UtHeap.lib;UtPAL.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcmrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UtPepNet64.def</ModuleDefinitionFile>
@@ -269,6 +269,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="PinConfig.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="Device.cpp" />
@@ -305,6 +306,7 @@
     <None Include="UtPepNet64.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Buffer.h" />
     <ClInclude Include="PinConfig.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Device.h" />
