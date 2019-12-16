@@ -10,7 +10,7 @@
 
 System::Boolean Pep::Programmer::Buffer::IsEmpty(
   array<System::Byte>^ byData,
-  System::Boolean^% bIsEmpty)
+  System::Boolean% bIsEmpty)
 {
 	pin_ptr<System::Byte> pbyData = &byData[0];
 	BOOL bTmpIsEmpty;
@@ -128,7 +128,7 @@ System::Boolean Pep::Programmer::Buffer::CheckStuckBits(
 
 System::Boolean Pep::Programmer::Buffer::IsOverdump(
   array<System::Byte>^ byData,
-  System::Boolean^% bIsOverdump)
+  System::Boolean% bIsOverdump)
 {
 	pin_ptr<System::Byte> pbyData = &byData[0];
 	BOOL bTmpIsOverdump;

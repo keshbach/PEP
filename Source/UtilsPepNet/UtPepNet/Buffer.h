@@ -32,11 +32,11 @@ namespace Pep
 			};
 
 		public:
-			static System::Boolean IsEmpty(array<System::Byte>^ byData, System::Boolean^% bIsEmpty);
+			static System::Boolean IsEmpty(array<System::Byte>^ byData, System::Boolean% bIsEmpty);
 
 			static System::Boolean CheckStuckBits(array<System::Byte>^ byData, System::Collections::Generic::List<EBitStuck>^% BitsStuckList);
 
-			static System::Boolean IsOverdump(array<System::Byte>^ byData, System::Boolean^% bIsOverdump);
+			static System::Boolean IsOverdump(array<System::Byte>^ byData, System::Boolean% bIsOverdump);
 		};
 	}
 }
