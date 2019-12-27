@@ -12,6 +12,8 @@ namespace Pep
         {
             #region "Member Variables"
             private System.Byte m_byValue = 0;
+
+            private System.Byte m_byMaxValue = System.Byte.MaxValue;
             #endregion
 
             #region "Properties"
@@ -20,6 +22,18 @@ namespace Pep
                 get
                 {
                     return m_byValue;
+                }
+            }
+
+            public System.Byte MaxValue
+            {
+                get
+                {
+                    return m_byMaxValue;
+                }
+                set
+                {
+                    m_byMaxValue = value;
                 }
             }
             #endregion
@@ -34,6 +48,8 @@ namespace Pep
             #region "Event Handlers"
             private void FillBufferForm_Load(object sender, EventArgs e)
             {
+                labelInstructions.Text = System.String.Format("(Enter a value from 0 to {0}.)", m_byMaxValue);
+
                 VerifyValue();
             }
 
@@ -62,7 +78,7 @@ namespace Pep
                 {
                     nValue = System.Convert.ToInt16(maskedTextBoxValue.Text);
 
-                    if (nValue <= (System.Int16)System.Byte.MaxValue)
+                    if (nValue <= (System.Int16)m_byMaxValue)
                     {
                         bEnable = true;
                     }
