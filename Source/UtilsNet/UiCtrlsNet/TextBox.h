@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -9,7 +9,7 @@ namespace Common
     namespace Forms
     {
         /// <summary>
-        /// Summary description for TextBox.
+        /// TextBox with a timer delay after a key has been pressed.
         /// </summary>
 
         public ref class TextBox : System::Windows::Forms::TextBox
@@ -55,6 +55,9 @@ namespace Common
         public:
             TextBox();
 
+		public:
+			void CancelKeyPressTimer();
+
         protected:
             /// <summary>
             /// Clean up any resources being used.
@@ -93,5 +96,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

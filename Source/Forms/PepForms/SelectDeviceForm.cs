@@ -16,17 +16,28 @@ namespace Pep
             #endregion
 
             #region Constants
-            private static System.String CAllFilterType = "All";
+            private static string CAllFilterType = "All";
 
-            private static System.String CDevicePinsText = "{0} Pins";
+            private static string CDevicePinsText = "{0} Pins";
+
+            private const string CRegDeviceFilterKey = "Device Filters";
+
+            private const string CRegSearchValue = "Search";
+
+            private const string CRegTotalFiltersValue = "Total Filters";
+
+            private const string CRegFilterNameValue = "Filter Name";
+            private const string CRegFilterEnabledValue = "Filter Enabled";
             #endregion
 
             #region Member Variables
             private Pep.Programmer.Device m_PepDevice = null;
 
-            private System.String[] m_Filters = null;
+            private string m_sRegistryKey = null;
 
-            private System.Boolean m_bIgnoreItemCheck = false;
+            private string[] m_Filters = null;
+
+            private bool m_bIgnoreItemCheck = false;
             #endregion
 
             #region Properties
@@ -42,6 +53,14 @@ namespace Pep
                     m_PepDevice = value;
                 }
             }
+
+            public System.String RegistryKey
+            {
+                set
+                {
+                    m_sRegistryKey = value;
+                }
+            }
             #endregion
 
             #region Constructor
@@ -54,24 +73,53 @@ namespace Pep
             #endregion
 
             #region SelectDeviceForm Event Handlers
-            private void SelectDevice2Form_Load(object sender, EventArgs e)
+            private void SelectDeviceForm_Load(object sender, EventArgs e)
             {
-                System.Collections.Generic.SortedSet<System.String> FilterSet = new System.Collections.Generic.SortedSet<System.String>();
+                System.Collections.Generic.SortedSet<string> FilterSet = new System.Collections.Generic.SortedSet<string>();
+                Microsoft.Win32.RegistryKey RegKey;
 
                 foreach (Pep.Programmer.Device Device in Pep.Programmer.Devices.DevicesList)
                 {
                     FilterSet.Add(Device.DeviceType);
                 }
 
-                m_Filters = new System.String[FilterSet.Count];
+                m_Filters = new string[FilterSet.Count];
 
                 FilterSet.CopyTo(m_Filters);
 
                 checkedListBoxFilter.Items.Add(CAllFilterType);
                 checkedListBoxFilter.Items.AddRange(m_Filters);
+
+                m_bIgnoreItemCheck = true;
+
                 checkedListBoxFilter.SetItemChecked(0, true);
 
+                m_bIgnoreItemCheck = false;
+
+                RegKey = Common.Registry.CreateCurrentUserRegKey(m_sRegistryKey);
+
+                if (RegKey != null)
+                {
+                    ReadSelectDeviceFilters(RegKey);
+
+                    RegKey.Close();
+                }
+
                 RefreshDevices();
+            }
+
+            private void SelectDeviceForm_FormClosed(object sender, System.Windows.Forms.FormClosedEventArgs e)
+            {
+                Microsoft.Win32.RegistryKey RegKey;
+
+                RegKey = Common.Registry.CreateCurrentUserRegKey(m_sRegistryKey);
+
+                if (RegKey != null)
+                {
+                    WriteSelectDeviceFilters(RegKey);
+
+                    RegKey.Close();
+                }
             }
 
             private void treeViewDevice_AfterSelect(object sender, System.Windows.Forms.TreeViewEventArgs e)
@@ -118,7 +166,7 @@ namespace Pep
                     {
                         m_bIgnoreItemCheck = true;
 
-                        for (System.Int32 nIndex = 1; nIndex < checkedListBoxFilter.Items.Count; ++nIndex)
+                        for (int nIndex = 1; nIndex < checkedListBoxFilter.Items.Count; ++nIndex)
                         {
                             checkedListBoxFilter.SetItemChecked(nIndex, true);
                         }
@@ -143,13 +191,20 @@ namespace Pep
                 }
             }
 
+            private void splitContainerDevice_SplitterMoved(object sender, System.Windows.Forms.SplitterEventArgs e)
+            {
+            }
+
             private void buttonOK_Click(object sender, EventArgs e)
             {
+                textBoxSearch.CancelKeyPressTimer();
+
                 m_PepDevice = (Pep.Programmer.Device)treeViewDevice.SelectedNode.Tag;
             }
 
             private void buttonCancel_Click(object sender, EventArgs e)
             {
+                textBoxSearch.CancelKeyPressTimer();
             }
             #endregion
 
@@ -174,7 +229,7 @@ namespace Pep
             {
                 System.Windows.Forms.TreeNode NameTreeNode = null;
                 System.Windows.Forms.TreeNode DeviceTypeTreeNode, PinCountTreeNode;
-                System.String sPinCountName;
+                string sPinCountName;
 
                 treeViewDevice.BeginUpdate();
 
@@ -280,7 +335,7 @@ namespace Pep
                     }
                 }
 
-                for (System.Int32 nIndex = 0; nIndex < m_Filters.Length; ++nIndex)
+                for (int nIndex = 0; nIndex < m_Filters.Length; ++nIndex)
                 {
                     if (System.String.Compare(Device.DeviceType, m_Filters[nIndex]) == 0)
                     {
@@ -297,9 +352,92 @@ namespace Pep
             }
 
             private static System.String FormatDevicePinCount(
-              System.UInt32 nPinCount)
+              uint nPinCount)
             {
-                return System.String.Format(CDevicePinsText, nPinCount);
+                return string.Format(CDevicePinsText, nPinCount);
+            }
+
+            private System.Boolean ReadSelectDeviceFilters(
+                Microsoft.Win32.RegistryKey RegKey)
+            {
+                Microsoft.Win32.RegistryKey DeviceFilterRegKey;
+                string sSearch, sFilterName;
+                int? nTotalFilters, nFilterEnabled;
+
+                DeviceFilterRegKey = Common.Registry.OpenRegKey(RegKey, CRegDeviceFilterKey, false);
+
+                if (DeviceFilterRegKey == null)
+                {
+                    return true;
+                }
+
+                sSearch = (string)DeviceFilterRegKey.GetValue(CRegSearchValue);
+
+                if (!string.IsNullOrWhiteSpace(sSearch))
+                {
+                    textBoxSearch.Text = sSearch;
+                }
+
+                nTotalFilters = (int?)DeviceFilterRegKey.GetValue(CRegTotalFiltersValue);
+
+                if (nTotalFilters != null)
+                {
+                    for (int nIndex = 0; nIndex < nTotalFilters; ++nIndex)
+                    {
+                        sFilterName = (string)DeviceFilterRegKey.GetValue(string.Format("{0} #{1}", CRegFilterNameValue, nIndex + 1));
+                        nFilterEnabled = (int?)DeviceFilterRegKey.GetValue(string.Format("{0} #{1}", CRegFilterEnabledValue, nIndex + 1));
+
+                        if (!string.IsNullOrWhiteSpace(sFilterName) && nFilterEnabled != null)
+                        {
+                            m_bIgnoreItemCheck = true;
+
+                            for (int nIndex2 = 0; nIndex2 < m_Filters.Length; ++nIndex2)
+                            {
+                                if (sFilterName.CompareTo(m_Filters[nIndex2]) == 0)
+                                {
+                                    checkedListBoxFilter.SetItemChecked(nIndex2 + 1, nFilterEnabled > 0 ? true : false);
+
+                                    break;
+                                }
+                            }
+
+                            if (nFilterEnabled == 0)
+                            {
+                                checkedListBoxFilter.SetItemChecked(0, false);
+                            }
+
+                            m_bIgnoreItemCheck = false;
+                        }
+                    }
+                }
+
+                DeviceFilterRegKey.Close();
+
+                return true;
+            }
+
+            private bool WriteSelectDeviceFilters(
+                Microsoft.Win32.RegistryKey RegKey)
+            {
+                Microsoft.Win32.RegistryKey DeviceFilterRegKey;
+
+                DeviceFilterRegKey = Common.Registry.CreateRegKey(RegKey, CRegDeviceFilterKey);
+
+                DeviceFilterRegKey.SetValue(CRegSearchValue, textBoxSearch.Text);
+                DeviceFilterRegKey.SetValue(CRegTotalFiltersValue, m_Filters.Length);
+
+                for (int nIndex = 0; nIndex < m_Filters.Length; ++nIndex)
+                {
+                    DeviceFilterRegKey.SetValue(string.Format("{0} #{1}", CRegFilterNameValue, nIndex + 1),
+                                                m_Filters[nIndex]);
+                    DeviceFilterRegKey.SetValue(string.Format("{0} #{1}", CRegFilterEnabledValue, nIndex + 1),
+                                                checkedListBoxFilter.GetItemChecked(nIndex + 1),
+                                                Microsoft.Win32.RegistryValueKind.DWord);
+                }
+
+                DeviceFilterRegKey.Close();
+
+                return true;
             }
             #endregion
         }

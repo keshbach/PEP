@@ -68,6 +68,7 @@
             this.splitContainerDevice.Size = new System.Drawing.Size(402, 305);
             this.splitContainerDevice.SplitterDistance = 212;
             this.splitContainerDevice.TabIndex = 0;
+            this.splitContainerDevice.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainerDevice_SplitterMoved);
             // 
             // treeViewDevice
             // 
@@ -205,7 +206,8 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Select Device";
-            this.Load += new System.EventHandler(this.SelectDevice2Form_Load);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.SelectDeviceForm_FormClosed);
+            this.Load += new System.EventHandler(this.SelectDeviceForm_Load);
             this.splitContainerDevice.Panel1.ResumeLayout(false);
             this.splitContainerDevice.Panel1.PerformLayout();
             this.splitContainerDevice.Panel2.ResumeLayout(false);
