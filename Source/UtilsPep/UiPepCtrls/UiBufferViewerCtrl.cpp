@@ -12,6 +12,8 @@
 
 #include <Includes/UtMacros.h>
 
+#include <Includes/UiMacros.h>
+
 #include <strsafe.h>
 #include <windowsx.h>
 #include <uxtheme.h>
@@ -22,11 +24,6 @@
 #pragma region "Constants"
 
 #define CFontName L"Courier New"
-
-#define CPtSizesPerInch 72
-
-#define MPtSizeToTwips(nPtSize) (nPtSize * 20)
-#define MTwipsToPtSize(nTwipsSize) (nTwipsSize / 20)
 
 #define CBufferMarginDevWidth 1
 
@@ -88,31 +85,6 @@ static HFONT lCreateFont(
     return ::CreateFontIndirectW(&LogFont);
 }
 
-static VOID lSelectTwipsMode(
-  HDC hDC)
-{
-    ::SetMapMode(hDC, MM_ANISOTROPIC);
-
-    ::SetWindowExtEx(hDC, MPtSizeToTwips(CPtSizesPerInch),
-                     MPtSizeToTwips(CPtSizesPerInch), NULL);
-
-    ::SetViewportExtEx(hDC, ::GetDeviceCaps(hDC, LOGPIXELSX),
-                       ::GetDeviceCaps(hDC, LOGPIXELSY), NULL);
-
-    ::SetWindowOrgEx(hDC, 0, 0, NULL);
-
-    ::SetViewportOrgEx(hDC, 0, 0, NULL);
-}
-
-static void lSelectDevUnitsMode(
-  HDC hDC)
-{
-    ::SetMapMode(hDC, MM_TEXT);
-
-    ::SetWindowOrgEx(hDC, 0, 0, NULL);
-    ::SetViewportOrgEx(hDC, 0, 0, NULL);
-}
-
 static VOID lGetCharSizes(
   HWND hWnd,
   INT nPtSize,
@@ -125,7 +97,7 @@ static VOID lGetCharSizes(
 
     ::SaveDC(hDC);
 
-    lSelectTwipsMode(hDC);
+    UiPepCtrlSelectTwipsMode(hDC);
 
     ::SelectObject(hDC, hFont);
 
@@ -144,45 +116,6 @@ static VOID lGetCharSizes(
     ::DeleteObject(hFont);
 
     ::ReleaseDC(hWnd, hDC);
-}
-
-static VOID lThemeFillSolidRect(
-  HDC hDC,
-  HBRUSH hBrush,
-  INT nXPos,
-  INT nYPos,
-  INT nWidth,
-  INT nHeight)
-{
-	RECT Rect;
-
-	Rect.left = nXPos;
-	Rect.top = nYPos;
-	Rect.right = nXPos + nWidth;
-	Rect.bottom = nYPos + nHeight;
-
-	::FillRect(hDC, &Rect, hBrush);
-}
-
-static VOID lFillSolidRect(
-    HDC hDC,
-    COLORREF crBack,
-    INT nXPos,
-    INT nYPos,
-    INT nWidth,
-    INT nHeight)
-{
-    HBRUSH hBrush = ::CreateSolidBrush(crBack);
-    RECT Rect;
-
-    Rect.left = nXPos;
-    Rect.top = nYPos;
-    Rect.right = nXPos + nWidth;
-    Rect.bottom = nYPos + nHeight;
-
-    ::FillRect(hDC, &Rect, hBrush);
-
-    ::DeleteObject(hBrush);
 }
 
 static VOID lDrawAddressForRow(
@@ -562,23 +495,22 @@ static VOID lDrawWindow(
 
     // Draw the margin
 
-    lSelectDevUnitsMode(hDC);
+    UiPepCtrlSelectDevUnitsMode(hDC);
 
     if (pData->hTheme)
     {
-        lThemeFillSolidRect(hDC, ::GetThemeSysColorBrush(pData->hTheme, TMT_BTNFACE), 0, 0,
-                            CBufferMarginDevWidth, ClientRect.bottom);
+        UiPepCtrlFillSolidRect(hDC, ::GetThemeSysColorBrush(pData->hTheme, TMT_BTNFACE), 0, 0,
+                               CBufferMarginDevWidth, ClientRect.bottom);
     }
     else
     {
-        lFillSolidRect(hDC, ::GetSysColor(COLOR_BTNFACE), 0, 0,
-                       CBufferMarginDevWidth, ClientRect.bottom);
+        UiPepCtrlFillSolidRect(hDC, ::GetSysColor(COLOR_BTNFACE), 0, 0,
+                               CBufferMarginDevWidth, ClientRect.bottom);
     }
-
 
     // Draw the buffer text
 
-    lSelectTwipsMode(hDC);
+    UiPepCtrlSelectTwipsMode(hDC);
 
     ::SelectObject(hDC, hFont);
 
@@ -620,18 +552,18 @@ static VOID lDrawWindow(
         }
         else
         {
-            lFillSolidRect(hDC, ::GetSysColor(COLOR_BTNFACE),  nXPos, nYPos,
-                           pData->CharTwipsSize.cx * CAddressTotalChars,
-                           pData->CharTwipsSize.cy);
+            UiPepCtrlFillSolidRect(hDC, ::GetSysColor(COLOR_BTNFACE),  nXPos, nYPos,
+                                   pData->CharTwipsSize.cx * CAddressTotalChars,
+                                   pData->CharTwipsSize.cy);
         }
 
         nXPos += (pData->CharTwipsSize.cx * CAddressTotalChars);
 
         // Draw the area between the address and data
 
-        lFillSolidRect(hDC, ::GetSysColor(COLOR_WINDOW),  nXPos, nYPos,
-                       pData->CharTwipsSize.cx * CAddressToDataTotalChars,
-                       pData->CharTwipsSize.cy);
+        UiPepCtrlFillSolidRect(hDC, ::GetSysColor(COLOR_WINDOW),  nXPos, nYPos,
+                               pData->CharTwipsSize.cx * CAddressToDataTotalChars,
+                               pData->CharTwipsSize.cy);
 
         nXPos += (pData->CharTwipsSize.cx * CAddressToDataTotalChars);
 
@@ -673,8 +605,8 @@ static VOID lDrawWindow(
 
         // Draw the area after the data
 
-        lFillSolidRect(hDC, ::GetSysColor(COLOR_WINDOW), nXPos, nYPos,
-                       Point[1].x - nXPos, pData->CharTwipsSize.cy);
+        UiPepCtrlFillSolidRect(hDC, ::GetSysColor(COLOR_WINDOW), nXPos, nYPos,
+                               Point[1].x - nXPos, pData->CharTwipsSize.cy);
 	
 		nYPos += pData->CharTwipsSize.cy;
 

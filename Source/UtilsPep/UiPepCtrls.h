@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UiPepCtrls_H)
@@ -7,7 +7,12 @@
 
 #define UIPEPCTRLSAPI __stdcall
 
+#pragma region "Class Names"
+
 #define CUiBufferViewerCtrlClass L"BufferViewerCtrl"
+#define CUiCheckedListBoxCtrlClass L"CheckedListBoxCtrl"
+
+#pragma endregion
 
 /* Data Organization flags */
 
@@ -15,6 +20,12 @@
 #define CBufferViewerByteData             0x0002
 #define CBufferViewerWordBigEndianData    0x0004
 #define CBufferViewerWordLittleEndianData 0x0008
+
+/* Check State flags */
+
+#define CCheckedListBoxUncheckedState     0x0001
+#define CCheckedListBoxCheckedState       0x0002
+#define CCheckedListBoxIndeterminateState 0x0004
 
 /* Min/Max Font Point Sizes */
 
@@ -34,6 +45,19 @@
 #define BVM_GETFONTPTSIZE       (WM_USER + 0x0105)
 #define BVM_SETFONTPTSIZE       (WM_USER + 0x0106)
 
+#define CLBM_ADDITEM            (WM_USER + 0x0100)
+#define CLBM_DELETEITEM         (WM_USER + 0x0101)
+#define CLBM_DELETEALLITEMS     (WM_USER + 0x0102)
+
+#define CLBM_SETCHECKSTATE      (WM_USER + 0x0103)
+#define CLBM_GETCHECKSTATE      (WM_USER + 0x0104)
+
+#define CLBM_GETMINWIDTH        (WM_USER + 0x0105)
+
+/* Notification Messages */
+
+#define CLBNM_STATECHANGE       (WMN_FIRST + 1)
+
 #pragma region "Structures"
 
 #if defined(_MSC_VER)
@@ -49,6 +73,15 @@ typedef struct tagTUiBufferViewerMem
 	LPCBYTE pbyBuffer;
 	ULONG nBufferLen;
 } TUiBufferViewerMem;
+
+/* Checked List Box Control State Change Notification */
+
+typedef struct tagTCheckedListBoxCtrlNMStateChange
+{
+	NMHDR Hdr;
+	INT nIndex;
+	DWORD dwNewState;
+} TCheckedListBoxCtrlNMStateChange;
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
@@ -73,5 +106,5 @@ VOID UIPEPCTRLSAPI UiPepCtrlsUninitialize(VOID);
 #endif
 
 /***************************************************************************/
-/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2020 Kevin Eshbach                                  */
 /***************************************************************************/

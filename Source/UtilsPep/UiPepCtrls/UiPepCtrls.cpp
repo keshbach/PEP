@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -9,6 +9,8 @@
 #include <Utils/UtHeap.h>
 
 #include "UiBufferViewerCtrl.h"
+#include "UiCheckedListBoxCtrl.h"
+#include "UiListBoxCtrl.h"
 
 extern "C"
 {
@@ -18,11 +20,15 @@ VOID UIPEPCTRLSAPI UiPepCtrlsInitialize(VOID)
     UtInitHeap();
 
     UiBufferViewerCtrlRegister();
+	UiListBoxCtrlRegister();
+	UiCheckedListBoxCtrlRegister();
 }
 
 VOID UIPEPCTRLSAPI UiPepCtrlsUninitialize(VOID)
 {
     UiBufferViewerCtrlUnregister();
+	UiListBoxCtrlUnregister();
+	UiCheckedListBoxCtrlUnregister();
 
     UtUninitHeap();
 }
@@ -30,5 +36,5 @@ VOID UIPEPCTRLSAPI UiPepCtrlsUninitialize(VOID)
 };
 
 /***************************************************************************/
-/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2020 Kevin Eshbach                                  */
 /***************************************************************************/

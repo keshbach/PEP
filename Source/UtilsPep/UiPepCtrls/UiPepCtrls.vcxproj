@@ -247,6 +247,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="UiBufferViewerCtrl.cpp" />
+    <ClCompile Include="UiCheckedListBoxCtrl.cpp" />
+    <ClCompile Include="UiListBoxCtrl.cpp" />
     <ClCompile Include="UiPepCtrls.cpp" />
     <ClCompile Include="UiPepCtrlsDllMain.cpp" />
     <ClCompile Include="UiPepCtrlsUtil.cpp" />
@@ -261,6 +263,8 @@
   <ItemGroup>
     <ClInclude Include="..\UiPepCtrls.h" />
     <ClInclude Include="UiBufferViewerCtrl.h" />
+    <ClInclude Include="UiCheckedListBoxCtrl.h" />
+    <ClInclude Include="UiListBoxCtrl.h" />
     <ClInclude Include="UiPepCtrlsUtil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,19 +1,22 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2010-2020 Kevin Eshbach
+//  Copyright (C) 2020-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
-#include <vcclr.h>
-
-#define STRICT
-
-#include <windows.h>
-#include <windowsx.h>
-#include <commctrl.h>
-
-#using <System.Core.dll>
+namespace Pep
+{
+	namespace Forms
+	{
+	    public enum class ECheckState
+		{
+			Unchecked,
+			Checked,
+			Indeterminate
+		};
+	};
+}
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyrhght (C) 2010-2020 Kevin Eshbach
+//  Copyright (C) 2020-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
