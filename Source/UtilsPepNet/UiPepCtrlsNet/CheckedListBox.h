@@ -45,6 +45,20 @@ namespace Pep
 				}
 			}
 
+			/// <summary>
+			/// The minimum width in pixels that is required to fully display all items.
+			/// </summary>
+
+			[System::ComponentModel::Browsable(false),
+				System::ComponentModel::EditorBrowsableAttribute(System::ComponentModel::EditorBrowsableState::Never)]
+			property System::Int32 MinWidth
+			{
+				System::Int32 get()
+				{
+					return GetMinWidth();
+				}
+			}
+
 		public:
 			CheckedListBox();
 			CheckedListBox(System::ComponentModel::IContainer ^container);
@@ -74,6 +88,8 @@ namespace Pep
 
 			void UpdateFont(System::Boolean bRedraw);
 
+			System::Int32 GetMinWidth();
+
 		protected:
 			/// <summary>
 			/// Clean up any resources being used.
@@ -95,10 +111,8 @@ namespace Pep
 			{
 				this->SuspendLayout();
 				// 
-				// BufferViewer
+				// CheckedListBox
 				// 
-				this->BackgroundImageLayout = System::Windows::Forms::ImageLayout::None;
-				this->Name = L"CheckedListBox";
 				this->ResumeLayout(false);
 			}
 #pragma endregion

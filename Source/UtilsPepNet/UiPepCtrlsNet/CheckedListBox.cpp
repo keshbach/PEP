@@ -17,6 +17,13 @@
 
 #include <strsafe.h>
 
+#pragma region "Constants"
+
+#define CBorderWidth 1
+#define CBorderHeight 1
+
+#pragma endregion
+
 #pragma region "Local Functions"
 
 static DWORD lTranslateCheckState(
@@ -205,11 +212,18 @@ void Pep::Forms::CheckedListBox::OnGotFocus(
 void Pep::Forms::CheckedListBox::OnPaint(
   System::Windows::Forms::PaintEventArgs^ e)
 {
-	System::Drawing::Brush^ Brush = gcnew System::Drawing::SolidBrush(System::Drawing::Color::Aquamarine);
-
 	System::Windows::Forms::Control::OnPaint(e);
 
-	e->Graphics->FillRectangle(Brush, 0, 0, this->ClientSize.Width, this->ClientSize.Height);
+	e->Graphics->FillRectangle(System::Drawing::SystemBrushes::WindowFrame,
+		                       0, 0, ClientSize.Width, ClientSize.Height);
+
+	e->Graphics->FillRectangle(System::Drawing::SystemBrushes::Window,
+                               CBorderWidth, CBorderHeight,
+		                       ClientSize.Width - (CBorderWidth * 2),
+		                       ClientSize.Height - (CBorderHeight * 2));
+
+	e->Graphics->DrawString(Name, Font, System::Drawing::SystemBrushes::WindowText,
+		                    CBorderWidth * 2, CBorderHeight * 2);
 }
 
 void Pep::Forms::CheckedListBox::OnResize(
@@ -317,6 +331,21 @@ void Pep::Forms::CheckedListBox::UpdateFont(
 
 		::SendMessage(m_hCheckedListBoxCtrl, WM_SETFONT, (WPARAM)hFont, MAKELPARAM(bRedraw ? TRUE : FALSE, 0));
 	}
+}
+
+System::Int32 Pep::Forms::CheckedListBox::GetMinWidth()
+{
+	INT nMinWidth;
+
+	if (m_hCheckedListBoxCtrl)
+	{
+		if (::SendMessage(m_hCheckedListBoxCtrl, CLBM_GETMINWIDTH, 0, (LPARAM)&nMinWidth))
+		{
+			return nMinWidth;
+		}
+	}
+
+	return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////
