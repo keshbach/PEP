@@ -113,7 +113,7 @@ static VOID lSendChangeItemStateNotification(
   _In_ INT nIndex,
   _In_ DWORD dwState)
 {
-	TCheckedListBoxCtrlNMStateChange HdrStateChange;
+	TUiCheckedListBoxCtrlNMStateChange HdrStateChange;
 
 	HdrStateChange.Hdr.hwndFrom = hWnd;
 	HdrStateChange.Hdr.idFrom = ::GetDlgCtrlID(hWnd);
@@ -157,9 +157,34 @@ static LRESULT lOnCheckedListBoxAddItem(
 	TListBoxItemData* pItemData;
 	INT nIndex;
 
-	nIndex = (INT)::SendMessage(pData->hListBox, LB_ADDSTRING, 0, (LPARAM)pszValue);
+	nIndex = (INT)::SendMessage(pData->hListBox, LB_ADDSTRING, 0, 0);
 
 	if (nIndex == LB_ERR)
+	{
+		return FALSE;
+	}
+
+	pItemData = (TListBoxItemData*)UtAllocMem(sizeof(TListBoxItemData) + (nValueLen * sizeof(TCHAR)));
+
+	pItemData->dwState = CCheckedListBoxUncheckedState;
+
+	::StringCchCopy(pItemData->cText, nValueLen + 1, pszValue);
+
+	::SendMessage(pData->hListBox, LB_SETITEMDATA, nIndex, (LPARAM)pItemData);
+
+	return TRUE;
+}
+
+static LRESULT lOnCheckedListBoxInsertItem(
+  HWND hWnd,
+  INT nIndex,
+  LPCTSTR pszValue)
+{
+	TCheckedListBoxCtrlData* pData = (TCheckedListBoxCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	INT nValueLen = ::lstrlen(pszValue);
+	TListBoxItemData* pItemData;
+
+	if (LB_ERR == ::SendMessage(pData->hListBox, LB_INSERTSTRING, nIndex, 0))
 	{
 		return FALSE;
 	}
@@ -190,6 +215,79 @@ static LRESULT lOnCheckedListBoxDeleteAllItems(
 	TCheckedListBoxCtrlData* pData = (TCheckedListBoxCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
 	::SendMessage(pData->hListBox, LB_RESETCONTENT, 0, 0);
+
+	return TRUE;
+}
+
+static LRESULT lOnCheckedListBoxSetName(
+  HWND hWnd,
+  INT nIndex,
+  LPCTSTR pszName)
+{
+	TCheckedListBoxCtrlData* pData = (TCheckedListBoxCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	TListBoxItemData* pItemData = (TListBoxItemData*)::SendMessage(pData->hListBox, LB_GETITEMDATA, nIndex, 0);
+	INT nValueLen = ::lstrlen(pszName);
+	TListBoxItemData* pNewItemData;
+	RECT Rect;
+
+	if (PtrToInt(pItemData) == LB_ERR)
+	{
+		return FALSE;
+	}
+
+	::SendMessage(pData->hListBox, LB_GETITEMRECT, nIndex, (LPARAM)&Rect);
+
+	if (::lstrlen(pItemData->cText) >= nValueLen)
+	{
+		::StringCchCopy(pItemData->cText, nValueLen + 1, pszName);
+	}
+	else
+	{
+		pNewItemData = (TListBoxItemData*)UtAllocMem(sizeof(TListBoxItemData) + (nValueLen * sizeof(TCHAR)));
+
+		pNewItemData->dwState = pItemData->dwState;
+
+		::StringCchCopy(pItemData->cText, nValueLen + 1, pszName);
+
+		UtFreeMem(pItemData);
+
+		::SendMessage(pData->hListBox, LB_SETITEMDATA, nIndex, (LPARAM)pNewItemData);
+	}
+
+	::InvalidateRect(pData->hListBox, &Rect, FALSE);
+
+	return TRUE;
+}
+
+static LRESULT lOnCheckedListBoxGetName(
+  HWND hWnd,
+  INT nIndex,
+  TUiCheckedListBoxGetName* pCheckedListBoxGetName)
+{
+	TCheckedListBoxCtrlData* pData = (TCheckedListBoxCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	TListBoxItemData* pItemData = (TListBoxItemData*)::SendMessage(pData->hListBox, LB_GETITEMDATA, nIndex, 0);
+	INT nValueLen;
+
+	if (PtrToInt(pItemData) == LB_ERR)
+	{
+		return -1;
+	}
+
+	nValueLen = ::lstrlen(pItemData->cText);
+
+	if (pCheckedListBoxGetName->pszName == NULL)
+	{
+		pCheckedListBoxGetName->nNameLen = nValueLen;
+
+		return TRUE;
+	}
+
+	if (pCheckedListBoxGetName->nNameLen < nValueLen)
+	{
+		return FALSE;
+	}
+
+	::StringCchCopy(pCheckedListBoxGetName->pszName, nValueLen + 1, pItemData->cText);
 
 	return TRUE;
 }
@@ -694,11 +792,17 @@ static LRESULT CALLBACK lCheckedListBoxCtrlWndProc(
     {
 	    case CLBM_ADDITEM:
 			return lOnCheckedListBoxAddItem(hWnd, (LPCTSTR)lParam);
+		case CLBM_INSERTITEM:
+			return lOnCheckedListBoxInsertItem(hWnd, (INT)wParam, (LPCTSTR)lParam);
         case CLBM_DELETEITEM:
 			return lOnCheckedListBoxDeleteItem(hWnd, (INT)wParam);
         case CLBM_DELETEALLITEMS:
 			return lOnCheckedListBoxDeleteAllItems(hWnd);
-        case CLBM_SETCHECKSTATE:
+		case CLBM_SETNAME:
+			return lOnCheckedListBoxSetName(hWnd, (INT)wParam, (LPCTSTR)lParam);
+		case CLBM_GETNAME:
+			return lOnCheckedListBoxGetName(hWnd, (INT)wParam, (TUiCheckedListBoxGetName*)lParam);
+		case CLBM_SETCHECKSTATE:
 			return lOnCheckedListBoxSetCheckState(hWnd, (INT)wParam, (DWORD)lParam);
         case CLBM_GETCHECKSTATE:
 			return lOnCheckedListBoxGetCheckState(hWnd, (INT)wParam);

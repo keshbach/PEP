@@ -12,7 +12,11 @@ namespace Pep
 		/// Summary for CheckedListBox
 		/// </summary>
 		[System::Drawing::ToolboxBitmapAttribute(Pep::Forms::CheckedListBox::typeid, "IDB_CHECKEDLISTBOX")]
-		public ref class CheckedListBox : public System::Windows::Forms::Control
+	    [System::ComponentModel::DefaultPropertyAttribute("Items")]
+		[System::ComponentModel::DefaultEventAttribute("CheckStateChange")]
+		public ref class CheckedListBox : public System::Windows::Forms::Control,
+			                                     Pep::Forms::ICheckedListBoxList,
+			                                     Pep::Forms::ICheckedListBoxItemChange
 		{
 		public:
 			[System::ComponentModel::Category("Behavior")]
@@ -23,25 +27,16 @@ namespace Pep
 			/// The items in the checked list box.
 			/// </summary>
 
-			[System::ComponentModel::Description("The checked list box items."),
-				System::ComponentModel::Category("Data")]
-			property array<System::String^>^ Items
+			[System::ComponentModel::Description("The items in the checked list box."),
+				System::ComponentModel::Category("Data"),
+			    System::ComponentModel::DesignerSerializationVisibility(System::ComponentModel::DesignerSerializationVisibility::Content),
+				System::ComponentModel::EditorAttribute(CheckedListBoxItemCollectionEditor::typeid,
+					                                    System::Drawing::Design::UITypeEditor::typeid)]
+			property CheckedListBoxItemCollection^ Items
 			{
-				array<System::String^>^ get()
+				CheckedListBoxItemCollection^ get()
 				{
-					return m_ItemList->ToArray();
-				}
-
-				void set(array<System::String^>^ value)
-				{
-					m_ItemList->Clear();
-
-					for (System::Int32 nIndex = 0; nIndex < value->Length; ++nIndex)
-					{
-						m_ItemList->Add(value[nIndex]);
-					}
-
-    				UpdateItems();
+                    return m_CheckedListBoxItemCollection;
 				}
 			}
 
@@ -66,8 +61,27 @@ namespace Pep
 			void BeginUpdate(void);
 			void EndUpdate(void);
 
-			ECheckState GetCheckState(System::Int32 nIndex);
-			void SetCheckState(System::Int32 nIndex, ECheckState CheckState);
+		// Pep::Forms::ICheckedListBoxList
+		public:
+			[System::ComponentModel::Browsable(false),
+				System::ComponentModel::EditorBrowsableAttribute(System::ComponentModel::EditorBrowsableState::Never)]
+			property array<CheckedListBoxItem^>^ Array
+			{
+				virtual array<CheckedListBoxItem^>^ get()
+				{
+					return m_CheckedListBoxItemList->ToArray();
+				}
+			}
+
+			virtual void Add(CheckedListBoxItem^ CheckedListBoxItem);
+			virtual void Clear();
+			virtual void CopyTo(array<CheckedListBoxItem^>^ CheckedListBoxItemArray, int nIndex);
+			virtual bool Remove(int nIndex);
+
+		// Pep::Forms::ICheckedListBoxItemChange
+		public:
+			virtual void OnNameChange(System::Object^ CheckedListBoxItem);
+			virtual void OnCheckStateChange(System::Object^ CheckedListBoxItem);
 
 		protected:
 			void OnHandleCreated(System::EventArgs^ e) override;
@@ -118,7 +132,9 @@ namespace Pep
 #pragma endregion
 
 		private:
-			System::Collections::Generic::List<System::String^>^ m_ItemList = gcnew System::Collections::Generic::List<System::String^>();
+			CheckedListBoxItemCollection^ m_CheckedListBoxItemCollection = gcnew CheckedListBoxItemCollection(this);
+
+			System::Collections::Generic::List<CheckedListBoxItem^>^ m_CheckedListBoxItemList = gcnew System::Collections::Generic::List<CheckedListBoxItem^>();;
 
 			HWND m_hCheckedListBoxCtrl;
 		};

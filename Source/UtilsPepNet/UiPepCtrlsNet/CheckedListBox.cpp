@@ -4,8 +4,14 @@
 
 #include "StdAfx.h"
 
+#include "ICheckedListBoxItemChange.h"
+
 #include "CheckedListBoxEnums.h"
 #include "CheckStateChangeEventArgs.h"
+#include "CheckedListBoxItem.h"
+#include "ICheckedListBoxList.h"
+#include "CheckedListBoxItemCollectionEditor.h"
+#include "CheckedListBoxItemCollection.h"
 
 #include "CheckedListBox.h"
 
@@ -84,6 +90,13 @@ Pep::Forms::CheckedListBox::~CheckedListBox()
 	{
 		delete components;
 	}
+
+	if (m_CheckedListBoxItemCollection)
+	{
+		m_CheckedListBoxItemCollection->Close();
+
+		m_CheckedListBoxItemCollection = nullptr;
+	}
 }
 
 void Pep::Forms::CheckedListBox::BeginUpdate(void)
@@ -102,41 +115,175 @@ void Pep::Forms::CheckedListBox::EndUpdate(void)
     }
 }
 
-Pep::Forms::ECheckState Pep::Forms::CheckedListBox::GetCheckState(
-  System::Int32 nIndex)
+#pragma region Pep::Forms::ICheckedListBoxList
+
+void Pep::Forms::CheckedListBox::Add(
+  CheckedListBoxItem^ CheckedListBoxItem)
 {
-	LRESULT lResult;
+	pin_ptr<const wchar_t> pszName;
 
 	if (m_hCheckedListBoxCtrl)
 	{
-		lResult = ::SendMessage(m_hCheckedListBoxCtrl, CLBM_GETCHECKSTATE, nIndex, 0);
+		pszName = PtrToStringChars(CheckedListBoxItem->Name);
 
-		return lTranslateCheckState((DWORD)lResult);
-	}
-
-	throw gcnew System::Exception("Control not created.");
-}
-
-void Pep::Forms::CheckedListBox::SetCheckState(
-  System::Int32 nIndex,
-  ECheckState CheckState)
-{
-	LPARAM lParam;
-
-	if (m_hCheckedListBoxCtrl)
-	{
-		lParam = lTranslateCheckState(CheckState);
-
-		if (FALSE == ::SendMessage(m_hCheckedListBoxCtrl, CLBM_SETCHECKSTATE, nIndex, lParam))
+		if (::SendMessage(m_hCheckedListBoxCtrl, CLBM_ADDITEM, 0, (LPARAM)pszName))
 		{
-			throw gcnew System::Exception("Invalid index.");
+			::SendMessage(m_hCheckedListBoxCtrl, CLBM_SETCHECKSTATE, m_CheckedListBoxItemCollection->Count,
+				          lTranslateCheckState(CheckedListBoxItem->CheckState));
+
+			CheckedListBoxItem->CheckedListBoxItemChange = this;
+
+			m_CheckedListBoxItemList->Add(CheckedListBoxItem);
 		}
 	}
 	else
 	{
-		throw gcnew System::Exception("Control not created.");
+		CheckedListBoxItem->CheckedListBoxItemChange = this;
+
+		m_CheckedListBoxItemList->Add(CheckedListBoxItem);
 	}
 }
+
+void Pep::Forms::CheckedListBox::Clear()
+{
+	if (m_hCheckedListBoxCtrl)
+	{
+		::SendMessage(m_hCheckedListBoxCtrl, CLBM_DELETEALLITEMS, 0, 0);
+	}
+
+	for each (CheckedListBoxItem^ CheckedListBoxItem in m_CheckedListBoxItemList)
+	{
+		CheckedListBoxItem->CheckedListBoxItemChange = nullptr;
+	}
+
+	m_CheckedListBoxItemList->Clear();
+}
+
+void Pep::Forms::CheckedListBox::CopyTo(
+  array<CheckedListBoxItem^>^ CheckedListBoxItemArray,
+  int nIndex)
+{
+	pin_ptr<const wchar_t> pszName;
+
+	if (CheckedListBoxItemArray == nullptr)
+	{
+		throw gcnew System::ArgumentNullException();
+	}
+
+	if (nIndex < 0 || nIndex > m_CheckedListBoxItemList->Count)
+	{
+		throw gcnew System::ArgumentOutOfRangeException();
+	}
+
+	if (nIndex == m_CheckedListBoxItemList->Count)
+	{
+		for (int nArrayIndex = 0; nArrayIndex < m_CheckedListBoxItemList->Count; ++nArrayIndex)
+		{
+			Add(CheckedListBoxItemArray[nArrayIndex]);
+		}
+	}
+	else
+	{
+		for (int nArrayIndex = 0; nArrayIndex < CheckedListBoxItemArray->Length; ++nArrayIndex)
+		{
+			if (m_hCheckedListBoxCtrl)
+			{
+				pszName = PtrToStringChars(CheckedListBoxItemArray[nArrayIndex]->Name);
+
+				if (::SendMessage(m_hCheckedListBoxCtrl, CLBM_INSERTITEM, nIndex + nArrayIndex, (LPARAM)pszName))
+				{
+					::SendMessage(m_hCheckedListBoxCtrl, CLBM_SETCHECKSTATE, m_CheckedListBoxItemCollection->Count,
+                                  lTranslateCheckState(CheckedListBoxItemArray[nArrayIndex]->CheckState));
+
+					CheckedListBoxItemArray[nArrayIndex]->CheckedListBoxItemChange = this;
+
+					m_CheckedListBoxItemList->Insert(nIndex + nArrayIndex, CheckedListBoxItemArray[nArrayIndex]);
+				}
+			}
+			else
+			{
+				CheckedListBoxItemArray[nArrayIndex]->CheckedListBoxItemChange = this;
+
+				m_CheckedListBoxItemList->Insert(nIndex + nArrayIndex, CheckedListBoxItemArray[nArrayIndex]);
+			}
+		}
+	}
+}
+
+bool Pep::Forms::CheckedListBox::Remove(
+  int nIndex)
+{
+	System::Collections::Generic::IEnumerator<CheckedListBoxItem^>^ Enumerator;
+
+	if (nIndex < 0 || nIndex > m_CheckedListBoxItemList->Count)
+	{
+		return false;
+	}
+
+	if (m_hCheckedListBoxCtrl)
+	{
+		::SendMessage(m_hCheckedListBoxCtrl, CLBM_DELETEITEM, nIndex, 0);
+	}
+
+	Enumerator = m_CheckedListBoxItemList->GetEnumerator();
+
+	for (int nTmpIndex = 0; nTmpIndex < nIndex; ++nTmpIndex)
+	{
+		Enumerator->MoveNext();
+	}
+
+	Enumerator->Current->CheckedListBoxItemChange = nullptr;
+
+	m_CheckedListBoxItemList->RemoveAt(nIndex);
+
+	return true;
+}
+
+#pragma endregion
+
+#pragma region Pep::Forms::ICheckedListBoxItemChange
+
+void Pep::Forms::CheckedListBox::OnNameChange(
+  System::Object^ CheckedListBoxItem)
+{
+	pin_ptr<const wchar_t> pszName;
+
+	if (m_hCheckedListBoxCtrl)
+	{
+		for (int nIndex = 0; nIndex < m_CheckedListBoxItemCollection->Count; ++nIndex)
+		{
+			if (m_CheckedListBoxItemCollection[nIndex] == CheckedListBoxItem)
+			{
+				pszName = PtrToStringChars(m_CheckedListBoxItemCollection[nIndex]->Name);
+
+				::SendMessage(m_hCheckedListBoxCtrl, CLBM_SETCHECKSTATE, nIndex,
+					          (LPARAM)pszName);
+
+				return;
+			}
+		}
+	}
+}
+
+void Pep::Forms::CheckedListBox::OnCheckStateChange(
+  System::Object^ CheckedListBoxItem)
+{
+	if (m_hCheckedListBoxCtrl)
+	{
+    	for (int nIndex = 0; nIndex < m_CheckedListBoxItemCollection->Count; ++nIndex)
+        {
+		    if (m_CheckedListBoxItemCollection[nIndex] == CheckedListBoxItem)
+		    {
+		    	::SendMessage(m_hCheckedListBoxCtrl, CLBM_SETCHECKSTATE, nIndex,
+				              lTranslateCheckState(m_CheckedListBoxItemCollection[nIndex]->CheckState));
+
+			    return;
+		    }
+	    }
+	}
+}
+
+#pragma endregion
 
 void Pep::Forms::CheckedListBox::OnHandleCreated(
   System::EventArgs^ e)
@@ -241,7 +388,8 @@ void Pep::Forms::CheckedListBox::WndProc(
   System::Windows::Forms::Message% msg)
 {
 	LPNMHDR pHdr;
-	TCheckedListBoxCtrlNMStateChange* pHdrStateChange;
+	TUiCheckedListBoxCtrlNMStateChange* pHdrStateChange;
+	ECheckState CheckState;
 
 	if (msg.Msg == WM_NOTIFY)
 	{
@@ -249,10 +397,13 @@ void Pep::Forms::CheckedListBox::WndProc(
 
 		if (pHdr->hwndFrom == m_hCheckedListBoxCtrl && pHdr->code == CLBNM_STATECHANGE)
 		{
-			pHdrStateChange = (TCheckedListBoxCtrlNMStateChange*)pHdr;
+			pHdrStateChange = (TUiCheckedListBoxCtrlNMStateChange*)pHdr;
 
-			CheckStateChange(this, gcnew CheckStateChangedEventArgs(pHdrStateChange->nIndex,
-                                                                    lTranslateCheckState(pHdrStateChange->dwNewState)));
+			CheckState = lTranslateCheckState(pHdrStateChange->dwNewState);
+
+			m_CheckedListBoxItemCollection[pHdrStateChange->nIndex]->CheckState = CheckState;
+
+			CheckStateChange(this, gcnew CheckStateChangedEventArgs(pHdrStateChange->nIndex, CheckState));
 		}
 	}
 
@@ -279,7 +430,7 @@ bool Pep::Forms::CheckedListBox::PreProcessMessage(
 
 System::Boolean Pep::Forms::CheckedListBox::UpdateItems()
 {
-	pin_ptr<const wchar_t> pszValue;
+	pin_ptr<const wchar_t> pszName;
 
 	if (m_hCheckedListBoxCtrl)
 	{
@@ -288,13 +439,14 @@ System::Boolean Pep::Forms::CheckedListBox::UpdateItems()
 			return false;
 		}
 
-		for each (System::String^ sValue in m_ItemList)
+		for (int nIndex = 0; nIndex < m_CheckedListBoxItemCollection->Count; ++nIndex)
 		{
-			pszValue = PtrToStringChars(sValue);
+			pszName = PtrToStringChars(m_CheckedListBoxItemCollection[nIndex]->Name);
 
-			if (FALSE == ::SendMessage(m_hCheckedListBoxCtrl, CLBM_ADDITEM, 0, (LPARAM)pszValue))
+			if (::SendMessage(m_hCheckedListBoxCtrl, CLBM_ADDITEM, 0, (LPARAM)pszName))
 			{
-				return false;
+				::SendMessage(m_hCheckedListBoxCtrl, CLBM_SETCHECKSTATE, nIndex,
+					          lTranslateCheckState(m_CheckedListBoxItemCollection[nIndex]->CheckState));
 			}
 		}
 	}

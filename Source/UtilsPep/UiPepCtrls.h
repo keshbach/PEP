@@ -46,13 +46,17 @@
 #define BVM_SETFONTPTSIZE       (WM_USER + 0x0106)
 
 #define CLBM_ADDITEM            (WM_USER + 0x0100)
-#define CLBM_DELETEITEM         (WM_USER + 0x0101)
-#define CLBM_DELETEALLITEMS     (WM_USER + 0x0102)
+#define CLBM_INSERTITEM         (WM_USER + 0x0101)
+#define CLBM_DELETEITEM         (WM_USER + 0x0102)
+#define CLBM_DELETEALLITEMS     (WM_USER + 0x0103)
 
-#define CLBM_SETCHECKSTATE      (WM_USER + 0x0103)
-#define CLBM_GETCHECKSTATE      (WM_USER + 0x0104)
+#define CLBM_SETNAME            (WM_USER + 0x0104)
+#define CLBM_GETNAME            (WM_USER + 0x0105)
 
-#define CLBM_GETMINWIDTH        (WM_USER + 0x0105)
+#define CLBM_SETCHECKSTATE      (WM_USER + 0x0106)
+#define CLBM_GETCHECKSTATE      (WM_USER + 0x0107)
+
+#define CLBM_GETMINWIDTH        (WM_USER + 0x0108)
 
 /* Notification Messages */
 
@@ -74,14 +78,22 @@ typedef struct tagTUiBufferViewerMem
 	ULONG nBufferLen;
 } TUiBufferViewerMem;
 
+/* Checked List Box Get Name */
+
+typedef struct tagTUiCheckedListBoxGetName
+{
+	LPTSTR pszName; // buffer for the name (when allocate include extra character for the terminating null character)
+	INT nNameLen; // length of the pszName field in characters minus the terminating null character
+} TUiCheckedListBoxGetName;
+
 /* Checked List Box Control State Change Notification */
 
-typedef struct tagTCheckedListBoxCtrlNMStateChange
+typedef struct tagTUiCheckedListBoxCtrlNMStateChange
 {
 	NMHDR Hdr;
 	INT nIndex;
 	DWORD dwNewState;
-} TCheckedListBoxCtrlNMStateChange;
+} TUiCheckedListBoxCtrlNMStateChange;
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
