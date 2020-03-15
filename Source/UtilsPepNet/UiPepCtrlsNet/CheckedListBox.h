@@ -14,7 +14,7 @@ namespace Pep
 		[System::Drawing::ToolboxBitmapAttribute(Pep::Forms::CheckedListBox::typeid, "IDB_CHECKEDLISTBOX")]
 	    [System::ComponentModel::DefaultPropertyAttribute("Items")]
 		[System::ComponentModel::DefaultEventAttribute("CheckStateChange")]
-		public ref class CheckedListBox : public System::Windows::Forms::Control,
+		public ref class CheckedListBox sealed : public System::Windows::Forms::Control,
 			                                     Pep::Forms::ICheckedListBoxList,
 			                                     Pep::Forms::ICheckedListBoxItemChange
 		{

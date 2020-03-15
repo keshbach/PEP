@@ -8,7 +8,10 @@ namespace Pep
 {
 	namespace Forms
 	{
-		public interface class ICheckedListBoxList
+		/// <summary>
+		/// Summary for ICheckedListBoxList
+		/// </summary>
+		private interface class ICheckedListBoxList
 		{
 		public:
 			property array<CheckedListBoxItem^>^ Array
@@ -16,7 +19,6 @@ namespace Pep
 				virtual array<CheckedListBoxItem^>^ get();
 			}
 
-		public:
 			virtual void Add(CheckedListBoxItem^ CheckedListBoxItem);
 			virtual void Clear();
 			virtual void CopyTo(array<CheckedListBoxItem^>^ CheckedListBoxItemArray, int nIndex);

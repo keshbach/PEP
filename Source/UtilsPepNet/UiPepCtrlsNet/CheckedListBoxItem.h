@@ -11,7 +11,7 @@ namespace Pep
 		/// <summary>
 		/// Summary for CheckedListBoxItem
 		/// </summary>
-		public ref class CheckedListBoxItem
+		public ref class CheckedListBoxItem sealed
 		{
 		public:
 			/// <summary>

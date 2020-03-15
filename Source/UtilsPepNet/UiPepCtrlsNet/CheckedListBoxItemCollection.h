@@ -8,17 +8,18 @@ namespace Pep
 {
 	namespace Forms
 	{
-		public ref class CheckedListBoxItemCollection : public System::Collections::IList,
-			                                            public System::Collections::Generic::ICollection<CheckedListBoxItem^>,
-			                                            public System::Collections::Generic::IList<CheckedListBoxItem^>
+		/// <summary>
+        /// Summary for CheckedListBoxItemCollection
+        /// </summary>
+		public ref class CheckedListBoxItemCollection sealed : public System::Collections::IList,
+			                                                   public System::Collections::Generic::ICollection<CheckedListBoxItem^>,
+			                                                   public System::Collections::Generic::IList<CheckedListBoxItem^>
 		{
 		internal:
 			CheckedListBoxItemCollection(ICheckedListBoxList^ CheckedListBoxList);
 
 		public:
 			CheckedListBoxItemCollection();
-			CheckedListBoxItemCollection(System::Runtime::Serialization::SerializationInfo^ info,
-				                         System::Runtime::Serialization::StreamingContext context);
 
 		internal:
 			void Close();

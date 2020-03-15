@@ -11,7 +11,8 @@ namespace Pep
 		/// <summary>
 		/// Summary for CheckStateChangeEventArgs
 		/// </summary>
-		public ref class CheckStateChangedEventArgs : public System::EventArgs
+		public ref class CheckStateChangedEventArgs sealed :
+			public System::EventArgs
 		{
 		public:
 			/// <summary>
@@ -37,7 +38,7 @@ namespace Pep
                 }
 			}
 
-		public:
+		internal:
 			CheckStateChangedEventArgs(System::Int32 nIndex, Pep::Forms::ECheckState CheckState);
 
 		private:

@@ -8,7 +8,10 @@ namespace Pep
 {
 	namespace Forms
 	{
-		interface class ICheckedListBoxItemChange
+		/// <summary>
+		/// Summary for ICheckedListBoxItemChange
+		/// </summary>
+		private interface class ICheckedListBoxItemChange
 		{
 		public:
 			virtual void OnNameChange(System::Object^ CheckedListBoxItem);

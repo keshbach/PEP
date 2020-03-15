@@ -11,7 +11,8 @@ namespace Pep
 		/// <summary>
 		/// Summary for CheckedListBoxItemCollectionEditor
 		/// </summary>
-		public ref class CheckedListBoxItemCollectionEditor : System::ComponentModel::Design::CollectionEditor
+		public ref class CheckedListBoxItemCollectionEditor sealed :
+			public System::ComponentModel::Design::CollectionEditor
 		{
 		public:
 			CheckedListBoxItemCollectionEditor();

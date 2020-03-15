@@ -37,24 +37,6 @@ Pep::Forms::CheckedListBoxItemCollection::CheckedListBoxItemCollection(
 	m_SyncObject = gcnew System::Object();
 }
 
-Pep::Forms::CheckedListBoxItemCollection::CheckedListBoxItemCollection(
-  System::Runtime::Serialization::SerializationInfo^ info,
-  System::Runtime::Serialization::StreamingContext context)
-{
-	int nCount;
-
-	context;
-
-	m_CheckedListBoxList = nullptr;
-
-	if (info == nullptr)
-	{
-		throw gcnew System::ArgumentNullException("info");
-	}
-
-	nCount = info->GetInt32(CSerializationCountName);
-}
-
 #pragma endregion
 
 #pragma region Deconstructor
@@ -88,15 +70,20 @@ void Pep::Forms::CheckedListBoxItemCollection::CopyTo(
 	array<CheckedListBoxItem^>^ NewCheckedListBoxItemArray;
 	System::Int32 nNewIndex;
 
+	if (CheckedListBoxItemArray == nullptr)
+	{
+		throw gcnew System::Exception("Array is null");
+	}
+
 	for each (System::Object^ obj in CheckedListBoxItemArray)
 	{
-		if (obj->GetType() == CheckedListBoxItem::typeid)
+		if (obj != nullptr && obj->GetType() == CheckedListBoxItem::typeid)
 		{
 			++nCount;
 		}
 		else
 		{
-			throw gcnew System::Exception();
+			throw gcnew System::Exception("Array contains null or invalid items");
 		}
 	}
 
@@ -135,6 +122,11 @@ int Pep::Forms::CheckedListBoxItemCollection::Add(
 bool Pep::Forms::CheckedListBoxItemCollection::Contains(
   System::Object^ Obj)
 {
+	if (Obj == nullptr || Obj->GetType() != CheckedListBoxItem::typeid)
+	{
+		return false;
+	}
+
 	if (m_CheckedListBoxList != nullptr)
 	{
 		for (int nIndex = 0; nIndex < m_CheckedListBoxList->Array->Length; ++nIndex)
@@ -152,6 +144,11 @@ bool Pep::Forms::CheckedListBoxItemCollection::Contains(
 int Pep::Forms::CheckedListBoxItemCollection::IndexOf(
   System::Object^ Obj)
 {
+	if (Obj == nullptr || Obj->GetType() != CheckedListBoxItem::typeid)
+	{
+		return -1;
+	}
+
 	if (m_CheckedListBoxList != nullptr)
 	{
 		for (int nIndex = 0; nIndex < m_CheckedListBoxList->Array->Length; ++nIndex)
@@ -174,7 +171,7 @@ void Pep::Forms::CheckedListBoxItemCollection::InsertNonGeneric(
 
 	if (Obj == nullptr || Obj->GetType() != CheckedListBoxItem::typeid)
 	{
-		return;
+		throw gcnew System::Exception("Item is null or invalid");
 	}
 
 	CheckedListBoxItemArray = gcnew	array<CheckedListBoxItem^>(1);
@@ -228,6 +225,11 @@ void Pep::Forms::CheckedListBoxItemCollection::Clear()
 bool Pep::Forms::CheckedListBoxItemCollection::Contains(
   CheckedListBoxItem^ CheckedListBoxItem)
 {
+	if (CheckedListBoxItem == nullptr)
+	{
+		return false;
+    }
+
 	if (m_CheckedListBoxList != nullptr)
 	{
 		for each (Pep::Forms::CheckedListBoxItem^ TmpCheckedListBoxItem in m_CheckedListBoxList->Array)
@@ -246,6 +248,11 @@ void Pep::Forms::CheckedListBoxItemCollection::CopyTo(
   array<CheckedListBoxItem^>^ CheckedListBoxItemArray,
   int nIndex)
 {
+	if (CheckedListBoxItemArray == nullptr)
+	{
+		throw gcnew System::Exception("Array is null");
+	}
+
 	if (m_CheckedListBoxList != nullptr)
 	{
 		m_CheckedListBoxList->CopyTo(CheckedListBoxItemArray, nIndex);
@@ -255,6 +262,11 @@ void Pep::Forms::CheckedListBoxItemCollection::CopyTo(
 bool Pep::Forms::CheckedListBoxItemCollection::Remove(
   CheckedListBoxItem^ CheckedListBoxItem)
 {
+	if (CheckedListBoxItem == nullptr)
+	{
+		throw gcnew System::Exception("Item is null");
+	}
+
 	if (m_CheckedListBoxList != nullptr)
 	{
 		array<Pep::Forms::CheckedListBoxItem^>^ CheckedListBoxItemArray = m_CheckedListBoxList->Array;
@@ -302,6 +314,11 @@ System::Collections::Generic::IEnumerator<Pep::Forms::CheckedListBoxItem^>^ Pep:
 int Pep::Forms::CheckedListBoxItemCollection::IndexOf(
   CheckedListBoxItem^ CheckedListBoxItem)
 {
+	if (CheckedListBoxItem == nullptr)
+	{
+		return -1;
+	}
+
 	if (m_CheckedListBoxList != nullptr)
 	{
 		array<Pep::Forms::CheckedListBoxItem^>^ CheckedListBoxItemArray = m_CheckedListBoxList->Array;
@@ -322,6 +339,11 @@ void Pep::Forms::CheckedListBoxItemCollection::Insert(
   int nIndex,
   CheckedListBoxItem^ CheckedListBoxItem)
 {
+	if (CheckedListBoxItem == nullptr)
+	{
+		throw gcnew System::Exception("Item is null");
+	}
+
 	if (m_CheckedListBoxList != nullptr)
 	{
 		array<Pep::Forms::CheckedListBoxItem^>^ CheckedListBoxItemArray = gcnew array<Pep::Forms::CheckedListBoxItem^>(1);

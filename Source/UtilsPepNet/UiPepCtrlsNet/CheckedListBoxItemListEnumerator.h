@@ -8,7 +8,10 @@ namespace Pep
 {
 	namespace Forms
 	{
-		ref class CheckedListBoxItemListEnumerator sealed :
+		/// <summary>
+		/// Summary for CheckedListBoxItemListEnumerator
+		/// </summary>
+		private ref class CheckedListBoxItemListEnumerator sealed :
 			System::Collections::Generic::IEnumerator<Pep::Forms::CheckedListBoxItem^>
 		{
 		public:
