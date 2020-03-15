@@ -270,6 +270,7 @@
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
     </Reference>
+    <Reference Include="System.Design" />
     <Reference Include="System.Xml">
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
@@ -287,6 +288,9 @@
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="BufferViewer.cpp" />
     <ClCompile Include="CheckedListBox.cpp" />
+    <ClCompile Include="CheckedListBoxItemCollection.cpp" />
+    <ClCompile Include="CheckedListBoxItemCollectionEditor.cpp" />
+    <ClCompile Include="CheckedListBoxItemListEnumerator.cpp" />
     <ClCompile Include="CheckStateChangeEventArgs.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -319,7 +323,13 @@
     </ClInclude>
     <ClInclude Include="CheckedListBox.h" />
     <ClInclude Include="CheckedListBoxEnums.h" />
+    <ClInclude Include="CheckedListBoxItem.h" />
+    <ClInclude Include="CheckedListBoxItemCollection.h" />
+    <ClInclude Include="CheckedListBoxItemCollectionEditor.h" />
+    <ClInclude Include="CheckedListBoxItemListEnumerator.h" />
     <ClInclude Include="CheckStateChangeEventArgs.h" />
+    <ClInclude Include="ICheckedListBoxItemChange.h" />
+    <ClInclude Include="ICheckedListBoxList.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
   </ItemGroup>
