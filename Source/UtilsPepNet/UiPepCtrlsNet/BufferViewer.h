@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2010-2014 Kevin Eshbach
+//  Copyright (C) 2010-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -12,7 +12,8 @@ namespace Pep
 		/// Summary for BufferViewer
 		/// </summary>
 		[System::Drawing::ToolboxBitmapAttribute(Pep::Forms::BufferViewer::typeid, "IDB_BUFFERVIEWER")]
-		public ref class BufferViewer : public System::Windows::Forms::UserControl
+		[System::ComponentModel::DefaultPropertyAttribute("Buffer")]
+		public ref class BufferViewer sealed : public System::Windows::Forms::Control
 		{
 		public:
 			enum class EDataOrganization
@@ -94,13 +95,14 @@ namespace Pep
                 System::ComponentModel::EditorBrowsableAttribute(System::ComponentModel::EditorBrowsableState::Never)]
             virtual property System::Drawing::Font^ Font
 			{
-				System::Drawing::Font^ get() new
+				System::Drawing::Font^ get() override
 				{
-					return nullptr;
+					return System::Windows::Forms::Control::Font;
 				}
 
-				void set(System::Drawing::Font^) new
+				void set(System::Drawing::Font^ value) override
 				{
+					System::Windows::Forms::Control::Font = value;
 				}
 			}
 
@@ -134,24 +136,18 @@ namespace Pep
 				// 
 				// BufferViewer
 				// 
-				this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::None;
-				this->AutoValidate = System::Windows::Forms::AutoValidate::Disable;
-				this->BackgroundImageLayout = System::Windows::Forms::ImageLayout::None;
-				this->BorderStyle = System::Windows::Forms::BorderStyle::Fixed3D;
-				this->Font = (gcnew System::Drawing::Font(L"Courier New", 8.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-					static_cast<System::Byte>(0)));
-				this->Name = L"BufferViewer";
-				this->Size = System::Drawing::Size(196, 196);
-				this->Load += gcnew System::EventHandler(this, &BufferViewer::BufferViewer_Load);
-				this->Resize += gcnew System::EventHandler(this, &BufferViewer::BufferViewer_Resize);
 				this->ResumeLayout(false);
-
 			}
 #pragma endregion
 
-		private:
-			System::Void BufferViewer_Load(System::Object^ sender, System::EventArgs^ e);
-			System::Void BufferViewer_Resize(System::Object^ sender, System::EventArgs^ e);
+		protected:
+			void OnHandleCreated(System::EventArgs^ e) override;
+			void OnHandleDestroyed(System::EventArgs^ e) override;
+			void OnEnabledChanged(System::EventArgs^ e) override;
+			void OnVisibleChanged(System::EventArgs^ e) override;
+			void OnGotFocus(System::EventArgs^ e) override;
+			void OnPaint(System::Windows::Forms::PaintEventArgs^ e) override;
+			void OnResize(System::EventArgs^ e) override;
 
 		private:
 			System::Boolean UpdateBuffer(void);
@@ -169,5 +165,5 @@ namespace Pep
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2010-2014 Kevin Eshbach
+//  Copyright (C) 2010-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

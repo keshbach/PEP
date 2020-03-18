@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2010-2014 Kevin Eshbach
+//  Copyright (C) 2010-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "StdAfx.h"
@@ -7,22 +7,39 @@
 
 #include <UtilsPep/UiPepCtrls.h>
 
-#pragma unmanaged
+#pragma region "Constants"
 
-static HWND lUnmanagedCreateBufferViewerCtrl(
-  HWND hParentWnd,
-  INT nWidth,
-  INT nHeight)
+#define CBorderWidth 1
+#define CBorderHeight 1
+
+#pragma endregion
+
+#pragma region "Local Functions"
+
+static INT lTranslateUpdateDataOrganization(
+  Pep::Forms::BufferViewer::EDataOrganization DataOrganization)
 {
-    return ::CreateWindowExW(0, CUiBufferViewerCtrlClass, NULL,
-                             WS_CHILD | WS_VISIBLE, 0, 0, nWidth, nHeight,
-                             hParentWnd, NULL, NULL, NULL);
+    switch (DataOrganization)
+    {
+        case Pep::Forms::BufferViewer::EDataOrganization::Ascii:
+            return CBufferViewerAsciiData;
+        case Pep::Forms::BufferViewer::EDataOrganization::Byte:
+            return CBufferViewerByteData;
+        case Pep::Forms::BufferViewer::EDataOrganization::WordBigEndian:
+            return CBufferViewerWordBigEndianData;
+        case Pep::Forms::BufferViewer::EDataOrganization::WordLittleEndian:
+            return CBufferViewerWordLittleEndianData;
+	}
+
+	System::Diagnostics::Debug::Assert(false, "Undefined data organization");
+
+	return CBufferViewerByteData;
 }
 
-#pragma managed
+#pragma endregion
 
 Pep::Forms::BufferViewer::BufferViewer() :
-m_DataOrganization(Pep::Forms::BufferViewer::EDataOrganization::Byte),
+  m_DataOrganization(Pep::Forms::BufferViewer::EDataOrganization::Byte),
   m_byBuffer(nullptr),
   m_nFontPtSize(CBufferViewerDefPtSize),
   m_hBufferViewerCtrl(NULL)
@@ -68,38 +85,100 @@ void Pep::Forms::BufferViewer::EndUpdate(void)
     }
 }
 
-System::Void Pep::Forms::BufferViewer::BufferViewer_Load(
-  System::Object^ sender,
+void Pep::Forms::BufferViewer::OnHandleCreated(
   System::EventArgs^ e)
 {
-    HWND hWnd = (HWND)Handle.ToPointer();
+	HWND hWnd = (HWND)Handle.ToPointer();
 
-    sender;
-    e;
+	System::Windows::Forms::Control::OnHandleCreated(e);
 
-    m_hBufferViewerCtrl = lUnmanagedCreateBufferViewerCtrl(hWnd,
-                                                           ClientRectangle.Width,
-                                                           ClientRectangle.Height);
+	m_hBufferViewerCtrl = ::CreateWindowExW(0, CUiBufferViewerCtrlClass, NULL,
+                                            WS_CHILD | WS_BORDER | (this->Visible ? WS_VISIBLE : 0),
+		                                    0, 0, ClientRectangle.Width, ClientRectangle.Height,
+		                                    hWnd, NULL, NULL, NULL);
 
-    if (m_byBuffer != nullptr)
-    {
-        UpdateBuffer();
-    }
+	if (m_byBuffer != nullptr)
+	{
+		UpdateBuffer();
+	}
 
-    UpdateDataOrganization();
+	UpdateDataOrganization();
 
-    ResizeRedraw = true;
+	this->ResizeRedraw = true;
 }
 
-System::Void Pep::Forms::BufferViewer::BufferViewer_Resize(
-  System::Object^ sender,
+void Pep::Forms::BufferViewer::OnHandleDestroyed(
   System::EventArgs^ e)
 {
-    sender;
-    e;
+	if (m_hBufferViewerCtrl)
+	{
+		::DestroyWindow(m_hBufferViewerCtrl);
 
-    ::MoveWindow(m_hBufferViewerCtrl, 0, 0,
-                 ClientRectangle.Width, ClientRectangle.Height, TRUE);
+		m_hBufferViewerCtrl = NULL;
+	}
+
+	System::Windows::Forms::Control::OnHandleDestroyed(e);
+}
+
+void Pep::Forms::BufferViewer::OnEnabledChanged(
+  System::EventArgs^ e)
+{
+	System::Windows::Forms::Control::OnEnabledChanged(e);
+
+	if (m_hBufferViewerCtrl)
+	{
+		::EnableWindow(m_hBufferViewerCtrl, this->Enabled ? TRUE : FALSE);
+	}
+}
+
+void Pep::Forms::BufferViewer::OnVisibleChanged(
+  System::EventArgs^ e)
+{
+	System::Windows::Forms::Control::OnVisibleChanged(e);
+
+	if (m_hBufferViewerCtrl)
+	{
+		::ShowWindow(m_hBufferViewerCtrl, this->Visible ? SW_SHOW : SW_HIDE);
+	}
+}
+
+void Pep::Forms::BufferViewer::OnGotFocus(
+  System::EventArgs^ e)
+{
+	System::Windows::Forms::Control::OnGotFocus(e);
+
+	if (m_hBufferViewerCtrl)
+	{
+		::SetFocus(m_hBufferViewerCtrl);
+	}
+}
+
+void Pep::Forms::BufferViewer::OnPaint(
+  System::Windows::Forms::PaintEventArgs^ e)
+{
+	System::Windows::Forms::Control::OnPaint(e);
+
+	e->Graphics->FillRectangle(System::Drawing::SystemBrushes::WindowFrame,
+                               0, 0, ClientSize.Width, ClientSize.Height);
+
+	e->Graphics->FillRectangle(System::Drawing::SystemBrushes::Window,
+                               CBorderWidth, CBorderHeight,
+                               ClientSize.Width - (CBorderWidth * 2),
+                               ClientSize.Height - (CBorderHeight * 2));
+
+	e->Graphics->DrawString(Name, Font, System::Drawing::SystemBrushes::WindowText,
+                            CBorderWidth * 2, CBorderHeight * 2);
+}
+
+void Pep::Forms::BufferViewer::OnResize(
+  System::EventArgs^ e)
+{
+	System::Windows::Forms::Control::OnResize(e);
+
+	if (m_hBufferViewerCtrl)
+	{
+		::MoveWindow(m_hBufferViewerCtrl, 0, 0, ClientRectangle.Width, ClientRectangle.Height, TRUE);
+	}
 }
 
 System::Boolean Pep::Forms::BufferViewer::UpdateBuffer(void)
@@ -124,26 +203,7 @@ System::Boolean Pep::Forms::BufferViewer::UpdateBuffer(void)
 System::Boolean Pep::Forms::BufferViewer::UpdateDataOrganization(void)
 {
     System::Boolean bResult = true;
-    INT nDataOrganization;
-
-    switch (m_DataOrganization)
-    {
-        case EDataOrganization::Ascii:
-            nDataOrganization = CBufferViewerAsciiData;
-            break;
-        case EDataOrganization::Byte:
-            nDataOrganization = CBufferViewerByteData;
-            break;
-        case EDataOrganization::WordBigEndian:
-            nDataOrganization = CBufferViewerWordBigEndianData;
-            break;
-        case EDataOrganization::WordLittleEndian:
-            nDataOrganization = CBufferViewerWordLittleEndianData;
-            break;
-        default:
-            System::Diagnostics::Debug::Assert(false, "Undefined data organization");
-            return false;
-    }
+	INT nDataOrganization = lTranslateUpdateDataOrganization(m_DataOrganization);
 
     if (m_hBufferViewerCtrl)
     {
@@ -168,5 +228,5 @@ System::Boolean Pep::Forms::BufferViewer::UpdateFontPtSize(void)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2010-2014 Kevin Eshbach
+//  Copyright (C) 2010-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
