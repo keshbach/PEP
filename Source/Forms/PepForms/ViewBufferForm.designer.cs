@@ -43,9 +43,7 @@ namespace Pep
                 this.bufferViewer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                             | System.Windows.Forms.AnchorStyles.Left)
                             | System.Windows.Forms.AnchorStyles.Right)));
-                this.bufferViewer.AutoValidate = System.Windows.Forms.AutoValidate.Disable;
                 this.bufferViewer.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-                this.bufferViewer.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
                 this.bufferViewer.Buffer = null;
                 this.bufferViewer.DataOrganization = Pep.Forms.BufferViewer.EDataOrganization.Byte;
                 this.bufferViewer.FontPtSize = ((uint)(10u));
