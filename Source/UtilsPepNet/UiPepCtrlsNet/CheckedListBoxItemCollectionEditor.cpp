@@ -102,6 +102,9 @@ void Pep::Forms::CheckedListBoxItemCollectionEditor::CollectionForm_FormClosed(
   System::Object^ sender,
   System::Windows::Forms::FormClosedEventArgs^ e)
 {
+	sender;
+	e;
+
 	m_CollectionForm->FormClosed -= gcnew System::Windows::Forms::FormClosedEventHandler(this, &Pep::Forms::CheckedListBoxItemCollectionEditor::CollectionForm_FormClosed);
 
 	m_CollectionForm = nullptr;
