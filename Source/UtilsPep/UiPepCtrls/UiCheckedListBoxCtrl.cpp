@@ -28,7 +28,8 @@
 
 #define CLabelMargin 2
 
-#define CThemeClassName L"EditStyle;Edit"
+#define CListBoxThemeClassName L"ListBox"
+#define CButtonThemeClassName L"Button"
 
 #define CLBM_INTERNAL_SETFOCUS (WM_USER + 0x0050)
 
@@ -40,6 +41,8 @@ typedef struct tagTCheckedListBoxCtrlData
 {
 	HWND hListBox;
 	HFONT hFont;
+	HTHEME hListBoxTheme;
+	HTHEME hButtonTheme;
 } TCheckedListBoxCtrlData;
 
 typedef struct tagTListBoxItemData
@@ -122,6 +125,273 @@ static VOID lSendChangeItemStateNotification(
 	HdrStateChange.dwNewState = dwState;
 
 	::SendMessage(::GetParent(hWnd), WM_NOTIFY, HdrStateChange.Hdr.idFrom, (LPARAM)&HdrStateChange);
+}
+
+static VOID lNonThemedDrawItem(
+  HWND hWnd,
+  TCheckedListBoxCtrlData* pCheckedListBoxCtrlData,
+  LPDRAWITEMSTRUCT pDrawItemStruct)
+{
+	TListBoxItemData* pItemData = (TListBoxItemData*)pDrawItemStruct->itemData;
+	INT nWidth = pDrawItemStruct->rcItem.right - pDrawItemStruct->rcItem.left;
+	INT nHeight = pDrawItemStruct->rcItem.bottom - pDrawItemStruct->rcItem.top;
+	HDC hMemDC = ::CreateCompatibleDC(pDrawItemStruct->hDC);
+	HBITMAP hMemBitmap = ::CreateCompatibleBitmap(pDrawItemStruct->hDC, nWidth, nHeight);
+	COLORREF crTextColor, crBackColor;
+	RECT CheckBoxRect, InnerCheckBoxRect, LabelRect;
+	POINT Point;
+	SIZE Size;
+	UINT nState;
+
+	hWnd;
+
+	lCalcRects(nWidth, nHeight, &CheckBoxRect, &InnerCheckBoxRect, &LabelRect);
+
+	::SaveDC(hMemDC);
+
+	::SelectObject(hMemDC, hMemBitmap);
+
+	// Paint the item's background
+
+	if ((ODS_SELECTED & pDrawItemStruct->itemState) != ODS_SELECTED)
+	{
+		if ((ODS_DISABLED & pDrawItemStruct->itemState) != ODS_DISABLED)
+		{
+			// Item to paint is not disabled
+
+			crTextColor = ::GetSysColor(COLOR_WINDOWTEXT);
+			crBackColor = ::GetSysColor(COLOR_WINDOW);
+		}
+		else
+		{
+			// Item to paint is disabled
+
+			crTextColor = ::GetSysColor(COLOR_3DFACE);
+			crBackColor = ::GetSysColor(COLOR_WINDOW);
+		}
+	}
+	else
+	{
+		// Item to paint is the currently selected one
+
+		crTextColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
+		crBackColor = ::GetSysColor(COLOR_HIGHLIGHT);
+	} // end of if...else statement
+
+	UiPepCtrlFillSolidRect(hMemDC, ::GetSysColor(COLOR_WINDOW),
+                           CheckBoxRect.left, CheckBoxRect.top,
+                           CheckBoxRect.right - CheckBoxRect.left,
+                           CheckBoxRect.bottom - CheckBoxRect.top);
+
+	UiPepCtrlFillSolidRect(hMemDC, crBackColor,
+                           LabelRect.left, LabelRect.top,
+                           LabelRect.right - LabelRect.left,
+                           LabelRect.bottom - LabelRect.top);
+
+	UiPepCtrlSelectTwipsMode(hMemDC);
+
+	::SelectObject(hMemDC, pCheckedListBoxCtrlData->hFont);
+
+	::SetBkMode(hMemDC, TRANSPARENT);
+
+	::SetTextColor(hMemDC, crTextColor);
+	::SetBkColor(hMemDC, crBackColor);
+
+	Point.x = LabelRect.left + CLabelMargin;
+	Point.y = LabelRect.bottom;
+
+	::DPtoLP(hMemDC, &Point, 1);
+
+	::GetTextExtentPoint32(hMemDC, pItemData->cText, ::lstrlen(pItemData->cText), &Size);
+
+	Point.y = (Point.y - Size.cy) / 2;
+
+	::TextOutW(hMemDC, Point.x, Point.y, pItemData->cText, ::lstrlenW(pItemData->cText));
+
+	UiPepCtrlSelectDevUnitsMode(hMemDC);
+
+	switch (pItemData->dwState)
+	{
+        case CCheckedListBoxUncheckedState:
+            nState = DFCS_BUTTONCHECK;
+            break;
+        case CCheckedListBoxCheckedState:
+            nState = DFCS_BUTTONCHECK | DFCS_CHECKED;
+            break;
+        case CCheckedListBoxIndeterminateState:
+            nState = DFCS_BUTTON3STATE | DFCS_CHECKED;
+            break;
+    }
+
+	nState |= DFCS_MONO;
+
+	if ((ODS_DISABLED & pDrawItemStruct->itemState) == ODS_DISABLED)
+	{
+		nState |= DFCS_INACTIVE;
+	}
+
+	::DrawFrameControl(hMemDC, &InnerCheckBoxRect, DFC_BUTTON, nState);
+
+	// Draw the input focus around the item if applicable
+
+	if ((pDrawItemStruct->itemState & ODS_FOCUS) == ODS_FOCUS)
+	{
+		::DrawFocusRect(hMemDC, &LabelRect);
+	}
+
+	::BitBlt(pDrawItemStruct->hDC,
+             pDrawItemStruct->rcItem.left,
+             pDrawItemStruct->rcItem.top,
+             nWidth, nHeight, hMemDC, 0, 0, SRCCOPY);
+
+	::RestoreDC(hMemDC, -1);
+
+	::DeleteObject(hMemBitmap);
+
+	::DeleteDC(hMemDC);
+}
+
+static VOID lThemedDrawItem(
+  HWND hWnd,
+  TCheckedListBoxCtrlData* pCheckedListBoxCtrlData,
+  LPDRAWITEMSTRUCT pDrawItemStruct)
+{
+	TListBoxItemData* pItemData = (TListBoxItemData*)pDrawItemStruct->itemData;
+	INT nWidth = pDrawItemStruct->rcItem.right - pDrawItemStruct->rcItem.left;
+	INT nHeight = pDrawItemStruct->rcItem.bottom - pDrawItemStruct->rcItem.top;
+	HDC hMemDC = ::CreateCompatibleDC(pDrawItemStruct->hDC);
+	HBITMAP hMemBitmap = ::CreateCompatibleBitmap(pDrawItemStruct->hDC, nWidth, nHeight);
+	COLORREF crTextColor, crBackColor;
+	RECT CheckBoxRect, InnerCheckBoxRect, LabelRect;
+	POINT Point;
+	SIZE Size;
+	INT nStateId;
+
+	hWnd;
+
+	lCalcRects(nWidth, nHeight, &CheckBoxRect, &InnerCheckBoxRect, &LabelRect);
+
+	::SaveDC(hMemDC);
+
+	::SelectObject(hMemDC, hMemBitmap);
+
+	// Paint the item's background
+
+	if ((ODS_SELECTED & pDrawItemStruct->itemState) != ODS_SELECTED)
+	{
+		if ((ODS_DISABLED & pDrawItemStruct->itemState) != ODS_DISABLED)
+		{
+			// Item to paint is not disabled
+
+			crTextColor = ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_WINDOWTEXT);
+			crBackColor = ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_WINDOW);
+		}
+		else
+		{
+			// Item to paint is disabled
+
+			crTextColor = ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_3DFACE);
+			crBackColor = ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_WINDOW);
+		}
+	}
+	else
+	{
+		// Item to paint is the currently selected one
+
+		crTextColor = ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_HIGHLIGHTTEXT);
+		crBackColor = ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_HIGHLIGHT);
+	} // end of if...else statement
+
+	UiPepCtrlFillSolidRect(hMemDC,
+                           ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_WINDOW),
+                           CheckBoxRect.left, CheckBoxRect.top,
+                           CheckBoxRect.right - CheckBoxRect.left,
+                           CheckBoxRect.bottom - CheckBoxRect.top);
+
+	switch (pItemData->dwState)
+	{
+	    case CCheckedListBoxUncheckedState:
+		    if ((ODS_DISABLED & pDrawItemStruct->itemState) != ODS_DISABLED)
+		    {
+			    nStateId = CBS_UNCHECKEDNORMAL;
+		    }
+		    else
+		    {
+			    nStateId = CBS_UNCHECKEDDISABLED;
+		    }
+		    break;
+	    case CCheckedListBoxCheckedState:
+		    if ((ODS_DISABLED & pDrawItemStruct->itemState) != ODS_DISABLED)
+		    {
+			    nStateId = CBS_CHECKEDNORMAL;
+		    }
+		    else
+		    {
+			    nStateId = CBS_CHECKEDDISABLED;
+		    }
+		    break;
+	    case CCheckedListBoxIndeterminateState:
+		    if ((ODS_DISABLED & pDrawItemStruct->itemState) != ODS_DISABLED)
+		    {
+			    nStateId = CBS_MIXEDNORMAL;
+		    }
+		    else
+		    {
+			    nStateId = CBS_MIXEDDISABLED;
+		    }
+		    break;
+		default:
+			nStateId = CBS_UNCHECKEDNORMAL;
+			break;
+	}
+
+	::DrawThemeBackground(pCheckedListBoxCtrlData->hButtonTheme, hMemDC,
+                          BP_CHECKBOX, nStateId, &CheckBoxRect, NULL);
+
+	UiPepCtrlFillSolidRect(hMemDC, crBackColor,
+                           LabelRect.left, LabelRect.top,
+                           LabelRect.right - LabelRect.left,
+                           LabelRect.bottom - LabelRect.top);
+
+	UiPepCtrlSelectTwipsMode(hMemDC);
+
+	::SelectObject(hMemDC, pCheckedListBoxCtrlData->hFont);
+
+	::SetBkMode(hMemDC, TRANSPARENT);
+
+	::SetTextColor(hMemDC, crTextColor);
+	::SetBkColor(hMemDC, crBackColor);
+
+	Point.x = LabelRect.left + CLabelMargin;
+	Point.y = LabelRect.bottom;
+
+	::DPtoLP(hMemDC, &Point, 1);
+
+	::GetTextExtentPoint32(hMemDC, pItemData->cText, ::lstrlen(pItemData->cText), &Size);
+
+	Point.y = (Point.y - Size.cy) / 2;
+
+	::TextOutW(hMemDC, Point.x, Point.y, pItemData->cText, ::lstrlenW(pItemData->cText));
+
+	UiPepCtrlSelectDevUnitsMode(hMemDC);
+
+	// Draw the input focus around the item if applicable
+
+	if ((pDrawItemStruct->itemState & ODS_FOCUS) == ODS_FOCUS)
+	{
+		::DrawFocusRect(hMemDC, &LabelRect);
+	}
+
+	::BitBlt(pDrawItemStruct->hDC,
+             pDrawItemStruct->rcItem.left,
+             pDrawItemStruct->rcItem.top,
+             nWidth, nHeight, hMemDC, 0, 0, SRCCOPY);
+
+	::RestoreDC(hMemDC, -1);
+
+	::DeleteObject(hMemBitmap);
+
+	::DeleteDC(hMemDC);
 }
 
 static VOID lOnNotifyListBoxCtrlClick(
@@ -400,123 +670,17 @@ static LRESULT lOnDrawItem(
   LPDRAWITEMSTRUCT pDrawItemStruct)
 {
 	TCheckedListBoxCtrlData* pData = (TCheckedListBoxCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
-	TListBoxItemData* pItemData = (TListBoxItemData*)pDrawItemStruct->itemData;
-	INT nWidth = pDrawItemStruct->rcItem.right - pDrawItemStruct->rcItem.left;
-	INT nHeight = pDrawItemStruct->rcItem.bottom - pDrawItemStruct->rcItem.top;
-	HDC hMemDC = ::CreateCompatibleDC(pDrawItemStruct->hDC);
-	HBITMAP hMemBitmap = ::CreateCompatibleBitmap(pDrawItemStruct->hDC, nWidth, nHeight);
-	COLORREF crTextColor, crBackColor;
-	RECT CheckBoxRect, InnerCheckBoxRect, LabelRect;
-	POINT Point;
-	SIZE Size;
-	UINT nState;
 
 	nControlId;
 
-	lCalcRects(nWidth, nHeight, &CheckBoxRect, &InnerCheckBoxRect, &LabelRect);
-
-	::SaveDC(hMemDC);
-
-	::SelectObject(hMemDC, hMemBitmap);
-
-	// Paint the item's background
-
-	if ((ODS_SELECTED & pDrawItemStruct->itemState) != ODS_SELECTED)
+	if (pData->hListBoxTheme && pData->hButtonTheme)
 	{
-		if ((ODS_DISABLED & pDrawItemStruct->itemState) != ODS_DISABLED)
-		{
-			// Item to paint is not disabled
-
-			crTextColor = ::GetSysColor(COLOR_WINDOWTEXT);
-			crBackColor = ::GetSysColor(COLOR_WINDOW);
-		}
-		else
-		{
-			// Item to paint is disabled
-
-			crTextColor = ::GetSysColor(COLOR_3DFACE);
-			crBackColor = ::GetSysColor(COLOR_WINDOW);
-		}
+		lThemedDrawItem(hWnd, pData, pDrawItemStruct);
 	}
 	else
 	{
-		// Item to paint is the currently selected one
-
-		crTextColor = ::GetSysColor(COLOR_HIGHLIGHTTEXT);
-		crBackColor = ::GetSysColor(COLOR_HIGHLIGHT);
-	} // end of if...else statement
-
-	UiPepCtrlFillSolidRect(hMemDC, ::GetSysColor(COLOR_WINDOW),
-                           CheckBoxRect.left, CheckBoxRect.top,
-                           CheckBoxRect.right - CheckBoxRect.left,
-                           CheckBoxRect.bottom - CheckBoxRect.top);
-
-	UiPepCtrlFillSolidRect(hMemDC, crBackColor,
-                           LabelRect.left, LabelRect.top,
-                           LabelRect.right - LabelRect.left,
-                           LabelRect.bottom - LabelRect.top);
-
-	UiPepCtrlSelectTwipsMode(hMemDC);
-
-	::SelectObject(hMemDC, pData->hFont);
-
-	::SetBkMode(hMemDC, TRANSPARENT);
-
-	::SetTextColor(hMemDC, crTextColor);
-	::SetBkColor(hMemDC, crBackColor);
-
-	Point.x = LabelRect.left + CLabelMargin;
-	Point.y = LabelRect.bottom;
-
-	::DPtoLP(hMemDC, &Point, 1);
-
-	::GetTextExtentPoint32(hMemDC, pItemData->cText, ::lstrlen(pItemData->cText), &Size);
-
-	Point.y = (Point.y - Size.cy) / 2;
-
-	::TextOutW(hMemDC, Point.x, Point.y, pItemData->cText, ::lstrlenW(pItemData->cText));
-
-	UiPepCtrlSelectDevUnitsMode(hMemDC);
-
-	switch (pItemData->dwState)
-	{
-	    case CCheckedListBoxUncheckedState:
-			nState = DFCS_BUTTONCHECK;
-			break;
-	    case CCheckedListBoxCheckedState:
-			nState = DFCS_BUTTONCHECK | DFCS_CHECKED;
-		    break;
-    	case CCheckedListBoxIndeterminateState:
-			nState = DFCS_BUTTON3STATE | DFCS_CHECKED;
-	    	break;
+		lNonThemedDrawItem(hWnd, pData, pDrawItemStruct);
 	}
-
-	nState |= DFCS_MONO;
-
-	if ((ODS_DISABLED & pDrawItemStruct->itemState) == ODS_DISABLED)
-	{
-		nState |= DFCS_INACTIVE;
-	}
-
-	::DrawFrameControl(hMemDC, &InnerCheckBoxRect, DFC_BUTTON, nState);
-
-	// Draw the input focus around the item if applicable
-
-	if ((pDrawItemStruct->itemState & ODS_FOCUS) == ODS_FOCUS)
-	{
-    	::DrawFocusRect(hMemDC, &LabelRect);
-    }
-
-	::BitBlt(pDrawItemStruct->hDC,
-		     pDrawItemStruct->rcItem.left,
-		     pDrawItemStruct->rcItem.top,
-             nWidth, nHeight, hMemDC, 0, 0, SRCCOPY);
-
-	::RestoreDC(hMemDC, -1);
-
-	::DeleteObject(hMemBitmap);
-
-	::DeleteDC(hMemDC);
 
 	return TRUE;
 }
@@ -664,21 +828,27 @@ static LRESULT lOnSetFocus(
 static LRESULT lOnThemeChangedMsg(
   HWND hWnd)
 {
-	hWnd;
+	TCheckedListBoxCtrlData* pData = (TCheckedListBoxCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
-/*    TCheckedListBoxCtrlData* pData = (TCheckedListBoxCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
-
-    if (pData->hTheme)
+    if (pData->hListBoxTheme)
     {
-        ::CloseThemeData(pData->hTheme);
+        ::CloseThemeData(pData->hListBoxTheme);
 
-        pData->hTheme = NULL;
+        pData->hListBoxTheme = NULL;
     }
+
+	if (pData->hButtonTheme)
+	{
+		::CloseThemeData(pData->hButtonTheme);
+
+		pData->hButtonTheme = NULL;
+	}
 
     if (::IsThemeActive())
     {
-        pData->hTheme = ::OpenThemeData(hWnd, CThemeClassName);
-    }*/
+        pData->hListBoxTheme = ::OpenThemeData(hWnd, CListBoxThemeClassName);
+		pData->hButtonTheme = ::OpenThemeData(hWnd, CButtonThemeClassName);
+	}
 
     return 0;
 }
@@ -746,12 +916,13 @@ static LRESULT lOnCreateMsg(
 		                              pCreateStruct->cx, pCreateStruct->cy,
 		                              hWnd, (HMENU)1, pCreateStruct->hInstance, NULL);
 	pData->hFont = NULL;
-
-    //pData->hTheme = NULL;
+    pData->hListBoxTheme = NULL;
+	pData->hButtonTheme = NULL;
 
     if (::IsThemeActive())
     {
-        //pData->hTheme = ::OpenThemeData(hWnd, CThemeClassName);
+        pData->hListBoxTheme = ::OpenThemeData(hWnd, CListBoxThemeClassName);
+		pData->hButtonTheme = ::OpenThemeData(hWnd, CButtonThemeClassName);
     }
 
     return 0;
@@ -772,10 +943,15 @@ static LRESULT lOnDestroyMsg(
 		::DestroyWindow(pData->hListBox);
 	}
 
-    /*if (pData->hTheme)
+    if (pData->hListBoxTheme)
     {
-        ::CloseThemeData(pData->hTheme);
-    }*/
+        ::CloseThemeData(pData->hListBoxTheme);
+    }
+
+	if (pData->hButtonTheme)
+	{
+		::CloseThemeData(pData->hButtonTheme);
+	}
 
     UtFreeMem(pData);
 
