@@ -36,8 +36,6 @@ namespace Pep
             private string m_sRegistryKey = null;
 
             private string[] m_Filters = null;
-
-            private bool m_bIgnoreItemCheck = false;
             #endregion
 
             #region Properties
@@ -87,14 +85,14 @@ namespace Pep
 
                 FilterSet.CopyTo(m_Filters);
 
+                checkedListBoxFilter.BeginUpdate();
+
                 checkedListBoxFilter.Items.Add(CAllFilterType);
                 checkedListBoxFilter.Items.AddRange(m_Filters);
 
-                m_bIgnoreItemCheck = true;
+                checkedListBoxFilter.Items[0].CheckState = ECheckState.Checked;
 
-                checkedListBoxFilter.SetItemChecked(0, true);
-
-                m_bIgnoreItemCheck = false;
+                checkedListBoxFilter.EndUpdate();
 
                 RegKey = Common.Registry.CreateCurrentUserRegKey(m_sRegistryKey);
 
@@ -153,41 +151,32 @@ namespace Pep
                 RefreshDevices();
             }
 
-            private void checkedListBoxFilter_ItemCheck(object sender, System.Windows.Forms.ItemCheckEventArgs e)
+            private void checkedListBoxFilter_CheckStateChange(object sender, CheckStateChangedEventArgs e)
             {
-                if (m_bIgnoreItemCheck)
-                {
-                    return;
-                }
-
                 if (e.Index == 0)
                 {
-                    if (e.NewValue == System.Windows.Forms.CheckState.Checked)
+                    if (e.CheckState == ECheckState.Checked)
                     {
-                        m_bIgnoreItemCheck = true;
+                        checkedListBoxFilter.BeginUpdate();
 
                         for (int nIndex = 1; nIndex < checkedListBoxFilter.Items.Count; ++nIndex)
                         {
-                            checkedListBoxFilter.SetItemChecked(nIndex, true);
+                            checkedListBoxFilter.Items[nIndex].CheckState = ECheckState.Checked;
                         }
 
-                        m_bIgnoreItemCheck = false;
+                        checkedListBoxFilter.EndUpdate();
 
                         BeginInvoke(m_DelegateRefreshDevices, new object[] { });
                     }
                 }
                 else
                 {
-                    if (e.NewValue == System.Windows.Forms.CheckState.Unchecked)
+                    if (e.CheckState == ECheckState.Unchecked)
                     {
-                        m_bIgnoreItemCheck = true;
-
-                        checkedListBoxFilter.SetItemChecked(0, false);
-
-                        m_bIgnoreItemCheck = false;
+                        checkedListBoxFilter.Items[0].CheckState = ECheckState.Unchecked;
                     }
 
-                    BeginInvoke(m_DelegateRefreshDevices, new object[] {});
+                    BeginInvoke(m_DelegateRefreshDevices, new object[] { });
                 }
             }
 
@@ -339,7 +328,7 @@ namespace Pep
                 {
                     if (System.String.Compare(Device.DeviceType, m_Filters[nIndex]) == 0)
                     {
-                        return checkedListBoxFilter.GetItemChecked(nIndex + 1);
+                        return checkedListBoxFilter.Items[nIndex + 1].CheckState == ECheckState.Checked;
                     }
                 }
 
@@ -382,6 +371,8 @@ namespace Pep
 
                 if (nTotalFilters != null)
                 {
+                    checkedListBoxFilter.BeginUpdate();
+
                     for (int nIndex = 0; nIndex < nTotalFilters; ++nIndex)
                     {
                         sFilterName = (string)DeviceFilterRegKey.GetValue(string.Format("{0} #{1}", CRegFilterNameValue, nIndex + 1));
@@ -389,13 +380,11 @@ namespace Pep
 
                         if (!string.IsNullOrWhiteSpace(sFilterName) && nFilterEnabled != null)
                         {
-                            m_bIgnoreItemCheck = true;
-
                             for (int nIndex2 = 0; nIndex2 < m_Filters.Length; ++nIndex2)
                             {
                                 if (sFilterName.CompareTo(m_Filters[nIndex2]) == 0)
                                 {
-                                    checkedListBoxFilter.SetItemChecked(nIndex2 + 1, nFilterEnabled > 0 ? true : false);
+                                    checkedListBoxFilter.Items[nIndex + 1].CheckState = (nFilterEnabled > 0) ? ECheckState.Checked : ECheckState.Unchecked;
 
                                     break;
                                 }
@@ -403,12 +392,12 @@ namespace Pep
 
                             if (nFilterEnabled == 0)
                             {
-                                checkedListBoxFilter.SetItemChecked(0, false);
+                                checkedListBoxFilter.Items[0].CheckState = ECheckState.Unchecked;
                             }
-
-                            m_bIgnoreItemCheck = false;
                         }
                     }
+
+                    checkedListBoxFilter.EndUpdate();
                 }
 
                 DeviceFilterRegKey.Close();
@@ -431,7 +420,7 @@ namespace Pep
                     DeviceFilterRegKey.SetValue(string.Format("{0} #{1}", CRegFilterNameValue, nIndex + 1),
                                                 m_Filters[nIndex]);
                     DeviceFilterRegKey.SetValue(string.Format("{0} #{1}", CRegFilterEnabledValue, nIndex + 1),
-                                                checkedListBoxFilter.GetItemChecked(nIndex + 1),
+                                                checkedListBoxFilter.Items[nIndex + 1].CheckState == ECheckState.Checked,
                                                 Microsoft.Win32.RegistryValueKind.DWord);
                 }
 

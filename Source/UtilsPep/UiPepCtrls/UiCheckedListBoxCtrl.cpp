@@ -576,8 +576,8 @@ static LRESULT lOnCheckedListBoxSetCheckState(
 		return FALSE;
 	}
 
-	if (dwState != CCheckedListBoxUncheckedState ||
-		dwState != CCheckedListBoxCheckedState ||
+	if (dwState != CCheckedListBoxUncheckedState &&
+		dwState != CCheckedListBoxCheckedState &&
 		dwState != CCheckedListBoxIndeterminateState)
 	{
 		return FALSE;

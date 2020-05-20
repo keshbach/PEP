@@ -104,16 +104,30 @@ void Pep::Forms::CheckedListBoxItemCollection::CopyTo(
 int Pep::Forms::CheckedListBoxItemCollection::Add(
   System::Object^ Obj)
 {
-	if (Obj == nullptr || Obj->GetType() != CheckedListBoxItem::typeid)
+	if (Obj == nullptr)
 	{
 		return -1;
 	}
 
 	if (m_CheckedListBoxList != nullptr)
 	{
-		m_CheckedListBoxList->Add((CheckedListBoxItem^)Obj);
+		if (Obj->GetType() == CheckedListBoxItem::typeid)
+		{
+			m_CheckedListBoxList->Add((CheckedListBoxItem^)Obj);
 
-		return m_CheckedListBoxList->Array->Length - 1;
+			return m_CheckedListBoxList->Array->Length - 1;
+		}
+		else if (Obj->GetType() == System::String::typeid)
+		{
+			CheckedListBoxItem^ Item = gcnew CheckedListBoxItem();
+
+			Item->Name = (System::String^)Obj;
+			Item->CheckState = ECheckState::Unchecked;
+
+			m_CheckedListBoxList->Add(Item);
+
+			return m_CheckedListBoxList->Array->Length - 1;
+		}
 	}
 
 	return -1;
@@ -364,6 +378,35 @@ void Pep::Forms::CheckedListBoxItemCollection::RemoveAt(
 }
 
 #pragma endregion
+
+void Pep::Forms::CheckedListBoxItemCollection::AddRange(
+  array<System::Object^>^ ObjectArray)
+{
+	if (ObjectArray == nullptr)
+	{
+		throw gcnew System::Exception("Array is null");
+	}
+
+	if (m_CheckedListBoxList != nullptr)
+	{
+		for each (System::Object^ Obj in ObjectArray)
+		{
+			if (Obj != nullptr && Obj->GetType() == CheckedListBoxItem::typeid)
+			{
+				m_CheckedListBoxList->Add((CheckedListBoxItem^)Obj);
+			}
+			else if (Obj != nullptr && Obj->GetType() == System::String::typeid)
+			{
+				CheckedListBoxItem^ Item = gcnew CheckedListBoxItem();
+
+				Item->Name = (System::String^)Obj;
+				Item->CheckState = ECheckState::Unchecked;
+
+				m_CheckedListBoxList->Add(Item);
+			}
+		}
+	}
+}
 
 Pep::Forms::CheckedListBoxItem^ Pep::Forms::CheckedListBoxItemCollection::GetItem(
   int nIndex)

@@ -70,10 +70,6 @@ static LRESULT lOnLeftButtonDownMsg(
 		::SendMessage(hWnd, LB_SETCARETINDEX, pData->nIndex, FALSE);
 		::SendMessage(hWnd, LB_SETCURSEL, pData->nIndex, 0);
 	}
-	else
-	{
-		::SendMessage(hWnd, LB_SETCURSEL, (WPARAM)-1, 0);
-	}
 
 	return 0;
 }

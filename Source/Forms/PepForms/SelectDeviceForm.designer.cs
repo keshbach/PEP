@@ -30,13 +30,14 @@
             /// </summary>
             private void InitializeComponent()
             {
+            this.components = new System.ComponentModel.Container();
             this.splitContainerDevice = new System.Windows.Forms.SplitContainer();
             this.treeViewDevice = new System.Windows.Forms.TreeView();
             this.labelDevice = new System.Windows.Forms.Label();
             this.textBoxPinDiagram = new System.Windows.Forms.TextBox();
             this.labelPinDiagram = new System.Windows.Forms.Label();
             this.labelFilter = new System.Windows.Forms.Label();
-            this.checkedListBoxFilter = new System.Windows.Forms.CheckedListBox();
+            this.checkedListBoxFilter = new Pep.Forms.CheckedListBox(this.components);
             this.buttonOK = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.labelSearch = new System.Windows.Forms.Label();
@@ -130,13 +131,11 @@
             // 
             this.checkedListBoxFilter.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.checkedListBoxFilter.CheckOnClick = true;
-            this.checkedListBoxFilter.FormattingEnabled = true;
             this.checkedListBoxFilter.Location = new System.Drawing.Point(420, 24);
             this.checkedListBoxFilter.Name = "checkedListBoxFilter";
             this.checkedListBoxFilter.Size = new System.Drawing.Size(132, 289);
             this.checkedListBoxFilter.TabIndex = 1;
-            this.checkedListBoxFilter.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxFilter_ItemCheck);
+            this.checkedListBoxFilter.CheckStateChange += new System.EventHandler<Pep.Forms.CheckStateChangedEventArgs>(this.checkedListBoxFilter_CheckStateChange);
             // 
             // buttonOK
             // 
@@ -226,7 +225,7 @@
             private System.Windows.Forms.Label labelPinDiagram;
             private System.Windows.Forms.TextBox textBoxPinDiagram;
             private System.Windows.Forms.Label labelFilter;
-            private System.Windows.Forms.CheckedListBox checkedListBoxFilter;
+            private Pep.Forms.CheckedListBox checkedListBoxFilter;
             private System.Windows.Forms.Button buttonOK;
             private System.Windows.Forms.Button buttonCancel;
             private System.Windows.Forms.Label labelSearch;

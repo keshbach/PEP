@@ -124,6 +124,10 @@ namespace Pep
 			virtual void Insert(int nIndex, CheckedListBoxItem^ CheckedListBoxItem);
 			virtual void RemoveAt(int nIndex);
 
+		// Other
+		public:
+			void AddRange(array<System::Object^>^ ObjectArray);
+
 		protected:
 			/// <summary>
 			/// Clean up any resources being used.
