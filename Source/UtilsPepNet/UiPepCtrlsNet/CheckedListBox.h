@@ -45,7 +45,7 @@ namespace Pep
 			/// </summary>
 
 			[System::ComponentModel::Browsable(false),
-				System::ComponentModel::EditorBrowsableAttribute(System::ComponentModel::EditorBrowsableState::Never)]
+				System::ComponentModel::EditorBrowsableAttribute(System::ComponentModel::EditorBrowsableState::Always)]
 			property System::Int32 MinWidth
 			{
 				System::Int32 get()
