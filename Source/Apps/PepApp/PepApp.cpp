@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -18,6 +18,7 @@
 #include <Utils/UtHeapProcess.h>
 
 #include <UtilsDevice/UtPepDevices.h>
+#include <UtilsDevice/UtPAL.h>
 
 #include <UtilsPep/UiPepCtrls.h>
 
@@ -53,6 +54,9 @@ typedef BOOL (STDAPICALLTYPE *TPathAppendWFunc)(_Inout_ LPWSTR pszPath, _In_ LPC
 typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesInitializeFunc)(_In_ LPCWSTR pszPluginPath);
 typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesUninitializeFunc)(VOID);
 
+typedef BOOL(UTPALAPI* TUtPALInitializeFunc)(VOID);
+typedef BOOL(UTPALAPI* TUtPALUninitializeFunc)(VOID);
+
 typedef VOID (UIPEPCTRLSAPI* TUiPepCtrlsInitializeFunc)(VOID);
 typedef VOID (UIPEPCTRLSAPI* TUiPepCtrlsUninitializeFunc)(VOID);
 
@@ -60,35 +64,43 @@ typedef VOID (UIPEPCTRLSAPI* TUiPepCtrlsUninitializeFunc)(VOID);
 
 #pragma region Structures
 
-typedef struct tagTPepAppHostData
+typedef struct tagTPepAppHostModuleData
 {
     HMODULE hModule;
     TPepAppHostInitializeFunc pInitialize;
     TPepAppHostUninitializeFunc pUninitialize;
     TPepAppHostExecuteFunc pExecute;
-} TPepAppHostData;
+} TPepAppHostModuleData;
 
-typedef struct tagTPepDeviceData
+typedef struct tagTPepDeviceModuleData
 {
 	HMODULE hModule;
 	TUtPepDevicesInitializeFunc pInitialize;
 	TUtPepDevicesUninitializeFunc pUninitialize;
-} TPepDeviceData;
+} TPepDeviceModuleData;
 
-typedef struct tagTPepCtrlsData
+typedef struct tagTPALModuleData
+{
+	HMODULE hModule;
+	TUtPALInitializeFunc pInitialize;
+	TUtPALUninitializeFunc pUninitialize;
+} TPALModuleData;
+
+typedef struct tagTPepCtrlsModuleData
 {
 	HMODULE hModule;
 	TUiPepCtrlsInitializeFunc pInitialize;
 	TUiPepCtrlsUninitializeFunc pUninitialize;
-} TPepCtrlsData;
+} TPepCtrlsModuleData;
 
 typedef struct tagTPepAppData
 {
     HINSTANCE hInstance;
 	LPCWSTR pszPluginPath;
-    TPepAppHostData AppHostData;
-	TPepDeviceData DeviceData;
-	TPepCtrlsData CtrlsData;
+    TPepAppHostModuleData AppHostModuleData;
+	TPepDeviceModuleData DeviceModuleData;
+	TPALModuleData PALModuleData;
+	TPepCtrlsModuleData CtrlsModuleData;
 } TPepAppData;
 
 #pragma endregion
@@ -255,25 +267,25 @@ static VOID lUninitialize()
     l_hAppRunningMutex = NULL;
 }
 
-static BOOL lInitializePepAppHostData(
-  _In_ TPepAppHostData* pPepAppHostData)
+static BOOL lInitializePepAppHostModuleData(
+  _In_ TPepAppHostModuleData* pPepAppHostModuleData)
 {
-	pPepAppHostData->hModule = ::LoadLibrary(L"PepAppHost.dll");
+	pPepAppHostModuleData->hModule = ::LoadLibrary(L"PepAppHost.dll");
 
-	if (pPepAppHostData->hModule == NULL)
+	if (pPepAppHostModuleData->hModule == NULL)
 	{
 		return FALSE;
 	}
 
-	pPepAppHostData->pInitialize = (TPepAppHostInitializeFunc)::GetProcAddress(pPepAppHostData->hModule, "PepAppHostInitialize");
-	pPepAppHostData->pUninitialize = (TPepAppHostUninitializeFunc)::GetProcAddress(pPepAppHostData->hModule, "PepAppHostUninitialize");
-	pPepAppHostData->pExecute = (TPepAppHostExecuteFunc)::GetProcAddress(pPepAppHostData->hModule, "PepAppHostExecute");
+	pPepAppHostModuleData->pInitialize = (TPepAppHostInitializeFunc)::GetProcAddress(pPepAppHostModuleData->hModule, "PepAppHostInitialize");
+	pPepAppHostModuleData->pUninitialize = (TPepAppHostUninitializeFunc)::GetProcAddress(pPepAppHostModuleData->hModule, "PepAppHostUninitialize");
+	pPepAppHostModuleData->pExecute = (TPepAppHostExecuteFunc)::GetProcAddress(pPepAppHostModuleData->hModule, "PepAppHostExecute");
 
-	if (pPepAppHostData->pInitialize == NULL ||
-		pPepAppHostData->pUninitialize == NULL ||
-		pPepAppHostData->pExecute == NULL)
+	if (pPepAppHostModuleData->pInitialize == NULL ||
+		pPepAppHostModuleData->pUninitialize == NULL ||
+		pPepAppHostModuleData->pExecute == NULL)
 	{
-		::FreeLibrary(pPepAppHostData->hModule);
+		::FreeLibrary(pPepAppHostModuleData->hModule);
 
 		return FALSE;
 	}
@@ -281,10 +293,10 @@ static BOOL lInitializePepAppHostData(
 	return TRUE;
 }
 
-static BOOL lUninitializePepAppHostData(
-  _In_ TPepAppHostData* pPepAppHostData)
+static BOOL lUninitializePepAppHostModuleData(
+  _In_ TPepAppHostModuleData* pPepAppHostModuleData)
 {
-	pPepAppHostData;
+	pPepAppHostModuleData;
 
 	// Cannot free the library because there is no way to unload the .NET Framework.
 
@@ -293,55 +305,23 @@ static BOOL lUninitializePepAppHostData(
 	return TRUE;
 }
 
-static BOOL lInitializeDeviceData(
-  _In_ TPepDeviceData* pDeviceData)
+static BOOL lInitializeDeviceModuleData(
+  _In_ TPepDeviceModuleData* pDeviceModuleData)
 {
-	pDeviceData->hModule = ::LoadLibrary(L"UtPepDevices.dll");
+	pDeviceModuleData->hModule = ::LoadLibrary(L"UtPepDevices.dll");
 
-	if (pDeviceData->hModule == NULL)
+	if (pDeviceModuleData->hModule == NULL)
 	{
 		return FALSE;
 	}
 
-	pDeviceData->pInitialize = (TUtPepDevicesInitializeFunc)::GetProcAddress(pDeviceData->hModule, "UtPepDevicesInitialize");
-	pDeviceData->pUninitialize = (TUtPepDevicesUninitializeFunc)::GetProcAddress(pDeviceData->hModule, "UtPepDevicesUninitialize");
+	pDeviceModuleData->pInitialize = (TUtPepDevicesInitializeFunc)::GetProcAddress(pDeviceModuleData->hModule, "UtPepDevicesInitialize");
+	pDeviceModuleData->pUninitialize = (TUtPepDevicesUninitializeFunc)::GetProcAddress(pDeviceModuleData->hModule, "UtPepDevicesUninitialize");
 
-	if (pDeviceData->pInitialize == NULL ||
-		pDeviceData->pUninitialize == NULL)
+	if (pDeviceModuleData->pInitialize == NULL ||
+		pDeviceModuleData->pUninitialize == NULL)
 	{
-		::FreeLibrary(pDeviceData->hModule);
-
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static BOOL lUninitializeDeviceData(
-  _In_ TPepDeviceData* pDeviceData)
-{
-	::FreeLibrary(pDeviceData->hModule);
-
-	return TRUE;
-}
-
-static BOOL lInitializeCtrlsData(
-  _In_ TPepCtrlsData* pCtrlsData)
-{
-	pCtrlsData->hModule = ::LoadLibrary(L"UiPepCtrls.dll");
-
-	if (pCtrlsData->hModule == NULL)
-	{
-		return FALSE;
-	}
-
-	pCtrlsData->pInitialize = (TUiPepCtrlsInitializeFunc)::GetProcAddress(pCtrlsData->hModule, "UiPepCtrlsInitialize");
-	pCtrlsData->pUninitialize = (TUiPepCtrlsUninitializeFunc)::GetProcAddress(pCtrlsData->hModule, "UiPepCtrlsUninitialize");
-
-	if (pCtrlsData->pInitialize == NULL ||
-		pCtrlsData->pUninitialize == NULL)
-	{
-		::FreeLibrary(pCtrlsData->hModule);
+		::FreeLibrary(pDeviceModuleData->hModule);
 
 		return FALSE;
 	}
@@ -349,16 +329,80 @@ static BOOL lInitializeCtrlsData(
 	return TRUE;
 }
 
-static BOOL lUninitializeCtrlsData(
-	_In_ TPepCtrlsData* pCtrlsData)
+static BOOL lUninitializeDeviceModuleData(
+  _In_ TPepDeviceModuleData* pDeviceModuleData)
 {
-	::FreeLibrary(pCtrlsData->hModule);
+	::FreeLibrary(pDeviceModuleData->hModule);
+
+	return TRUE;
+}
+
+static BOOL lInitializePALModuleData(
+  _In_ TPALModuleData* pPALModuleData)
+{
+	pPALModuleData->hModule = ::LoadLibrary(L"UtPAL.dll");
+
+	if (pPALModuleData->hModule == NULL)
+	{
+		return FALSE;
+	}
+
+	pPALModuleData->pInitialize = (TUtPALInitializeFunc)::GetProcAddress(pPALModuleData->hModule, "UtPALInitialize");
+	pPALModuleData->pUninitialize = (TUtPALUninitializeFunc)::GetProcAddress(pPALModuleData->hModule, "UtPALUninitialize");
+
+	if (pPALModuleData->pInitialize == NULL ||
+		pPALModuleData->pUninitialize == NULL)
+	{
+		::FreeLibrary(pPALModuleData->hModule);
+
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static BOOL lUninitializePALModuleData(
+	_In_ TPALModuleData* pPALModuleData)
+{
+	::FreeLibrary(pPALModuleData->hModule);
+
+	return TRUE;
+}
+
+static BOOL lInitializeCtrlsModuleData(
+  _In_ TPepCtrlsModuleData* pCtrlsModuleData)
+{
+	pCtrlsModuleData->hModule = ::LoadLibrary(L"UiPepCtrls.dll");
+
+	if (pCtrlsModuleData->hModule == NULL)
+	{
+		return FALSE;
+	}
+
+	pCtrlsModuleData->pInitialize = (TUiPepCtrlsInitializeFunc)::GetProcAddress(pCtrlsModuleData->hModule, "UiPepCtrlsInitialize");
+	pCtrlsModuleData->pUninitialize = (TUiPepCtrlsUninitializeFunc)::GetProcAddress(pCtrlsModuleData->hModule, "UiPepCtrlsUninitialize");
+
+	if (pCtrlsModuleData->pInitialize == NULL ||
+		pCtrlsModuleData->pUninitialize == NULL)
+	{
+		::FreeLibrary(pCtrlsModuleData->hModule);
+
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static BOOL lUninitializeCtrlsModuleData(
+	_In_ TPepCtrlsModuleData* pCtrlsModuleData)
+{
+	::FreeLibrary(pCtrlsModuleData->hModule);
 
 	return TRUE;
 }
 
 static BOOL lInitializePepDevices(
-  _In_ TPepDeviceData* pDeviceData,
+  _In_ TPepDeviceModuleData* pDeviceModuleData,
   _In_ LPCWSTR pszPluginPath)
 {
 	BOOL bResult;
@@ -371,7 +415,7 @@ static BOOL lInitializePepDevices(
 
 	if (pszPluginPath)
 	{
-		bResult = pDeviceData->pInitialize(pszPluginPath);
+		bResult = pDeviceModuleData->pInitialize(pszPluginPath);
 	}
 	else
 	{
@@ -406,7 +450,7 @@ static BOOL lInitializePepDevices(
 
 		::FreeLibrary(hModule);
 
-		bResult = pDeviceData->pInitialize(cPluginPath);
+		bResult = pDeviceModuleData->pInitialize(cPluginPath);
 	}
 
 	return bResult;
@@ -415,17 +459,17 @@ static BOOL lInitializePepDevices(
 static VOID PEPAPPSPLASHWINDOWEXECUTEAPI lExecuteInitializeControls(
   _In_ PVOID pvData)
 {
-	TPepCtrlsData* pCtrlsData = (TPepCtrlsData*)pvData;
+	TPepCtrlsModuleData* pCtrlsModuleData = (TPepCtrlsModuleData*)pvData;
 
-	pCtrlsData->pInitialize();
+	pCtrlsModuleData->pInitialize();
 }
 
 static VOID PEPAPPSPLASHWINDOWEXECUTEAPI lExecuteUninitializeControls(
   _In_ PVOID pvData)
 {
-	TPepCtrlsData* pCtrlsData = (TPepCtrlsData*)pvData;
+	TPepCtrlsModuleData* pCtrlsModuleData = (TPepCtrlsModuleData*)pvData;
 
-	pCtrlsData->pUninitialize();
+	pCtrlsModuleData->pUninitialize();
 }
 
 static DWORD WINAPI lRunSetupThreadProc(
@@ -450,7 +494,7 @@ static DWORD WINAPI lRunSetupThreadProc(
         return FALSE;
     }
 
-	if (FALSE == lInitializePepAppHostData(&pPepAppData->AppHostData))
+	if (FALSE == lInitializePepAppHostModuleData(&pPepAppData->AppHostModuleData))
 	{
 		PepAppSplashWindowDisplayUnknownError();
 
@@ -459,9 +503,9 @@ static DWORD WINAPI lRunSetupThreadProc(
         return FALSE;
     }
 
-	if (FALSE == lInitializeDeviceData(&pPepAppData->DeviceData))
+	if (FALSE == lInitializePALModuleData(&pPepAppData->PALModuleData))
 	{
-		lUninitializePepAppHostData(&pPepAppData->AppHostData);
+		lUninitializePepAppHostModuleData(&pPepAppData->AppHostModuleData);
 
 		PepAppSplashWindowDisplayUnknownError();
 
@@ -470,10 +514,10 @@ static DWORD WINAPI lRunSetupThreadProc(
 		return FALSE;
 	}
 
-	if (FALSE == lInitializeCtrlsData(&pPepAppData->CtrlsData))
+	if (FALSE == pPepAppData->PALModuleData.pInitialize())
 	{
-		lUninitializeDeviceData(&pPepAppData->DeviceData);
-		lUninitializePepAppHostData(&pPepAppData->AppHostData);
+		lUninitializePALModuleData(&pPepAppData->PALModuleData);
+		lUninitializePepAppHostModuleData(&pPepAppData->AppHostModuleData);
 
 		PepAppSplashWindowDisplayUnknownError();
 
@@ -482,11 +526,45 @@ static DWORD WINAPI lRunSetupThreadProc(
 		return FALSE;
 	}
 
-	if (FALSE == lInitializePepDevices(&pPepAppData->DeviceData, pPepAppData->pszPluginPath))
+	if (FALSE == lInitializeDeviceModuleData(&pPepAppData->DeviceModuleData))
 	{
-		lUninitializeCtrlsData(&pPepAppData->CtrlsData);
-		lUninitializeDeviceData(&pPepAppData->DeviceData);
-		lUninitializePepAppHostData(&pPepAppData->AppHostData);
+		pPepAppData->PALModuleData.pUninitialize();
+
+		lUninitializePALModuleData(&pPepAppData->PALModuleData);
+		lUninitializePepAppHostModuleData(&pPepAppData->AppHostModuleData);
+
+		PepAppSplashWindowDisplayUnknownError();
+
+		lUninitialize();
+
+		return FALSE;
+	}
+
+	if (FALSE == lInitializeCtrlsModuleData(&pPepAppData->CtrlsModuleData))
+	{
+		lUninitializeDeviceModuleData(&pPepAppData->DeviceModuleData);
+
+		pPepAppData->PALModuleData.pUninitialize();
+
+		lUninitializePALModuleData(&pPepAppData->PALModuleData);
+		lUninitializePepAppHostModuleData(&pPepAppData->AppHostModuleData);
+
+		PepAppSplashWindowDisplayUnknownError();
+
+		lUninitialize();
+
+		return FALSE;
+	}
+
+	if (FALSE == lInitializePepDevices(&pPepAppData->DeviceModuleData, pPepAppData->pszPluginPath))
+	{
+		lUninitializeCtrlsModuleData(&pPepAppData->CtrlsModuleData);
+		lUninitializeDeviceModuleData(&pPepAppData->DeviceModuleData);
+
+		pPepAppData->PALModuleData.pUninitialize();
+
+		lUninitializePALModuleData(&pPepAppData->PALModuleData);
+		lUninitializePepAppHostModuleData(&pPepAppData->AppHostModuleData);
 
 		PepAppSplashWindowDisplayPluginsLoadFailed();
 
@@ -495,17 +573,21 @@ static DWORD WINAPI lRunSetupThreadProc(
 		return FALSE;
 	}
 
-	PepAppSplashWindowExecute(lExecuteInitializeControls, &pPepAppData->CtrlsData);
+	PepAppSplashWindowExecute(lExecuteInitializeControls, &pPepAppData->CtrlsModuleData);
 
-	if (FALSE == pPepAppData->AppHostData.pInitialize())
+	if (FALSE == pPepAppData->AppHostModuleData.pInitialize())
 	{
-		PepAppSplashWindowExecute(lExecuteUninitializeControls, &pPepAppData->CtrlsData);
+		PepAppSplashWindowExecute(lExecuteUninitializeControls, &pPepAppData->CtrlsModuleData);
 
-		pPepAppData->DeviceData.pUninitialize();
+		pPepAppData->DeviceModuleData.pUninitialize();
 
-		lUninitializeCtrlsData(&pPepAppData->CtrlsData);
-		lUninitializeDeviceData(&pPepAppData->DeviceData);
-		lUninitializePepAppHostData(&pPepAppData->AppHostData);
+		lUninitializeCtrlsModuleData(&pPepAppData->CtrlsModuleData);
+		lUninitializeDeviceModuleData(&pPepAppData->DeviceModuleData);
+
+		pPepAppData->PALModuleData.pUninitialize();
+
+		lUninitializePALModuleData(&pPepAppData->PALModuleData);
+		lUninitializePepAppHostModuleData(&pPepAppData->AppHostModuleData);
 
 		PepAppSplashWindowDisplayUnknownError();
 
@@ -635,14 +717,16 @@ INT PepAppExecute(
 		return 1;
     }
 
-    pPepAppData->AppHostData.pExecute(&dwExitCode);
+    pPepAppData->AppHostModuleData.pExecute(&dwExitCode);
 
-	pPepAppData->CtrlsData.pUninitialize();
-	pPepAppData->DeviceData.pUninitialize();
+	pPepAppData->CtrlsModuleData.pUninitialize();
+	pPepAppData->DeviceModuleData.pUninitialize();
+	pPepAppData->PALModuleData.pUninitialize();
 
-	lUninitializeCtrlsData(&pPepAppData->CtrlsData);
-	lUninitializeDeviceData(&pPepAppData->DeviceData);
-	lUninitializePepAppHostData(&pPepAppData->AppHostData);
+	lUninitializeCtrlsModuleData(&pPepAppData->CtrlsModuleData);
+	lUninitializeDeviceModuleData(&pPepAppData->DeviceModuleData);
+	lUninitializePALModuleData(&pPepAppData->PALModuleData);
+	lUninitializePepAppHostModuleData(&pPepAppData->AppHostModuleData);
 
 	UtFreeMem(pPepAppData);
 
@@ -654,5 +738,5 @@ INT PepAppExecute(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

@@ -1,37 +1,39 @@
 ;
-;  Copyright (C) 2008-2019 Kevin Eshbach
+;  Copyright (C) 2008-2020 Kevin Eshbach
 ;
 
 LIBRARY UtPAL BASE=0x400370000
 EXPORTS
-    UtPALClearFuseMap @ 1
-    UtPALGetFuseMapSize @ 2
-    UtPALBlowFuse @ 3
-    UtPALBlowFuseRange @ 4
-    UtPALBlowFuseRow @ 5
-    UtPALBlowFuseRows @ 6
-    UtPALBlowFuseColumn @ 7
-    UtPALBlowFuseColumns @ 8
-    UtPALRestoreFuse @ 9
-    UtPALRestoreFuseRow @ 10
-    UtPALFuseNumberToFuseRow @ 11
-    UtPALFuseColumnFromPin @ 12
-    UtPALIsFuseColumnPresent @ 13
-    UtPALTermCount @ 14
-    UtPALTermRowToFuseRow @ 15
-    UtPALIsOutputEnablePresent @ 16
-    UtPALOutputEnableFuseRow @ 17
-    UtPALWriteFuseMapToJEDFile @ 18
-    UtPALFuseMapText @ 19
-    UtPALFuseMapSampleText @ 20
-    UtPALDevicePinConfigToPinDefined @ 21
-    UtPALVerifyDevicePinConfig @ 22
-    UtPALAllocMinimizedTerms @ 23
-    UtPALFreeMinimizedTerms @ 24
-    UtPALAreSimiliarTermsPresent @ 25
-    UtPALAllocMergedTerms @ 26
-    UtPALFreeMergedTerms @ 27
+    UtPALInitialize @ 1
+    UtPALUninitialize @ 2
+    UtPALClearFuseMap @ 3
+    UtPALGetFuseMapSize @ 4
+    UtPALBlowFuse @ 5
+    UtPALBlowFuseRange @ 6
+    UtPALBlowFuseRow @ 7
+    UtPALBlowFuseRows @ 8
+    UtPALBlowFuseColumn @ 9
+    UtPALBlowFuseColumns @ 10
+    UtPALRestoreFuse @ 11
+    UtPALRestoreFuseRow @ 12
+    UtPALFuseNumberToFuseRow @ 13
+    UtPALFuseColumnFromPin @ 14
+    UtPALIsFuseColumnPresent @ 15
+    UtPALTermCount @ 16
+    UtPALTermRowToFuseRow @ 17
+    UtPALIsOutputEnablePresent @ 18
+    UtPALOutputEnableFuseRow @ 19
+    UtPALWriteFuseMapToJEDFile @ 20
+    UtPALFuseMapText @ 21
+    UtPALFuseMapSampleText @ 22
+    UtPALDevicePinConfigToPinDefined @ 23
+    UtPALVerifyDevicePinConfig @ 24
+    UtPALAllocMinimizedTerms @ 25
+    UtPALFreeMinimizedTerms @ 26
+    UtPALAreSimiliarTermsPresent @ 27
+    UtPALAllocMergedTerms @ 28
+    UtPALFreeMergedTerms @ 29
 
 ;
-;  Copyright (C) 2008-2019 Kevin Eshbach
+;  Copyright (C) 2008-2020 Kevin Eshbach
 ;

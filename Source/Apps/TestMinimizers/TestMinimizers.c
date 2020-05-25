@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2012-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2012-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -17,7 +17,7 @@
 #include <Includes/UtMacros.h>
 
 static LPCWSTR l_ppszSampleTerms1[] = {
-    L"0111111100",
+    TEXT("0111111100"),
     TEXT("0111111110"),
     TEXT("0111111101"),
     TEXT("0000000011"),
@@ -346,7 +346,19 @@ static void lRunMinimizerTest(
 
 static int lRunTest1()
 {
+	if (FALSE == UtPALInitialize())
+	{
+		wprintf(L"Call to UtPALInitialize has failed.\n");
+
+		return -1;
+	}
+
     lRunMinimizerTest(l_ppszSampleTerms1);
+
+	if (FALSE == UtPALUninitialize())
+	{
+		wprintf(L"Call to UtPALUninitialize has failed.\n");
+	}
 
     return 0;
 }
@@ -402,5 +414,5 @@ int _cdecl wmain(int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2012-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2012-2020 Kevin Eshbach                                  */
 /***************************************************************************/

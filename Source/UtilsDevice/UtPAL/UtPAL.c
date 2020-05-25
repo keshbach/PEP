@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -19,40 +19,7 @@
 #include "Quine-McClusky.h"
 #include "MatchTerms.h"
 
-#pragma region "Local Variables"
-
-static ULONG l_nHeapRefCount = 0;
-
-#pragma endregion
-
 #pragma region "Local Functions"
-
-static BOOL lInitialize(VOID)
-{
-	if (l_nHeapRefCount == 0)
-	{
-		if (FALSE == UtInitHeap())
-		{
-			return FALSE;
-		}
-	}
-
-	++l_nHeapRefCount;
-
-	return TRUE;
-}
-
-static BOOL lUninitialize(VOID)
-{
-	--l_nHeapRefCount;
-
-	if (l_nHeapRefCount == 0)
-	{
-		UtUninitHeap();
-	}
-
-	return TRUE;
-}
 
 static ULONG lCalcFuseColumnCount(
   const TPALData* pPALData)
@@ -696,6 +663,16 @@ static const TDevicePinFuseColumns* lFindDevicePinFuseColumns(
 
 #pragma endregion
 
+BOOL UTPALAPI UtPALInitialize(VOID)
+{
+	return UtInitHeap();
+}
+
+BOOL UTPALAPI UtPALUninitialize(VOID)
+{
+	return UtUninitHeap();
+}
+
 BOOL UTPALAPI UtPALClearFuseMap(
   LPBYTE pbyData,
   ULONG ulDataLen)
@@ -1070,16 +1047,9 @@ BOOL UTPALAPI UtPALWriteFuseMapToJEDFile(
     ULONG ulFuseSize;
     HANDLE hFile;
 
-	if (FALSE == lInitialize())
-	{
-		return FALSE;
-	}
-
     if (FALSE == UtPALGetFuseMapSize(pPALData, &ulFuseSize) ||
         ulDataLen != ulFuseSize)
     {
-		lUninitialize();
-
 		return FALSE;
     }
 
@@ -1088,8 +1058,6 @@ BOOL UTPALAPI UtPALWriteFuseMapToJEDFile(
 
     if (hFile == INVALID_HANDLE_VALUE)
     {
-		lUninitialize();
-
         return FALSE;
     }
 
@@ -1110,8 +1078,6 @@ BOOL UTPALAPI UtPALWriteFuseMapToJEDFile(
         DeleteFileW(pszFile);
     }
 
-	lUninitialize();
-
     return bResult;
 }
 
@@ -1131,18 +1097,11 @@ BOOL UTPALAPI UtPALFuseMapText(
     LPSTR pszFileData;
     INT nBufferLen;
 
-	if (FALSE == lInitialize())
-	{
-		return FALSE;
-	}
-
     if (0 == GetTempPathW(MArrayLen(cTempPath), cTempPath) ||
         0 == GetTempFileNameW(cTempPath, L"PAL", 1, cFile) ||
         FALSE == UtPALWriteFuseMapToJEDFile(pPALData, pbyData, ulDataLen,
                                             pszPALType, nPinCount, cFile))
     {
-		lUninitialize();
-
         return FALSE;
     }
 
@@ -1198,8 +1157,6 @@ EndFreeMem:
 EndDelete:
     DeleteFileW(cFile);
 
-	lUninitialize();
-
     return bResult;
 }
 
@@ -1215,18 +1172,11 @@ BOOL UTPALAPI UtPALFuseMapSampleText(
     INT nBufferLen;
     LPCWSTR pszSampleFuseMapText;
 
-	if (FALSE == lInitialize())
-	{
-		return FALSE;
-	}
-
     if (pPALData->pAllocSampleFuseMapTextFunc == NULL &&
         pPALData->pFreeSampleFuseMapTextFunc == NULL)
     {
         if (FALSE == UtPALGetFuseMapSize(pPALData, &ulFuseSize))
         {
-			lUninitialize();
-
             return FALSE;
         }
 
@@ -1287,8 +1237,6 @@ BOOL UTPALAPI UtPALFuseMapSampleText(
 
         pPALData->pFreeSampleFuseMapTextFunc(pszSampleFuseMapText);
     }
-
-	lUninitialize();
 
     return bResult;
 }
@@ -1356,18 +1304,11 @@ BOOL UTPALAPI UtPALVerifyDevicePinConfig(
 
     *pbValid = FALSE;
 
-	if (FALSE == lInitialize())
-	{
-		return FALSE;
-    }
-
     pPALPinDefined = (TPALPinDefined*)UtAllocMem(sizeof(TPALPinDefined) *
                                                      nTotalDevicePinConfigs);
 
     if (pPALPinDefined == NULL)
     {
-        lUninitialize();
-
         return FALSE;
     }
 
@@ -1388,8 +1329,6 @@ BOOL UTPALAPI UtPALVerifyDevicePinConfig(
     }
     
     UtFreeMem(pPALPinDefined);
-
-	lUninitialize();
 
     return TRUE;
 }
@@ -1449,5 +1388,5 @@ VOID UTPALAPI UtPALFreeMergedTerms(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

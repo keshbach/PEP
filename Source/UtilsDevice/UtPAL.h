@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPAL_H)
@@ -27,6 +27,10 @@ typedef struct tagTPALPinDefined
     UINT nPin;
     BOOL bDefined;
 } TPALPinDefined;
+
+MExternC BOOL UTPALAPI UtPALInitialize(VOID);
+
+MExternC BOOL UTPALAPI UtPALUninitialize(VOID);
 
 MExternC BOOL UTPALAPI UtPALClearFuseMap(LPBYTE pbyData,
                                          ULONG ulDataLen);
@@ -155,5 +159,5 @@ MExternC VOID UTPALAPI UtPALFreeMergedTerms(LPWSTR* ppszTerms);
 #endif /* end of UtPAL_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

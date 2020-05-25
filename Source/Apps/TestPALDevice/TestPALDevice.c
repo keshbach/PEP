@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -399,6 +399,13 @@ static int lReadDevice(
     UINT nTotalDevicePinConfigs;
     ULONG ulDataLen;
 
+	if (FALSE == UtPALInitialize())
+	{
+		wprintf(L"Call to UtPALInitialize has failed.\n");
+
+		return -1;
+	}
+
     lInitDeviceIOFuncs(&DeviceIOFuncs);
 
     GetModuleFileNameW(GetModuleHandle(NULL), cPath, MArrayLen(cPath));
@@ -411,7 +418,7 @@ static int lReadDevice(
     {
         wprintf(L"Call to UtPepDevicesInitialize has failed.\n");
 
-        return -1;
+		goto EndPALUninitialize;
     }
 
     wprintf(L"Calling UtPepDevicesFindDevice for the device \"%s\".\n", pszDevice);
@@ -607,6 +614,12 @@ EndPepDevicesUninit:
         wprintf(L"Call to UtPepDevicesUninitialize has failed.\n");
     }
 
+EndPALUninitialize:
+	if (FALSE == UtPALUninitialize())
+	{
+		wprintf(L"Call to UtPALUninitialize has failed.\n");
+	}
+
     return nResult;
 }
 
@@ -670,5 +683,5 @@ int __cdecl wmain (int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
