@@ -17,6 +17,8 @@ namespace Common
 
             System::Drawing::Design::UITypeEditorEditStyle GetEditStyle(System::ComponentModel::ITypeDescriptorContext^ context) override
             {
+				context;
+
                 return System::Drawing::Design::UITypeEditorEditStyle::Modal;
             }
         };
@@ -31,6 +33,8 @@ namespace Common
 
             System::ComponentModel::TypeConverter::StandardValuesCollection^ GetStandardValues(System::ComponentModel::ITypeDescriptorContext^ context) override
             {
+				context;
+
                 return nullptr;
             }
 
@@ -41,11 +45,16 @@ namespace Common
 
             bool GetStandardValuesSupported(System::ComponentModel::ITypeDescriptorContext^ context) override
             {
+				context;
+
                 return true;
             }
 
             bool IsValid(System::ComponentModel::ITypeDescriptorContext^ context, System::Object^ value) override
             {
+				context;
+				value;
+
                 return true;
             }
 
@@ -74,6 +83,9 @@ namespace Common
             {
                 System::String^ stringValue = dynamic_cast<System::String^>(value);
 
+				context; 
+				culture;
+
                 if (stringValue != nullptr)
                 {
                 }
@@ -83,11 +95,18 @@ namespace Common
 
             System::Object^ ConvertTo(System::Object^ value, System::Type^ destType) new
             {
+				value;
+				destType;
+
                 return nullptr;
             }
 
             System::Object^ ConvertTo(System::ComponentModel::ITypeDescriptorContext^ context, System::Globalization::CultureInfo^ culture, System::Object^ value, System::Type^ destType) override
             {
+				context;
+				culture;
+				value;
+
                 //if (value == MenuItemHelpList::typeid)
                 {
                     if (destType == System::String::typeid)

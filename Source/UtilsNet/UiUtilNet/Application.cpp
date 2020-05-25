@@ -7,6 +7,7 @@
 #include "Application.h"
 #include "ImageManager.h"
 
+#if defined(NEW_MENU_CODE)
 static HHOOK l_hHook = NULL;
 
 static LRESULT CALLBACK lGetMsgProc(
@@ -40,6 +41,7 @@ static LRESULT CALLBACK lGetMsgProc(
 
     return Result;
 }
+#endif
 
 System::Boolean Common::Forms::Application::Run(Common::Forms::MainForm^ MainForm)
 {
