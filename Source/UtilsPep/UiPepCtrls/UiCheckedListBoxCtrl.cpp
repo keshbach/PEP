@@ -63,8 +63,8 @@ static VOID lCalcRects(
 {
 	pCheckBoxRect->left = pItemRect->left;
 	pCheckBoxRect->top = pItemRect->top;
-	pCheckBoxRect->right = pItemRect->left + (pItemRect->bottom - pItemRect->top);
-	pCheckBoxRect->bottom = pItemRect->top + (pItemRect->bottom - pItemRect->top);
+	pCheckBoxRect->right = pItemRect->left + MRectHeight(*pItemRect);
+	pCheckBoxRect->bottom = pItemRect->top + MRectHeight(*pItemRect);
 
 	pInnerCheckBoxRect->left = pCheckBoxRect->left + CCheckBoxBorder;
 	pInnerCheckBoxRect->top = pCheckBoxRect->top + CCheckBoxBorder;
@@ -133,8 +133,8 @@ static VOID lNonThemedDrawItem(
   LPDRAWITEMSTRUCT pDrawItemStruct)
 {
 	TListBoxItemData* pItemData = (TListBoxItemData*)pDrawItemStruct->itemData;
-	INT nWidth = pDrawItemStruct->rcItem.right - pDrawItemStruct->rcItem.left;
-	INT nHeight = pDrawItemStruct->rcItem.bottom - pDrawItemStruct->rcItem.top;
+	INT nWidth = MRectWidth(pDrawItemStruct->rcItem);
+	INT nHeight = MRectHeight(pDrawItemStruct->rcItem);
 	HDC hMemDC = ::CreateCompatibleDC(pDrawItemStruct->hDC);
 	HBITMAP hMemBitmap = ::CreateCompatibleBitmap(pDrawItemStruct->hDC, nWidth, nHeight);
 	COLORREF crTextColor, crBackColor;
@@ -180,13 +180,13 @@ static VOID lNonThemedDrawItem(
 
 	UiPepCtrlFillSolidRect(hMemDC, ::GetSysColor(COLOR_WINDOW),
                            CheckBoxRect.left, CheckBoxRect.top,
-                           CheckBoxRect.right - CheckBoxRect.left,
-                           CheckBoxRect.bottom - CheckBoxRect.top);
+                           MRectWidth(CheckBoxRect),
+                           MRectHeight(CheckBoxRect));
 
 	UiPepCtrlFillSolidRect(hMemDC, crBackColor,
                            LabelRect.left, LabelRect.top,
-                           LabelRect.right - LabelRect.left,
-                           LabelRect.bottom - LabelRect.top);
+                           MRectWidth(LabelRect),
+                           MRectHeight(LabelRect));
 
 	UiPepCtrlSelectTwipsMode(hMemDC);
 
@@ -257,8 +257,8 @@ static VOID lThemedDrawItem(
   LPDRAWITEMSTRUCT pDrawItemStruct)
 {
 	TListBoxItemData* pItemData = (TListBoxItemData*)pDrawItemStruct->itemData;
-	INT nWidth = pDrawItemStruct->rcItem.right - pDrawItemStruct->rcItem.left;
-	INT nHeight = pDrawItemStruct->rcItem.bottom - pDrawItemStruct->rcItem.top;
+	INT nWidth = MRectWidth(pDrawItemStruct->rcItem);
+	INT nHeight = MRectHeight(pDrawItemStruct->rcItem);
 	HDC hMemDC = ::CreateCompatibleDC(pDrawItemStruct->hDC);
 	HBITMAP hMemBitmap = ::CreateCompatibleBitmap(pDrawItemStruct->hDC, nWidth, nHeight);
 	COLORREF crTextColor, crBackColor;
@@ -305,8 +305,8 @@ static VOID lThemedDrawItem(
 	UiPepCtrlFillSolidRect(hMemDC,
                            ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_WINDOW),
                            CheckBoxRect.left, CheckBoxRect.top,
-                           CheckBoxRect.right - CheckBoxRect.left,
-                           CheckBoxRect.bottom - CheckBoxRect.top);
+                           MRectWidth(CheckBoxRect),
+                           MRectHeight(CheckBoxRect));
 
 	switch (pItemData->dwState)
 	{
@@ -350,8 +350,8 @@ static VOID lThemedDrawItem(
 
 	UiPepCtrlFillSolidRect(hMemDC, crBackColor,
                            LabelRect.left, LabelRect.top,
-                           LabelRect.right - LabelRect.left,
-                           LabelRect.bottom - LabelRect.top);
+                           MRectWidth(LabelRect),
+                           MRectHeight(LabelRect));
 
 	UiPepCtrlSelectTwipsMode(hMemDC);
 
@@ -617,6 +617,14 @@ static LRESULT lOnCheckedListBoxGetMinWidth(
 	TListBoxItemData* pItemData;
 	SIZE Size;
 	POINT Point;
+	RECT Rect, CheckBoxRect, InnerCheckBoxRect, LabelRect;
+
+	if (LB_ERR == ::SendMessage(pData->hListBox, LB_GETITEMRECT, 0, (LPARAM)&Rect))
+	{
+		return FALSE;
+	}
+
+	lCalcRects(&Rect, &CheckBoxRect, &InnerCheckBoxRect, &LabelRect);
 
 	::SaveDC(hDC);
 
@@ -649,7 +657,7 @@ static LRESULT lOnCheckedListBoxGetMinWidth(
 
 	::ReleaseDC(pData->hListBox, hDC);
 
-	*pnWidth = Point.x + (::GetSystemMetrics(SM_CXBORDER) * 2);
+	*pnWidth = (LabelRect.left - CheckBoxRect.left) + (CLabelMargin * 2) + Point.x;
 
 	return TRUE;
 }

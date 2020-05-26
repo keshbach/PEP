@@ -10,6 +10,9 @@
 #define MPtSizeToTwips(nPtSize) (nPtSize * 20)
 #define MTwipsToPtSize(nTwipsSize) (nTwipsSize / 20)
 
+#define MRectWidth(rect) ((rect).right - (rect).left)
+#define MRectHeight(rect) ((rect).bottom - (rect).top)
+
 #endif /* end of UiMacros_H */
 
 /***************************************************************************/

@@ -493,7 +493,7 @@ System::Int32 Pep::Forms::CheckedListBox::GetMinWidth()
 	{
 		if (::SendMessage(m_hCheckedListBoxCtrl, CLBM_GETMINWIDTH, 0, (LPARAM)&nMinWidth))
 		{
-			return nMinWidth;
+			return nMinWidth + (CBorderWidth * 2);
 		}
 	}
 
