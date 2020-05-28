@@ -618,10 +618,34 @@ static LRESULT lOnCheckedListBoxGetMinWidth(
 	SIZE Size;
 	POINT Point;
 	RECT Rect, CheckBoxRect, InnerCheckBoxRect, LabelRect;
+	INT nIndex;
+
+	*pnWidth = 0;
+
+	if (nTotalItems == 0)
+	{
+		if (FALSE == lOnCheckedListBoxAddItem(hWnd, TEXT("")))
+		{
+			return FALSE;
+		}
+	}
 
 	if (LB_ERR == ::SendMessage(pData->hListBox, LB_GETITEMRECT, 0, (LPARAM)&Rect))
 	{
+		if (nTotalItems == 0)
+		{
+			lOnCheckedListBoxDeleteAllItems(hWnd);
+		}
+
 		return FALSE;
+	}
+
+	if (nTotalItems == 0)
+	{
+		if (FALSE == lOnCheckedListBoxDeleteAllItems(hWnd))
+		{
+			return FALSE;
+		}
 	}
 
 	lCalcRects(&Rect, &CheckBoxRect, &InnerCheckBoxRect, &LabelRect);
@@ -657,7 +681,12 @@ static LRESULT lOnCheckedListBoxGetMinWidth(
 
 	::ReleaseDC(pData->hListBox, hDC);
 
-	*pnWidth = (LabelRect.left - CheckBoxRect.left) + (CLabelMargin * 2) + Point.x;
+	*pnWidth = LabelRect.left - CheckBoxRect.left;
+
+	if (nTotalItems > 0)
+	{
+		*pnWidth += ((CLabelMargin * 2) + Point.x);
+	}
 
 	return TRUE;
 }
