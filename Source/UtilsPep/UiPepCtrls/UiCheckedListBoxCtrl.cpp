@@ -618,7 +618,6 @@ static LRESULT lOnCheckedListBoxGetMinWidth(
 	SIZE Size;
 	POINT Point;
 	RECT Rect, CheckBoxRect, InnerCheckBoxRect, LabelRect;
-	INT nIndex;
 
 	*pnWidth = 0;
 
