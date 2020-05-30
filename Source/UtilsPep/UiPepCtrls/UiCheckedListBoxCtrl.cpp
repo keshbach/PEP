@@ -948,7 +948,7 @@ static LRESULT lOnCreateMsg(
 
 	pData->hListBox = ::CreateWindowW(CUiListBoxCtrlClass, NULL,
 		                              WS_CHILD | WS_TABSTOP | WS_VSCROLL | WS_VISIBLE | WS_BORDER |
-		                                  LBS_OWNERDRAWFIXED | LBS_WANTKEYBOARDINPUT,
+		                                  LBS_OWNERDRAWFIXED | LBS_WANTKEYBOARDINPUT | LBS_NOINTEGRALHEIGHT,
 		                              pCreateStruct->x, pCreateStruct->y,
 		                              pCreateStruct->cx, pCreateStruct->cy,
 		                              hWnd, (HMENU)1, pCreateStruct->hInstance, NULL);
