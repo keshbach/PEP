@@ -302,6 +302,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="FormLocation.h" />
+    <ClInclude Include="IFormLocation.h" />
     <ClInclude Include="MenuItemHelp.h" />
     <ClInclude Include="MenuItemHelpList.h" />
     <ClInclude Include="MyApplicationContext.h" />

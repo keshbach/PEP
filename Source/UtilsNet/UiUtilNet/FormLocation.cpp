@@ -1,10 +1,12 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2019 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
 #include "FormLocation.h"
+
+#include "IFormLocation.h"
 
 #pragma region "Constants"
 
@@ -17,6 +19,8 @@
 #define CWindowYValueName L"Y"
 #define CWindowWidthValueName L"Width"
 #define CWindowHeightValueName L"Height"
+
+#define CExtraRegName L"Extra"
 
 #pragma endregion
 
@@ -32,6 +36,7 @@ Common::Forms::FormLocation::FormLocation(
 {
 	m_Form = form;
 	m_sRegistryPath = System::String::Format(L"{0}\\{1}", sRegistryPath, form->GetType()->ToString());
+	m_sExtraRegistryPath = System::String::Format(L"{0}\\{1}", m_sRegistryPath, CExtraRegName);
 
 	m_Form->Load += gcnew System::EventHandler(this, &Common::Forms::FormLocation::OnFormLoad);
 	m_Form->Closed += gcnew System::EventHandler(this, &Common::Forms::FormLocation::OnFormClosed);
@@ -59,6 +64,8 @@ void Common::Forms::FormLocation::OnFormLoad(
 	DWORD dwValue, dwXValue, dwYValue, dwWidthValue, dwHeightValue, dwValueLen;
 	HMONITOR hMonitor;
 	RECT Rect;
+	Microsoft::Win32::SafeHandles::SafeRegistryHandle^ RegistryHandle;
+	Microsoft::Win32::RegistryKey^ RegistryKey;
 
 	sender;
 	e;
@@ -116,6 +123,25 @@ void Common::Forms::FormLocation::OnFormLoad(
 		}
 
 		::RegCloseKey(hKey);
+
+		if (dynamic_cast<IFormLocation^>(m_Form) != nullptr)
+		{
+			pszRegistryPath = PtrToStringChars(m_sExtraRegistryPath);
+
+			Status = ::RegCreateKeyEx(HKEY_CURRENT_USER, pszRegistryPath, 0, NULL, REG_OPTION_NON_VOLATILE,
+                                      KEY_READ, NULL, &hKey, NULL);
+
+			if (Status == ERROR_SUCCESS)
+			{
+				RegistryHandle = gcnew Microsoft::Win32::SafeHandles::SafeRegistryHandle(System::IntPtr(hKey), true);
+
+				RegistryKey = Microsoft::Win32::RegistryKey::FromHandle(RegistryHandle);
+
+				dynamic_cast<IFormLocation^>(m_Form)->OnFormLocationRestored(RegistryKey);
+
+				RegistryKey->Close();
+			}
+		}
 	}
 }
 
@@ -127,6 +153,8 @@ void Common::Forms::FormLocation::OnFormClosed(
 	HKEY hKey;
 	LSTATUS Status;
 	DWORD dwValue;
+	Microsoft::Win32::SafeHandles::SafeRegistryHandle^ RegistryHandle;
+	Microsoft::Win32::RegistryKey^ RegistryKey;
 
 	sender;
 	e;
@@ -170,14 +198,34 @@ void Common::Forms::FormLocation::OnFormClosed(
 		::RegSetKeyValue(hKey, NULL, CWindowHeightValueName, REG_DWORD, (LPCVOID)&dwValue, sizeof(dwValue));
 
 		::RegCloseKey(hKey);
+
+		if (dynamic_cast<IFormLocation^>(m_Form) != nullptr)
+		{
+			pszRegistryPath = PtrToStringChars(m_sExtraRegistryPath);
+
+			Status = ::RegCreateKeyEx(HKEY_CURRENT_USER, pszRegistryPath, 0, NULL, REG_OPTION_NON_VOLATILE,
+                                      KEY_WRITE, NULL, &hKey, NULL);
+
+			if (Status == ERROR_SUCCESS)
+			{
+				RegistryHandle = gcnew Microsoft::Win32::SafeHandles::SafeRegistryHandle(System::IntPtr(hKey), true);
+
+				RegistryKey = Microsoft::Win32::RegistryKey::FromHandle(RegistryHandle);
+
+				dynamic_cast<IFormLocation^>(m_Form)->OnFormLocationSaved(RegistryKey);
+
+				RegistryKey->Close();
+			}
+		}
 	}
 
 	m_Form = nullptr;
 	m_sRegistryPath = nullptr;
+	m_sExtraRegistryPath = nullptr;
 }
 
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2019 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

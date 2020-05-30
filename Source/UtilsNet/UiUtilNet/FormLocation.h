@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2019 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -9,7 +9,7 @@ namespace Common
     namespace Forms
     {
         /// <summary>
-        /// Summary description for FormTimer.
+        /// Summary description for FormLocation.
         /// </summary>
 
 		public ref class FormLocation sealed
@@ -33,10 +33,11 @@ namespace Common
 		protected:
 			System::Windows::Forms::Form^ m_Form;
 			System::String^ m_sRegistryPath;
+			System::String^ m_sExtraRegistryPath;
 		};
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2019 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
