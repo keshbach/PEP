@@ -8,7 +8,8 @@ namespace Pep
 {
     namespace Forms
     {
-        public partial class SelectDeviceForm : System.Windows.Forms.Form
+        public partial class SelectDeviceForm : System.Windows.Forms.Form,
+                                                Common.Forms.IFormLocation
         {
             #region "Delegates"
             private delegate void DelegateRefreshDevices();
@@ -28,6 +29,9 @@ namespace Pep
 
             private const string CRegFilterNameValue = "Filter Name";
             private const string CRegFilterEnabledValue = "Filter Enabled";
+
+            private const string CRegFilterWidthValue = "Filter Width";
+            private const string CRegSplitterPositionValue = "Splitter Position";
             #endregion
 
             #region Member Variables
@@ -180,10 +184,6 @@ namespace Pep
                 }
             }
 
-            private void splitContainerDevice_SplitterMoved(object sender, System.Windows.Forms.SplitterEventArgs e)
-            {
-            }
-
             private void buttonOK_Click(object sender, EventArgs e)
             {
                 textBoxSearch.CancelKeyPressTimer();
@@ -194,6 +194,66 @@ namespace Pep
             private void buttonCancel_Click(object sender, EventArgs e)
             {
                 textBoxSearch.CancelKeyPressTimer();
+            }
+            #endregion
+
+            #region "Common.Forms.IFormLocation"
+            public void OnFormLocationSaved(Microsoft.Win32.RegistryKey RegKey)
+            {
+                RegKey.SetValue(CRegFilterWidthValue, checkedListBoxFilter.Width);
+                RegKey.SetValue(CRegSplitterPositionValue, splitContainerDevice.SplitterDistance);
+            }
+
+            public void OnFormLocationRestored(Microsoft.Win32.RegistryKey RegKey)
+            {
+                object oFilterWidth = RegKey.GetValue(CRegFilterWidthValue);
+                object oSplitterPosition = RegKey.GetValue(CRegSplitterPositionValue);
+                int nNewFilterWidth;
+
+                if (oFilterWidth is Int32 && oSplitterPosition is Int32)
+                {
+                    nNewFilterWidth = (Int32)oFilterWidth;
+                }
+                else
+                {
+                    nNewFilterWidth = checkedListBoxFilter.MinWidth;
+                }
+
+                if (nNewFilterWidth < labelFilter.Size.Width)
+                {
+                    nNewFilterWidth = labelFilter.Size.Width;
+                }
+
+                if (checkedListBoxFilter.Size.Width > nNewFilterWidth)
+                {
+                    splitContainerDevice.Size = new System.Drawing.Size(splitContainerDevice.Size.Width + (checkedListBoxFilter.Size.Width - nNewFilterWidth),
+                                                                        splitContainerDevice.Size.Height);
+
+                    labelFilter.Location = new System.Drawing.Point(labelFilter.Location.X + (checkedListBoxFilter.Size.Width - nNewFilterWidth),
+                                                                    labelFilter.Location.Y);
+
+                    checkedListBoxFilter.Location = new System.Drawing.Point(checkedListBoxFilter.Location.X + (checkedListBoxFilter.Size.Width - nNewFilterWidth),
+                                                                             checkedListBoxFilter.Location.Y);
+                }
+                else
+                {
+                    splitContainerDevice.Size = new System.Drawing.Size(splitContainerDevice.Size.Width - (nNewFilterWidth - checkedListBoxFilter.Size.Width),
+                                                                        splitContainerDevice.Size.Height);
+
+                    labelFilter.Location = new System.Drawing.Point(labelFilter.Location.X - (nNewFilterWidth - checkedListBoxFilter.Size.Width),
+                                                                    labelFilter.Location.Y);
+
+                    checkedListBoxFilter.Location = new System.Drawing.Point(checkedListBoxFilter.Location.X - (nNewFilterWidth - checkedListBoxFilter.Size.Width),
+                                                                             checkedListBoxFilter.Location.Y);
+                }
+
+                checkedListBoxFilter.Size = new System.Drawing.Size(nNewFilterWidth,
+                                                                    checkedListBoxFilter.Size.Height);
+
+                if (oFilterWidth is Int32 && oSplitterPosition is Int32)
+                {
+                    splitContainerDevice.SplitterDistance = (Int32)oSplitterPosition;
+                }
             }
             #endregion
 

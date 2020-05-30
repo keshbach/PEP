@@ -69,7 +69,6 @@
             this.splitContainerDevice.Size = new System.Drawing.Size(402, 305);
             this.splitContainerDevice.SplitterDistance = 212;
             this.splitContainerDevice.TabIndex = 0;
-            this.splitContainerDevice.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainerDevice_SplitterMoved);
             // 
             // treeViewDevice
             // 
