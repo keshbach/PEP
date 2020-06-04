@@ -986,7 +986,6 @@ namespace OpenZip
             private void InitZipFile()
             {
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                System.Collections.Generic.IEnumerator<Common.Zip.Item> Enum;
                 System.Windows.Forms.TreeNode TreeNode;
                 System.Collections.Generic.List<TZipFileData> ZipFileDataList;
                 TZipFileData ZipFileData;
@@ -1020,17 +1019,18 @@ namespace OpenZip
                 {
                     try
                     {
-                        Enum = m_ZipFile.GetEnumerator();
-
-                        while (Enum.MoveNext())
+                        using (System.Collections.Generic.IEnumerator<Common.Zip.Item> Enum = m_ZipFile.GetEnumerator())
                         {
-                            TreeNode = AddTreeNode(Enum.Current.Path);
+                            while (Enum.MoveNext())
+                            {
+                                TreeNode = AddTreeNode(Enum.Current.Path);
 
-                            ZipFileDataList = (System.Collections.Generic.List<TZipFileData>)TreeNode.Tag;
+                                ZipFileDataList = (System.Collections.Generic.List<TZipFileData>)TreeNode.Tag;
 
-                            ZipFileData = CreateZipFileData(Enum.Current);
+                                ZipFileData = CreateZipFileData(Enum.Current);
 
-                            ZipFileDataList.Add(ZipFileData);
+                                ZipFileDataList.Add(ZipFileData);
+                            }
                         }
                     }
 
