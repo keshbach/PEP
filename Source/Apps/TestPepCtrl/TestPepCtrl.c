@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -12,13 +12,16 @@
 #include <Utils/UtHeapProcess.h>
 #include <Utils/UtConsole.h>
 
-typedef int (*TTestWithAddressFunc)(int);
+#define CMaxDecimalNumberDigits 10
+#define CMaxHexNumberDigits 8
+
+typedef int (*TTestWithValueFunc)(int);
 typedef int (*TTestFunc)(void);
 
 typedef struct tagTTestData
 {
     LPCWSTR pszTestCommand;
-    TTestWithAddressFunc TestWithAddressFunc;
+    TTestWithValueFunc TestWithValueFunc;
     TTestFunc TestFunc;
 } TTestData;
 
@@ -40,22 +43,27 @@ static int lRunVpp12Test(void);
 static int lRunVpp21Test(void);
 static int lRunVpp25Test(void);
 
+static int lRunChipEnableTest(int nNanoseconds);
+static int lRunOutputEnableTest(int nNanoseconds);
+
 static TTestData l_TestData[] = {
-    {L"all",          lRunAllTest,     NULL},
-    {L"read",         lRunReadTest,    NULL},
-    {L"program",      lRunProgramTest, NULL},
-    {L"address",      lRunAddressTest, NULL},
-    {L"data",         lRunDataTest,    NULL},
-    {L"status",       NULL,            lRunStatusTest},
-    {L"devicechange", NULL,            lRunDeviceChangeTest},
-    {L"vcc5",         NULL,            lRunVcc5Test},
-    {L"vcc6",         NULL,            lRunVcc6Test},
-    {L"ven08",        NULL,            lRunVEN08Test},
-    {L"~vp5",         NULL,            lRunNegVP5Test},
-    {L"vpp12",        NULL,            lRunVpp12Test},
-    {L"vpp21",        NULL,            lRunVpp21Test},
-    {L"vpp25",        NULL,            lRunVpp25Test},
-    {NULL,            NULL,            NULL} };
+    {L"all",          lRunAllTest,          NULL},
+    {L"read",         lRunReadTest,         NULL},
+    {L"program",      lRunProgramTest,      NULL},
+    {L"address",      lRunAddressTest,      NULL},
+    {L"data",         lRunDataTest,         NULL},
+    {L"status",       NULL,                 lRunStatusTest},
+    {L"devicechange", NULL,                 lRunDeviceChangeTest},
+    {L"vcc5",         NULL,                 lRunVcc5Test},
+    {L"vcc6",         NULL,                 lRunVcc6Test},
+    {L"ven08",        NULL,                 lRunVEN08Test},
+    {L"~vp5",         NULL,                 lRunNegVP5Test},
+    {L"vpp12",        NULL,                 lRunVpp12Test},
+    {L"vpp21",        NULL,                 lRunVpp21Test},
+    {L"vpp25",        NULL,                 lRunVpp25Test},
+	{L"cedelay",      lRunChipEnableTest,   NULL},
+	{L"oedelay",      lRunOutputEnableTest, NULL},
+    {NULL,            NULL,                 NULL} };
 
 static BOOL WINAPI lHandlerRoutine(
   DWORD dwCtrlType)
@@ -91,67 +99,127 @@ static VOID UTPEPCTRLAPI lDeviceChangeFunc(
     }
 }
 
-static int lParseNumber(
-  LPCWSTR pszNumber)
+static BOOL lParseDecimalNumber(
+  LPCWSTR pszNumber,
+  int* pnDecimalNumber)
 {
-    int nNumberLen = lstrlenW(pszNumber);
-    int nNumber = 0;
-    int nMultiplier = 1;
-    int nNumberPos;
+	int nNumberLen = lstrlenW(pszNumber);
+	int nMultiplier;
 
-    if (nNumberLen > 2 && (pszNumber[0] == L'0' && pszNumber[2] == L'x'))
-    {
-        return -1;
-    }
-    else
-    {
-        for (nNumberPos = 1; nNumberPos < nNumberLen; ++nNumberPos)
-        {
-            nMultiplier *= 10;
-        }
+	*pnDecimalNumber = 0;
 
-        for (nNumberPos = 0; nNumberPos < nNumberLen; ++nNumberPos)
-        {
-            switch (pszNumber[nNumberPos])
-            {
-                case L'0':
-                case L'1':
-                case L'2':
-                case L'3':
-                case L'4':
-                case L'5':
-                case L'6':
-                case L'7':
-                case L'8':
-                case L'9':
-                    nNumber += (nMultiplier * (pszNumber[nNumberPos] - L'0'));
-                    break;
-                default:
-                    return -1;
-            }
+	for (int nNumberPos = 0; nNumberPos < nNumberLen; ++nNumberPos)
+	{
+		if (pszNumber[nNumberPos] < L'0' || pszNumber[nNumberPos] > L'9')
+		{
+			return FALSE;
+		}
+	}
 
-            nMultiplier /= 10;
-        }
-    }
+	if (nNumberLen > CMaxDecimalNumberDigits)
+	{
+		return FALSE;
+	}
 
-    return nNumber;
+	nMultiplier = 10;
+
+	for (int nNumberPos = 1; nNumberPos < nNumberLen; ++nNumberPos)
+	{
+		nMultiplier *= 10;
+	}
+
+	for (int nNumberPos = 0; nNumberPos < nNumberLen; ++nNumberPos)
+	{
+		*pnDecimalNumber += ((pszNumber[nNumberPos] - L'0') * nMultiplier);
+
+		nMultiplier /= 10;
+	}
+
+	return TRUE;
+}
+
+static BOOL lParseHexNumber(
+  LPCWSTR pszNumber,
+  int* pnHexNumber)
+{
+	int nNumberLen = lstrlenW(pszNumber);
+	int nValue;
+
+	*pnHexNumber = 0;
+
+	if (nNumberLen < 3 || pszNumber[0] != L'0' || pszNumber[1] != L'x')
+	{
+		return FALSE;
+	}
+
+	for (int nNumberPos = 2; nNumberPos < nNumberLen; ++nNumberPos)
+	{
+		if (!((pszNumber[nNumberPos] >= L'0' && pszNumber[nNumberPos] <= L'9') ||
+ 			    (pszNumber[nNumberPos] >= L'A' && pszNumber[nNumberPos] <= L'F') ||
+			    (pszNumber[nNumberPos] >= L'a' && pszNumber[nNumberPos] <= L'f')))
+		{
+			return FALSE;
+		}
+	}
+
+	if (nNumberLen > CMaxHexNumberDigits + 2)
+	{
+		return FALSE;
+	}
+
+	for (int nNumberPos = 2; nNumberPos < nNumberLen; ++nNumberPos)
+	{
+		if (pszNumber[nNumberPos] >= '0' && pszNumber[nNumberPos] <= '9')
+		{
+			nValue = pszNumber[nNumberPos] - '0';
+		}
+		else if (pszNumber[nNumberPos] >= 'a' && pszNumber[nNumberPos] <= 'f')
+		{
+			nValue = pszNumber[nNumberPos] - 'a' + 10;
+		}
+		else if (pszNumber[nNumberPos] >= 'A' && pszNumber[nNumberPos] <= 'F')
+		{
+			nValue = pszNumber[nNumberPos] - 'A' + 10;
+		}
+		else
+		{
+			nValue = 0;
+		}
+
+		*pnHexNumber = (*pnHexNumber << 4) | (nValue & 0xF);
+	}
+
+	return TRUE;
+}
+
+static BOOL lParseNumber(
+  LPCWSTR pszNumber,
+  int* pnNumber)
+{
+	if (lParseDecimalNumber(pszNumber, pnNumber) ||
+        lParseHexNumber(pszNumber, pnNumber))
+	{
+		return TRUE;
+	}
+
+    return FALSE;
 }
 
 BOOL lFindTestRun(
   LPCWSTR pszTestCommand,
-  TTestWithAddressFunc* pTestWithAddressFunc,
+  TTestWithValueFunc* pTestWithValueFunc,
   TTestFunc* pTestFunc)
 {
     int nIndex = 0;
 
-    *pTestWithAddressFunc = NULL;
+    *pTestWithValueFunc = NULL;
     *pTestFunc = NULL;
 
     while (l_TestData[nIndex].pszTestCommand != NULL)
     {
         if (lstrcmpi(pszTestCommand, l_TestData[nIndex].pszTestCommand) == 0)
         {
-            *pTestWithAddressFunc = l_TestData[nIndex].TestWithAddressFunc;
+            *pTestWithValueFunc = l_TestData[nIndex].TestWithValueFunc;
             *pTestFunc = l_TestData[nIndex].TestFunc;
 
             return TRUE;
@@ -582,8 +650,113 @@ static int lRunVpp25Test(void)
     return 1;
 }
 
+static int lRunChipEnableTest(
+  int nNanoseconds)
+{
+	wprintf(L"TestPepCtrl: Running the chip enable test in Read Mode.\n");
+
+	if (!UtPepCtrlSetDelaySettings(nNanoseconds, 0))
+	{
+		wprintf(L"TestPepCtrl: Could not set the delay settings.\n");
+
+		return 0;
+	}
+
+	if (!UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
+	{
+		wprintf(L"TestPepCtrl: Could not enable the programmer's read mode.\n");
+
+		return 0;
+	}
+
+	if (!UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode))
+	{
+		wprintf(L"TestPepCtrl: Could not clear the programmer's mode.\n");
+
+		return 0;
+	}
+
+	wprintf(L"\n");
+
+	wprintf(L"TestPepCtrl: Running the chip enable test in Program Mode.\n");
+
+	if (!UtPepCtrlSetDelaySettings(nNanoseconds, 0))
+	{
+		wprintf(L"TestPepCtrl: Could not set the delay settings.\n");
+
+		return 0;
+	}
+
+	if (!UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerWriteMode))
+	{
+		wprintf(L"TestPepCtrl: Could not enable the programmer's write mode.\n");
+
+		return 0;
+	}
+
+	if (!UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode))
+	{
+		wprintf(L"TestPepCtrl: Could not clear the programmer's mode.\n");
+
+		return 0;
+	}
+
+	return 1;
+}
+
+static int lRunOutputEnableTest(
+  int nNanoseconds)
+{
+	BYTE byData[1] = {0};
+
+	wprintf(L"TestPepCtrl: Running the output enable test in Read Mode.\n");
+
+	if (!UtPepCtrlSetDelaySettings(0, nNanoseconds))
+	{
+		wprintf(L"TestPepCtrl: Could not set the delay settings.\n");
+
+		return 0;
+	}
+
+	if (!UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
+	{
+		wprintf(L"TestPepCtrl: Could not enable the programmer's read mode.\n");
+
+		return 0;
+	}
+
+	if (!UtPepCtrlReadData(0, byData, sizeof(byData)))
+	{
+		wprintf(L"TestPepCtrl: Could not set the address.\n");
+
+		if (!UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode))
+		{
+			wprintf(L"TestPepCtrl: Could not clear the programmer's mode.\n");
+
+			return 0;
+		}
+	}
+
+	if (!UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode))
+	{
+		wprintf(L"TestPepCtrl: Could not clear the programmer's mode.\n");
+
+		return 0;
+	}
+
+	wprintf(L"\n");
+
+	//
+    // TODO: Implement the output enable test in Program Mode
+	//
+
+	wprintf(L"TestPepCtrl: Need to implement output enable test in Program Mode.\n");
+
+	return 1;
+}
+
 static int lRunTest(
-  TTestWithAddressFunc TestWithAddressFunc,
+  TTestWithValueFunc TestWithValueFunc,
   TTestFunc TestFunc,
   int nAddress)
 {
@@ -598,9 +771,9 @@ static int lRunTest(
         return 0;
     }
 
-    if (TestWithAddressFunc)
+    if (TestWithValueFunc)
     {
-        nResult = TestWithAddressFunc(nAddress);
+        nResult = TestWithValueFunc(nAddress);
     }
     else if (TestFunc)
     {
@@ -632,7 +805,9 @@ static int lDisplayHelp(void)
     wprintf(L"            [/test (we08 | vpp16 | vpp32 | vpp64)]\n");
     wprintf(L"            [/test status]\n");
     wprintf(L"            [/test devicechange]\n");
-    wprintf(L"\n");
+	wprintf(L"            [/test cedelay \"Nanosecs\"]\n");
+	wprintf(L"            [/test oedelay \"Nanosecs\"]\n");
+	wprintf(L"\n");
     wprintf(L"    Programmer Tests\n");
     wprintf(L"    /test\n");
     wprintf(L"        all          - Run the write (program), then read test\n");
@@ -663,14 +838,21 @@ static int lDisplayHelp(void)
     wprintf(L"        vpp21        - Set Vpp Accessory Connector to +21VDC\n");
     wprintf(L"        vpp25        - Set Vpp Accessory Connector to +25VDC\n");
     wprintf(L"\n");
+	wprintf(L"    Delay Tests  (Dips: 1 - On, 2 to 8 - Off)\n");
+	wprintf(L"    /test\n");
+	wprintf(L"        cedelay      - Run the chip enable delay\n");
+	wprintf(L"        oedelay      - Run the output enable delay\n");
+	wprintf(L"        \"Nanosecs\"   - Delay in nanoseconds\n");
+	wprintf(L"                       (Enter 0x1f for hexadecimal or 39 for decimal)\n");
+	wprintf(L"\n");
 
     return -1;
 }
 
 int _cdecl wmain(int argc, WCHAR* argv[])
 {
-    int nAddress = 0;
-    TTestWithAddressFunc TestWithAddressFunc;
+    int nValue = 0;
+    TTestWithValueFunc TestWithValueFunc;
     TTestFunc TestFunc;
     int nResult;
 
@@ -680,7 +862,7 @@ int _cdecl wmain(int argc, WCHAR* argv[])
 
     if (lstrcmpi(argv[1], L"/test") == 0 && (argc == 3 || argc == 4))
     {
-        if (!lFindTestRun(argv[2], &TestWithAddressFunc, &TestFunc))
+        if (!lFindTestRun(argv[2], &TestWithValueFunc, &TestFunc))
         {
             wprintf(L"TestPepCtrl: Unrecognized test command.\n");
 
@@ -689,22 +871,20 @@ int _cdecl wmain(int argc, WCHAR* argv[])
             goto End;
         }
 
-        if (TestWithAddressFunc)
+        if (TestWithValueFunc)
         {
             if (argc != 4)
             {
-                wprintf(L"TestPepCtrl: Address argument missing.\n");
+                wprintf(L"TestPepCtrl: Value argument missing.\n");
 
                 nResult = -4;
 
                 goto End;
             }
 
-            nAddress = lParseNumber(argv[3]);
-
-            if (nAddress == -1)
-            {
-                wprintf(L"TestPepCtrl: The address is not a valid number.\n");
+			if (!lParseNumber(argv[3], &nValue))
+			{
+                wprintf(L"TestPepCtrl: Invalid number provided.\n");
 
                 nResult = -4;
 
@@ -712,7 +892,7 @@ int _cdecl wmain(int argc, WCHAR* argv[])
             }
         }
 
-        nResult = lRunTest(TestWithAddressFunc, TestFunc, nAddress);
+        nResult = lRunTest(TestWithValueFunc, TestFunc, nValue);
     }
     else
     {
@@ -726,5 +906,5 @@ End:
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

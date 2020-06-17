@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -88,8 +88,9 @@ static TDeviceControlFuncs l_DeviceControlFuncs[] = {
     {IOCTL_PEPCTRL_SET_OUTPUT_ENABLE,   &PepCtrlDeviceControl_SetOutputEnable},
     {IOCTL_PEPCTRL_GET_DEVICE_STATUS,   &PepCtrlDeviceControl_GetDeviceStatus},
     {IOCTL_PEPCTRL_DEVICE_NOTIFICATION, &PepCtrlDeviceControl_DeviceNotification},
-    {IOCTL_PEPCTRL_GET_SETTINGS,        &PepCtrlDeviceControl_GetSettings},
-    {IOCTL_PEPCTRL_SET_SETTINGS,        &PepCtrlDeviceControl_SetSettings} };
+    {IOCTL_PEPCTRL_GET_PORT_SETTINGS,   &PepCtrlDeviceControl_GetPortSettings},
+    {IOCTL_PEPCTRL_SET_PORT_SETTINGS,   &PepCtrlDeviceControl_SetPortSettings},
+    {IOCTL_PEPCTRL_SET_DELAY_SETTINGS,  &PepCtrlDeviceControl_SetDelaySettings} };
 
 #pragma data_seg()
 #pragma bss_seg()
@@ -536,5 +537,5 @@ NTSTATUS __stdcall DriverEntry(
 #pragma endregion
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

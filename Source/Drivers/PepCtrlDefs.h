@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-201 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepCtrlDefs_H)
@@ -50,6 +50,12 @@ typedef struct tagTPepCtrlPortSettings
     WCHAR cPortDeviceName[1];
 } TPepCtrlPortSettings;
 
+typedef struct tagTPepCtrlDelaySettings
+{
+	UINT32 nChipEnableNanoSecs;      // number of nanoseconds before chip ready after VCC applied
+	UINT32 nOutputEnableNanoSeconds; // number of nanoseconds before data available after the Output Enable goes low
+} TPepCtrlDelaySettings;
+
 #if defined(_MSC_VER)
 #pragma pack(pop)
 #else
@@ -59,5 +65,5 @@ typedef struct tagTPepCtrlPortSettings
 #endif // PepCtrlDefs_H
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

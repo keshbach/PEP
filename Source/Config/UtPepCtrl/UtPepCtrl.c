@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -154,7 +154,7 @@ static TPepCtrlPortSettings* lAllocPortSettings(VOID)
             return NULL;
         }
 
-        bResult = DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_GET_SETTINGS,
+        bResult = DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_GET_PORT_SETTINGS,
                                   NULL, 0,
                                   pPortSettings, nPortSettingsLen,
                                   &dwBytesReturned, NULL);
@@ -341,7 +341,7 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetPortSettings(
 
     StringCchCopyW(pPortSettings->cPortDeviceName, nPortDeviceNameLen + 1, pszPortDeviceName);
 
-    bResult = DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_SETTINGS,
+    bResult = DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_PORT_SETTINGS,
                               pPortSettings, nPortSettingsLen,
                               NULL, 0, &dwBytesReturned,
                               NULL);
@@ -424,6 +424,31 @@ BOOL UTPEPCTRLAPI UtPepCtrlGetPortDeviceName(
     lFreePortSettings(pPortSettings);
 
     return TRUE;
+}
+
+BOOL UTPEPCTRLAPI UtPepCtrlSetDelaySettings(
+  _In_ UINT32 nChipEnableNanoSeconds,
+  _In_ UINT32 nOutputEnableNanoSeconds)
+{
+	DWORD dwBytesReturned;
+	TPepCtrlDelaySettings DelaySettings;
+
+	if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+	{
+		return FALSE;
+	}
+
+	DelaySettings.nChipEnableNanoSecs = nChipEnableNanoSeconds;
+	DelaySettings.nOutputEnableNanoSeconds = nOutputEnableNanoSeconds;
+
+	if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_DELAY_SETTINGS,
+						 &DelaySettings, sizeof(DelaySettings), NULL, 0,
+						 &dwBytesReturned, NULL))
+	{
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(
@@ -823,5 +848,5 @@ BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

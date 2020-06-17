@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepCtrlIOCTL_H)
@@ -42,14 +42,17 @@
 #define IOCTL_PEPCTRL_DEVICE_NOTIFICATION \
     CTL_CODE(FILE_DEVICE_UNKNOWN, 0x80a, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-#define IOCTL_PEPCTRL_GET_SETTINGS \
+#define IOCTL_PEPCTRL_GET_PORT_SETTINGS \
     CTL_CODE(FILE_DEVICE_UNKNOWN, 0x80b, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-#define IOCTL_PEPCTRL_SET_SETTINGS \
+#define IOCTL_PEPCTRL_SET_PORT_SETTINGS \
     CTL_CODE(FILE_DEVICE_UNKNOWN, 0x80c, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_PEPCTRL_SET_DELAY_SETTINGS \
+    CTL_CODE(FILE_DEVICE_UNKNOWN, 0x80d, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #endif /* PepCtrlIOCTL_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

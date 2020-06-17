@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepCtrl_H)
@@ -99,6 +99,7 @@ MExternC BOOL UTPEPCTRLAPI UtPepCtrlUninitialize(VOID);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetPortSettings(_In_ EUtPepCtrlPortType PortType, _In_ LPCWSTR pszPortDeviceName);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlGetPortType(_Out_ EUtPepCtrlPortType* pPortType);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlGetPortDeviceName(_Out_ LPWSTR pszPortDeviceName, _Out_ LPINT pnPortDeviceNameLen);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetDelaySettings(_In_ UINT32 nChipEnableNanoSeconds, _In_ UINT32 nOutputEnableNanoSeconds);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(_Out_ LPBOOL pbPresent);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlReset(VOID);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(_In_ EUtPepCtrlProgrammerMode ProgrammerMode);
@@ -119,5 +120,5 @@ MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(_In_ const TUtPepCtrlProgram
 #endif /* UtPepCtrl_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

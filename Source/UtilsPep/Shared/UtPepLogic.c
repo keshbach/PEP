@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if defined(BUILD_USER_LIB)
@@ -115,6 +115,16 @@
 
 #define MEnableResetProgramPulse(enable) (enable ? PPCL : 0)
 
+/*
+  Macro to convert time units
+*/
+
+#define MNanoToMilliseconds(nano) (nano / 1000000.0)
+
+#define MMilliToNanoseconds(milli) (milli * 1000000.0)
+
+#define MMicroToNanoseconds(micro) (micro * 1000.0)
+
 #pragma endregion
 
 #pragma region "Structures"
@@ -139,10 +149,17 @@ typedef struct tagTPepInternalLogicModes
     UINT32 nVppMode;
 } TPepInternalLogicModes;
 
+typedef struct tagTPepInternalDelaySettings
+{
+	UINT32 nChipEnableNanoSeconds;   // number of nanoseconds before chip ready
+	UINT32 nOutputEnableNanoSeconds; // number of nanoseconds before data available
+} TPepInternalDelaySettings;
+
 typedef struct tagTPepInternalLogicData
 {
     UINT32 nLastAddress; /* Last address that was set */
     TPepInternalLogicModes Modes;
+	TPepInternalDelaySettings DelaySettings;
 } TPepInternalLogicData;
 
 #if defined(_MSC_VER)
@@ -154,6 +171,9 @@ typedef struct tagTPepInternalLogicData
 #pragma endregion
 
 #pragma region "Local Function Declarations"
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+static BOOLEAN lSleepNanoseconds(_In_ TUtPepLogicData* pLogicData, _In_ PLARGE_INTEGER pIntervalNanoseconds);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWritePortData(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 ucData, _In_ UINT8 ucUnit);
@@ -191,11 +211,16 @@ static BOOLEAN lWaitForProgramPulse(_In_ TUtPepLogicData* pLogicData);
 _IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lInitModes(_In_ TPepInternalLogicData* pInternalData);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+static BOOLEAN lInitDelaySettings(_In_ TPepInternalLogicData* pInternalData);
+
 #pragma endregion
 
 #if defined(BUILD_DRIVER_LIB)
 
 #if defined(ALLOC_PRAGMA)
+
+#pragma alloc_text (PAGE, lSleepNanoseconds)
 #pragma alloc_text (PAGE, lWritePortData)
 #pragma alloc_text (PAGE, lReadByteFromProgrammer)
 #pragma alloc_text (PAGE, lWriteByteToProgrammer)
@@ -208,6 +233,7 @@ static BOOLEAN lInitModes(_In_ TPepInternalLogicData* pInternalData);
 #pragma alloc_text (PAGE, lEnableProgrammerWriteMode)
 #pragma alloc_text (PAGE, lWaitForProgramPulse)
 #pragma alloc_text (PAGE, lInitModes)
+#pragma alloc_text (PAGE, lInitDelaySettings)
 
 #pragma alloc_text (PAGE, UtPepLogicAllocLogicContext)
 #pragma alloc_text (PAGE, UtPepLogicFreeLogicContext)
@@ -221,6 +247,7 @@ static BOOLEAN lInitModes(_In_ TPepInternalLogicData* pInternalData);
 #pragma alloc_text (PAGE, UtPepLogicTriggerProgram)
 #pragma alloc_text (PAGE, UtPepLogicSetOutputEnable)
 #pragma alloc_text (PAGE, UtPepLogicReset)
+#pragma alloc_text (PAGE, UtPepLogicSetDelays)
 #endif // #if defined(ALLOC_PRAGMA)
 
 #endif // #if defined(BUILD_DRIVER_LIB)
@@ -228,6 +255,56 @@ static BOOLEAN lInitModes(_In_ TPepInternalLogicData* pInternalData);
 /*
   Local Functions
 */
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+static BOOLEAN lSleepNanoseconds(
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ PLARGE_INTEGER pIntervalNanoseconds)
+{
+#if defined(BUILD_USER_LIB)
+	LARGE_INTEGER IntervalMilliseconds;
+#elif defined(BUILD_DRIVER_LIB)
+	NTSTATUS status;
+	LARGE_INTEGER Interval;
+#endif
+
+#if defined(BUILD_DRIVER_LIB)
+	PAGED_CODE()
+#endif
+
+	pLogicData->pLogFunc("lSleepNanoseconds - Entering.\n");
+
+#if defined(BUILD_USER_LIB)
+	IntervalMilliseconds.QuadPart = (LONGLONG)MNanoToMilliseconds(pIntervalNanoseconds->QuadPart);
+
+	if ((LONGLONG)MMilliToNanoseconds(IntervalMilliseconds.QuadPart) < pIntervalNanoseconds->QuadPart)
+	{
+		IntervalMilliseconds.QuadPart += 1;
+	}
+
+	Sleep(IntervalMilliseconds.LowPart);
+#else
+	Interval.QuadPart = pIntervalNanoseconds->QuadPart / 100;
+
+	if (Interval.QuadPart * 100 < pIntervalNanoseconds->QuadPart)
+	{
+		++Interval.QuadPart;
+	}
+
+	status = KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+
+	if (STATUS_SUCCESS != status)
+	{
+		pLogicData->pLogFunc("lSleepNanoseconds - Thread execution delayed has failed.  (0x%X)\n", status);
+
+		return FALSE;
+	}
+#endif
+
+	pLogicData->pLogFunc("lSleepNanoseconds - Leaving.\n");
+
+	return TRUE;
+}
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWritePortData(
@@ -528,6 +605,7 @@ static BOOLEAN lEnableProgrammerReadMode(
   _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
+	LARGE_INTEGER IntervalNanoseconds;
 
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
@@ -543,8 +621,20 @@ static BOOLEAN lEnableProgrammerReadMode(
                            MEnableVpp(FALSE),
                        CUnit7_Programmer))
     {
+		if (pData->DelaySettings.nChipEnableNanoSeconds > 0)
+		{
+			pLogicData->pLogFunc("lEnableProgrammerReadMode - Chip Enable delay detected.\n");
+
+			IntervalNanoseconds.QuadPart = pData->DelaySettings.nChipEnableNanoSeconds;
+
+			if (!lSleepNanoseconds(pLogicData, &IntervalNanoseconds))
+			{
+				pLogicData->pLogFunc("lEnableProgrammerReadMode - Sleep failed.\n");
+			}
+		}
+
         return TRUE;
-    }
+	}
 
     return FALSE;
 }
@@ -554,6 +644,7 @@ static BOOLEAN lEnableProgrammerWriteMode(
   _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
+	LARGE_INTEGER IntervalNanoseconds;
 
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
@@ -571,7 +662,19 @@ static BOOLEAN lEnableProgrammerWriteMode(
                        lPinPulseModeToData(pLogicData, pData->Modes.nPinPulseMode) | CN2 | CN3,
                        CUnit6_LedAndVpp))
     {
-        return TRUE;
+		if (pData->DelaySettings.nChipEnableNanoSeconds > 0)
+		{
+			pLogicData->pLogFunc("lEnableProgrammerWriteMode - Chip Enable delay detected.\n");
+
+			IntervalNanoseconds.QuadPart = pData->DelaySettings.nChipEnableNanoSeconds;
+
+			if (!lSleepNanoseconds(pLogicData, &IntervalNanoseconds))
+			{
+				pLogicData->pLogFunc("lEnableProgrammerWriteMode - Sleep failed.\n");
+			}
+		}
+		
+		return TRUE;
     }
 
     return FALSE;
@@ -582,12 +685,7 @@ static BOOLEAN lWaitForProgramPulse(
   _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
-#if defined(BUILD_USER_LIB)
-    DWORD dwMilliseconds;
-#elif defined(BUILD_DRIVER_LIB)
-    NTSTATUS status;
-    LARGE_INTEGER Interval;
-#endif
+    LARGE_INTEGER IntervalNanoseconds;
     UINT8 nData;
     BOOLEAN bValue;
 
@@ -597,48 +695,26 @@ static BOOLEAN lWaitForProgramPulse(
 
     pLogicData->pLogFunc("lWaitForProgramPulse called.\n");
 
-    pLogicData->pLogFunc("lWaitForProgramPulse - Delaying thread execution.\n");
+	switch (pData->Modes.nPinPulseMode)
+	{
+		case CUtPepLogicPinPulse1Mode:
+			IntervalNanoseconds.QuadPart = (LONGLONG)MMilliToNanoseconds(1.1); /* 1.1 msec */
+			break;
+		case CUtPepLogicPinPulse2Mode:
+		case CUtPepLogicPinPulse3Mode:
+		case CUtPepLogicPinPulse4Mode:
+			IntervalNanoseconds.QuadPart = (LONGLONG)MMicroToNanoseconds(250); /* 250 us */
+			break;
+		default:
+			return FALSE;
+	}
 
-#if defined(BUILD_USER_LIB)
-    switch (pData->Modes.nPinPulseMode)
-    {
-        case CUtPepLogicPinPulse1Mode:
-            dwMilliseconds = 2; /* 1.1 msec */
-            break;
-        case CUtPepLogicPinPulse2Mode:
-        case CUtPepLogicPinPulse3Mode:
-        case CUtPepLogicPinPulse4Mode:
-            dwMilliseconds = 1; /* 250 us */
-            break;
-        default:
-            return FALSE;
-    }
+	pLogicData->pLogFunc("lWaitForProgramPulse - Putting thread to sleep briefly.\n");
 
-    Sleep(dwMilliseconds);
-#elif defined(BUILD_DRIVER_LIB)
-    switch (pData->Modes.nPinPulseMode)
-    {
-        case CUtPepLogicPinPulse1Mode:
-            Interval.QuadPart = -11000; /* 1.1 msec */
-            break;
-        case CUtPepLogicPinPulse2Mode:
-        case CUtPepLogicPinPulse3Mode:
-        case CUtPepLogicPinPulse4Mode:
-            Interval.QuadPart = -3; /* 250 us */
-            break;
-        default:
-            return FALSE;
-    }
-
-    status = KeDelayExecutionThread(KernelMode, FALSE, &Interval);
-
-    if (STATUS_SUCCESS != status)
-    {
-        pLogicData->pLogFunc("lWaitForProgramPulse - Thread execution delayed has failed.  (0x%X)\n", status);
-
-        return FALSE;
-    }
-#endif
+	if (!lSleepNanoseconds(pLogicData, &IntervalNanoseconds))
+	{
+		return FALSE;
+	}
 
     switch (pData->Modes.nPinPulseMode)
     {
@@ -691,6 +767,20 @@ static BOOLEAN lInitModes(
     return TRUE;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+static BOOLEAN lInitDelaySettings(
+  _In_ TPepInternalLogicData* pInternalData)
+{
+#if defined(BUILD_DRIVER_LIB)
+	PAGED_CODE()
+#endif
+
+	pInternalData->DelaySettings.nChipEnableNanoSeconds = 0;
+	pInternalData->DelaySettings.nOutputEnableNanoSeconds = 0;
+
+	return TRUE;
+}
+
 #pragma region "Public Functions"
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -711,6 +801,7 @@ PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext()
     pLogicData->nLastAddress = 0xFFFFFFFF;
 
     lInitModes(pLogicData);
+	lInitDelaySettings(pLogicData);
 
     return pLogicData;
 }
@@ -764,6 +855,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetProgrammerMode(
             pLogicData->pLogFunc("UtPepLogicSetProgrammerMode - Setting the programmer to the none mode.\n");
 
             bResult = lInitModes(pData) &&
+				          lInitDelaySettings(pData) &&
                           lResetProgrammerState(pLogicData) &&
                           lSetProgrammerVppMode(pLogicData);
             break;
@@ -1102,7 +1194,9 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
   _In_ UINT32 nOutputEnable)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
-    
+	BOOLEAN bResult;
+	LARGE_INTEGER IntervalNanoseconds;
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
@@ -1116,12 +1210,26 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
         return FALSE;
     }
 
-    return lWritePortData(pLogicData,
-                          MEnableTriggerProgramPulse(nOutputEnable) |
-                              MEnableResetProgramPulse(TRUE) |
-                              MSelectVccMode(pData->Modes.nVccMode) |
-                              MEnableVpp(FALSE),
-                          CUnit7_Programmer);
+	bResult = lWritePortData(pLogicData,
+                             MEnableTriggerProgramPulse(nOutputEnable) |
+                                 MEnableResetProgramPulse(TRUE) |
+                                 MSelectVccMode(pData->Modes.nVccMode) |
+                                 MEnableVpp(FALSE),
+                             CUnit7_Programmer);
+
+	if (nOutputEnable && bResult && pData->DelaySettings.nOutputEnableNanoSeconds > 0)
+	{
+		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable Delay detected.\n");
+
+		IntervalNanoseconds.QuadPart = pData->DelaySettings.nOutputEnableNanoSeconds;
+
+		if (!lSleepNanoseconds(pLogicData, &IntervalNanoseconds))
+		{
+			pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Sleep failed.\n");
+		}
+	}
+
+	return bResult;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -1140,6 +1248,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
     if (pData->Modes.nProgrammerMode != CUtPepLogicProgrammerNoneMode)
     {
         if (lInitModes(pData) &&
+			lInitDelaySettings(pData) &&
             lResetProgrammerState(pLogicData) &&
             lSetProgrammerAddress(pLogicData, 0) &&
             lSetProgrammerVppMode(pLogicData))
@@ -1160,8 +1269,40 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
     return bResult;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+BOOLEAN TUTPEPLOGICAPI UtPepLogicSetDelays(
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nChipEnableNanoSeconds,
+  _In_ UINT32 nOutputEnableNanoSeconds)
+{
+	BOOLEAN bResult = FALSE;
+	TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
+
+#if defined(BUILD_DRIVER_LIB)
+	PAGED_CODE()
+#endif
+
+	pLogicData->pLogFunc("UtPepLogicSetDelays called.\n");
+
+	if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
+	{
+		pData->DelaySettings.nChipEnableNanoSeconds = nChipEnableNanoSeconds;
+		pData->DelaySettings.nOutputEnableNanoSeconds = nOutputEnableNanoSeconds;
+
+		bResult = TRUE;
+
+		pLogicData->pLogFunc("UtPepLogicSetDelays - Delay settings changed.\n");
+	}
+	else
+	{
+		pLogicData->pLogFunc("UtPepLogicSetDelays - Delay settings cannot be changed.\n");
+	}
+
+	return bResult;
+}
+
 #pragma endregion
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepLogic_H)
@@ -54,8 +54,13 @@ MExternC BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(_In_ TUtPepLogicData* 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 MExternC BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(_In_ TUtPepLogicData* pLogicData);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+MExternC BOOLEAN TUTPEPLOGICAPI UtPepLogicSetDelays(_In_ TUtPepLogicData* pLogicData,
+                                                    _In_ UINT32 nChipEnableNanoSeconds,
+                                                    _In_ UINT32 nOutputEnableNanoSeconds);
+
 #endif /* !defined(UtPepLogic_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

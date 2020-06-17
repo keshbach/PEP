@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -39,8 +39,9 @@ static DRIVER_CANCEL lDeviceControlCancelIrpRoutine;
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetOutputEnable)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_GetDeviceStatus)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_DeviceNotification)
-#pragma alloc_text (PAGE, PepCtrlDeviceControl_GetSettings)
-#pragma alloc_text (PAGE, PepCtrlDeviceControl_SetSettings)
+#pragma alloc_text (PAGE, PepCtrlDeviceControl_GetPortSettings)
+#pragma alloc_text (PAGE, PepCtrlDeviceControl_SetPortSettings)
+#pragma alloc_text (PAGE, PepCtrlDeviceControl_SetDelaySettings)
 #endif
 
 #pragma region "Local Functions"
@@ -670,7 +671,7 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS PepCtrlDeviceControl_GetSettings(
+NTSTATUS PepCtrlDeviceControl_GetPortSettings(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData, 
   _In_ const PVOID pvInBuf, 
@@ -688,7 +689,7 @@ NTSTATUS PepCtrlDeviceControl_GetSettings(
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlDeviceControl_GetSettings entering.\n");
+    PepCtrlLog("PepCtrlDeviceControl_GetPortSettings entering.\n");
 
     Length = sizeof(UINT32);
 
@@ -708,7 +709,7 @@ NTSTATUS PepCtrlDeviceControl_GetSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_GetSettings leaving (buffer too small).\n");
+        PepCtrlLog("PepCtrlDeviceControl_GetPortSettings leaving (buffer too small).\n");
 
         return Status;
     }
@@ -736,13 +737,13 @@ NTSTATUS PepCtrlDeviceControl_GetSettings(
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("PepCtrlDeviceControl_GetSettings leaving (settings retrieved).\n");
+    PepCtrlLog("PepCtrlDeviceControl_GetPortSettings leaving (settings retrieved).\n");
 
     return Status;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS PepCtrlDeviceControl_SetSettings(
+NTSTATUS PepCtrlDeviceControl_SetPortSettings(
   _In_ PIRP pIrp,
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
@@ -763,7 +764,7 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlDeviceControl_SetSettings entering.\n");
+    PepCtrlLog("PepCtrlDeviceControl_SetPortSettings entering.\n");
 
     if (ulInBufLen < sizeof(TPepCtrlPortSettings))
     {
@@ -773,7 +774,7 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Buffer too small.)\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Buffer too small.)\n");
 
         return Status;
     }
@@ -790,14 +791,14 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Invalid port type.)\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Invalid port type.)\n");
 
         return Status;
     }
 
     if (pPortSettings->nPortType != CPepCtrlNoPortType)
     {
-        PepCtrlLog("PepCtrlDeviceControl_SetSettings - Validating the port data.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Validating the port data.\n");
 
         ulBufferLen = ulInBufLen - UFIELD_OFFSET(TPepCtrlPortSettings, cPortDeviceName);
         ulDeviceNameLen = 0;
@@ -821,7 +822,7 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
             IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-            PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Port device name not null terminated.)\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Port device name not null terminated.)\n");
 
             return Status;
         }
@@ -834,7 +835,7 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
             IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-            PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Port device name is empty.)\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Port device name is empty.)\n");
 
             return Status;
         }
@@ -848,27 +849,27 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
     if (pPortData->RegSettings.nPortType != CPepCtrlNoPortType)
     {
-        PepCtrlLog("PepCtrlDeviceControl_SetSettings releasing the existing device.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings releasing the existing device.\n");
 
         if (PepCtrlPlugPlayUnregister(pPortData->pvPlugPlayData))
         {
-            PepCtrlLog("PepCtrlDeviceControl_SetSettings - Plug and Play notification unregistered.\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Plug and Play notification unregistered.\n");
         }
         else 
         {
-            PepCtrlLog("PepCtrlDeviceControl_SetSettings - Could not unregister the Plug and Play notification.\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Could not unregister the Plug and Play notification.\n");
         }
 
         pPortData->RegSettings.nPortType = CPepCtrlNoPortType;
     }
     else
     {
-        PepCtrlLog("PepCtrlDeviceControl_SetSettings no existing device to release.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings no existing device to release.\n");
     }
 
     if (pPortData->RegSettings.pszPortDeviceName)
     {
-        PepCtrlLog("PepCtrlDeviceControl_SetSettings - Deleting the memory allocated for the port's device name.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Deleting the memory allocated for the port's device name.\n");
 
         UtFreePagedMem(pPortData->RegSettings.pszPortDeviceName);
 
@@ -877,7 +878,7 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
     RtlInitUnicodeString(&RegistryPath, pPortData->RegSettings.pszRegistryPath);
 
-    PepCtrlLog("PepCtrlDeviceControl_SetSettings - saving the new registry settings.\n");
+    PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - saving the new registry settings.\n");
 
     if (!PepCtrlWriteRegSettings(&RegistryPath, pPortSettings->nPortType,
                                  pPortSettings->cPortDeviceName))
@@ -890,7 +891,7 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Could not save the new registry settings.)\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Could not save the new registry settings.)\n");
 
         return Status;
     }
@@ -907,7 +908,7 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving (Could not allocate memory for the port's device name.)\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Could not allocate memory for the port's device name.)\n");
 
         return Status;
     }
@@ -929,17 +930,17 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
     {
         PepCtrlInitPortTypeFuncs(pPortData);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetSettings - Registering for plug and Play notification.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Registering for plug and Play notification.\n");
 
         if (PepCtrlPlugPlayRegister(pPortData->Funcs.pGetDeviceInterfaceGuidFunc(),
                                     pPortData->RegSettings.pszPortDeviceName,
                                     pPortData->pvPlugPlayData))
         {
-            PepCtrlLog("PepCtrlDeviceControl_SetSettings - Plug and Play notification registered.\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Plug and Play notification registered.\n");
         }
         else
         {
-            PepCtrlLog("PepCtrlDeviceControl_SetSettings - Plug and Play notification failed to register.\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Plug and Play notification failed to register.\n");
         }
     }
 
@@ -951,11 +952,79 @@ NTSTATUS PepCtrlDeviceControl_SetSettings(
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("PepCtrlDeviceControl_SetSettings leaving.\n");
+    PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving.\n");
 
     return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS PepCtrlDeviceControl_SetDelaySettings(
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
+{
+	NTSTATUS Status = STATUS_UNSUCCESSFUL;
+	TPepCtrlDelaySettings* pDelaySettings;
+
+	pIrp;
+	pvOutBuf;
+	ulOutBufLen;
+
+	PAGED_CODE()
+
+	PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings entering.\n");
+
+	if (ulInBufLen < sizeof(TPepCtrlDelaySettings))
+	{
+		Status = STATUS_BUFFER_TOO_SMALL;
+
+		pIrp->IoStatus.Status = Status;
+
+		IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+		PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings leaving (Buffer too small.)\n");
+
+		return Status;
+	}
+
+	if (ulInBufLen > sizeof(TPepCtrlDelaySettings))
+	{
+		Status = STATUS_ARRAY_BOUNDS_EXCEEDED;
+
+		pIrp->IoStatus.Status = Status;
+
+		IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+		PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings leaving (Buffer too large.)\n");
+
+		return Status;
+	}
+
+	pDelaySettings = (TPepCtrlDelaySettings*)pvInBuf;
+
+	if (UtPepLogicSetDelays(&pPortData->LogicData,
+		                    pDelaySettings->nChipEnableNanoSecs,
+		                    pDelaySettings->nOutputEnableNanoSeconds))
+	{
+		Status = STATUS_SUCCESS;
+	}
+	else
+	{
+		Status = STATUS_UNSUCCESSFUL;
+	}
+
+	pIrp->IoStatus.Status = Status;
+
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+	PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings leaving.\n");
+
+	return Status;
+}
+
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
