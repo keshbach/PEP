@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -83,6 +83,22 @@ namespace Pep
 				}
 			}
 
+			property System::UInt32 ChipEnableNanoseconds
+			{
+				System::UInt32 get()
+				{
+					return m_nChipEnableNanoseconds;
+				}
+			}
+
+			property System::UInt32 OutputEnableNanoseconds
+			{
+				System::UInt32 get()
+				{
+					return m_nOutputEnableNanoseconds;
+				}
+			}
+
 			property System::Object^ DeviceData
 			{
 				System::Object^ get()
@@ -105,11 +121,13 @@ namespace Pep
 			System::String^ m_sAdapter;
 			System::String^ m_sMessage;
 			array<System::Boolean>^ m_bDipSwitches;
+			System::UInt32 m_nChipEnableNanoseconds;
+			System::UInt32 m_nOutputEnableNanoseconds;
 			System::Object^ m_pDeviceData;
 		};
 	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

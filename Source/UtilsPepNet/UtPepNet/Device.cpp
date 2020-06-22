@@ -1,10 +1,12 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "Stdafx.h"
 
 #include <UtilsDevice/UtPepDevices.h>
+
+#include <Includes/UtMacros.h>
 
 #include "Device.h"
 
@@ -20,18 +22,17 @@
 Pep::Programmer::Device::Device(
   _In_ const TDevice* pDevice)
 {
-    ULONG ulTotalDipSwitches;
-    LPCWSTR pszPinDiagram;
+    ULONG ulTotalDipSwitches = MArrayLen(pDevice->bDipSwitches);
+	LPCWSTR pszPinDiagram;
 
-    ulTotalDipSwitches = sizeof(pDevice->bDipSwitches) /
-                             sizeof(pDevice->bDipSwitches[0]);
-
-    m_sName          = gcnew System::String(pDevice->pszName);
-    m_sDeviceType    = gcnew System::String(UtPepDevicesGetDeviceTypeName(pDevice->DeviceType));
-	m_sDevicePackage = gcnew System::String(UtPepDevicesGetDevicePackageName(pDevice->DevicePackage));
-    m_nPinCount      = pDevice->nPinCount;
-	m_sPinNames      = gcnew array<System::String^>(pDevice->nPinCount);
-    m_bDipSwitches   = gcnew array<System::Boolean>(ulTotalDipSwitches);
+    m_sName                    = gcnew System::String(pDevice->pszName);
+    m_sDeviceType              = gcnew System::String(UtPepDevicesGetDeviceTypeName(pDevice->DeviceType));
+	m_sDevicePackage           = gcnew System::String(UtPepDevicesGetDevicePackageName(pDevice->DevicePackage));
+    m_nPinCount                = pDevice->nPinCount;
+	m_sPinNames                = gcnew array<System::String^>(pDevice->nPinCount);
+    m_bDipSwitches             = gcnew array<System::Boolean>(ulTotalDipSwitches);
+	m_nChipEnableNanoseconds   = pDevice->nChipEnableNanoseconds;
+	m_nOutputEnableNanoseconds = pDevice->nOutputEnableNanoseconds;
 
     if (pDevice->pszAdapter)
     {
@@ -125,5 +126,5 @@ Pep::Programmer::Device::~Device()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

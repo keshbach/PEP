@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -82,7 +82,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# KE74S287/82S13x")
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
             DEVICE_ROM_SIZE(0x0100)
@@ -101,7 +103,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# KE74S288")
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
             DEVICE_ROM_SIZE(0x0020)
@@ -120,6 +124,8 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# KE74S288")
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
         DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
@@ -139,7 +145,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# KE74S287/82S13x")
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
             DEVICE_ROM_SIZE(0x0200)
@@ -153,5 +161,5 @@ DEVICES_BEGIN
 DEVICES_END
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -1,5 +1,5 @@
-
-/*  Copyright (C) 2007-2016 Kevin Eshbach                                  */
+/***************************************************************************/
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -881,7 +881,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal6L16PinConfigValues)
@@ -903,7 +905,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal8L14PinConfigValues)
@@ -925,7 +929,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal20L8PinConfigValues)
@@ -947,7 +953,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal20L10PinConfigValues)
@@ -969,7 +977,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal20R4PinConfigValues)
@@ -991,7 +1001,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal20R6PinConfigValues)
@@ -1013,7 +1025,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal20R8PinConfigValues)
@@ -1035,7 +1049,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal20X4PinConfigValues)
@@ -1057,7 +1073,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal20X8PinConfigValues)
@@ -1079,7 +1097,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# PAL20/24")
         DEVICE_MESSAGE("Set the switch to 24 Pins.")
         DEVICE_DIPSWITCHES(FALSE, FALSE, FALSE, TRUE, FALSE, TRUE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_PAL_DATA_BEGIN
             DEVICE_PAL_PINCONFIGVALUES(l_Pal20X10PinConfigValues)
@@ -1294,5 +1314,5 @@ static VOID UTPEPDEVICESAPI lPal20X10ReadDevice(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2016 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/

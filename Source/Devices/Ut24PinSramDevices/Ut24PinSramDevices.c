@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2008-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2008-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -82,7 +82,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part #6116")
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_RAM_DATA_BEGIN
             DEVICE_RAM_SIZE(0x0400)
@@ -99,7 +101,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part #6116")
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_RAM_DATA_BEGIN
             DEVICE_RAM_SIZE(0x0800)
@@ -145,5 +149,5 @@ static VOID UTPEPDEVICESAPI l6116VerifyDevice(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2008-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2008-2020 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepDevices_H)
@@ -220,16 +220,18 @@ typedef struct tagTDeviceData
 
 typedef struct tagTDevice
 {
-    LPCWSTR pszName;              /* Name of the device */
-    EDeviceType DeviceType;       /* Type of device */
-    EDevicePackage DevicePackage; /* Package of the device */
-    UINT nPinCount;               /* Number of pins on the device */
-    LPCWSTR* ppszPinNames;        /* Pin names of the device */
-    UINT nPinNamesCount;          /* Count of the pin names for the device */
-    LPCWSTR pszAdapter;           /* Adapter used for the device */
-    LPCWSTR pszMessage;           /* Device message */
-    BOOL bDipSwitches[8];         /* Dip switch settings */
-    TDeviceData DeviceData;       /* Device specific data */
+    LPCWSTR pszName;                 /* Name of the device */
+    EDeviceType DeviceType;          /* Type of device */
+    EDevicePackage DevicePackage;    /* Package of the device */
+    UINT nPinCount;                  /* Number of pins on the device */
+    LPCWSTR* ppszPinNames;           /* Pin names of the device */
+    UINT nPinNamesCount;             /* Count of the pin names for the device */
+    LPCWSTR pszAdapter;              /* Adapter used for the device */
+    LPCWSTR pszMessage;              /* Device message */
+    BOOL bDipSwitches[8];            /* Dip switch settings */
+	UINT32 nChipEnableNanoseconds;   /* number of nanoseconds before chip ready after VCC applied */
+	UINT32 nOutputEnableNanoseconds; /* number of nanoseconds before data available after the Output Enable goes low */
+    TDeviceData DeviceData;          /* Device specific data */
 } TDevice;
 
 /*
@@ -310,6 +312,18 @@ static TDevice l_Devices[] = {
 
 #define DEVICE_DIPSWITCHES(dip1, dip2, dip3, dip4, dip5, dip6, dip7, dip8) \
     {dip1, dip2, dip3, dip4, dip5, dip6, dip7, dip8},
+
+#define DEVICE_CHIP_ENABLE_NANO_SECS(ns) \
+	ns,
+
+#define DEVICE_CHIP_ENABLE_NANO_SECS_NONE \
+	0,
+
+#define DEVICE_OUTPUT_ENABLE_NANO_SECS(ns) \
+	ns,
+
+#define DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE \
+	0,
 
 #define DEVICE_INIT_FUNC(initFunc) \
     {initFunc,
@@ -470,5 +484,5 @@ MExternC BOOL UTPEPDEVICESAPI UtPepDevicesFreePinDiagram(LPCWSTR pszPinDiagram);
 #endif /* UtPepDevices_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/

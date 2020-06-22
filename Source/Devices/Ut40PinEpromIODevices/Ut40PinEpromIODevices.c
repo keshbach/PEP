@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -69,7 +69,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER_NONE
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
             DEVICE_ROM_SIZE(0x0000)
@@ -93,5 +95,5 @@ static BOOL UTPEPDEVICESAPI lGenericUninit(VOID)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2012Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/

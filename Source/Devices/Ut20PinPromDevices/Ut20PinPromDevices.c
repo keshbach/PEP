@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2009-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -73,7 +73,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# KE74S472/74LS471")
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
             DEVICE_ROM_SIZE(0x200)
@@ -92,7 +94,9 @@ DEVICES_BEGIN
         DEVICE_ADAPTER("Part# KE74S472/74LS471")
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
-        DEVICE_INIT_FUNC(lGenericInit)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
             DEVICE_ROM_SIZE(0x100)
@@ -207,5 +211,5 @@ End:
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2009-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2020 Kevin Eshbach                                  */
 /***************************************************************************/

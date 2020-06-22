@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2016-2016 Kevin Eshbach                                  */
+/*  Copyright (C) 2016-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -170,6 +170,8 @@ DEVICES_BEGIN
         DEVICE_ADAPTER_NONE
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
         DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
@@ -189,6 +191,8 @@ DEVICES_BEGIN
         DEVICE_ADAPTER_NONE
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
+		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
+		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
         DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
@@ -343,5 +347,5 @@ static VOID UTPEPDEVICESAPI lFake16BitVerifyDevice(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2016-2016 Kevin Eshbach                                  */
+/*  Copyright (C) 2016-2020 Kevin Eshbach                                  */
 /***************************************************************************/

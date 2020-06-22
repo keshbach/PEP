@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -43,12 +43,12 @@ static BOOL WINAPI lHandlerRoutine(
 static void lPrintROMData(
   TROMData* pROMData)
 {
-    wprintf(L"Size (Bytes):   %d\n", pROMData->nSize);
-    wprintf(L"Bits per Data:  %d\n", pROMData->nBitsPerValue);
-    wprintf(L"Device Vpp:     %s\n",
+    wprintf(L"Size (Bytes):        %d\n", pROMData->nSize);
+    wprintf(L"Bits per Data:       %d\n", pROMData->nBitsPerValue);
+    wprintf(L"Device Vpp:          %s\n",
 		    UtPepDevicesGetDeviceVppName(pROMData->DeviceVpp));
 
-    wprintf(L"Operations:     ");
+    wprintf(L"Operations:          ");
 
     if (pROMData->pReadDeviceFunc)
     {
@@ -71,10 +71,10 @@ static void lPrintROMData(
 static void lPrintRAMData(
   TRAMData* pRAMData)
 {
-    wprintf(L"Size (Bytes):   %d\n", pRAMData->nSize);
-    wprintf(L"Bits per Data:  %d\n", pRAMData->nBitsPerValue);
+    wprintf(L"Size (Bytes):        %d\n", pRAMData->nSize);
+    wprintf(L"Bits per Data:       %d\n", pRAMData->nBitsPerValue);
 
-    wprintf(L"Operations:     ");
+    wprintf(L"Operations:          ");
 
     if (pRAMData->pWriteDeviceFunc)
     {
@@ -224,7 +224,7 @@ static void lPrintPALData(
         wprintf(L"\n");
     }
 
-    wprintf(L"Operations:                 ");
+    wprintf(L"Operations:          ");
 
     if (pPALData->pGetFuseMapSizeFunc)
     {
@@ -257,13 +257,13 @@ static void lPrintDevice(
     ULONG ulIndex;
     LPCTSTR pszPinDiagram;
 
-    wprintf(L"Name:           %s\n", pDevice->pszName);
-    wprintf(L"Device Type:    %s\n",
+    wprintf(L"Name:                %s\n", pDevice->pszName);
+    wprintf(L"Device Type:         %s\n",
             UtPepDevicesGetDeviceTypeName(pDevice->DeviceType));
-	wprintf(L"Device Package: %s\n",
+	wprintf(L"Device Package:      %s\n",
 			UtPepDevicesGetDevicePackageName(pDevice->DevicePackage));
-    wprintf(L"Pin Count:      %d\n", pDevice->nPinCount);
-    wprintf(L"Adapter:        ");
+    wprintf(L"Pin Count:           %d\n", pDevice->nPinCount);
+    wprintf(L"Adapter:             ");
 
     if (pDevice->pszAdapter)
     {
@@ -271,7 +271,7 @@ static void lPrintDevice(
     }
 
     wprintf(L"\n");
-	wprintf(L"Message:        ");
+	wprintf(L"Message:             ");
 
 	if (pDevice->pszMessage)
     {
@@ -280,12 +280,38 @@ static void lPrintDevice(
 
     wprintf(L"\n");
 
-    wprintf(L"Dip Switches:   ");
+    wprintf(L"Dip Switches:        ");
 
     UtConsolePrintDipSwitches(pDevice->bDipSwitches,
                               MArrayLen(pDevice->bDipSwitches));
 
-	wprintf(L"Pin Names:      ");
+	wprintf(L"Chip Enable Delay:   ");
+
+	if (pDevice->nChipEnableNanoseconds > 0)
+	{
+		wprintf(L"%d nanoseconds", pDevice->nChipEnableNanoseconds);
+	}
+	else
+	{
+		wprintf(L"None");
+	}
+
+	wprintf(L"\n");
+
+	wprintf(L"Output Enable Delay: ");
+
+	if (pDevice->nChipEnableNanoseconds > 0)
+	{
+		wprintf(L"%d nanoseconds", pDevice->nChipEnableNanoseconds);
+	}
+	else
+	{
+		wprintf(L"None");
+	}
+
+	wprintf(L"\n");
+
+	wprintf(L"Pin Names:           ");
 
 	for (ulIndex = 0; ulIndex < pDevice->nPinCount; ++ulIndex)
 	{
@@ -347,11 +373,27 @@ static int lListDevices(void)
 
     PathRemoveFileSpec(cPath);
 
+	wprintf(L"Calling UtPALInitialize.\n");
+
+	if (FALSE == UtPALInitialize())
+	{
+		wprintf(L"UtPALInitialize call has failed.\n");
+
+		return -1;
+	}
+
     wprintf(L"Calling UtPepDevicesInitialize with the plugin path of \"%s\".\n", cPath);
 
     if (FALSE == UtPepDevicesInitialize(cPath))
     {
         wprintf(L"UtPepDevicesInitialize call has failed.\n");
+
+		wprintf(L"Calling UtPALUninitialize.\n");
+
+		if (FALSE == UtPALUninitialize())
+		{
+			wprintf(L"UtPALUninitialize call has failed.\n");
+		}
 
         return -1;
     }
@@ -384,7 +426,8 @@ static int lListDevices(void)
     }
 
 End:
-    wprintf(L"Calling UtPepDevicesUninitialize.\n");
+
+	wprintf(L"Calling UtPepDevicesUninitialize.\n");
 
     if (FALSE == UtPepDevicesUninitialize())
     {
@@ -392,6 +435,15 @@ End:
 
         nResult = -1;
     }
+
+	wprintf(L"Calling UtPALUninitialize.\n");
+
+	if (FALSE == UtPALUninitialize())
+	{
+		wprintf(L"UtPALUninitialize call has failed.\n");
+
+        nResult = -1;
+	}
 
     return nResult;
 }
@@ -531,5 +583,5 @@ int _cdecl wmain(int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
