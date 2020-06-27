@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "Stdafx.h"
@@ -84,7 +84,9 @@ Pep::Programmer::PALData::PALData(
   _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
   _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc,
   _In_ LPCWSTR pszDeviceName,
-  _In_ UINT nPinCount) :
+  _In_ UINT nPinCount,
+  _In_ UINT32 nChipEnableNanoseconds,
+  _In_ UINT32 nOutputEnableNanoseconds) :
   m_pInitDeviceFunc(pInitDeviceFunc),
   m_pUninitDeviceFunc(pUninitDeviceFunc),
   m_pDevicePinConfigValues(pPALData->pDevicePinConfigValues),
@@ -103,7 +105,9 @@ Pep::Programmer::PALData::PALData(
   m_pReadDeviceFunc(pPALData->pReadDeviceFunc),
   m_pszDeviceName(pszDeviceName),
   m_nPinCount(nPinCount),
-  m_nFuseMapSize(0)
+  m_nFuseMapSize(0),
+  m_nChipEnableNanoseconds(nChipEnableNanoseconds),
+  m_nOutputEnableNanoseconds(nOutputEnableNanoseconds)
 {
 	ULONG ulFuseMapSize = 0;
 
@@ -238,7 +242,9 @@ void Pep::Programmer::PALData::ReadDevice(
 		{
 			if (m_pSetDevicePinConfigsFunc(pDevicePinConfig, PinConfigArray->Length))
 			{
-				m_pReadDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+				m_pReadDeviceFunc(pDeviceIOFuncs, m_nChipEnableNanoseconds,
+					              m_nOutputEnableNanoseconds, pbyData,
+					              byData->Length);
 			}
 
 			m_pUninitDeviceFunc();
@@ -270,5 +276,5 @@ void Pep::Programmer::PALData::InitPALData(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

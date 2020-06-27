@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -348,7 +348,9 @@ static int lWriteDevice(
 
     lInitDeviceIOFuncs(&DeviceIOFuncs);
 
-    pRAMData->pWriteDeviceFunc(&DeviceIOFuncs, pbyData, pRAMData->nSize);
+    pRAMData->pWriteDeviceFunc(&DeviceIOFuncs, Device.nChipEnableNanoseconds,
+		                       Device.nOutputEnableNanoseconds,
+		                       pbyData, pRAMData->nSize);
 
     if (FALSE == l_bErrorOccurred)
     {
@@ -525,7 +527,9 @@ static int lVerifyDevice(
 
     lInitDeviceIOFuncs(&DeviceIOFuncs);
 
-    pRAMData->pVerifyDeviceFunc(&DeviceIOFuncs, pbyData, pRAMData->nSize);
+    pRAMData->pVerifyDeviceFunc(&DeviceIOFuncs, Device.nChipEnableNanoseconds,
+                                Device.nChipEnableNanoseconds,
+		                        pbyData, pRAMData->nSize);
 
     if (FALSE == l_bErrorOccurred)
     {
@@ -623,5 +627,5 @@ int __cdecl wmain (int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -67,7 +67,9 @@ namespace Pep
 		internal:
 			ROMData(_In_ const TROMData* pROMData,
                     _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
-                    _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc);
+                    _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc,
+                    _In_ UINT32 nChipEnableNanoseconds,
+                    _In_ UINT32 nOutputEnableNanoseconds);
 			~ROMData();
 
 		private:
@@ -79,6 +81,8 @@ namespace Pep
 			System::UInt32 m_nSize;
 			System::UInt32 m_nBitsPerValue;
 			System::String^ m_sDeviceVpp;
+			System::UInt32 m_nChipEnableNanoseconds;
+			System::UInt32 m_nOutputEnableNanoseconds;
 			ReadDeviceDelegate^ m_ReadDeviceDelegate;
 			ProgramDeviceDelegate^ m_ProgramDeviceDelegate;
 			VerifyDeviceDelegate^ m_VerifyDeviceDelegate;
@@ -95,5 +99,5 @@ namespace Pep
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

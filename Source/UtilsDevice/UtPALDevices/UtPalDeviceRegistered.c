@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -75,14 +75,8 @@ static VOID lAllocRegisteredDataWithNoDuplicateStates(
   TRegisteredData** ppNewRegisteredData,
   ULONG* pulNewRegisteredDataLen)
 {
-    ULONG ulIndex;
-
     *ppNewRegisteredData = NULL;
     *pulNewRegisteredDataLen = 0;
-
-    for (ulIndex = 0; ulIndex < ulRegisteredDataLen; ++ulIndex)
-    {
-    }
 }
 
 static VOID lFreeRegisteredData(
@@ -285,6 +279,8 @@ static BOOL lConfigureRegisteredPalFuseMap(
 
 VOID UtPALDeviceRegisteredRead(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const TPALData* pPALData,
   LPBYTE pbyData,
   ULONG ulDataLen,
@@ -456,5 +452,5 @@ End:
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/

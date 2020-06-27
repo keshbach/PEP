@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -43,7 +43,9 @@ namespace Pep
                     _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
                     _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc,
                     _In_ LPCWSTR pszDeviceName,
-                    _In_ UINT nPinCount);
+                    _In_ UINT nPinCount,
+				    _In_ UINT32 m_nChipEnableNanoseconds,
+			        _In_ UINT32 m_nOutputEnableNanoseconds);
 			~PALData();
 
         public:
@@ -58,6 +60,8 @@ namespace Pep
 		private:
 			System::UInt32 m_nFuseMapSize;
 			array<Pep::Programmer::PinConfigValues^>^ m_PinConfigValuesArray;
+			System::UInt32 m_nChipEnableNanoseconds;
+			System::UInt32 m_nOutputEnableNanoseconds;
 			ReadDeviceDelegate^ m_ReadDeviceDelegate;
 			TUtPepDevicesInitFunc m_pInitDeviceFunc;
 			TUtPepDevicesUninitFunc m_pUninitDeviceFunc;
@@ -86,5 +90,5 @@ namespace Pep
 };
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

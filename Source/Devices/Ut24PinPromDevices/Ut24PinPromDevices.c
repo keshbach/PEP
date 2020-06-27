@@ -32,32 +32,32 @@
 static BOOL UTPEPDEVICESAPI lGenericInit(VOID);
 static BOOL UTPEPDEVICESAPI lGenericUninit(VOID);
 
-static VOID UTPEPDEVICESAPI lGenericReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lGenericVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lGenericReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lGenericVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
-static VOID UTPEPDEVICESAPI l82S183ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI l82S183VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l82S183ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l82S183VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
-static VOID UTPEPDEVICESAPI l82S191ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI l82S191VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l82S191ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l82S191VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
-static VOID UTPEPDEVICESAPI l82S321ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI l82S321VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l82S321ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l82S321VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
-static VOID UTPEPDEVICESAPI l82HS641ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI l82HS641VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l82HS641ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l82HS641VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
-static VOID UTPEPDEVICESAPI lS114LatchedReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lS114LatchedVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lS114LatchedReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lS114LatchedVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
-static VOID UTPEPDEVICESAPI lS114TransparentReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lS114TransparentVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lS114TransparentReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lS114TransparentVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
-static VOID UTPEPDEVICESAPI lS115LatchedReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lS115LatchedVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lS115LatchedReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lS115LatchedVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
-static VOID UTPEPDEVICESAPI lS115TransparentReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lS115TransparentVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lS115TransparentReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lS115TransparentVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
 static LPCWSTR l_psz6336PinNames[] = {
     CDevicePin_Address7,
@@ -687,6 +687,8 @@ End:
 
 static VOID UTPEPDEVICESAPI lGenericReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -696,6 +698,8 @@ static VOID UTPEPDEVICESAPI lGenericReadDevice(
 
 static VOID UTPEPDEVICESAPI lGenericVerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -709,6 +713,8 @@ static VOID UTPEPDEVICESAPI lGenericVerifyDevice(
 
 static VOID UTPEPDEVICESAPI l82S183ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -718,6 +724,8 @@ static VOID UTPEPDEVICESAPI l82S183ReadDevice(
 
 static VOID UTPEPDEVICESAPI l82S183VerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -731,6 +739,8 @@ static VOID UTPEPDEVICESAPI l82S183VerifyDevice(
 
 static VOID UTPEPDEVICESAPI l82S191ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -740,6 +750,8 @@ static VOID UTPEPDEVICESAPI l82S191ReadDevice(
 
 static VOID UTPEPDEVICESAPI l82S191VerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -753,6 +765,8 @@ static VOID UTPEPDEVICESAPI l82S191VerifyDevice(
 
 static VOID UTPEPDEVICESAPI l82S321ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -762,6 +776,8 @@ static VOID UTPEPDEVICESAPI l82S321ReadDevice(
 
 static VOID UTPEPDEVICESAPI l82S321VerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -775,6 +791,8 @@ static VOID UTPEPDEVICESAPI l82S321VerifyDevice(
 
 static VOID UTPEPDEVICESAPI l82HS641ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -783,6 +801,8 @@ static VOID UTPEPDEVICESAPI l82HS641ReadDevice(
 
 static VOID UTPEPDEVICESAPI l82HS641VerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -841,6 +861,8 @@ static BOOL lS114LatchedRead(
 
 static VOID UTPEPDEVICESAPI lS114LatchedReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -880,6 +902,8 @@ End:
 
 static VOID UTPEPDEVICESAPI lS114LatchedVerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -977,6 +1001,8 @@ static BOOL lS114TransparentRead(
 
 static VOID UTPEPDEVICESAPI lS114TransparentReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -1016,6 +1042,8 @@ End:
 
 static VOID UTPEPDEVICESAPI lS114TransparentVerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -1104,6 +1132,8 @@ static BOOL lS115LatchedRead(
 
 static VOID UTPEPDEVICESAPI lS115LatchedReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -1143,6 +1173,8 @@ End:
 
 static VOID UTPEPDEVICESAPI lS115LatchedVerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -1231,6 +1263,8 @@ static BOOL lS115TransparentRead(
 
 static VOID UTPEPDEVICESAPI lS115TransparentReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -1270,6 +1304,8 @@ End:
 
 static VOID UTPEPDEVICESAPI lS115TransparentVerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {

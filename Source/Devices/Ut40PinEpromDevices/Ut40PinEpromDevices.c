@@ -24,9 +24,9 @@
 static BOOL UTPEPDEVICESAPI lGenericInit(VOID);
 static BOOL UTPEPDEVICESAPI lGenericUninit(VOID);
 
-static VOID UTPEPDEVICESAPI l27Cx02ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI l27Cx02ProgramDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI l27Cx02VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l27Cx02ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l27Cx02ProgramDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l27Cx02VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
 static LPCWSTR l_psz27C1024PinNames[] = {
     CDevicePin_Vpp,
@@ -761,6 +761,8 @@ static BOOL UTPEPDEVICESAPI lGenericUninit(VOID)
 
 static VOID UTPEPDEVICESAPI l27Cx02ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -774,8 +776,7 @@ static VOID UTPEPDEVICESAPI l27Cx02ReadDevice(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen / sizeof(WORD), edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
-        FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
+	if (FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
     {
@@ -834,16 +835,22 @@ End:
 
 static VOID UTPEPDEVICESAPI l27Cx02ProgramDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
     pDeviceIOFuncs;
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;
 }
 
 static VOID UTPEPDEVICESAPI l27Cx02VerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {

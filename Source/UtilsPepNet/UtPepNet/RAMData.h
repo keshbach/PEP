@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyrigit (C) 2007-2019 Kevin Eshbach
+//  Copyrigit (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -50,7 +50,9 @@ namespace Pep
 		internal:
 			RAMData(_In_ const TRAMData* pRAMData,
                     _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
-                    _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc);
+                    _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc,
+                    _In_ UINT32 nChipEnableNanoseconds,
+                    _In_ UINT32 nOutputEnableNanoseconds);
 			~RAMData();
 
 		private:
@@ -60,6 +62,8 @@ namespace Pep
 		private:
 			System::UInt32 m_nSize;
 			System::UInt32 m_nBitsPerValue;
+			System::UInt32 m_nChipEnableNanoseconds;
+			System::UInt32 m_nOutputEnableNanoseconds;
 			WriteDeviceDelegate^ m_WriteDeviceDelegate;
 			VerifyDeviceDelegate^ m_VerifyDeviceDelegate;
 			TUtPepDevicesWriteDeviceFunc m_pWriteDeviceFunc;
@@ -74,5 +78,5 @@ namespace Pep
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

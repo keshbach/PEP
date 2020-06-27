@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "Stdafx.h"
@@ -31,16 +31,20 @@ Pep::Programmer::ROMData::~ROMData()
 Pep::Programmer::ROMData::ROMData(
   _In_ const TROMData* pROMData,
   _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
-  _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc) :
+  _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc,
+  _In_ UINT32 nChipEnableNanoseconds,
+  _In_ UINT32 nOutputEnableNanoseconds) :
   m_pReadDeviceFunc(pROMData->pReadDeviceFunc),
   m_pProgramDeviceFunc(pROMData->pProgramDeviceFunc),
   m_pVerifyDeviceFunc(pROMData->pVerifyDeviceFunc),
   m_pInitDeviceFunc(pInitDeviceFunc),
   m_pUninitDeviceFunc(pUninitDeviceFunc)
 {
-    m_nSize         = pROMData->nSize;
-    m_nBitsPerValue = pROMData->nBitsPerValue;
-    m_sDeviceVpp    = gcnew System::String(UtPepDevicesGetDeviceVppName(pROMData->DeviceVpp));
+    m_nSize                    = pROMData->nSize;
+    m_nBitsPerValue            = pROMData->nBitsPerValue;
+    m_sDeviceVpp               = gcnew System::String(UtPepDevicesGetDeviceVppName(pROMData->DeviceVpp));
+	m_nChipEnableNanoseconds   = nChipEnableNanoseconds;
+	m_nOutputEnableNanoseconds = nOutputEnableNanoseconds;
 
     if (m_pInitDeviceFunc && m_pUninitDeviceFunc)
     {
@@ -90,7 +94,9 @@ void Pep::Programmer::ROMData::ReadDevice(
 
 	if (m_pInitDeviceFunc())
 	{
-		m_pReadDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+		m_pReadDeviceFunc(pDeviceIOFuncs, m_nChipEnableNanoseconds,
+			              m_nOutputEnableNanoseconds, 
+			              pbyData, byData->Length);
 
 		m_pUninitDeviceFunc();
 	}
@@ -107,7 +113,9 @@ void Pep::Programmer::ROMData::ProgramDevice(
 
 	if (m_pInitDeviceFunc())
 	{
-		m_pProgramDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+		m_pProgramDeviceFunc(pDeviceIOFuncs, m_nChipEnableNanoseconds,
+			                 m_nOutputEnableNanoseconds,
+			                 pbyData, byData->Length);
 
 		m_pUninitDeviceFunc();
 	}
@@ -124,12 +132,14 @@ void Pep::Programmer::ROMData::VerifyDevice(
 
 	if (m_pInitDeviceFunc())
 	{
-		m_pVerifyDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+		m_pVerifyDeviceFunc(pDeviceIOFuncs, m_nChipEnableNanoseconds,
+			                m_nOutputEnableNanoseconds,
+			                pbyData, byData->Length);
 
 		m_pUninitDeviceFunc();
 	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

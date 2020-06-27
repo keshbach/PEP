@@ -1,18 +1,22 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2016 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPalDeviceCombinatorial_H)
 #define UtPalDeviceCombinatorial_H
 
 VOID UtPALDeviceCombinatorialRead(const TDeviceIOFuncs* pDeviceIOFuncs,
-                                  const TPALData* pPALData,
-                                  LPBYTE pbyData,
+                                  UINT32 nChipEnableNanoseconds,
+                                  UINT32 nOutputEnableNanoseconds,
+								  const TPALData* pPALData,
+							      LPBYTE pbyData,
                                   ULONG ulDataLen,
                                   BOOL bIsPal24);
 
 VOID UtPALDeviceCombinatorialReadAdapter(const TDeviceIOFuncs* pDeviceIOFuncs,
-                                         const TPALData* pPALData,
+										 UINT32 nChipEnableNanoseconds,
+										 UINT32 nOutputEnableNanoseconds,
+										 const TPALData* pPALData,
                                          LPBYTE pbyData,
                                          ULONG ulDataLen,
                                          LPCTSTR pszDeviceAdapter,
@@ -22,5 +26,5 @@ VOID UtPALDeviceCombinatorialReadAdapter(const TDeviceIOFuncs* pDeviceIOFuncs,
 #endif /* end of UtPalDeviceCombinatorial_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2016 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/

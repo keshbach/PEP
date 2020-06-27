@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyrig(t (C) 2007-2019 Kevin Eshbach
+//  Copyrig(t (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "Stdafx.h"
@@ -27,14 +27,18 @@ Pep::Programmer::RAMData::~RAMData()
 Pep::Programmer::RAMData::RAMData(
   _In_ const TRAMData* pRAMData,
   _In_ TUtPepDevicesInitFunc pInitDeviceFunc,
-  _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc) :
+  _In_ TUtPepDevicesUninitFunc pUninitDeviceFunc,
+  _In_ UINT32 nChipEnableNanoseconds,
+  _In_ UINT32 nOutputEnableNanoseconds) :
   m_pWriteDeviceFunc(pRAMData->pWriteDeviceFunc),
   m_pVerifyDeviceFunc(pRAMData->pVerifyDeviceFunc),
   m_pInitDeviceFunc(pInitDeviceFunc),
   m_pUninitDeviceFunc(pUninitDeviceFunc)
 {
-    m_nSize         = pRAMData->nSize;
-    m_nBitsPerValue = pRAMData->nBitsPerValue;
+    m_nSize                    = pRAMData->nSize;
+    m_nBitsPerValue            = pRAMData->nBitsPerValue;
+	m_nChipEnableNanoseconds   = nChipEnableNanoseconds;
+	m_nOutputEnableNanoseconds = nOutputEnableNanoseconds;
 
     if (m_pInitDeviceFunc && m_pUninitDeviceFunc)
     {
@@ -74,7 +78,9 @@ void Pep::Programmer::RAMData::WriteDevice(
 
 	if (m_pInitDeviceFunc())
 	{
-		m_pWriteDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+		m_pWriteDeviceFunc(pDeviceIOFuncs, m_nChipEnableNanoseconds,
+			               m_nOutputEnableNanoseconds,
+			               pbyData, byData->Length);
 
 		m_pUninitDeviceFunc();
 	}
@@ -91,12 +97,13 @@ void Pep::Programmer::RAMData::VerifyDevice(
 
 	if (m_pInitDeviceFunc())
 	{
-		m_pVerifyDeviceFunc(pDeviceIOFuncs, pbyData, byData->Length);
+		m_pVerifyDeviceFunc(pDeviceIOFuncs, m_nChipEnableNanoseconds,
+			                m_nOutputEnableNanoseconds, pbyData, byData->Length);
 
 		m_pUninitDeviceFunc();
 	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

@@ -18,8 +18,8 @@
 static BOOL UTPEPDEVICESAPI lGenericInit(VOID);
 static BOOL UTPEPDEVICESAPI lGenericUninit(VOID);
 
-static VOID UTPEPDEVICESAPI l6116WriteDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI l6116VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l6116WriteDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l6116VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
 static LPCWSTR l_psz4118PinNames[] = {
     CDevicePin_Address7,
@@ -130,20 +130,28 @@ static BOOL UTPEPDEVICESAPI lGenericUninit(VOID)
 
 static VOID UTPEPDEVICESAPI l6116WriteDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
     pDeviceIOFuncs;
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;
 }
 
 static VOID UTPEPDEVICESAPI l6116VerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
     pDeviceIOFuncs;
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;
 }

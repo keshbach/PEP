@@ -17,13 +17,13 @@
 
 #include <Devices/Includes/UtGenericFuncs.inl>
 
-static VOID UTPEPDEVICESAPI lFake8BitReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lFake8BitProgramDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lFake8BitVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lFake8BitReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lFake8BitProgramDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lFake8BitVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
-static VOID UTPEPDEVICESAPI lFake16BitReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lFake16BitProgramDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lFake16BitVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lFake16BitReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lFake16BitProgramDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lFake16BitVerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
 static LPCWSTR l_pszFake8BitPinNames[] = {
     L"",
@@ -212,11 +212,16 @@ DEVICES_END
 
 static VOID UTPEPDEVICESAPI lFake8BitReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
     BOOL bErrorOccurred = FALSE;
     ULONG ulAddress;
+
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
@@ -239,21 +244,30 @@ static VOID UTPEPDEVICESAPI lFake8BitReadDevice(
 
 static VOID UTPEPDEVICESAPI lFake8BitProgramDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
     pDeviceIOFuncs;
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;
 }
 
 static VOID UTPEPDEVICESAPI lFake8BitVerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
     BOOL bErrorOccurred = FALSE;
     ULONG ulAddress;
+
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
@@ -281,12 +295,17 @@ static VOID UTPEPDEVICESAPI lFake8BitVerifyDevice(
 */
 
 static VOID UTPEPDEVICESAPI lFake16BitReadDevice(
-    const TDeviceIOFuncs* pDeviceIOFuncs,
-    LPBYTE pbyData,
-    ULONG ulDataLen)
+  const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
+  LPBYTE pbyData,
+  ULONG ulDataLen)
 {
     BOOL bErrorOccurred = FALSE;
     ULONG ulAddress;
+
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
@@ -308,22 +327,31 @@ static VOID UTPEPDEVICESAPI lFake16BitReadDevice(
 }
 
 static VOID UTPEPDEVICESAPI lFake16BitProgramDevice(
-    const TDeviceIOFuncs* pDeviceIOFuncs,
-    const LPBYTE pbyData,
-    ULONG ulDataLen)
+  const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
+  const LPBYTE pbyData,
+  ULONG ulDataLen)
 {
     pDeviceIOFuncs;
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;
 }
 
 static VOID UTPEPDEVICESAPI lFake16BitVerifyDevice(
-    const TDeviceIOFuncs* pDeviceIOFuncs,
-    const LPBYTE pbyData,
-    ULONG ulDataLen)
+  const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
+  const LPBYTE pbyData,
+  ULONG ulDataLen)
 {
     BOOL bErrorOccurred = FALSE;
     ULONG ulAddress;
+
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 

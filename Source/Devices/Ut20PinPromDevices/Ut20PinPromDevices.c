@@ -17,8 +17,8 @@
 
 #include <Devices/Includes/UtGenericFuncs.inl>
 
-static VOID UTPEPDEVICESAPI l74LS471ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI l74LS471VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l74LS471ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l74LS471VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
 static LPCWSTR l_psz74S472PinNames[] = {
     CDevicePin_Address0,
@@ -111,6 +111,8 @@ DEVICES_END
 
 static VOID UTPEPDEVICESAPI l74LS471ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
@@ -120,7 +122,7 @@ static VOID UTPEPDEVICESAPI l74LS471ReadDevice(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+	if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -155,6 +157,8 @@ End:
 
 static VOID UTPEPDEVICESAPI l74LS471VerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {

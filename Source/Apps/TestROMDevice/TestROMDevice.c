@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -314,7 +314,10 @@ static int lReadDevice(
 
     lInitDeviceIOFuncs(&DeviceIOFuncs);
 
-    pROMData->pReadDeviceFunc(&DeviceIOFuncs, pbyData, pROMData->nSize);
+    pROMData->pReadDeviceFunc(&DeviceIOFuncs,
+                              Device.nChipEnableNanoseconds,
+	                          Device.nOutputEnableNanoseconds,
+		                      pbyData, pROMData->nSize);
 
     if (FALSE == l_bErrorOccurred)
     {
@@ -512,7 +515,10 @@ static int lProgramDevice(
 
     lInitDeviceIOFuncs(&DeviceIOFuncs);
 
-    pROMData->pProgramDeviceFunc(&DeviceIOFuncs, pbyData, pROMData->nSize);
+    pROMData->pProgramDeviceFunc(&DeviceIOFuncs,
+                                 Device.nChipEnableNanoseconds,
+		                         Device.nOutputEnableNanoseconds,
+                                 pbyData, pROMData->nSize);
 
     if (FALSE == l_bErrorOccurred)
     {
@@ -692,7 +698,10 @@ static int lVerifyDevice(
 
     lInitDeviceIOFuncs(&DeviceIOFuncs);
 
-    pROMData->pVerifyDeviceFunc(&DeviceIOFuncs, pbyData, pROMData->nSize);
+    pROMData->pVerifyDeviceFunc(&DeviceIOFuncs,
+                                Device.nChipEnableNanoseconds,
+                                Device.nOutputEnableNanoseconds,
+                                pbyData, pROMData->nSize);
 
     if (FALSE == l_bErrorOccurred)
     {
@@ -799,5 +808,5 @@ int __cdecl wmain (int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

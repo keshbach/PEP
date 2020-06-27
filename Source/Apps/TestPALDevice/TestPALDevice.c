@@ -549,7 +549,10 @@ static int lReadDevice(
 
     wprintf(L"Reading the device.\n");
 
-    pPALData->pReadDeviceFunc(&DeviceIOFuncs, pbyData, ulDataLen);
+    pPALData->pReadDeviceFunc(&DeviceIOFuncs,
+                              Device.nChipEnableNanoseconds,
+		                      Device.nOutputEnableNanoseconds,
+		                      pbyData, ulDataLen);
 
     wprintf(L"Uninitializing the device\n");
 

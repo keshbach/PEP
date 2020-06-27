@@ -84,10 +84,10 @@ typedef struct tagTDevicePinConfig
 typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesInitFunc)(VOID);
 typedef BOOL (UTPEPDEVICESAPI *TUtPepDevicesUninitFunc)(VOID);
 
-typedef VOID (UTPEPDEVICESAPI *TUtPepDevicesReadDeviceFunc)(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-typedef VOID (UTPEPDEVICESAPI *TUtPepDevicesWriteDeviceFunc)(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
-typedef VOID (UTPEPDEVICESAPI *TUtPepDevicesProgramDeviceFunc)(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
-typedef VOID (UTPEPDEVICESAPI *TUtPepDevicesVerifyDeviceFunc)(const TDeviceIOFuncs* pDeviceIOFuncs, const LPBYTE pbyData, ULONG ulDataLen);
+typedef VOID (UTPEPDEVICESAPI *TUtPepDevicesReadDeviceFunc)(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+typedef VOID (UTPEPDEVICESAPI *TUtPepDevicesWriteDeviceFunc)(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
+typedef VOID (UTPEPDEVICESAPI *TUtPepDevicesProgramDeviceFunc)(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
+typedef VOID (UTPEPDEVICESAPI *TUtPepDevicesVerifyDeviceFunc)(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
 typedef ULONG (UTPEPDEVICESAPI *TUtPepDevicesGetFuseMapSizeFunc)(VOID);
 typedef VOID (UTPEPDEVICESAPI *TUtPepDevicesConfigFuseMapFunc)(LPBYTE pbyData);

@@ -69,19 +69,25 @@ Pep::Programmer::Device::Device(
         case edtPROM:
 			m_pDeviceData = gcnew Pep::Programmer::ROMData(&pDevice->DeviceData.ROMData,
                                                            pDevice->DeviceData.pInitFunc,
-                                                           pDevice->DeviceData.pUninitFuncs);
+                                                           pDevice->DeviceData.pUninitFuncs,
+				                                           pDevice->nChipEnableNanoseconds,
+				                                           pDevice->nOutputEnableNanoseconds);
             break;
         case edtSRAM:
 			m_pDeviceData = gcnew Pep::Programmer::RAMData(&pDevice->DeviceData.RAMData,
                                                            pDevice->DeviceData.pInitFunc,
-                                                           pDevice->DeviceData.pUninitFuncs);
-            break;
+                                                           pDevice->DeviceData.pUninitFuncs,
+			                                               pDevice->nChipEnableNanoseconds,
+				                                           pDevice->nOutputEnableNanoseconds);
+			break;
         case edtPAL:
 			m_pDeviceData = gcnew Pep::Programmer::PALData(&pDevice->DeviceData.PALData,
                                                            pDevice->DeviceData.pInitFunc,
                                                            pDevice->DeviceData.pUninitFuncs,
                                                            pDevice->pszName,
-                                                           pDevice->nPinCount);
+                                                           pDevice->nPinCount,
+				                                           pDevice->nChipEnableNanoseconds,
+				                                           pDevice->nOutputEnableNanoseconds);
             break;
         default:
             System::Diagnostics::Debug::Assert(false, L"Unknown Device Data");

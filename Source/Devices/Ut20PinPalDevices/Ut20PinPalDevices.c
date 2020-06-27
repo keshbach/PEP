@@ -43,15 +43,15 @@ static VOID UTPEPDEVICESAPI lGal18V10FreeFuseMapText(LPCWSTR pszFuseMapText);
 static LPCWSTR UTPEPDEVICESAPI lGal18V10AllocSampleFuseMapText(VOID);
 static VOID UTPEPDEVICESAPI lGal18V10FreeSampleFuseMapText(LPCWSTR pszFuseMapText);
 
-static VOID UTPEPDEVICESAPI lPal10L8ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lPal12L6ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lPal12H6ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lPal16L2ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lPal16L8ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lPal16R4ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lPal16R6ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lPal16R8ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI lGal18V10ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lPal10L8ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds,	UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lPal12L6ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lPal12H6ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lPal16L2ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lPal16L8ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lPal16R4ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lPal16R6ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lPal16R8ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI lGal18V10ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
 
 static LPCWSTR l_pszPal10L8PinNames[] = {
     CDevicePin_Input,
@@ -374,22 +374,22 @@ static TDevicePinFuseColumns l_Pal12H6PinFuseColumns[] = {
     {19, 7,  6}};
 
 static TDevicePinFuseColumns l_Pal16L2PinFuseColumns[] = {
-	{1, 3, 2},
-	{2, 1, 0},
-	{3, 5, 4},
-	{4, 9, 8},
-	{5, 13, 12},
-	{6, 17, 16},
-	{7, 21, 20},
-	{8, 25, 24},
-	{9, 29, 28},
+	{1,  3,  2},
+	{2,  1,  0},
+	{3,  5,  4},
+	{4,  9,  8},
+	{5,  13, 12},
+	{6,  17, 16},
+	{7,  21, 20},
+	{8,  25, 24},
+	{9,  29, 28},
 	{11, 31, 30},
 	{12, 27, 26},
 	{13, 23, 22},
 	{14, 19, 18},
 	{17, 15, 14},
 	{18, 11, 10},
-	{19, 7, 6}};
+	{19, 7,  6}};
 
 static TDevicePinFuseColumns l_Pal16L8PinFuseColumns[] = {
     {1, 3,   2},
@@ -1240,91 +1240,127 @@ static VOID UTPEPDEVICESAPI lGal18V10FreeSampleFuseMapText(
 
 static VOID UTPEPDEVICESAPI lPal10L8ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, lFindPALData(L"PAL10L8"),
+    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+								 nOutputEnableNanoseconds,
+		                         lFindPALData(L"PAL10L8"),
                                  pbyData, ulDataLen, FALSE);
 }
 
 static VOID UTPEPDEVICESAPI lPal12L6ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, lFindPALData(L"PAL12L6"),
+    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+                                 nOutputEnableNanoseconds,
+		                         lFindPALData(L"PAL12L6"),
                                  pbyData, ulDataLen, FALSE);
 }
 
 static VOID UTPEPDEVICESAPI lPal12H6ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, lFindPALData(L"PAL12H6"),
+    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+		                         nOutputEnableNanoseconds,
+		                         lFindPALData(L"PAL12H6"),
                                  pbyData, ulDataLen, FALSE);
 }
 
 static VOID UTPEPDEVICESAPI lPal16L2ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, lFindPALData(L"PAL16L2"),
+    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+		                         nOutputEnableNanoseconds,
+		                         lFindPALData(L"PAL16L2"),
                                  pbyData, ulDataLen, FALSE);
 }
 
 static VOID UTPEPDEVICESAPI lPal16L8ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, lFindPALData(L"PAL16L8"),
+    UtPALDeviceCombinatorialRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+		                         nOutputEnableNanoseconds,
+		                         lFindPALData(L"PAL16L8"),
                                  pbyData, ulDataLen, FALSE);
 }
 
 static VOID UTPEPDEVICESAPI lPal16R4ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    UtPALDeviceRegisteredRead(pDeviceIOFuncs, lFindPALData(L"PAL16R4"),
+    UtPALDeviceRegisteredRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+		                      nOutputEnableNanoseconds,
+							  lFindPALData(L"PAL16R4"),
                               pbyData, ulDataLen, FALSE);
 }
 
 static VOID UTPEPDEVICESAPI lPal16R6ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    UtPALDeviceRegisteredRead(pDeviceIOFuncs, lFindPALData(L"PAL16R6"),
+    UtPALDeviceRegisteredRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+		                      nOutputEnableNanoseconds,
+						      lFindPALData(L"PAL16R6"),
                               pbyData, ulDataLen, FALSE);
 }
 
 static VOID UTPEPDEVICESAPI lPal16R8ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    UtPALDeviceRegisteredRead(pDeviceIOFuncs, lFindPALData(L"PAL16R8"),
+    UtPALDeviceRegisteredRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+		                      nOutputEnableNanoseconds,
+		                      lFindPALData(L"PAL16R8"),
                               pbyData, ulDataLen, FALSE);
 }
 
 static VOID UTPEPDEVICESAPI lGal18V10ReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
     const TPALData* pPALData = lFindPALData(L"GAL18V10");
-
+	
     if (0 == UtPALDeviceGetTotalPinTypes(epdptRegistered))
     {
-        UtPALDeviceCombinatorialRead(pDeviceIOFuncs, pPALData,
+        UtPALDeviceCombinatorialRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+			                         nOutputEnableNanoseconds, pPALData,
                                      pbyData, ulDataLen, FALSE);
     }
     else
     {
-        UtPALDeviceRegisteredRead(pDeviceIOFuncs, pPALData,
+        UtPALDeviceRegisteredRead(pDeviceIOFuncs, nChipEnableNanoseconds,
+			                      nOutputEnableNanoseconds, pPALData,
                                   pbyData, ulDataLen, FALSE);
     }
 }

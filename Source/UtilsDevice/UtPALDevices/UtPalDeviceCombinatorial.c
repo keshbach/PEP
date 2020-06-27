@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2016 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -1528,6 +1528,8 @@ static BOOL lConfigureCombinatorialPalFuseMap(
 
 VOID UtPALDeviceCombinatorialRead(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const TPALData* pPALData,
   LPBYTE pbyData,
   ULONG ulDataLen,
@@ -1654,6 +1656,8 @@ End:
 
 VOID UtPALDeviceCombinatorialReadAdapter(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const TPALData* pPALData,
   LPBYTE pbyData,
   ULONG ulDataLen,
@@ -1869,4 +1873,5 @@ End:
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2016 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
+/***************************************************************************/

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(CGenericBytesPerOperation)
@@ -8,6 +8,8 @@
 
 static VOID lGenericReadDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen,
   EUtPepCtrlPinPulseMode PinPulseMode)
@@ -18,7 +20,8 @@ static VOID lGenericReadDevice(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+	if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+        FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(PinPulseMode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -52,6 +55,8 @@ End:
 
 static VOID lGenericVerifyDevice(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen,
   EUtPepCtrlPinPulseMode PinPulseMode)
@@ -63,7 +68,8 @@ static VOID lGenericVerifyDevice(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+	if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+        FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(PinPulseMode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -119,20 +125,28 @@ static BOOL UTPEPDEVICESAPI lGenericUninit(VOID)
 
 static VOID UTPEPDEVICESAPI lGenericReadDevicePinPulse4Mode(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericReadDevice(pDeviceIOFuncs, pbyData, ulDataLen, eUtPepCtrlPinPulse4Mode);
+    lGenericReadDevice(pDeviceIOFuncs, nChipEnableNanoseconds,
+                       nOutputEnableNanoseconds,
+                       pbyData, ulDataLen, eUtPepCtrlPinPulse4Mode);
 }
 
 static VOID UTPEPDEVICESAPI lGenericVerifyDevicePinPulse4Mode(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericVerifyDevice(pDeviceIOFuncs, pbyData, ulDataLen, eUtPepCtrlPinPulse4Mode);
+    lGenericVerifyDevice(pDeviceIOFuncs, nChipEnableNanoseconds,
+                         nOutputEnableNanoseconds,
+                         pbyData, ulDataLen, eUtPepCtrlPinPulse4Mode);
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
