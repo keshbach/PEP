@@ -438,8 +438,8 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetDelaySettings(
 		return FALSE;
 	}
 
-	DelaySettings.nChipEnableNanoSecs = nChipEnableNanoSeconds;
-	DelaySettings.nOutputEnableNanoSeconds = nOutputEnableNanoSeconds;
+	DelaySettings.nChipEnableNanoseconds = nChipEnableNanoSeconds;
+	DelaySettings.nOutputEnableNanoseconds = nOutputEnableNanoSeconds;
 
 	if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_DELAY_SETTINGS,
 						 &DelaySettings, sizeof(DelaySettings), NULL, 0,

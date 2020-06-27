@@ -1006,8 +1006,8 @@ NTSTATUS PepCtrlDeviceControl_SetDelaySettings(
 	pDelaySettings = (TPepCtrlDelaySettings*)pvInBuf;
 
 	if (UtPepLogicSetDelays(&pPortData->LogicData,
-		                    pDelaySettings->nChipEnableNanoSecs,
-		                    pDelaySettings->nOutputEnableNanoSeconds))
+		                    pDelaySettings->nChipEnableNanoseconds,
+		                    pDelaySettings->nOutputEnableNanoseconds))
 	{
 		Status = STATUS_SUCCESS;
 	}
