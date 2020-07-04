@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -331,6 +331,16 @@ static LPCWSTR lAllocDipPackagePinDiagram(
     return pszPinDiagram;
 }
 
+static LPCWSTR lAllocPlccPackagePinDiagram(
+  LPCWSTR* ppszPinNames,
+  UINT nPinNamesCount)
+{
+	ppszPinNames;
+	nPinNamesCount;
+
+	return NULL;
+}
+
 BOOL UTPEPDEVICESAPI UtPepDevicesInitialize(
   LPCWSTR pszPluginPath)
 {
@@ -564,6 +574,8 @@ LPCWSTR UTPEPDEVICESAPI UtPepDevicesGetDevicePackageName(
 	{
 		case edpDIP:
 			return L"DIP (Dual-inline Package)";
+		case edpPLCC:
+			return L"PLCC (Plastic Leaded Chip Carrier)";
 	}
 
 	return L"Unknown";
@@ -600,7 +612,9 @@ LPCWSTR UTPEPDEVICESAPI UtPepDevicesAllocPinDiagram(
     {
         case edpDIP:
             return lAllocDipPackagePinDiagram(ppszPinNames, nPinNamesCount);
-    }
+		case edpPLCC:
+			return lAllocPlccPackagePinDiagram(ppszPinNames, nPinNamesCount);
+	}
 
     return NULL;
 }
@@ -614,5 +628,5 @@ BOOL UTPEPDEVICESAPI UtPepDevicesFreePinDiagram(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

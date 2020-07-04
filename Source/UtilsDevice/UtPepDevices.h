@@ -118,7 +118,8 @@ typedef enum EDeviceVpp
 
 typedef enum EDevicePackage
 {
-    edpDIP
+    edpDIP,
+	edpPLCC
 } EDevicePackage;
 
 /*
@@ -291,6 +292,9 @@ static TDevice l_Devices[] = {
 
 #define DEVICE_DIP_PACKAGE \
     edpDIP,
+
+#define DEVICE_PLCC_PACKAGE \
+    edpPLCC,
 
 #define DEVICE_PINCOUNT(pinCount) \
     pinCount,
