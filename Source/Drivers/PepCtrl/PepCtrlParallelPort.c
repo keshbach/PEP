@@ -8,6 +8,7 @@
 #include <parallel.h>
 
 #include <Utils/UtHeapDriver.h>
+#include <Utils/UtSleepDriver.h>
 
 #include <Includes/UtMacros.h>
 
@@ -388,10 +389,12 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(
   _In_ TPepCtrlObject* pObject,
   _In_ PUCHAR pucData,
-  _In_ ULONG ulDataLen)
+  _In_ ULONG ulDataLen,
+  _In_ ULONG ulWaitNanoSeconds)
 {
     PPARALLEL_PORT_INFORMATION pParallelPortInfo;
     ULONG ulIndex;
+	LARGE_INTEGER Interval;
 
     PepCtrlLog("PepCtrlWriteParallelPort entering.\n");
 
@@ -399,11 +402,18 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(
 
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
+	Interval.QuadPart = ulWaitNanoSeconds;
+
     for (ulIndex = 0; ulIndex < ulDataLen; ++ulIndex)
     {
     	WRITE_PORT_UCHAR(MDataAddress(pParallelPortInfo->Controller),
                          pucData[ulIndex]);
-    }
+
+		if (!UtSleep(&Interval))
+		{
+			PepCtrlLog("PepCtrlWriteParallelPort - Sleep failed.\n");
+		}
+	}
 
     PepCtrlLog("PepCtrlWriteParallelPort leaving.\n");
 

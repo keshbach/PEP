@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepCtrlPortData_H)
@@ -37,7 +37,8 @@ typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlReadBitPortFunc)(_In_ struct tagTPepCtrlOb
                                                        _Out_ PBOOLEAN pbValue);
 typedef BOOLEAN (TPEPCTRLAPI *TPepCtrlWritePortFunc)(_In_ struct tagTPepCtrlObject* pPortData,
                                                      _In_ PUCHAR pucData,
-                                                     _In_ ULONG ulDataLen);
+                                                     _In_ ULONG ulDataLen,
+	                                                 _In_ ULONG ulDelayNanoSeconds);
 typedef LPGUID (TPEPCTRLAPI *TPepCtrlGetDevInterfaceGuidFunc)(VOID);
 
 typedef struct tagTPepCtrlFuncs
@@ -86,5 +87,5 @@ typedef struct tagTPepCtrlPortData
 #endif /* !defined(PepCtrlPortData_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/

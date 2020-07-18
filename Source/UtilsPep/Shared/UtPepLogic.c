@@ -6,12 +6,14 @@
 #include <windows.h>
 
 #include <Utils/UtHeapProcess.h>
+#include <Utils/UtSleep.h>
 #elif defined(BUILD_DRIVER_LIB)
 #include <ntddk.h>
 
 #include <ntstrsafe.h>
 
 #include <Utils/UtHeapDriver.h>
+#include <Utils/UtSleepDriver.h>
 #else
 #error Unsupported configuration
 #endif
@@ -66,6 +68,8 @@
 #define PVAR 0
 #define PFIX 1
 
+#define CWaitNanoSeconds 10
+
 #pragma endregion
 
 #pragma region "Macros"
@@ -115,16 +119,6 @@
 
 #define MEnableResetProgramPulse(enable) (enable ? PPCL : 0)
 
-/*
-  Macro to convert time units
-*/
-
-#define MNanoToMilliseconds(nano) (nano / 1000000.0)
-
-#define MMilliToNanoseconds(milli) (milli * 1000000.0)
-
-#define MMicroToNanoseconds(micro) (micro * 1000.0)
-
 #pragma endregion
 
 #pragma region "Structures"
@@ -173,9 +167,6 @@ typedef struct tagTPepInternalLogicData
 #pragma region "Local Function Declarations"
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-static BOOLEAN lSleepNanoseconds(_In_ TUtPepLogicData* pLogicData, _In_ PLARGE_INTEGER pIntervalNanoseconds);
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWritePortData(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 ucData, _In_ UINT8 ucUnit);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -220,7 +211,6 @@ static BOOLEAN lInitDelaySettings(_In_ TPepInternalLogicData* pInternalData);
 
 #if defined(ALLOC_PRAGMA)
 
-#pragma alloc_text (PAGE, lSleepNanoseconds)
 #pragma alloc_text (PAGE, lWritePortData)
 #pragma alloc_text (PAGE, lReadByteFromProgrammer)
 #pragma alloc_text (PAGE, lWriteByteToProgrammer)
@@ -257,56 +247,6 @@ static BOOLEAN lInitDelaySettings(_In_ TPepInternalLogicData* pInternalData);
 */
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-static BOOLEAN lSleepNanoseconds(
-  _In_ TUtPepLogicData* pLogicData,
-  _In_ PLARGE_INTEGER pIntervalNanoseconds)
-{
-#if defined(BUILD_USER_LIB)
-	LARGE_INTEGER IntervalMilliseconds;
-#elif defined(BUILD_DRIVER_LIB)
-	NTSTATUS status;
-	LARGE_INTEGER Interval;
-#endif
-
-#if defined(BUILD_DRIVER_LIB)
-	PAGED_CODE()
-#endif
-
-	pLogicData->pLogFunc("lSleepNanoseconds - Entering.\n");
-
-#if defined(BUILD_USER_LIB)
-	IntervalMilliseconds.QuadPart = (LONGLONG)MNanoToMilliseconds(pIntervalNanoseconds->QuadPart);
-
-	if ((LONGLONG)MMilliToNanoseconds(IntervalMilliseconds.QuadPart) < pIntervalNanoseconds->QuadPart)
-	{
-		IntervalMilliseconds.QuadPart += 1;
-	}
-
-	Sleep(IntervalMilliseconds.LowPart);
-#else
-	Interval.QuadPart = pIntervalNanoseconds->QuadPart / 100;
-
-	if (Interval.QuadPart * 100 < pIntervalNanoseconds->QuadPart)
-	{
-		++Interval.QuadPart;
-	}
-
-	status = KeDelayExecutionThread(KernelMode, FALSE, &Interval);
-
-	if (STATUS_SUCCESS != status)
-	{
-		pLogicData->pLogFunc("lSleepNanoseconds - Thread execution delayed has failed.  (0x%X)\n", status);
-
-		return FALSE;
-	}
-#endif
-
-	pLogicData->pLogFunc("lSleepNanoseconds - Leaving.\n");
-
-	return TRUE;
-}
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lWritePortData(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT8 nData,
@@ -329,7 +269,7 @@ static BOOLEAN lWritePortData(
     nTmpData[2] = MPortData(nData, nUnit, CUnitOff);
 
     bResult = pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, nTmpData,
-                                         MArrayLen(nTmpData));
+                                         MArrayLen(nTmpData), CWaitNanoSeconds);
 
     return bResult;
 }
@@ -356,9 +296,13 @@ static BOOLEAN lReadByteFromProgrammer(
     {
         nTmpData = MPortData(nBitPosition, CUnit_DontCare, CUnitOff);
 
-        if (!pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, &nTmpData,
-                                        sizeof(nTmpData)) ||
-            !pLogicData->pReadBitPortFunc(pLogicData->pvDeviceContext, &bValue))
+		if (!pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, &nTmpData,
+                                        sizeof(nTmpData), CWaitNanoSeconds))
+		{
+			return FALSE;
+		}
+
+		if (!pLogicData->pReadBitPortFunc(pLogicData->pvDeviceContext, &bValue))
         {
             return FALSE;
         }
@@ -627,7 +571,7 @@ static BOOLEAN lEnableProgrammerReadMode(
 
 			IntervalNanoseconds.QuadPart = pData->DelaySettings.nChipEnableNanoSeconds;
 
-			if (!lSleepNanoseconds(pLogicData, &IntervalNanoseconds))
+			if (!UtSleep(&IntervalNanoseconds))
 			{
 				pLogicData->pLogFunc("lEnableProgrammerReadMode - Sleep failed.\n");
 			}
@@ -668,7 +612,7 @@ static BOOLEAN lEnableProgrammerWriteMode(
 
 			IntervalNanoseconds.QuadPart = pData->DelaySettings.nChipEnableNanoSeconds;
 
-			if (!lSleepNanoseconds(pLogicData, &IntervalNanoseconds))
+			if (!UtSleep(&IntervalNanoseconds))
 			{
 				pLogicData->pLogFunc("lEnableProgrammerWriteMode - Sleep failed.\n");
 			}
@@ -711,7 +655,7 @@ static BOOLEAN lWaitForProgramPulse(
 
 	pLogicData->pLogFunc("lWaitForProgramPulse - Putting thread to sleep briefly.\n");
 
-	if (!lSleepNanoseconds(pLogicData, &IntervalNanoseconds))
+	if (!UtSleep(&IntervalNanoseconds))
 	{
 		return FALSE;
 	}
@@ -731,7 +675,7 @@ static BOOLEAN lWaitForProgramPulse(
     pLogicData->pLogFunc("lWaitForProgramPulse - Checking if program pulse finished.\n");
 
     if (pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, &nData,
-                                   sizeof(nData)) &&
+                                   sizeof(nData), CWaitNanoSeconds) &&
         pLogicData->pReadBitPortFunc(pLogicData->pvDeviceContext, &bValue))
     {
         if (bValue)
@@ -1223,7 +1167,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
 
 		IntervalNanoseconds.QuadPart = pData->DelaySettings.nOutputEnableNanoSeconds;
 
-		if (!lSleepNanoseconds(pLogicData, &IntervalNanoseconds))
+		if (!UtSleep(&IntervalNanoseconds))
 		{
 			pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Sleep failed.\n");
 		}

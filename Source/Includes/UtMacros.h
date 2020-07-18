@@ -10,6 +10,16 @@
 #define MMillisecondsToRelativeTime(milliseconds) \
     (((LONGLONG)milliseconds * (LONGLONG)-1000000) / (LONGLONG)100)
 
+/*
+  Macro to convert time units
+*/
+
+#define MNanoToMilliseconds(nano) (nano / 1000000.0)
+
+#define MMilliToNanoseconds(milli) (milli * 1000000.0)
+
+#define MMicroToNanoseconds(micro) (micro * 1000.0)
+
 #endif /* end of UtMacros_H */
 
 /***************************************************************************/

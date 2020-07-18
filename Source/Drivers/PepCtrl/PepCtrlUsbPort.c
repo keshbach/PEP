@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -457,7 +457,8 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
   _In_ TPepCtrlObject* pObject,
   _In_ PUCHAR pucData,
-  _In_ ULONG ulDataLen)
+  _In_ ULONG ulDataLen,
+  _In_ ULONG ulWaitNanoSeconds)
 {
 	BOOLEAN bResult = FALSE;
     NTSTATUS status;
@@ -466,7 +467,10 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
     LARGE_INTEGER OffsetInteger, TimeoutInteger;
     PIRP pIrp;
 
-    PAGED_CODE()
+	PAGED_CODE()
+
+	// TODO: Implement support for waiting.
+	ulWaitNanoSeconds;
 
     PepCtrlLog("PepCtrlWriteUsbPort entering.\n");
 
@@ -656,5 +660,5 @@ LPGUID TPEPCTRLAPI PepCtrlGetUsbPortDevInterfaceGuid(VOID)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

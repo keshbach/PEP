@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepLogicDefs_H)
@@ -43,7 +43,8 @@ typedef BOOLEAN (TUTPEPLOGICAPI *TUtPepLogicReadBitPortFunc)(_In_ PVOID pvContex
                                                              OUT PBOOLEAN pbValue);
 typedef BOOLEAN (TUTPEPLOGICAPI *TUtPepLogicWritePortFunc)(_In_ PVOID pvContext,
                                                            _In_ PUCHAR pucData,
-                                                           _In_ ULONG ulDataLen);
+                                                           _In_ ULONG ulDataLen,
+	                                                       _In_ ULONG nWaitNanoSeconds);
 
 typedef VOID (__cdecl *TUtPepLogicLogFunc)(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
 
@@ -77,5 +78,5 @@ typedef struct tagTUtPepLogicData
 #endif /* !defined(UtPepLogicDefs_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -28,7 +28,7 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(_In_ PVOID pvContext, _Out_ PBOOLEAN pbValue);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(_In_ PVOID pvContext, _In_ PUCHAR pucData, _In_ ULONG ulDataLen);
+static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(_In_ PVOID pvContext, _In_ PUCHAR pucData, _In_ ULONG ulDataLen, _In_ ULONG ulWaitNanoSeconds);
 
 static VOID __cdecl lPepLogicLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
 
@@ -78,7 +78,8 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
   _In_ PVOID pvContext,
   _In_ PUCHAR pucData,
-  _In_ ULONG ulDataLen)
+  _In_ ULONG ulDataLen,
+  _In_ ULONG ulDelayNanoSeconds)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pvContext;
 
@@ -87,7 +88,7 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
     PepCtrlLog("lPepLogicWritePort - Port Data pointer: 0x%p\n",
                pPortData);
 
-    return pPortData->Funcs.pWritePortFunc(&pPortData->Object, pucData, ulDataLen);
+    return pPortData->Funcs.pWritePortFunc(&pPortData->Object, pucData, ulDataLen, ulDelayNanoSeconds);
 }
 
 static VOID __cdecl lPepLogicLog(
@@ -634,5 +635,5 @@ VOID PepCtrlInitPortTypeFuncs(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
