@@ -152,7 +152,8 @@ typedef struct tagTPepInternalDelaySettings
 typedef struct tagTPepInternalLogicData
 {
     UINT32 nLastAddress; /* Last address that was set */
-    TPepInternalLogicModes Modes;
+	UINT32 nLastOutputEnable; /* Last state of the output enable pin */
+	TPepInternalLogicModes Modes;
 	TPepInternalDelaySettings DelaySettings;
 } TPepInternalLogicData;
 
@@ -743,6 +744,7 @@ PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext()
 #endif
 
     pLogicData->nLastAddress = 0xFFFFFFFF;
+	pLogicData->nLastOutputEnable = 0xFFFFFFFF;
 
     lInitModes(pLogicData);
 	lInitDelaySettings(pLogicData);
@@ -1138,7 +1140,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
   _In_ UINT32 nOutputEnable)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
-	BOOLEAN bResult;
+	BOOLEAN bResult, bOutputEnableChanged;
 	LARGE_INTEGER IntervalNanoseconds;
 
 #if defined(BUILD_DRIVER_LIB)
@@ -1154,6 +1156,17 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
         return FALSE;
     }
 
+	bOutputEnableChanged = (pData->nLastOutputEnable != nOutputEnable);
+
+	if (bOutputEnableChanged)
+	{
+		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable state being changed.\n");
+	}
+	else
+	{
+		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable state not being changed.\n");
+	}
+
 	bResult = lWritePortData(pLogicData,
                              MEnableTriggerProgramPulse(nOutputEnable) |
                                  MEnableResetProgramPulse(TRUE) |
@@ -1161,7 +1174,12 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
                                  MEnableVpp(FALSE),
                              CUnit7_Programmer);
 
-	if (nOutputEnable && bResult && pData->DelaySettings.nOutputEnableNanoSeconds > 0)
+	if (bResult)
+	{
+		pData->nLastOutputEnable = nOutputEnable;
+	}
+
+	if (bOutputEnableChanged && bResult && pData->DelaySettings.nOutputEnableNanoSeconds > 0)
 	{
 		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable Delay detected.\n");
 
