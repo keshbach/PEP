@@ -1,0 +1,15 @@
+Dip 1 - Off then A13 for Pin 28 otherwise switched VCC
+
+Dip 2 - Off then A14 for Pin 29 otherwise ~PVAR (PGM)
+
+Dip 3 - Off then A17 for Pin 30 otherwise switched VCC
+
+Dip 4 - Off then A18 for Pin 31 otherwise ~PVAR (PGM)
+
+Dip 5 - Off then A15 for Pin 3 otherwise Vpp
+
+Dip 6 - Off then A19 for Pin 1 otherwise Vpp
+
+Dip 7 - Off then enable PVAR state otherwise PVAR set to +5VDC
+
+Dip 8 - Off then enable Vpp voltages when in program mode otherwise disable any Vpp voltages
