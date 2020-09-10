@@ -747,40 +747,57 @@ static VOID UTPEPDEVICESAPI l2708ReadDevice(
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    BOOL bErrorOccurred = FALSE;
-    ULONG ulTmpBufferLen = ulDataLen / 32;
-    ULONG ulAddress;
+	BOOL bErrorOccurred = FALSE;
+	ULONG ulAddress;
+	TUtPepCtrlReadUserData ReadUserData[3];
 
-    pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
+	nOutputEnableNanoseconds;
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
-        FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
-        FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse1Mode) ||
-        FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
-    {
-        bErrorOccurred = TRUE;
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-        goto End;
-    }
+	// Since the Chip Enable pin of the 2708 is mapped to the Output Enable pin flip the 
+	// delay parameters and just wait for the chip to power up before attempting a read.
 
-    for (ulAddress = 0; ulAddress < ulDataLen; ulAddress += ulTmpBufferLen)
-    {
-        if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
-            FALSE == UtPepCtrlReadData(ulAddress, pbyData + ulAddress,
-                                       ulTmpBufferLen))
-        {
-            bErrorOccurred = TRUE;
+	if (FALSE == UtPepCtrlSetDelaySettings(0, nChipEnableNanoseconds) ||
+        FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+		FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
+		FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse1Mode) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
+	{
+		bErrorOccurred = TRUE;
 
-            goto End;
-        }
+		goto End;
+	}
 
-        pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
-    }
+	for (ulAddress = 0; ulAddress < ulDataLen; ++ulAddress)
+	{
+		ReadUserData[0].nAddress = ulAddress;
+		ReadUserData[0].OutputEnableMode = eUtPepCtrlDisableOE;
+		ReadUserData[0].bPerformRead = FALSE;
+
+		ReadUserData[1].nAddress = ulAddress;
+		ReadUserData[1].OutputEnableMode = eUtPepCtrlEnableOE;
+		ReadUserData[1].bPerformRead = TRUE;
+
+		ReadUserData[2].nAddress = ulAddress;
+		ReadUserData[2].OutputEnableMode = eUtPepCtrlDisableOE;
+		ReadUserData[2].bPerformRead = FALSE;
+
+		if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
+			FALSE == UtPepCtrlReadUserData(ReadUserData, 3, pbyData + ulAddress, 1))
+		{
+			bErrorOccurred = TRUE;
+
+			goto End;
+		}
+
+		pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
+	}
 
 End:
-    UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
+	UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
 
-    pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoRead);
+	pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoRead);
 }
 
 static VOID UTPEPDEVICESAPI l2708ProgramDevice(
@@ -804,53 +821,65 @@ static VOID UTPEPDEVICESAPI l2708VerifyDevice(
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    BOOL bErrorOccurred = FALSE;
-    ULONG ulTmpBufferLen = ulDataLen / 32;
-    LPBYTE pbyTmpBuffer = (LPBYTE)UtAllocMem(ulTmpBufferLen);
-    ULONG ulAddress, ulIndex;
+	BOOL bErrorOccurred = FALSE;
+	ULONG ulAddress;
+	TUtPepCtrlReadUserData ReadUserData[3];
+	BYTE byData;
 
-    pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
+	nOutputEnableNanoseconds;
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
-        FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
-        FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse1Mode) ||
-        FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
-    {
-        bErrorOccurred = TRUE;
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-        goto End;
-    }
+	// Since the Chip Enable pin of the 2708 is mapped to the Output Enable pin flip the 
+	// delay parameters and just wait for the chip to power up before attempting a read.
 
-    for (ulAddress = 0; ulAddress < ulDataLen; ulAddress += ulTmpBufferLen)
-    {
-        if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
-            FALSE == UtPepCtrlReadData(ulAddress, pbyTmpBuffer,
-                                       ulTmpBufferLen))
-        {
-            bErrorOccurred = TRUE;
+	if (FALSE == UtPepCtrlSetDelaySettings(0, nChipEnableNanoseconds) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+		FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
+		FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse1Mode) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
+	{
+		bErrorOccurred = TRUE;
 
-            goto End;
-        }
+		goto End;
+	}
 
-        for (ulIndex = 0; ulIndex < ulTmpBufferLen; ++ulIndex)
-        {
-            if (pbyData[ulAddress + ulIndex] != pbyTmpBuffer[ulIndex])
-            {
-                pDeviceIOFuncs->pVerifyByteErrorDeviceIOFunc(ulAddress + ulIndex,
-                                                             pbyData[ulAddress + ulIndex],
-                                                             pbyTmpBuffer[ulIndex]);
-            }
-        }
+	for (ulAddress = 0; ulAddress < ulDataLen; ++ulAddress)
+	{
+		ReadUserData[0].nAddress = ulAddress;
+		ReadUserData[0].OutputEnableMode = eUtPepCtrlDisableOE;
+		ReadUserData[0].bPerformRead = FALSE;
 
-        pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
-    }
+		ReadUserData[1].nAddress = ulAddress;
+		ReadUserData[1].OutputEnableMode = eUtPepCtrlEnableOE;
+		ReadUserData[1].bPerformRead = TRUE;
+
+		ReadUserData[2].nAddress = ulAddress;
+		ReadUserData[2].OutputEnableMode = eUtPepCtrlDisableOE;
+		ReadUserData[2].bPerformRead = FALSE;
+
+		if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
+			FALSE == UtPepCtrlReadUserData(ReadUserData, 3, &byData, 1))
+		{
+			bErrorOccurred = TRUE;
+
+			goto End;
+		}
+
+		if (pbyData[ulAddress] != byData)
+		{
+			pDeviceIOFuncs->pVerifyByteErrorDeviceIOFunc(ulAddress,
+         												 pbyData[ulAddress],
+														 byData);
+		}
+
+		pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
+	}
 
 End:
-    UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
+	UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
 
-    pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoVerify);
-
-    UtFreeMem(pbyTmpBuffer);
+	pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoVerify);
 }
 
 /*
@@ -870,7 +899,8 @@ static VOID UTPEPDEVICESAPI l2716ReadDevice(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -944,9 +974,10 @@ static VOID UTPEPDEVICESAPI l2716VerifyDevice(
     TUtPepCtrlReadUserData ReadUserData[3];
     BYTE byData;
 
-    pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
+    pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -998,7 +1029,7 @@ End:
 
     UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
 
-    pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoRead);
+    pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoVerify);
 }
 
 /*
@@ -1018,7 +1049,8 @@ static VOID UTPEPDEVICESAPI lTMS2716ReadDevice(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse1Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -1079,7 +1111,8 @@ static VOID UTPEPDEVICESAPI lTMS2716VerifyDevice(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse1Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
