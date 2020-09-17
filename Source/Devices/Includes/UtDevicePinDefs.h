@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2009-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtDevicePinDefs_H)
@@ -58,6 +58,11 @@
 
 #define CDevicePin_HighFE1 L"FE1"
 #define CDevicePin_HighFE2 L"FE2"
+
+#define CDevicePin_LowChipSelect_ProgramEnable L"~CS/PE"
+#define CDevicePin_LowChipSelect_Vpp L"~CS/VPP"
+
+#define CDevicePin_Vcc_ProgramEnable L"VCC/PE"
 
 /*
     Address Pin Names
@@ -122,5 +127,5 @@
 #endif /* end of UtDevicePinDefs_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2009-2012 Kevin Eshbach                                  */
+/*  Copyright (C) 2009-2020 Kevin Eshbach                                  */
 /***************************************************************************/
