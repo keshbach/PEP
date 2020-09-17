@@ -81,9 +81,9 @@ static LPCWSTR l_psz2708PinNames[] = {
     CDevicePin_Data5,
     CDevicePin_Data6,
     CDevicePin_Data7,
-    CDevicePin_HighProgram,
+	CDevicePin_Vpp,
     CDevicePin_Vdd,
-    CDevicePin_LowChipSelect,
+	CDevicePin_LowChipSelect_ProgramEnable,
     CDevicePin_Vbb,
     CDevicePin_Address9,
     CDevicePin_Address8,
@@ -107,13 +107,13 @@ static LPCWSTR l_pszTMS2716PinNames[] = {
     CDevicePin_Data5,
     CDevicePin_Data6,
     CDevicePin_Data7,
-    CDevicePin_LowChipSelect,
+	CDevicePin_LowChipSelect_Vpp,
     CDevicePin_Vdd,
     CDevicePin_Address10,
     CDevicePin_Vbb,
     CDevicePin_Address9,
     CDevicePin_Address8,
-    CDevicePin_Vcc};
+	CDevicePin_Vcc_ProgramEnable};
 
 static LPCWSTR l_psz2716PinNames[] = {
     CDevicePin_Address7,
@@ -350,7 +350,7 @@ DEVICES_BEGIN
         DEVICE_ROM_DATA_BEGIN
             DEVICE_ROM_SIZE(0x0400)
             DEVICE_ROM_BITSPERVALUE(8)
-            DEVICE_ROM_VPP_26VDC
+            DEVICE_ROM_VPP_25VDC
             DEVICE_ROM_READ_FUNC(l2708ReadDevice)
             DEVICE_ROM_PROGRAM_FUNC(l2708ProgramDevice)
             DEVICE_ROM_VERIFY_FUNC(l2708VerifyDevice)
