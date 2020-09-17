@@ -122,7 +122,8 @@ static VOID UTPEPDEVICESAPI l74LS471ReadDevice(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-	if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+	if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+	    FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -167,9 +168,10 @@ static VOID UTPEPDEVICESAPI l74LS471VerifyDevice(
     LPBYTE pbyTmpBuffer = (LPBYTE)UtAllocMem(ulTmpBufferLen);
     ULONG ulAddress, ulTmpAddress, ulIndex;
 
-    pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
+    pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+	if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+        FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -209,7 +211,7 @@ static VOID UTPEPDEVICESAPI l74LS471VerifyDevice(
 End:
     UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
 
-    pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoRead);
+    pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoVerify);
 
     UtFreeMem(pbyTmpBuffer);
 }
