@@ -77,9 +77,10 @@ static BOOLEAN lFlushFile()
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    pIrp = IoBuildDeviceIoControlRequest(IRP_MJ_FLUSH_BUFFERS, pDeviceObject,
-                                         NULL, 0, NULL, 0,
-                                         TRUE, &Event, &IoStatusBlock);
+    pIrp = IoBuildSynchronousFsdRequest(IRP_MJ_FLUSH_BUFFERS,
+		                                pDeviceObject,
+                                        NULL, 0, NULL,
+		                                &Event, &IoStatusBlock);
 
     if (!pIrp)
     {
