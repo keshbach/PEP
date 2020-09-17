@@ -52,9 +52,15 @@ typedef struct tagTPepCtrlPortSettings
 
 typedef struct tagTPepCtrlDelaySettings
 {
-	UINT32 nChipEnableNanoseconds;  // number of nanoseconds before chip ready after VCC applied
+	UINT32 nChipEnableNanoseconds;   // number of nanoseconds before chip ready after VCC applied
 	UINT32 nOutputEnableNanoseconds; // number of nanoseconds before data available after the Output Enable goes low
 } TPepCtrlDelaySettings;
+
+typedef struct tagTPepCtrlAddressWithDelay
+{
+	UINT32 nAddress;
+	UINT32 nDelayNanoseconds; // number of nanoseconds to delay after address is set
+} TPepCtrlAddressWithDelay;
 
 #if defined(_MSC_VER)
 #pragma pack(pop)

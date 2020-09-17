@@ -18,8 +18,9 @@ EXPORTS
     UtPepCtrlSetVppMode @ 12
     UtPepCtrlReadData @ 13
     UtPepCtrlReadUserData @ 14
-    UtPepCtrlProgramData @ 15
-    UtPepCtrlProgramUserData @ 16
+    UtPepCtrlReadUserDataWithDelay @ 15
+    UtPepCtrlProgramData @ 16
+    UtPepCtrlProgramUserData @ 17
 
 ;
 ;  Copyright (C) 2006-2020 Kevin Eshbach

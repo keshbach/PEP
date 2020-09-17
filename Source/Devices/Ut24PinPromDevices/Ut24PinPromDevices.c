@@ -586,6 +586,8 @@ static BOOL UTPEPDEVICESAPI lGenericUninit(VOID)
 
 static VOID lGenericReadData(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   LPBYTE pbyData,
   ULONG ulDataLen,
   ULONG ulAddressMask)
@@ -596,7 +598,8 @@ static VOID lGenericReadData(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+	if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+        FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -630,6 +633,8 @@ End:
 
 static VOID lGenericVerifyData(
   const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen,
   ULONG ulAddressMask)
@@ -641,7 +646,8 @@ static VOID lGenericVerifyData(
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+	if (FALSE == UtPepCtrlSetDelaySettings(nChipEnableNanoseconds, nOutputEnableNanoseconds) ||
+        FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -692,7 +698,9 @@ static VOID UTPEPDEVICESAPI lGenericReadDevice(
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericReadData(pDeviceIOFuncs, pbyData, ulDataLen,
+    lGenericReadData(pDeviceIOFuncs, 
+                     nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                     pbyData, ulDataLen,
                      CGeneric_CE1_AddressLine | CGeneric_CE2_AddressLine);
 }
 
@@ -703,7 +711,9 @@ static VOID UTPEPDEVICESAPI lGenericVerifyDevice(
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericVerifyData(pDeviceIOFuncs, pbyData, ulDataLen,
+    lGenericVerifyData(pDeviceIOFuncs,
+                       nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                       pbyData, ulDataLen,
                        CGeneric_CE1_AddressLine | CGeneric_CE2_AddressLine);
 }
 
@@ -718,7 +728,9 @@ static VOID UTPEPDEVICESAPI l82S183ReadDevice(
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericReadData(pDeviceIOFuncs, pbyData, ulDataLen,
+    lGenericReadData(pDeviceIOFuncs,
+		             nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                     pbyData, ulDataLen,
                      C82S183_CS3_AddressLine | C82S183_Strobe_AddressLine);
 }
 
@@ -729,7 +741,9 @@ static VOID UTPEPDEVICESAPI l82S183VerifyDevice(
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericVerifyData(pDeviceIOFuncs, pbyData, ulDataLen,
+    lGenericVerifyData(pDeviceIOFuncs,
+                       nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                       pbyData, ulDataLen,
                        C82S183_CS3_AddressLine | C82S183_Strobe_AddressLine);
 }
 
@@ -744,7 +758,9 @@ static VOID UTPEPDEVICESAPI l82S191ReadDevice(
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericReadData(pDeviceIOFuncs, pbyData, ulDataLen,
+    lGenericReadData(pDeviceIOFuncs, 
+                     nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                     pbyData, ulDataLen,
                      C82S191_CE2_AddressLine | C82S191_CE3_AddressLine);
 }
 
@@ -755,7 +771,9 @@ static VOID UTPEPDEVICESAPI l82S191VerifyDevice(
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericVerifyData(pDeviceIOFuncs, pbyData, ulDataLen,
+    lGenericVerifyData(pDeviceIOFuncs,
+                       nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                       pbyData, ulDataLen,
                        C82S191_CE2_AddressLine | C82S191_CE3_AddressLine);
 }
 
@@ -770,7 +788,9 @@ static VOID UTPEPDEVICESAPI l82S321ReadDevice(
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericReadData(pDeviceIOFuncs, pbyData, ulDataLen,
+    lGenericReadData(pDeviceIOFuncs,
+                     nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                     pbyData, ulDataLen,
                      C82S321_CE2_AddressLine);
 }
 
@@ -781,7 +801,9 @@ static VOID UTPEPDEVICESAPI l82S321VerifyDevice(
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericVerifyData(pDeviceIOFuncs, pbyData, ulDataLen,
+    lGenericVerifyData(pDeviceIOFuncs,
+                       nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                       pbyData, ulDataLen,
                        C82S321_CE2_AddressLine);
 }
 
@@ -796,7 +818,9 @@ static VOID UTPEPDEVICESAPI l82HS641ReadDevice(
   LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericReadData(pDeviceIOFuncs, pbyData, ulDataLen, 0);
+    lGenericReadData(pDeviceIOFuncs,
+                     nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                     pbyData, ulDataLen, 0);
 }
 
 static VOID UTPEPDEVICESAPI l82HS641VerifyDevice(
@@ -806,7 +830,9 @@ static VOID UTPEPDEVICESAPI l82HS641VerifyDevice(
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    lGenericVerifyData(pDeviceIOFuncs, pbyData, ulDataLen, 0);
+    lGenericVerifyData(pDeviceIOFuncs,
+                       nChipEnableNanoseconds, nOutputEnableNanoseconds,
+                       pbyData, ulDataLen, 0);
 }
 
 /*
@@ -817,7 +843,7 @@ static BOOL lS114LatchedRead(
   ULONG ulAddress,
   LPBYTE pbyData)
 {
-    TUtPepCtrlReadUserData ReadUserData[4];
+	TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[4];
     ULONG ulTmpAddress;
 
     /*
@@ -828,30 +854,31 @@ static BOOL lS114LatchedRead(
     ulTmpAddress = ulAddress & 0x1F;
     ulTmpAddress |= (ulAddress & 0xE0) << 1;
 
-    ReadUserData[0].nAddress = ulTmpAddress;
-    ReadUserData[0].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[0].bPerformRead = FALSE;
+    ReadUserDataWithDelay[0].nAddress = ulTmpAddress;
+    ReadUserDataWithDelay[0].bPerformRead = FALSE;
+	ReadUserDataWithDelay[0].nDelayNanoSeconds = 0;
 
     ulTmpAddress |= C82S11x_CE2_AddressLine;
 
-    ReadUserData[1].nAddress = ulTmpAddress;
-    ReadUserData[1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[1].bPerformRead = FALSE;
+    ReadUserDataWithDelay[1].nAddress = ulTmpAddress;
+    ReadUserDataWithDelay[1].bPerformRead = FALSE;
+	ReadUserDataWithDelay[1].nDelayNanoSeconds = 0;
 
     ulTmpAddress |= C82S11x_Strobe_AddressLine;
 
-    ReadUserData[2].nAddress = ulTmpAddress;
-    ReadUserData[2].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[2].bPerformRead = TRUE;
+    ReadUserDataWithDelay[2].nAddress = ulTmpAddress;
+    ReadUserDataWithDelay[2].bPerformRead = TRUE;
+	ReadUserDataWithDelay[2].nDelayNanoSeconds = 90;
 
     /* Turn off CE2 and Strobe */
 
-    ReadUserData[3].nAddress = 0;
-    ReadUserData[3].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[3].bPerformRead = FALSE;
+    ReadUserDataWithDelay[3].nAddress = 0;
+    ReadUserDataWithDelay[3].bPerformRead = FALSE;
+	ReadUserDataWithDelay[3].nDelayNanoSeconds = 55;
 
-    if (FALSE == UtPepCtrlReadUserData(ReadUserData, MArrayLen(ReadUserData),
-                                       pbyData, 1))
+    if (FALSE == UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay,
+		                                        MArrayLen(ReadUserDataWithDelay),
+                                                pbyData, 1))
     {
         return FALSE;
     }
@@ -869,9 +896,13 @@ static VOID UTPEPDEVICESAPI lS114LatchedReadDevice(
     BOOL bErrorOccurred = FALSE;
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -911,9 +942,13 @@ static VOID UTPEPDEVICESAPI lS114LatchedVerifyDevice(
     BYTE byTmpBuffer[1];
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -957,7 +992,7 @@ static BOOL lS114TransparentRead(
   ULONG ulAddress,
   LPBYTE pbyData)
 {
-    TUtPepCtrlReadUserData ReadUserData[4];
+	TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[4];
     ULONG ulTmpAddress;
 
     /*
@@ -968,30 +1003,31 @@ static BOOL lS114TransparentRead(
     ulTmpAddress = ulAddress & 0x1F;
     ulTmpAddress |= (ulAddress & 0xE0) << 1;
 
-    ReadUserData[0].nAddress = ulTmpAddress;
-    ReadUserData[0].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[0].bPerformRead = FALSE;
+    ReadUserDataWithDelay[0].nAddress = ulTmpAddress;
+    ReadUserDataWithDelay[0].bPerformRead = FALSE;
+	ReadUserDataWithDelay[0].nDelayNanoSeconds = 0;
 
     ulTmpAddress |= C82S11x_Strobe_AddressLine;
 
-    ReadUserData[1].nAddress = ulTmpAddress;
-    ReadUserData[1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[1].bPerformRead = FALSE;
+    ReadUserDataWithDelay[1].nAddress = ulTmpAddress;
+    ReadUserDataWithDelay[1].bPerformRead = FALSE;
+	ReadUserDataWithDelay[1].nDelayNanoSeconds = 0;
         
     ulTmpAddress |= C82S11x_CE2_AddressLine;
 
-    ReadUserData[2].nAddress = ulTmpAddress;
-    ReadUserData[2].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[2].bPerformRead = TRUE;
+    ReadUserDataWithDelay[2].nAddress = ulTmpAddress;
+    ReadUserDataWithDelay[2].bPerformRead = TRUE;
+	ReadUserDataWithDelay[2].nDelayNanoSeconds = 90;
 
     /* Turn off CE2 and Strobe */
 
-    ReadUserData[3].nAddress = 0;
-    ReadUserData[3].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[3].bPerformRead = FALSE;
+    ReadUserDataWithDelay[3].nAddress = 0;
+    ReadUserDataWithDelay[3].bPerformRead = FALSE;
+	ReadUserDataWithDelay[3].nDelayNanoSeconds = 55;
 
-    if (FALSE == UtPepCtrlReadUserData(ReadUserData, MArrayLen(ReadUserData),
-                                       pbyData, 1))
+    if (FALSE == UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay,
+		                                        MArrayLen(ReadUserDataWithDelay),
+                                                pbyData, 1))
     {
         return FALSE;
     }
@@ -1009,9 +1045,13 @@ static VOID UTPEPDEVICESAPI lS114TransparentReadDevice(
     BOOL bErrorOccurred = FALSE;
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -1051,9 +1091,13 @@ static VOID UTPEPDEVICESAPI lS114TransparentVerifyDevice(
     BYTE byTmpBuffer[1];
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -1097,32 +1141,33 @@ static BOOL lS115LatchedRead(
   ULONG ulAddress,
   LPBYTE pbyData)
 {
-    TUtPepCtrlReadUserData ReadUserData[4];
+    TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[4];
 
-    ReadUserData[0].nAddress = ulAddress;
-    ReadUserData[0].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[0].bPerformRead = FALSE;
+    ReadUserDataWithDelay[0].nAddress = ulAddress;
+    ReadUserDataWithDelay[0].bPerformRead = FALSE;
+	ReadUserDataWithDelay[0].nDelayNanoSeconds = 0;
 
     ulAddress |= C82S11x_CE2_AddressLine;
 
-    ReadUserData[1].nAddress = ulAddress;
-    ReadUserData[1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[1].bPerformRead = FALSE;
+    ReadUserDataWithDelay[1].nAddress = ulAddress;
+    ReadUserDataWithDelay[1].bPerformRead = FALSE;
+	ReadUserDataWithDelay[1].nDelayNanoSeconds = 0;
         
     ulAddress |= C82S11x_Strobe_AddressLine;
 
-    ReadUserData[2].nAddress = ulAddress;
-    ReadUserData[2].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[2].bPerformRead = TRUE;
+    ReadUserDataWithDelay[2].nAddress = ulAddress;
+	ReadUserDataWithDelay[2].bPerformRead = TRUE;
+	ReadUserDataWithDelay[2].nDelayNanoSeconds = 90;
 
     /* Turn off CE2 and Strobe */
 
-    ReadUserData[3].nAddress = 0;
-    ReadUserData[3].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[3].bPerformRead = FALSE;
+    ReadUserDataWithDelay[3].nAddress = 0;
+	ReadUserDataWithDelay[3].bPerformRead = FALSE;
+	ReadUserDataWithDelay[3].nDelayNanoSeconds = 55;
 
-    if (FALSE == UtPepCtrlReadUserData(ReadUserData, MArrayLen(ReadUserData),
-                                       pbyData, 1))
+    if (FALSE == UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay,
+		                                        MArrayLen(ReadUserDataWithDelay),
+                                                pbyData, 1))
     {
         return FALSE;
     }
@@ -1140,9 +1185,13 @@ static VOID UTPEPDEVICESAPI lS115LatchedReadDevice(
     BOOL bErrorOccurred = FALSE;
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -1182,9 +1231,13 @@ static VOID UTPEPDEVICESAPI lS115LatchedVerifyDevice(
     BYTE byTmpBuffer[1];
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -1228,32 +1281,33 @@ static BOOL lS115TransparentRead(
   ULONG ulAddress,
   LPBYTE pbyData)
 {
-    TUtPepCtrlReadUserData ReadUserData[4];
+    TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[4];
 
-    ReadUserData[0].nAddress = ulAddress;
-    ReadUserData[0].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[0].bPerformRead = FALSE;
+    ReadUserDataWithDelay[0].nAddress = ulAddress;
+    ReadUserDataWithDelay[0].bPerformRead = FALSE;
+	ReadUserDataWithDelay[0].nDelayNanoSeconds = 0;
 
     ulAddress |= C82S11x_Strobe_AddressLine;
 
-    ReadUserData[1].nAddress = ulAddress;
-    ReadUserData[1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[1].bPerformRead = FALSE;
+    ReadUserDataWithDelay[1].nAddress = ulAddress;
+    ReadUserDataWithDelay[1].bPerformRead = FALSE;
+	ReadUserDataWithDelay[1].nDelayNanoSeconds = 0;
         
     ulAddress |= C82S11x_CE2_AddressLine;
 
-    ReadUserData[2].nAddress = ulAddress;
-    ReadUserData[2].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[2].bPerformRead = TRUE;
+    ReadUserDataWithDelay[2].nAddress = ulAddress;
+    ReadUserDataWithDelay[2].bPerformRead = TRUE;
+	ReadUserDataWithDelay[2].nDelayNanoSeconds = 90;
 
     /* Turn off CE2 and Strobe */
 
-    ReadUserData[3].nAddress = 0;
-    ReadUserData[3].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[3].bPerformRead = FALSE;
+    ReadUserDataWithDelay[3].nAddress = 0;
+    ReadUserDataWithDelay[3].bPerformRead = FALSE;
+	ReadUserDataWithDelay[3].nDelayNanoSeconds = 55;
 
-    if (FALSE == UtPepCtrlReadUserData(ReadUserData, MArrayLen(ReadUserData),
-                                       pbyData, 1))
+    if (FALSE == UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay,
+		                                        MArrayLen(ReadUserDataWithDelay),
+                                                pbyData, 1))
     {
         return FALSE;
     }
@@ -1271,9 +1325,13 @@ static VOID UTPEPDEVICESAPI lS115TransparentReadDevice(
     BOOL bErrorOccurred = FALSE;
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -1313,9 +1371,13 @@ static VOID UTPEPDEVICESAPI lS115TransparentVerifyDevice(
     BYTE byTmpBuffer[1];
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))

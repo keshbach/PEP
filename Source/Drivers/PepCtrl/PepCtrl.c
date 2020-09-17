@@ -77,20 +77,21 @@ typedef struct tagTDeviceControlFuncs
 #pragma bss_seg("PAGEBSS")
 
 static TDeviceControlFuncs l_DeviceControlFuncs[] = {
-    {IOCTL_PEPCTRL_SET_PROGRAMMER_MODE, &PepCtrlDeviceControl_SetProgrammerMode},
-    {IOCTL_PEPCTRL_SET_VCC_MODE,        &PepCtrlDeviceControl_SetVccMode},
-    {IOCTL_PEPCTRL_SET_PIN_PULSE_MODE,  &PepCtrlDeviceControl_SetPinPulseMode},
-    {IOCTL_PEPCTRL_SET_VPP_MODE,        &PepCtrlDeviceControl_SetVppMode},
-    {IOCTL_PEPCTRL_SET_ADDRESS,         &PepCtrlDeviceControl_SetAddress},
-    {IOCTL_PEPCTRL_GET_DATA,            &PepCtrlDeviceControl_GetData},
-    {IOCTL_PEPCTRL_SET_DATA,            &PepCtrlDeviceControl_SetData},
-    {IOCTL_PEPCTRL_TRIGGER_PROGRAM,     &PepCtrlDeviceControl_TriggerProgram},
-    {IOCTL_PEPCTRL_SET_OUTPUT_ENABLE,   &PepCtrlDeviceControl_SetOutputEnable},
-    {IOCTL_PEPCTRL_GET_DEVICE_STATUS,   &PepCtrlDeviceControl_GetDeviceStatus},
-    {IOCTL_PEPCTRL_DEVICE_NOTIFICATION, &PepCtrlDeviceControl_DeviceNotification},
-    {IOCTL_PEPCTRL_GET_PORT_SETTINGS,   &PepCtrlDeviceControl_GetPortSettings},
-    {IOCTL_PEPCTRL_SET_PORT_SETTINGS,   &PepCtrlDeviceControl_SetPortSettings},
-    {IOCTL_PEPCTRL_SET_DELAY_SETTINGS,  &PepCtrlDeviceControl_SetDelaySettings} };
+    {IOCTL_PEPCTRL_SET_PROGRAMMER_MODE,    &PepCtrlDeviceControl_SetProgrammerMode},
+    {IOCTL_PEPCTRL_SET_VCC_MODE,           &PepCtrlDeviceControl_SetVccMode},
+    {IOCTL_PEPCTRL_SET_PIN_PULSE_MODE,     &PepCtrlDeviceControl_SetPinPulseMode},
+    {IOCTL_PEPCTRL_SET_VPP_MODE,           &PepCtrlDeviceControl_SetVppMode},
+    {IOCTL_PEPCTRL_SET_ADDRESS,            &PepCtrlDeviceControl_SetAddress},
+    {IOCTL_PEPCTRL_SET_ADDRESS_WITH_DELAY, &PepCtrlDeviceControl_SetAddressWithDelay},
+    {IOCTL_PEPCTRL_GET_DATA,               &PepCtrlDeviceControl_GetData},
+    {IOCTL_PEPCTRL_SET_DATA,               &PepCtrlDeviceControl_SetData},
+    {IOCTL_PEPCTRL_TRIGGER_PROGRAM,        &PepCtrlDeviceControl_TriggerProgram},
+    {IOCTL_PEPCTRL_SET_OUTPUT_ENABLE,      &PepCtrlDeviceControl_SetOutputEnable},
+    {IOCTL_PEPCTRL_GET_DEVICE_STATUS,      &PepCtrlDeviceControl_GetDeviceStatus},
+    {IOCTL_PEPCTRL_DEVICE_NOTIFICATION,    &PepCtrlDeviceControl_DeviceNotification},
+    {IOCTL_PEPCTRL_GET_PORT_SETTINGS,      &PepCtrlDeviceControl_GetPortSettings},
+    {IOCTL_PEPCTRL_SET_PORT_SETTINGS,      &PepCtrlDeviceControl_SetPortSettings},
+    {IOCTL_PEPCTRL_SET_DELAY_SETTINGS,     &PepCtrlDeviceControl_SetDelaySettings} };
 
 #pragma data_seg()
 #pragma bss_seg()

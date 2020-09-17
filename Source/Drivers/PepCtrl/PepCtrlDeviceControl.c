@@ -33,6 +33,7 @@ static DRIVER_CANCEL lDeviceControlCancelIrpRoutine;
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetPinPulseMode)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetVppMode)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetAddress)
+#pragma alloc_text (PAGE, PepCtrlDeviceControl_SetAddressWithDelay)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_GetData)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetData)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_TriggerProgram)
@@ -351,6 +352,58 @@ NTSTATUS PepCtrlDeviceControl_SetAddress(
 		else
 		{
 			if (ulOutBufLen < sizeof(UINT32))
+			{
+				Status = STATUS_BUFFER_TOO_SMALL;
+			}
+			else
+			{
+				Status = STATUS_ARRAY_BOUNDS_EXCEEDED;
+			}
+		}
+	}
+
+	pIrp->IoStatus.Status = Status;
+
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+	return Status;
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS PepCtrlDeviceControl_SetAddressWithDelay(
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_ PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
+{
+	NTSTATUS Status = STATUS_UNSUCCESSFUL;
+	TPepCtrlAddressWithDelay* pAddressWithDelay;
+
+	pvOutBuf;
+	ulOutBufLen;
+
+	PAGED_CODE()
+
+	PepCtrlLog("PepCtrlDeviceControl_SetAddressWithDelay called.\n");
+
+	if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+	{
+		if (ulInBufLen == sizeof(TPepCtrlAddressWithDelay))
+		{
+			pAddressWithDelay = (TPepCtrlAddressWithDelay*)pvInBuf;
+
+			if (UtPepLogicSetAddressWithDelay(&pPortData->LogicData,
+				                              pAddressWithDelay->nAddress,
+				                              pAddressWithDelay->nDelayNanoseconds))
+			{
+				Status = STATUS_SUCCESS;
+			}
+		}
+		else
+		{
+			if (ulOutBufLen < sizeof(TPepCtrlAddressWithDelay))
 			{
 				Status = STATUS_BUFFER_TOO_SMALL;
 			}

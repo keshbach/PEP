@@ -36,6 +36,11 @@ MExternC BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddress(_In_ TUtPepLogicData* pLogi
                                                      _In_ UINT32 nAddress);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
+MExternC BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddressWithDelay(_In_ TUtPepLogicData* pLogicData,
+	                                                          _In_ UINT32 nAddress,
+	                                                          _In_ UINT32 nDelayNanoSeconds);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 MExternC BOOLEAN TUTPEPLOGICAPI UtPepLogicGetData(_In_ TUtPepLogicData* pLogicData,
                                                   _Out_ UINT8* pnData);
 

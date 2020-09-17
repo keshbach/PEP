@@ -6,22 +6,60 @@
 #define PepCtrlDeviceControl_H
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(_In_ PIRP pIrp,
+                                                _In_ TPepCtrlPortData* pPortData,
+                                                _In_ const PVOID pvInBuf,
+                                                _In_ ULONG ulInBufLen,
+                                                _Out_ PVOID pvOutBuf,
+                                                _In_ ULONG ulOutBufLen);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS PepCtrlDeviceControl_SetVccMode(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetVccMode(_In_ PIRP pIrp,
+                                         _In_ TPepCtrlPortData* pPortData,
+                                         _In_ const PVOID pvInBuf,
+                                         _In_ ULONG ulInBufLen,
+                                         _Out_ PVOID pvOutBuf,
+                                         _In_ ULONG ulOutBufLen);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(_In_ PIRP pIrp,
+                                              _In_ TPepCtrlPortData* pPortData,
+                                              _In_ const PVOID pvInBuf,
+                                              _In_ ULONG ulInBufLen,
+                                              _Out_ PVOID pvOutBuf,
+                                              _In_ ULONG ulOutBufLen);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS PepCtrlDeviceControl_SetVppMode(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetVppMode(_In_ PIRP pIrp,
+                                         _In_ TPepCtrlPortData* pPortData,
+                                         _In_ const PVOID pvInBuf,
+                                         _In_ ULONG ulInBufLen,
+                                         _Out_ PVOID pvOutBuf,
+                                         _In_ ULONG ulOutBufLen);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS PepCtrlDeviceControl_SetAddress(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetAddress(_In_ PIRP pIrp,
+                                         _In_ TPepCtrlPortData* pPortData,
+                                         _In_ const PVOID pvInBuf,
+                                         _In_ ULONG ulInBufLen,
+                                         _Out_ PVOID pvOutBuf,
+                                         _In_ ULONG ulOutBufLen);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS PepCtrlDeviceControl_GetData(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+NTSTATUS PepCtrlDeviceControl_SetAddressWithDelay(_In_ PIRP pIrp,
+                                                  _In_ TPepCtrlPortData* pPortData,
+                                                  _In_ const PVOID pvInBuf,
+                                                  _In_ ULONG ulInBufLen,
+                                                  _Out_ PVOID pvOutBuf,
+                                                  _In_ ULONG ulOutBufLen);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS PepCtrlDeviceControl_GetData(_In_ PIRP pIrp,
+                                      _In_ TPepCtrlPortData* pPortData,
+                                      _In_ const PVOID pvInBuf,
+                                      _In_ ULONG ulInBufLen,
+                                      _Out_ PVOID pvOutBuf,
+                                      _In_ ULONG ulOutBufLen);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS PepCtrlDeviceControl_SetData(_In_ PIRP pIrp,

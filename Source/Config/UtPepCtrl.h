@@ -58,7 +58,6 @@ typedef enum tagEUtPepCtrlVppMode
 
 typedef enum tagEUtPepCtrlOEMode
 {
-    eUtPepCtrlIgnoreOE,
     eUtPepCtrlEnableOE,
     eUtPepCtrlDisableOE
 } EUtPepCtrlOEMode;
@@ -86,6 +85,13 @@ typedef struct tagTUtPepCtrlReadUserData
     BOOL bPerformRead;
 } TUtPepCtrlReadUserData;
 
+typedef struct tagTUtPepCtrlReadUserDataWithDelay
+{
+	UINT32 nAddress;
+	UINT32 nDelayNanoSeconds; // Delay execute after set address and before performing a read
+	BOOL bPerformRead;
+} TUtPepCtrlReadUserDataWithDelay;
+
 typedef struct tagTUtPepCtrlProgramUserData
 {
     UINT32 nAddress;
@@ -108,6 +114,7 @@ MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetPinPulseMode(_In_ EUtPepCtrlPinPulseMode 
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetVppMode(_In_ EUtPepCtrlVppMode VppMode);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadData(_In_ UINT32 nAddress, _Out_ LPBYTE pbyData, _Out_ UINT32 nDataLen);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(_In_ const TUtPepCtrlReadUserData* pReadUserData, _In_ UINT32 nReadUserDataLen, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadUserDataWithDelay(_In_ const TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay, _In_ UINT32 nReadUserDataWithDelayLen, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramData(_In_ UINT nAddress, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(_In_ const TUtPepCtrlProgramUserData* pProgramUserData, _In_ UINT32 nProgramUserDataLen, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
 

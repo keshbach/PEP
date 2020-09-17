@@ -561,7 +561,7 @@ static BOOL UTPEPDEVICESAPI lGenericUninit(VOID)
 static BOOL lSetAddressLines7To20(
   ULONG ulAddress)
 {
-    TUtPepCtrlReadUserData ReadUserData[CTotalUpperAddressPins * 2];
+    TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[CTotalUpperAddressPins * 2];
     ULONG ulTmpAddress, ulIndex;
     BYTE byData;
 
@@ -571,22 +571,22 @@ static BOOL lSetAddressLines7To20(
     {
         byData = (ulTmpAddress & CAddressLine22) ? CAddressDataOn : CAddressDataOff;
 
-        ReadUserData[ulIndex * 2].nAddress = MAddress7To20Data(
-                                                 byData, CAddressDataDisable);
-        ReadUserData[ulIndex * 2].OutputEnableMode = eUtPepCtrlIgnoreOE;
-        ReadUserData[ulIndex * 2].bPerformRead = FALSE;
+        ReadUserDataWithDelay[ulIndex * 2].nAddress = MAddress7To20Data(
+                                                          byData, CAddressDataDisable);
+        ReadUserDataWithDelay[ulIndex * 2].bPerformRead = FALSE;
+		ReadUserDataWithDelay[ulIndex * 2].nDelayNanoSeconds = 0;
 
-        ReadUserData[(ulIndex * 2) + 1].nAddress = MAddress7To20Data(
-                                                       byData, CAddressDataEnable);
-        ReadUserData[(ulIndex * 2) + 1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-        ReadUserData[(ulIndex * 2) + 1].bPerformRead = FALSE;
+        ReadUserDataWithDelay[(ulIndex * 2) + 1].nAddress = MAddress7To20Data(
+                                                                byData, CAddressDataEnable);
+        ReadUserDataWithDelay[(ulIndex * 2) + 1].bPerformRead = FALSE;
+		ReadUserDataWithDelay[(ulIndex * 2) + 1].nDelayNanoSeconds = 0;
 
         ulTmpAddress = ulTmpAddress >> 1;
     }
 
-    if (!UtPepCtrlReadUserData(ReadUserData,
-                               sizeof(ReadUserData) / sizeof(ReadUserData[0]),
-                               NULL, 0))
+    if (!UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay,
+                                        MArrayLen(ReadUserDataWithDelay),
+                                        NULL, 0))
     {
         return FALSE;
     }
@@ -599,7 +599,7 @@ static BOOL lReadAddressData(
   LPWORD pwData,
   ULONG ulDataLen)
 {
-    TUtPepCtrlReadUserData ReadUserData[2];
+    TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[2];
     ULONG ulTmpAddress, ulLastAddress, ulIndex;
     LPWORD pwTmpData;
 
@@ -617,19 +617,19 @@ static BOOL lReadAddressData(
             }
         }
 
-        ReadUserData[0].nAddress = MSelectAddressAndDataBits(ulTmpAddress,
-                                                             CDataBits0To7);
-        ReadUserData[0].OutputEnableMode = eUtPepCtrlIgnoreOE;
-        ReadUserData[0].bPerformRead = TRUE;
+        ReadUserDataWithDelay[0].nAddress = MSelectAddressAndDataBits(ulTmpAddress,
+                                                                      CDataBits0To7);
+        ReadUserDataWithDelay[0].bPerformRead = TRUE;
+		ReadUserDataWithDelay[0].nDelayNanoSeconds = 0;
 
-        ReadUserData[1].nAddress = MSelectAddressAndDataBits(ulTmpAddress,
-                                                             CDataBits8To15);
-        ReadUserData[1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-        ReadUserData[1].bPerformRead = TRUE;
+        ReadUserDataWithDelay[1].nAddress = MSelectAddressAndDataBits(ulTmpAddress,
+                                                                      CDataBits8To15);
+        ReadUserDataWithDelay[1].bPerformRead = TRUE;
+		ReadUserDataWithDelay[1].nDelayNanoSeconds = 0;
 
-        if (!UtPepCtrlReadUserData(ReadUserData,
-                                   sizeof(ReadUserData) / sizeof(ReadUserData[0]),
-                                   (LPBYTE)pwTmpData, sizeof(WORD)))
+        if (!UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay,
+			                                MArrayLen(ReadUserDataWithDelay),
+                                            (LPBYTE)pwTmpData, sizeof(WORD)))
         {
             return FALSE;
         }

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -105,7 +105,7 @@ static ULONG lSetNotUsedConfigurablePinsToZero(
 static BOOL lReadPinActiveData(
   WORD* pwActiveData)
 {
-    TUtPepCtrlReadUserData ReadUserData[8];
+    TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[8];
     BYTE byData[1];
     UINT nIndex, nIndex2;
     ULONG ulInputData, ulTmpData;
@@ -121,29 +121,29 @@ static BOOL lReadPinActiveData(
         {
             ulTmpData = (ulInputData & 0x08) ? 1 : 0;
 
-            ReadUserData[nIndex2 * 2].nAddress =
+            ReadUserDataWithDelay[nIndex2 * 2].nAddress =
                 MPinData(CPinDataOff, CPinDataEnable) |
                 MPinEnableDataUpdate(CPinEnableDataUpdate) |
                 MPinSelectDataBits(CPinSelectDataBits8_11) |
                 MPinCheckActiveModeData(ulTmpData, CPinCheckActiveDisable);
-            ReadUserData[nIndex2 * 2].OutputEnableMode = eUtPepCtrlIgnoreOE;
-            ReadUserData[nIndex2 * 2].bPerformRead = FALSE;
+            ReadUserDataWithDelay[nIndex2 * 2].bPerformRead = FALSE;
+			ReadUserDataWithDelay[nIndex2 * 2].nDelayNanoSeconds = 0;
 
-            ReadUserData[(nIndex2 * 2) + 1].nAddress =
+            ReadUserDataWithDelay[(nIndex2 * 2) + 1].nAddress =
                 MPinData(CPinDataOff, CPinDataEnable) |
                 MPinEnableDataUpdate(CPinEnableDataUpdate) |
                 MPinSelectDataBits(CPinSelectDataBits8_11) |
                 MPinCheckActiveModeData(ulTmpData, CPinCheckActiveEnable);
-            ReadUserData[(nIndex2 * 2) + 1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-            ReadUserData[(nIndex2 * 2) + 1].bPerformRead = FALSE;
+            ReadUserDataWithDelay[(nIndex2 * 2) + 1].bPerformRead = FALSE;
+			ReadUserDataWithDelay[(nIndex2 * 2) + 1].nDelayNanoSeconds = 0;
 
             ulInputData = ulInputData << 1;
         }
 
-        ReadUserData[MArrayLen(ReadUserData) - 1].bPerformRead = TRUE;
+        ReadUserDataWithDelay[MArrayLen(ReadUserDataWithDelay) - 1].bPerformRead = TRUE;
 
-        if (!UtPepCtrlReadUserData(ReadUserData, MArrayLen(ReadUserData),
-                                   byData, MArrayLen(byData)))
+        if (!UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay, MArrayLen(ReadUserDataWithDelay),
+                                            byData, MArrayLen(byData)))
         {
             return FALSE;
         }
@@ -158,51 +158,53 @@ static BOOL lReadPinActiveData(
 BOOL lWriteData(
   ULONG ulData)
 {
-    TUtPepCtrlReadUserData ReadUserData[(CTotalPinData * 2) + 2];
+    TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[(CTotalPinData * 2) + 2];
     UINT nIndex;
 
     /* Setup data for the inputs */
 
     for (nIndex = 0; nIndex < CTotalPinData;  ++nIndex)
     {
-        ReadUserData[nIndex * 2].nAddress =
+        ReadUserDataWithDelay[nIndex * 2].nAddress =
             MPinData(((ulData & 0x00800000) ? CPinDataOn : CPinDataOff),
                      CPinDataDisable) |
             MPinEnableDataUpdate(CPinEnableDataUpdate) |
             MPinSelectDataBits(CPinSelectDataBits0_7) |
             MPinCheckActiveModeData(0, CPinCheckActiveDisable);
-        ReadUserData[nIndex * 2].OutputEnableMode = eUtPepCtrlIgnoreOE;
-        ReadUserData[nIndex * 2].bPerformRead = FALSE;
+        ReadUserDataWithDelay[nIndex * 2].bPerformRead = FALSE;
+		ReadUserDataWithDelay[nIndex * 2].nDelayNanoSeconds = 0;
 
-        ReadUserData[(nIndex * 2) + 1].nAddress =
+        ReadUserDataWithDelay[(nIndex * 2) + 1].nAddress =
             MPinData(((ulData & 0x00800000) ? CPinDataOn : CPinDataOff),
                      CPinDataEnable) |
             MPinEnableDataUpdate(CPinEnableDataUpdate) |
             MPinSelectDataBits(CPinSelectDataBits0_7) |
             MPinCheckActiveModeData(0, CPinCheckActiveDisable);
-        ReadUserData[(nIndex * 2) + 1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-        ReadUserData[(nIndex * 2) + 1].bPerformRead = FALSE;
+        ReadUserDataWithDelay[(nIndex * 2) + 1].bPerformRead = FALSE;
+		ReadUserDataWithDelay[(nIndex * 2) + 1].nDelayNanoSeconds = 0;
 
         ulData = ulData << 1;
     }
 
     /* Setup the trigger for a data output */
 
-    ReadUserData[nIndex * 2].nAddress = MPinData(CPinDataOff, CPinDataEnable) |
-                                        MPinEnableDataUpdate(CPinDisableDataUpdate) |
-                                        MPinSelectDataBits(CPinSelectDataBits0_7) |
-                                        MPinCheckActiveModeData(0, CPinCheckActiveDisable);
-    ReadUserData[nIndex * 2].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[nIndex * 2].bPerformRead = FALSE;
+    ReadUserDataWithDelay[nIndex * 2].nAddress = MPinData(CPinDataOff, CPinDataEnable) |
+                                                 MPinEnableDataUpdate(CPinDisableDataUpdate) |
+                                                 MPinSelectDataBits(CPinSelectDataBits0_7) |
+                                                 MPinCheckActiveModeData(0, CPinCheckActiveDisable);
+    ReadUserDataWithDelay[nIndex * 2].bPerformRead = FALSE;
+	ReadUserDataWithDelay[nIndex * 2].nDelayNanoSeconds = 0;
 
-    ReadUserData[(nIndex * 2) + 1].nAddress = MPinData(CPinDataOff, CPinDataEnable) |
-                                              MPinEnableDataUpdate(CPinEnableDataUpdate) |
-                                              MPinSelectDataBits(CPinSelectDataBits0_7) |
-                                              MPinCheckActiveModeData(0, CPinCheckActiveDisable);
-    ReadUserData[(nIndex * 2) + 1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[(nIndex * 2) + 1].bPerformRead = FALSE;
+    ReadUserDataWithDelay[(nIndex * 2) + 1].nAddress = MPinData(CPinDataOff, CPinDataEnable) |
+                                                       MPinEnableDataUpdate(CPinEnableDataUpdate) |
+                                                       MPinSelectDataBits(CPinSelectDataBits0_7) |
+                                                       MPinCheckActiveModeData(0, CPinCheckActiveDisable);
+    ReadUserDataWithDelay[(nIndex * 2) + 1].bPerformRead = FALSE;
+	ReadUserDataWithDelay[(nIndex * 2) + 1].nDelayNanoSeconds = 0;
 
-    if (UtPepCtrlReadUserData(ReadUserData, MArrayLen(ReadUserData), NULL, 0))
+    if (UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay,
+		                               MArrayLen(ReadUserDataWithDelay),
+		                               NULL, 0))
     {
         return TRUE;
     }
@@ -212,19 +214,21 @@ BOOL lWriteData(
 
 BOOL UtPALDeviceAdapterInit(VOID)
 {
-    TUtPepCtrlReadUserData ReadUserData;
+    TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[1];
 
-    ReadUserData.nAddress = MPinData(CPinDataOff, CPinDataEnable) |
-                            MPinEnableDataUpdate(CPinEnableDataUpdate) |
-                            MPinSelectDataBits(CPinSelectDataBits0_7) |
-                            MPinCheckActiveModeData(0, CPinCheckActiveDisable);
-    ReadUserData.OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData.bPerformRead = FALSE;
+    ReadUserDataWithDelay[0].nAddress = MPinData(CPinDataOff, CPinDataEnable) |
+                                        MPinEnableDataUpdate(CPinEnableDataUpdate) |
+                                        MPinSelectDataBits(CPinSelectDataBits0_7) |
+                                        MPinCheckActiveModeData(0, CPinCheckActiveDisable);
+    ReadUserDataWithDelay[0].bPerformRead = FALSE;
+	ReadUserDataWithDelay[0].nDelayNanoSeconds = 0;
 
     l_bEnablePALVcc = FALSE;
 
     if (!UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode) ||
-        !UtPepCtrlReadUserData(&ReadUserData, 1, NULL, 0) ||
+        !UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay, 
+			                            MArrayLen(ReadUserDataWithDelay),
+			                            NULL, 0) ||
         !UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode))
     {
         return FALSE;
@@ -276,7 +280,7 @@ BOOL UtPALDeviceAdapterWriteData(
 BOOL UtPALDeviceAdapterReadData(
   TPALDeviceAdapterData* pDeviceAdapterData)
 {
-    TUtPepCtrlReadUserData ReadUserData[2];
+    TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[2];
     BYTE byData[2];
 
     pDeviceAdapterData->wOutputData = 0;
@@ -289,22 +293,23 @@ BOOL UtPALDeviceAdapterReadData(
 
     /* Read low/high data */
 
-    ReadUserData[0].nAddress = MPinData(CPinDataOff, CPinDataDisable) |
-                               MPinEnableDataUpdate(CPinEnableDataUpdate) |
-                               MPinSelectDataBits(CPinSelectDataBits0_7) |
-                               MPinCheckActiveModeData(0, CPinCheckActiveDisable);
-    ReadUserData[0].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[0].bPerformRead = TRUE;
+    ReadUserDataWithDelay[0].nAddress = MPinData(CPinDataOff, CPinDataDisable) |
+                                        MPinEnableDataUpdate(CPinEnableDataUpdate) |
+                                        MPinSelectDataBits(CPinSelectDataBits0_7) |
+                                        MPinCheckActiveModeData(0, CPinCheckActiveDisable);
+    ReadUserDataWithDelay[0].bPerformRead = TRUE;
+	ReadUserDataWithDelay[0].nDelayNanoSeconds = 0;
 
-    ReadUserData[1].nAddress = MPinData(CPinDataOff, CPinDataDisable) |
-                               MPinEnableDataUpdate(CPinEnableDataUpdate) |
-                               MPinSelectDataBits(CPinSelectDataBits8_11) |
-                               MPinCheckActiveModeData(0, CPinCheckActiveDisable);
-    ReadUserData[1].OutputEnableMode = eUtPepCtrlIgnoreOE;
-    ReadUserData[1].bPerformRead = TRUE;
+    ReadUserDataWithDelay[1].nAddress = MPinData(CPinDataOff, CPinDataDisable) |
+                                        MPinEnableDataUpdate(CPinEnableDataUpdate) |
+                                        MPinSelectDataBits(CPinSelectDataBits8_11) |
+                                        MPinCheckActiveModeData(0, CPinCheckActiveDisable);
+    ReadUserDataWithDelay[1].bPerformRead = TRUE;
+	ReadUserDataWithDelay[1].nDelayNanoSeconds = 0;
 
-    if (!UtPepCtrlReadUserData(ReadUserData, MArrayLen(ReadUserData), byData,
-                               MArrayLen(byData)))
+    if (!UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay,
+		                                MArrayLen(ReadUserDataWithDelay),
+		                                byData, MArrayLen(byData)))
     {
         return FALSE;
     }
@@ -320,5 +325,5 @@ BOOL UtPALDeviceAdapterReadData(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2013 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/

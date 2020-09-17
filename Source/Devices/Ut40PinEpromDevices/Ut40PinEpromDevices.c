@@ -811,14 +811,15 @@ static VOID UTPEPDEVICESAPI l27Cx02ReadDevice(
     BOOL bErrorOccurred = FALSE;
     ULONG ulTmpBufferLen = (ulDataLen / sizeof(WORD)) / 32;
     ULONG ulAddress, ulTmpAddress, ulIndex, ulTmpIndex;
-    TUtPepCtrlReadUserData* pReadUserData;
+    TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay;
 
-    pReadUserData = (TUtPepCtrlReadUserData*)UtAllocMem(
-                        (sizeof(TUtPepCtrlReadUserData) * 2) * ulTmpBufferLen);
+    pReadUserDataWithDelay = (TUtPepCtrlReadUserDataWithDelay*)UtAllocMem(
+                                 (sizeof(TUtPepCtrlReadUserDataWithDelay) * 2) * ulTmpBufferLen);
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen / sizeof(WORD), edoRead);
 
-	if (FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
+	if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
     {
@@ -836,28 +837,28 @@ static VOID UTPEPDEVICESAPI l27Cx02ReadDevice(
         {
             ulTmpAddress = ulAddress + ulIndex;
 
-            pReadUserData[ulTmpIndex].nAddress = MSelectAddressAndDataBits(
-                                                     ulTmpAddress, CDataBits0To7);
-            pReadUserData[ulTmpIndex].OutputEnableMode = eUtPepCtrlIgnoreOE;
-            pReadUserData[ulTmpIndex].bPerformRead = TRUE;
+            pReadUserDataWithDelay[ulTmpIndex].nAddress = MSelectAddressAndDataBits(
+														      ulTmpAddress, CDataBits0To7);
+            pReadUserDataWithDelay[ulTmpIndex].bPerformRead = TRUE;
+			pReadUserDataWithDelay[ulTmpIndex].nDelayNanoSeconds = 0;
 
             ++ulTmpIndex;
 
             ulTmpAddress = ulAddress + ulIndex;
 
-            pReadUserData[ulTmpIndex].nAddress = MSelectAddressAndDataBits(
-                                                     ulTmpAddress,
-                                                     CDataBits8To15);
-            pReadUserData[ulTmpIndex].OutputEnableMode = eUtPepCtrlIgnoreOE;
-            pReadUserData[ulTmpIndex].bPerformRead = TRUE;
+            pReadUserDataWithDelay[ulTmpIndex].nAddress = MSelectAddressAndDataBits(
+                                                              ulTmpAddress,
+                                                              CDataBits8To15);
+            pReadUserDataWithDelay[ulTmpIndex].bPerformRead = TRUE;
+			pReadUserDataWithDelay[ulTmpIndex].nDelayNanoSeconds = 0;
 
             ++ulTmpIndex;
         }
 
         if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
-            FALSE == UtPepCtrlReadUserData(pReadUserData, ulTmpBufferLen * 2,
-                                           pbyData + (ulAddress * 2),
-                                           ulTmpBufferLen * 2))
+            FALSE == UtPepCtrlReadUserDataWithDelay(pReadUserDataWithDelay, ulTmpBufferLen * 2,
+                                                    pbyData + (ulAddress * 2),
+                                                    ulTmpBufferLen * 2))
         {
             bErrorOccurred = TRUE;
 
@@ -872,7 +873,7 @@ End:
 
     pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoRead);
 
-    UtFreeMem(pReadUserData);
+    UtFreeMem(pReadUserDataWithDelay);
 }
 
 static VOID UTPEPDEVICESAPI l27Cx02ProgramDevice(
@@ -899,17 +900,18 @@ static VOID UTPEPDEVICESAPI l27Cx02VerifyDevice(
     BOOL bErrorOccurred = FALSE;
     ULONG ulTmpBufferLen = (ulDataLen / sizeof(WORD)) / 32;
     ULONG ulAddress, ulTmpAddress, ulIndex, ulTmpIndex;
-    TUtPepCtrlReadUserData* pReadUserData;
+    TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay;
     LPWORD pwTmpData;
 
-    pReadUserData = (TUtPepCtrlReadUserData*)UtAllocMem(
-                        (sizeof(TUtPepCtrlReadUserData) * 2) * ulTmpBufferLen);
+    pReadUserDataWithDelay = (TUtPepCtrlReadUserDataWithDelay*)UtAllocMem(
+                                 (sizeof(TUtPepCtrlReadUserDataWithDelay) * 2) * ulTmpBufferLen);
 
     pwTmpData = (LPWORD)UtAllocMem(ulTmpBufferLen * sizeof(WORD));
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen / sizeof(WORD), edoVerify);
 
-    if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+    if (FALSE == UtPepCtrlSetDelaySettings(0, 0) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
         FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
         FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse4Mode) ||
         FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerReadMode))
@@ -928,29 +930,29 @@ static VOID UTPEPDEVICESAPI l27Cx02VerifyDevice(
         {
             ulTmpAddress = ulAddress + ulIndex;
 
-            pReadUserData[ulTmpIndex].nAddress = MSelectAddressAndDataBits(
-                                                     ulTmpAddress,
-                                                     CDataBits0To7);
-            pReadUserData[ulTmpIndex].OutputEnableMode = eUtPepCtrlIgnoreOE;
-            pReadUserData[ulTmpIndex].bPerformRead = TRUE;
+            pReadUserDataWithDelay[ulTmpIndex].nAddress = MSelectAddressAndDataBits(
+                                                              ulTmpAddress,
+                                                              CDataBits0To7);
+            pReadUserDataWithDelay[ulTmpIndex].bPerformRead = TRUE;
+			pReadUserDataWithDelay[ulTmpIndex].nDelayNanoSeconds = 0;
 
             ++ulTmpIndex;
 
             ulTmpAddress = ulAddress + ulIndex;
 
-            pReadUserData[ulTmpIndex].nAddress = MSelectAddressAndDataBits(
-                                                     ulTmpAddress,
-                                                     CDataBits8To15);
-            pReadUserData[ulTmpIndex].OutputEnableMode = eUtPepCtrlIgnoreOE;
-            pReadUserData[ulTmpIndex].bPerformRead = TRUE;
+            pReadUserDataWithDelay[ulTmpIndex].nAddress = MSelectAddressAndDataBits(
+                                                              ulTmpAddress,
+                                                              CDataBits8To15);
+            pReadUserDataWithDelay[ulTmpIndex].bPerformRead = TRUE;
+			pReadUserDataWithDelay[ulTmpIndex].nDelayNanoSeconds = 0;
 
             ++ulTmpIndex;
         }
 
         if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
-            FALSE == UtPepCtrlReadUserData(pReadUserData, ulTmpBufferLen * 2,
-                                           (LPBYTE)pwTmpData,
-                                           ulTmpBufferLen * sizeof(WORD)))
+            FALSE == UtPepCtrlReadUserDataWithDelay(pReadUserDataWithDelay, ulTmpBufferLen * 2,
+                                                    (LPBYTE)pwTmpData,
+                                                    ulTmpBufferLen * sizeof(WORD)))
         {
             bErrorOccurred = TRUE;
 
@@ -984,7 +986,7 @@ End:
     pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoVerify);
 
     UtFreeMem(pwTmpData);
-    UtFreeMem(pReadUserData);
+    UtFreeMem(pReadUserDataWithDelay);
 }
 
 /***************************************************************************/

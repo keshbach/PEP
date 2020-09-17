@@ -233,6 +233,7 @@ static BOOLEAN lInitDelaySettings(_In_ TPepInternalLogicData* pInternalData);
 #pragma alloc_text (PAGE, UtPepLogicSetPinPulseMode)
 #pragma alloc_text (PAGE, UtPepLogicSetVppMode)
 #pragma alloc_text (PAGE, UtPepLogicSetAddress)
+#pragma alloc_text (PAGE, UtPepLogicSetAddressWithDelay)
 #pragma alloc_text (PAGE, UtPepLogicGetData)
 #pragma alloc_text (PAGE, UtPepLogicSetData)
 #pragma alloc_text (PAGE, UtPepLogicTriggerProgram)
@@ -1008,6 +1009,38 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddress(
     pLogicData->pLogFunc("UtPepLogicSetAddress called.\n");
 
     return lSetProgrammerAddress(pLogicData, nAddress);
+}
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddressWithDelay(
+  _In_ TUtPepLogicData* pLogicData,
+  _In_ UINT32 nAddress,
+  _In_ UINT32 nDelayNanoSeconds)
+{
+	BOOLEAN bResult;
+	LARGE_INTEGER IntervalNanoseconds;
+
+#if defined(BUILD_DRIVER_LIB)
+	PAGED_CODE()
+#endif
+
+	pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay called.\n");
+
+	bResult = lSetProgrammerAddress(pLogicData, nAddress);
+
+	if (bResult && nDelayNanoSeconds > 0)
+	{
+		pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay - Delay detected.\n");
+
+		IntervalNanoseconds.QuadPart = nDelayNanoSeconds;
+
+		if (!UtSleep(&IntervalNanoseconds))
+		{
+			pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay - Sleep failed.\n");
+		}
+	}
+
+	return bResult;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

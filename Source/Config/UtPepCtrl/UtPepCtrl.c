@@ -718,8 +718,6 @@ BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(
 
         switch (pReadUserData[nReadUserDataIndex].OutputEnableMode)
         {
-            case eUtPepCtrlIgnoreOE:
-                break;
             case eUtPepCtrlEnableOE:
                 if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_OUTPUT_ENABLE,
                                      &l_nEnableOutputEnable, sizeof(l_nEnableOutputEnable),
@@ -754,6 +752,55 @@ BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(
     }
 
     return TRUE;
+}
+
+BOOL UTPEPCTRLAPI UtPepCtrlReadUserDataWithDelay(
+  _In_ const TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay,
+  _In_ UINT32 nReadUserDataWithDelayLen,
+  _Out_ LPBYTE pbyData,
+  _In_ UINT32 nDataLen)
+{
+	DWORD dwBytesReturned;
+	UINT32 nReadUserDataWithDelayIndex, nDataIndex;
+	TPepCtrlAddressWithDelay AddressWithDelay;
+
+	if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+	{
+		return FALSE;
+	}
+
+	nDataIndex = 0;
+
+	for (nReadUserDataWithDelayIndex = 0; nReadUserDataWithDelayIndex < nReadUserDataWithDelayLen;
+		 ++nReadUserDataWithDelayIndex)
+	{
+		AddressWithDelay.nAddress = pReadUserDataWithDelay[nReadUserDataWithDelayIndex].nAddress;
+		AddressWithDelay.nDelayNanoseconds = pReadUserDataWithDelay[nReadUserDataWithDelayIndex].nDelayNanoSeconds;
+
+		if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_ADDRESS_WITH_DELAY,
+			                 (LPVOID)&AddressWithDelay,
+			                 sizeof(AddressWithDelay), NULL, 0,
+			                 &dwBytesReturned, NULL))
+		{
+			return FALSE;
+		}
+
+		if (pReadUserDataWithDelay[nReadUserDataWithDelayIndex].bPerformRead &&
+			nDataIndex < nDataLen)
+		{
+			if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_GET_DATA,
+				                 NULL, 0, pbyData, sizeof(*pbyData),
+				                 &dwBytesReturned, NULL))
+			{
+				return FALSE;
+			}
+
+			++nDataIndex;
+			++pbyData;
+		}
+	}
+
+	return TRUE;
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlProgramData(
