@@ -33,9 +33,9 @@
 #define CUnit2_AddressLines0To3 2
 #define CUnit3_AddressLines4To7 3
 #define CUnit4_AddressLines8To11 4
-#define CUnit5_AddressLines12To19AndVppMode 5
+#define CUnit5_AddressLines12To19AndVppMode 5 /* Set Vpp voltage to either +12VDC, +21VDC or +25VDC */
 #define CUnit6_LedAndVpp 6
-#define CUnit7_Programmer 7
+#define CUnit7_Programmer 7 /* Set VCC voltage to either +5VDC or 6.25VDC */
 
 #define CUnit_DontCare CUnit0_DataBits0To3
 
@@ -46,6 +46,8 @@
 #define CUnitOn 1
 #define CUnitOff 0
 
+/* Unit 5 Control Bits */
+
 #define CEnableAddressLines12To19Unit 2
 #define CDisableAddressLines12To19Unit 0
 #define CAddressLines12To19On 1
@@ -54,10 +56,14 @@
 #define CEnable25Vpp 0
 #define CEnable21Vpp 8
 
+/* Unit 6 Control Bits */
+
 #define CN0 1
 #define CN1 2
 #define CN2 4 /* Turn Socket Power LED On */
 #define CN3 8 /* Turn Programming LED On */
+
+/* Unit 7 Control Bits */
 
 #define RDPGM 1 /* enable output enable pin (sets pin to low) */
 #define PPCL 2 /* Clear 9602 */

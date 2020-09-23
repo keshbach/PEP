@@ -1,5 +1,5 @@
           |----\_/----|
-*1      --| 1      32 |-- VCC
+*1      --| 1      32 |-- *32
 A16     --| 2      31 |-- *31
 *3      --| 3      30 |-- *30
 A12     --| 4      29 |-- *29
@@ -18,13 +18,20 @@ GND     --| 16     17 |-- D3
           |-----------|
 
 
-*1  - Dip 6 on VPP, Dip 6 off A19
-*3  - Dip 5 on VPP, Dip 5 off A15
+*1  - Dip 6 on +5VDC/VPP, Dip 6 off A19
+*3  - Dip 5 on +5VDC/VPP, Dip 5 off A15
 *23 - A10, VEN08 - +12VDC
 *24 - Output Enable, WE08 - +12VDC, Vpp32 - VPP
 *25 - A11, ~Vp5 - +12VDC, Vpp16 - Vpp, VEN08 - -5VDC
-*28 - Dip 1 on VCC, Dip 1 off A13
+*28 - Dip 1 on Switched VCC, Dip 1 off A13
 *29 - Dip 2 on ~PVAR (PGM), Dip 2 off A14
-*30 - Dip 3 on VCC, Dip 3 off A17
+*30 - Dip 3 on Switched VCC, Dip 3 off A17
 *31 - Dip 4 on ~PVAR (PGM), Dip 4 off A18
+*32 - Switched VCC
 
+
+
+
+Note:
+
+Switched VCC is always on can be either +5VDC or +6.25VDC
