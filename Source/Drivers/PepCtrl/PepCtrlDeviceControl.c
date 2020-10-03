@@ -25,6 +25,8 @@
 
 #include "PepCtrlLog.h"
 
+#include "PepCtrlHelper.h"
+
 static DRIVER_CANCEL lDeviceControlCancelIrpRoutine;
 
 #if defined(ALLOC_PRAGMA)
@@ -55,7 +57,8 @@ static VOID lDeviceControlCancelIrpRoutine(
     BOOLEAN bQuit = FALSE;
 	TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
-    PepCtrlLog("lDeviceControlCancelIrpRoutine entering.\n");
+    PepCtrlLog("lDeviceControlCancelIrpRoutine entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     IoReleaseCancelSpinLock(pIrp->CancelIrql);
 
@@ -68,7 +71,8 @@ static VOID lDeviceControlCancelIrpRoutine(
                 case CPepCtrlStateRunning:
                     if (pPortData->pIrp == pIrp)
                     {
-                        PepCtrlLog("lDeviceControlCancelIrpRoutine - Clearing out the existing device notification IRP.\n");
+                        PepCtrlLog("lDeviceControlCancelIrpRoutine - Clearing out the existing device notification IRP.  (Thread: 0x%p)\n",
+							       PsGetCurrentThread());
 
                         pPortData->pIrp = NULL;
                     }
@@ -78,8 +82,9 @@ static VOID lDeviceControlCancelIrpRoutine(
                 case CPepCtrlStateUnloading:
                 case CPepCtrlStateDeviceArrived:
                 case CPepCtrlStateDeviceRemoved:
-                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Invalid state of %d\n",
-                               pPortData->nState);
+                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Invalid state of \"%s\".  (Thread: 0x%p)\n",
+						       PepCtrlHelperTranslateState(pPortData->nState),
+						       PsGetCurrentThread());
 
                     bQuit = TRUE;
                     break;
@@ -87,8 +92,9 @@ static VOID lDeviceControlCancelIrpRoutine(
                 case CPepCtrlStateChangePortSettings:
                     break;
                 default:
-                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Unknown state of %d\n",
-                               pPortData->nState);
+                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Unknown state of \"%s\".  (Thread: 0x%p)\n",
+						       PepCtrlHelperTranslateState(pPortData->nState),
+						       PsGetCurrentThread());
 
                     bQuit = TRUE;
                     break;
@@ -109,14 +115,16 @@ static VOID lDeviceControlCancelIrpRoutine(
                     break;
                 case CPepCtrlStateDeviceArrived:
                 case CPepCtrlStateDeviceRemoved:
-                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Invalid state of %d\n",
-                                pPortData->nState);
+                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Invalid state of \"%s\".  (Thread: 0x%p)\n",
+						       PepCtrlHelperTranslateState(pPortData->nState),
+						       PsGetCurrentThread());
 
                     bQuit = TRUE;
                     break;
                 default:
-                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Unknown state of %d\n",
-                        pPortData->nState);
+                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Unknown state of \"%s\".  (Thread: 0x%p)\n",
+						       PepCtrlHelperTranslateState(pPortData->nState),
+						       PsGetCurrentThread());
 
                     bQuit = TRUE;
                     break;
@@ -129,7 +137,8 @@ static VOID lDeviceControlCancelIrpRoutine(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("lDeviceControlCancelIrpRoutine leaving.\n");
+    PepCtrlLog("lDeviceControlCancelIrpRoutine leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 }
 
 #pragma endregion
@@ -148,9 +157,10 @@ NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_SetProgrammerMode entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_SetProgrammerMode called.\n");
+	PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
@@ -178,6 +188,9 @@ NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_SetProgrammerMode leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -195,9 +208,10 @@ NTSTATUS PepCtrlDeviceControl_SetVccMode(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_SetVccMode entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_SetVccMode called.\n");
+	PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
@@ -225,6 +239,9 @@ NTSTATUS PepCtrlDeviceControl_SetVccMode(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_SetVccMode leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -242,9 +259,10 @@ NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_SetPinPulseMode entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_SetPinPulseMode called.\n");
+	PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
@@ -272,6 +290,9 @@ NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_SetPinPulseMode leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -289,9 +310,10 @@ NTSTATUS PepCtrlDeviceControl_SetVppMode(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_SetVppMode entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_SetVppMode called.\n");
+    PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
@@ -319,6 +341,9 @@ NTSTATUS PepCtrlDeviceControl_SetVppMode(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_SetVppMode leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -336,9 +361,10 @@ NTSTATUS PepCtrlDeviceControl_SetAddress(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_SetAddress entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_SetAddress called.\n");
+	PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
@@ -366,6 +392,9 @@ NTSTATUS PepCtrlDeviceControl_SetAddress(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_SetAddress leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -384,9 +413,10 @@ NTSTATUS PepCtrlDeviceControl_SetAddressWithDelay(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+	PepCtrlLog("PepCtrlDeviceControl_SetAddressWithDelay entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-	PepCtrlLog("PepCtrlDeviceControl_SetAddressWithDelay called.\n");
+	PAGED_CODE()
 
 	if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
 	{
@@ -418,6 +448,9 @@ NTSTATUS PepCtrlDeviceControl_SetAddressWithDelay(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_SetAddressWithDelay leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -435,9 +468,10 @@ NTSTATUS PepCtrlDeviceControl_GetData(
 	pvInBuf;
 	ulInBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_GetData entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_GetData called.\n");
+	PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
@@ -467,6 +501,9 @@ NTSTATUS PepCtrlDeviceControl_GetData(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_GetData leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -484,9 +521,10 @@ NTSTATUS PepCtrlDeviceControl_SetData(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_SetData entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_SetData called.\n");
+	PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
@@ -514,6 +552,9 @@ NTSTATUS PepCtrlDeviceControl_SetData(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_SetData leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -532,9 +573,10 @@ NTSTATUS PepCtrlDeviceControl_TriggerProgram(
 	pvInBuf;
 	ulInBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_TriggerProgram entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_TriggerProgram called.\n");
+	PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
@@ -566,6 +608,9 @@ NTSTATUS PepCtrlDeviceControl_TriggerProgram(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_TriggerProgram leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -583,9 +628,10 @@ NTSTATUS PepCtrlDeviceControl_SetOutputEnable(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_SetOutputEnable entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_SetOutputEnable called.\n");
+	PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
@@ -613,6 +659,9 @@ NTSTATUS PepCtrlDeviceControl_SetOutputEnable(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_SetOutputEnable leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
 	return Status;
 }
 
@@ -630,9 +679,10 @@ NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
 	pvInBuf;
 	ulInBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_GetPortStatus entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_GetPortStatus called.\n");
+	PAGED_CODE()
 
 	if (ulOutBufLen == sizeof(UINT32))
 	{
@@ -658,6 +708,8 @@ NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
+	PepCtrlLog("PepCtrlDeviceControl_GetPortStatus leaving.  (Thread: 0x%p)\n");
+
 	return Status;
 }
 
@@ -677,9 +729,10 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_DeviceNotification entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_DeviceNotification called.\n");
+	PAGED_CODE()
 
 	if (ulOutBufLen != sizeof(UINT32))
 	{
@@ -701,7 +754,8 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 
     if (pPortData->pIrp == NULL)
 	{
-        PepCtrlLog("PepCtrlDeviceControl_DeviceNotification - Saving off the IRP.\n");
+        PepCtrlLog("PepCtrlDeviceControl_DeviceNotification - Saving off the IRP.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
 		pPortData->pIrp = pIrp;
 
@@ -715,10 +769,16 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 	}
 	else
 	{
-        pIrp->IoStatus.Status = Status;
+		PepCtrlLog("PepCtrlDeviceControl_DeviceNotification - IRP already present, cannot save IRP off.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
+
+		pIrp->IoStatus.Status = Status;
 
 		IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 	}
+
+	PepCtrlLog("PepCtrlDeviceControl_DeviceNotification leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	return Status;
 }
@@ -740,9 +800,10 @@ NTSTATUS PepCtrlDeviceControl_GetPortSettings(
     pvInBuf;
     ulInBufLen;
 
-    PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_GetPortSettings entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_GetPortSettings entering.\n");
+	PAGED_CODE()
 
     Length = sizeof(UINT32);
 
@@ -762,7 +823,8 @@ NTSTATUS PepCtrlDeviceControl_GetPortSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_GetPortSettings leaving (buffer too small).\n");
+        PepCtrlLog("PepCtrlDeviceControl_GetPortSettings leaving.  (Buffer too small)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return Status;
     }
@@ -790,7 +852,8 @@ NTSTATUS PepCtrlDeviceControl_GetPortSettings(
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("PepCtrlDeviceControl_GetPortSettings leaving (settings retrieved).\n");
+    PepCtrlLog("PepCtrlDeviceControl_GetPortSettings leaving.  (Settings retrieved)  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return Status;
 }
@@ -815,9 +878,10 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
     pvOutBuf;
     ulOutBufLen;
 
-    PAGED_CODE()
+    PepCtrlLog("PepCtrlDeviceControl_SetPortSettings entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlDeviceControl_SetPortSettings entering.\n");
+	PAGED_CODE()
 
     if (ulInBufLen < sizeof(TPepCtrlPortSettings))
     {
@@ -827,7 +891,8 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Buffer too small.)\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving.  (Buffer too small)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return Status;
     }
@@ -844,14 +909,16 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Invalid port type.)\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving.  (Invalid port type)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return Status;
     }
 
     if (pPortSettings->nPortType != CPepCtrlNoPortType)
     {
-        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Validating the port data.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Validating the port data.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         ulBufferLen = ulInBufLen - UFIELD_OFFSET(TPepCtrlPortSettings, cPortDeviceName);
         ulDeviceNameLen = 0;
@@ -875,7 +942,8 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
 
             IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Port device name not null terminated.)\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving.  (Port device name not null terminated)  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             return Status;
         }
@@ -888,7 +956,8 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
 
             IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Port device name is empty.)\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving.  (Port device name is empty)  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             return Status;
         }
@@ -902,27 +971,32 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
 
     if (pPortData->RegSettings.nPortType != CPepCtrlNoPortType)
     {
-        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings releasing the existing device.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings releasing the existing device.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         if (PepCtrlPlugPlayUnregister(pPortData->pvPlugPlayData))
         {
-            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Plug and Play notification unregistered.\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Plug and Play notification unregistered.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
         else 
         {
-            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Could not unregister the Plug and Play notification.\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Could not unregister the Plug and Play notification.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
 
         pPortData->RegSettings.nPortType = CPepCtrlNoPortType;
     }
     else
     {
-        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings no existing device to release.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings no existing device to release.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
     if (pPortData->RegSettings.pszPortDeviceName)
     {
-        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Deleting the memory allocated for the port's device name.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Deleting the memory allocated for the port's device name.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         UtFreePagedMem(pPortData->RegSettings.pszPortDeviceName);
 
@@ -931,7 +1005,8 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
 
     RtlInitUnicodeString(&RegistryPath, pPortData->RegSettings.pszRegistryPath);
 
-    PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - saving the new registry settings.\n");
+    PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - saving the new registry settings.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     if (!PepCtrlWriteRegSettings(&RegistryPath, pPortSettings->nPortType,
                                  pPortSettings->cPortDeviceName))
@@ -944,7 +1019,8 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Could not save the new registry settings.)\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving.  (Could not save the new registry settings)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return Status;
     }
@@ -961,7 +1037,8 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving (Could not allocate memory for the port's device name.)\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving.  (Could not allocate memory for the port's device name)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return Status;
     }
@@ -983,17 +1060,20 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
     {
         PepCtrlInitPortTypeFuncs(pPortData);
 
-        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Registering for plug and Play notification.\n");
+        PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Registering for plug and Play notification.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         if (PepCtrlPlugPlayRegister(pPortData->Funcs.pGetDeviceInterfaceGuidFunc(),
                                     pPortData->RegSettings.pszPortDeviceName,
                                     pPortData->pvPlugPlayData))
         {
-            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Plug and Play notification registered.\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Plug and Play notification registered.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
         else
         {
-            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Plug and Play notification failed to register.\n");
+            PepCtrlLog("PepCtrlDeviceControl_SetPortSettings - Plug and Play notification failed to register.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
     }
 
@@ -1005,7 +1085,8 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving.\n");
+    PepCtrlLog("PepCtrlDeviceControl_SetPortSettings leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return Status;
 }
@@ -1026,9 +1107,10 @@ NTSTATUS PepCtrlDeviceControl_SetDelaySettings(
 	pvOutBuf;
 	ulOutBufLen;
 
-	PAGED_CODE()
+	PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-	PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings entering.\n");
+	PAGED_CODE()
 
 	if (ulInBufLen < sizeof(TPepCtrlDelaySettings))
 	{
@@ -1038,7 +1120,8 @@ NTSTATUS PepCtrlDeviceControl_SetDelaySettings(
 
 		IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-		PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings leaving (Buffer too small.)\n");
+		PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings leaving.  (Buffer too small)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
 		return Status;
 	}
@@ -1051,7 +1134,8 @@ NTSTATUS PepCtrlDeviceControl_SetDelaySettings(
 
 		IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-		PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings leaving (Buffer too large.)\n");
+		PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings leaving.  (Buffer too large)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
 		return Status;
 	}
@@ -1073,7 +1157,8 @@ NTSTATUS PepCtrlDeviceControl_SetDelaySettings(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-	PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings leaving.\n");
+	PepCtrlLog("PepCtrlDeviceControl_SetDelaySettings leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	return Status;
 }

@@ -21,6 +21,7 @@
 #include "PepCtrlDeviceControl.h"
 #include "PepCtrlPlugPlay.h"
 #include "PepCtrlInit.h"
+#include "PepCtrlHelper.h"
 
 #pragma region "Constants"
 
@@ -111,7 +112,8 @@ static NTSTATUS lPepCtrlIrpClose(
 
     PAGED_CODE()
 
-    PepCtrlLog("lPepCtrlIrpClose entering.\n");
+    PepCtrlLog("lPepCtrlIrpClose entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     UtPepLogicReset(&pPortData->LogicData);
 
@@ -120,7 +122,8 @@ static NTSTATUS lPepCtrlIrpClose(
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("lPepCtrlIrpClose leaving.\n");
+    PepCtrlLog("lPepCtrlIrpClose leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return STATUS_SUCCESS;
 }
@@ -136,35 +139,41 @@ static NTSTATUS lPepCtrlIrpPower(
 
     PAGED_CODE()
 
-    PepCtrlLog("lPepCtrlIrpPower entering.\n");
+    PepCtrlLog("lPepCtrlIrpPower entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     if (pIrpSp->MinorFunction == IRP_MN_POWER_SEQUENCE)
     {
-        PepCtrlLog("lPepCtrlIrpPower - IRP_MN_POWER_SEQUENCE received.\n");
+        PepCtrlLog("lPepCtrlIrpPower - IRP_MN_POWER_SEQUENCE received.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         Status = STATUS_NOT_IMPLEMENTED;
     }
     else if (pIrpSp->MinorFunction == IRP_MN_QUERY_POWER)
     {
-        PepCtrlLog("lPepCtrlIrpPower - IRP_MN_QUERY_POWER received.\n");
+        PepCtrlLog("lPepCtrlIrpPower - IRP_MN_QUERY_POWER received.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         Status = STATUS_SUCCESS;
     }
     else if (pIrpSp->MinorFunction == IRP_MN_SET_POWER)
     {
-        PepCtrlLog("lPepCtrlIrpPower - IRP_MN_SET_POWER received.\n");
+        PepCtrlLog("lPepCtrlIrpPower - IRP_MN_SET_POWER received.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         Status = STATUS_SUCCESS;
     }
     else if (pIrpSp->MinorFunction == IRP_MN_WAIT_WAKE)
     {
-        PepCtrlLog("lPepCtrlIrpPower - IRP_MN_WAIT_WAKE received.\n");
+        PepCtrlLog("lPepCtrlIrpPower - IRP_MN_WAIT_WAKE received.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         Status = STATUS_NOT_SUPPORTED;
     }
     else
     {
-        PepCtrlLog("lPepCtrlIrpPower - Unknown minor power code.\n");
+        PepCtrlLog("lPepCtrlIrpPower - Unknown minor power code.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         Status = STATUS_NOT_IMPLEMENTED;
     }
@@ -174,7 +183,8 @@ static NTSTATUS lPepCtrlIrpPower(
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("lPepCtrlIrpPower leaving.\n");
+    PepCtrlLog("lPepCtrlIrpPower leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return STATUS_SUCCESS;
 }
@@ -185,19 +195,22 @@ static NTSTATUS lPepCtrlIrpCreate(
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
-    PepCtrlLog("lPepCtrlIrpCreate entering.\n");
+    PepCtrlLog("lPepCtrlIrpCreate entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
     {
-        PepCtrlLog("lPepCtrlIrpCreate - Device present setting address to 0.\n");
+        PepCtrlLog("lPepCtrlIrpCreate - Device present setting address to 0.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         UtPepLogicSetAddress(&pPortData->LogicData, 0);
     }
     else
     {
-        PepCtrlLog("lPepCtrlIrpCreate - Device not present.\n");
+        PepCtrlLog("lPepCtrlIrpCreate - Device not present.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
     pIrp->IoStatus.Status = STATUS_SUCCESS;
@@ -205,7 +218,8 @@ static NTSTATUS lPepCtrlIrpCreate(
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("lPepCtrlIrpCreate leaving.\n");
+    PepCtrlLog("lPepCtrlIrpCreate leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return STATUS_SUCCESS;
 }
@@ -226,7 +240,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 
     PAGED_CODE()
 
-    PepCtrlLog("lPepCtrlIrpDeviceControl entering.\n");
+    PepCtrlLog("lPepCtrlIrpDeviceControl entering.  (Thread: 0x%p)\n", PsGetCurrentThread());
 
 	pIrpSp = IoGetCurrentIrpStackLocation(pIrp);
 
@@ -248,8 +262,10 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
                 break;
             case CPepCtrlStateDeviceArrived:
             case CPepCtrlStateDeviceRemoved:
-				PepCtrlLog("lPepCtrlIrpDeviceControl - State of %d detected for I/O Control Code: 0x%X.\n",
-                           pPortData->nState, pIrpSp->Parameters.DeviceIoControl.IoControlCode);
+				PepCtrlLog("lPepCtrlIrpDeviceControl - State of \"%s\" detected for I/O Control Code: %s.  (Thread: 0x%p)\n",
+					       PepCtrlHelperTranslateState(pPortData->nState),
+					       PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
+					       PsGetCurrentThread());
 
 				if (pIrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_PEPCTRL_GET_DEVICE_STATUS ||
 					pIrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_PEPCTRL_DEVICE_NOTIFICATION)
@@ -273,14 +289,18 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
             case CPepCtrlStateChangePortSettings:
                 bMonitorState = FALSE;
 
-                PepCtrlLog("lPepCtrlIrpDeviceControl - Invalid state of %d for I/O Control Code: 0x%X.\n",
-                           pPortData->nState, pIrpSp->Parameters.DeviceIoControl.IoControlCode);
+                PepCtrlLog("lPepCtrlIrpDeviceControl - Invalid state of \"%s\" for I/O Control Code: %s.  (Thread: 0x%p)\n",
+                           PepCtrlHelperTranslateState(pPortData->nState),
+                           PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
+					       PsGetCurrentThread());
                 break;
             default:
                 bMonitorState = FALSE;
 
-                PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: Unknown state of %d for I/O Control Code: 0x%X.\n",
-                           pPortData->nState, pIrpSp->Parameters.DeviceIoControl.IoControlCode);
+                PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: Unknown state of \"%s\" for I/O Control Code: %s.  (Thread: 0x%p)\n",
+                           PepCtrlHelperTranslateState(pPortData->nState),
+                           PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
+					       PsGetCurrentThread());
                 break;
         }
 
@@ -302,7 +322,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-        PepCtrlLog("lPepCtrlIrpDeviceControl leaving (Invalid state).\n");
+        PepCtrlLog("lPepCtrlIrpDeviceControl leaving (Invalid state, Thread: 0x%p).\n", PsGetCurrentThread());
 
         return Status;
     }
@@ -321,8 +341,9 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
     {
         if (l_DeviceControlFuncs[ulIndex].ulIOControlCode == pIrpSp->Parameters.DeviceIoControl.IoControlCode)
         {
-            PepCtrlLog("lPepCtrlIrpDeviceControl - Function found for I/O Control Code: 0x%X.\n",
-                       pIrpSp->Parameters.DeviceIoControl.IoControlCode);
+            PepCtrlLog("lPepCtrlIrpDeviceControl - Function found for I/O Control Code: %s.  (Thread: 0x%p)\n",
+                       PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
+                       PsGetCurrentThread());
 
             bFuncFound = TRUE;
 
@@ -336,8 +357,11 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 
     if (pPortData->nState != CPepCtrlStateDeviceControl)
     {
-        PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: State should be CPepCtrlStateDeviceControl not %d for I/O Control Code: 0x%X.\n",
-                   pPortData->nState, pIrpSp->Parameters.DeviceIoControl.IoControlCode);
+        PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: State should be \"%s\" not \"%s\" for I/O Control Code: %s.  (Thread: 0x%p)\n",
+                   PepCtrlHelperTranslateState(CPepCtrlStateDeviceControl),
+                   PepCtrlHelperTranslateState(pPortData->nState),
+                   PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
+			       PsGetCurrentThread());
     }
 
     pPortData->nState = CPepCtrlStateRunning;
@@ -346,8 +370,9 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 
     if (bFuncFound == FALSE)
     {
-        PepCtrlLog("lPepCtrlIrpDeviceControl - Unsupported I/O Control Code: 0x%X\n",
-                   pIrpSp->Parameters.DeviceIoControl.IoControlCode);
+        PepCtrlLog("lPepCtrlIrpDeviceControl - Unsupported I/O Control Code: %s  (Thread: 0x%p)\n",
+                   PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
+			       PsGetCurrentThread());
 
         Status = STATUS_UNSUCCESSFUL;
 
@@ -356,7 +381,8 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
     }
 
-    PepCtrlLog("lPepCtrlIrpDeviceControl leaving.\n");
+    PepCtrlLog("lPepCtrlIrpDeviceControl leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return Status;
 }
@@ -367,9 +393,10 @@ static VOID lPepCtrlDriverUnload(
     TPepCtrlPortData* pPortData;
     UNICODE_STRING DOSName;
 
-    PAGED_CODE()
+    PepCtrlLog("lPepCtrlDriverUnload entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("lPepCtrlDriverUnload entering.\n");
+	PAGED_CODE()
 
     pPortData = (TPepCtrlPortData*)pDriverObject->DeviceObject->DeviceExtension;
 
@@ -383,11 +410,13 @@ static VOID lPepCtrlDriverUnload(
 
         if (PepCtrlPlugPlayUnregister(pPortData->pvPlugPlayData))
         {
-            PepCtrlLog("lPepCtrlDriverUnload - Plug and Play notification unregistered.\n");
+            PepCtrlLog("lPepCtrlDriverUnload - Plug and Play notification unregistered.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
         else
         {
-            PepCtrlLog("lPepCtrlDriverUnload - Could not unregister the Plug and Play notification.\n");
+            PepCtrlLog("lPepCtrlDriverUnload - Could not unregister the Plug and Play notification.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
 
     }
@@ -396,15 +425,18 @@ static VOID lPepCtrlDriverUnload(
 
     RtlInitUnicodeString(&DOSName, CPepCtrlInternalDosDeviceName);
 
-    PepCtrlLog("lPepCtrlDriverUnload - Deleting the symbolic link of \"%ws\".\n", DOSName.Buffer);
+    PepCtrlLog("lPepCtrlDriverUnload - Deleting the symbolic link of \"%ws\".  (Thread: 0x%p)\n",
+		       DOSName.Buffer, PsGetCurrentThread());
 
     IoDeleteSymbolicLink(&DOSName);
 
-    PepCtrlLog("lPepCtrlDriverUnload - Deleting the device.\n");
+    PepCtrlLog("lPepCtrlDriverUnload - Deleting the device.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     IoDeleteDevice(pDriverObject->DeviceObject);
 
-    PepCtrlLog("lPepCtrlDriverUnload leaving.\n");
+    PepCtrlLog("lPepCtrlDriverUnload leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     //PepCtrlLogCloseFile();
 }
@@ -425,18 +457,22 @@ NTSTATUS __stdcall DriverEntry(
 
     //PepCtrlLogOpenFile(L"\\??\\C:\\pepctrl.log");
 
-    PepCtrlLog("DriverEntry entering");
+    PepCtrlLog("DriverEntry entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("DriverEntry - Initializing the memory pool tag.\n");
+    PepCtrlLog("DriverEntry - Initializing the memory pool tag.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     UtInitMemPoolTag(CPepCtrlMemPoolTag);
 
-    PepCtrlLog("DriverEntry - Called with a registry path of \"%ws\".\n", pRegistryPath->Buffer);
+    PepCtrlLog("DriverEntry - Called with a registry path of \"%ws\".  (Thread: 0x%p)\n",
+		       pRegistryPath->Buffer, PsGetCurrentThread());
 
     RtlInitUnicodeString(&DeviceName, CPepCtrlInternalDeviceName);
     RtlInitUnicodeString(&DOSName, CPepCtrlInternalDosDeviceName);
 
-    PepCtrlLog("DriverEntry - Creating the device \"%ws\".\n", DeviceName.Buffer);
+    PepCtrlLog("DriverEntry - Creating the device \"%ws\".  (Thread: 0x%p)\n", 
+		       DeviceName.Buffer, PsGetCurrentThread());
 
     status = IoCreateDevice(pDriverObject, sizeof(TPepCtrlPortData),
                             &DeviceName, FILE_DEVICE_UNKNOWN,
@@ -444,55 +480,64 @@ NTSTATUS __stdcall DriverEntry(
 
     if (!NT_SUCCESS(status))
     {
-        PepCtrlLog("DriverEntry leaving (Could not create the device.  (0x%X))\n", status);
+        PepCtrlLog("DriverEntry leaving. (Could not create the device Status: 0x%X  (Thread: 0x%p))\n",
+			       status, PsGetCurrentThread());
 
         return status;
     }
 
-    PepCtrlLog("DriverEntry - Creating the symbolic link of \"%ws\".\n", DOSName.Buffer);
+    PepCtrlLog("DriverEntry - Creating the symbolic link of \"%ws\"  (Thread: 0x%p).\n",
+		       DOSName.Buffer, PsGetCurrentThread());
 
     status = IoCreateSymbolicLink(&DOSName, &DeviceName);
 
     if (!NT_SUCCESS(status))
     {
-        PepCtrlLog("DriverEntry leaving (Could not create the symbolic link.  (0x%X))\n", status);
-
-        PepCtrlLog("DriverEntry - Deleting the device.\n");
+        PepCtrlLog("DriverEntry - Deleting the device.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         IoDeleteDevice(pDeviceObject);
+
+		PepCtrlLog("DriverEntry leaving. (Could not create the symbolic link Status: 0x%X  (Thread: 0x%p)).\n",
+			      status, PsGetCurrentThread());
 
         return status;
     }
 
-    PepCtrlLog("DriverEntry - Device Object pointer: 0x%p\n", pDeviceObject);
+    PepCtrlLog("DriverEntry - Device Object pointer: 0x%p  (Thread: 0x%p)\n",
+		       pDeviceObject, PsGetCurrentThread());
 
     pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
-    PepCtrlLog("DriverEntry - Port Data pointer: 0x%p\n",
-               pPortData);
+    PepCtrlLog("DriverEntry - Port Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
 
     RtlZeroMemory(pPortData, sizeof(TPepCtrlPortData));
 
     if (FALSE == PepCtrlInitPortData(pDriverObject, pDeviceObject, pRegistryPath, pPortData))
     {
-        PepCtrlLog("DriverEntry - Could not initialize the port data.\n");
+        PepCtrlLog("DriverEntry - Could not initialize the port data.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         bInitialized = FALSE;
     }
 
     if (bInitialized == TRUE && pPortData->RegSettings.nPortType != CPepCtrlNoPortType)
     {
-        PepCtrlLog("DriverEntry - Port settings found - attempting to register for plug 'n play events.\n");
+        PepCtrlLog("DriverEntry - Port settings found - attempting to register for plug 'n play events.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         if (PepCtrlPlugPlayRegister(pPortData->Funcs.pGetDeviceInterfaceGuidFunc(),
                                     pPortData->RegSettings.pszPortDeviceName,
                                     pPortData->pvPlugPlayData))
         {
-            PepCtrlLog("DriverEntry - Successfully registered for plug 'n play events.\n");
+            PepCtrlLog("DriverEntry - Successfully registered for plug 'n play events.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
         else
         {
-            PepCtrlLog("DriverEntry - Failed to register for plug 'n play events.\n");
+            PepCtrlLog("DriverEntry - Failed to register for plug 'n play events.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             bInitialized = FALSE;
         }
@@ -500,29 +545,35 @@ NTSTATUS __stdcall DriverEntry(
 
     if (!bInitialized)
     {
-        PepCtrlLog("DriverEntry - Uninitializing the port data.\n");
+        PepCtrlLog("DriverEntry - Uninitializing the port data.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         PepCtrlUninitPortData(pPortData);
 
-        PepCtrlLog("DriverEntry - Deleting the symbolic link of \"%ws\".\n", DOSName.Buffer);
+        PepCtrlLog("DriverEntry - Deleting the symbolic link of \"%ws\".  (Thread: 0x%p)\n",
+			       DOSName.Buffer, PsGetCurrentThread());
 
         status = IoDeleteSymbolicLink(&DOSName);
 
         if (!NT_SUCCESS(status))
         {
-            PepCtrlLog("DriverEntry - Waringing: Failed to delete the symbolic link.  (0x%X)\n", status);
+            PepCtrlLog("DriverEntry - Waringing: Failed to delete the symbolic link.  (0x%X)  (Thread: 0x%p)\n",
+				       status, PsGetCurrentThread());
         }
 
-        PepCtrlLog("DriverEntry - Deleting the device.\n");
+        PepCtrlLog("DriverEntry - Deleting the device.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         IoDeleteDevice(pDriverObject->DeviceObject);
 
-        PepCtrlLog("DriverEntry leaving (Failed to initialize.)\n");
+        PepCtrlLog("DriverEntry leaving (Failed to initialize.  (Thread: 0x%p))\n",
+			       PsGetCurrentThread());
 
         return STATUS_UNSUCCESSFUL;
     }
 
-    PepCtrlLog("DriverEntry - Initializing the driver object callback functions.\n");
+    PepCtrlLog("DriverEntry - Initializing the driver object callback functions.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pDriverObject->MajorFunction[IRP_MJ_CREATE] = lPepCtrlIrpCreate;
     pDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = lPepCtrlIrpDeviceControl;
@@ -530,7 +581,8 @@ NTSTATUS __stdcall DriverEntry(
     pDriverObject->MajorFunction[IRP_MJ_CLOSE] = lPepCtrlIrpClose;
     pDriverObject->DriverUnload = lPepCtrlDriverUnload;
 
-    PepCtrlLog("DriverEntry leaving (Finished initializing the driver).\n");
+    PepCtrlLog("DriverEntry leaving.  (Finished initializing the driver  (Thread: 0x%p))\n",
+		       PsGetCurrentThread());
 
     return STATUS_SUCCESS;
 }

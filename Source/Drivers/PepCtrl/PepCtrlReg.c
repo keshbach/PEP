@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -65,9 +65,11 @@ static BOOLEAN lReadRegULongValue(
     NTSTATUS status;
     ULONG ulValueInfoLen, ulResultLen;
 
-    PepCtrlLog("lReadRegULongValue called with the value name of \"%ws\".\n", pszValueName);
+	PepCtrlLog("lReadRegULongValue entering.\n");
 
     PAGED_CODE()
+
+    PepCtrlLog("lReadRegULongValue - Value Name: \"%ws\".\n", pszValueName);
 
     RtlInitUnicodeString(&ValueName, pszValueName);
 
@@ -80,7 +82,7 @@ static BOOLEAN lReadRegULongValue(
 
         if (!pValueInfo)
         {
-            PepCtrlLog("lReadRegULongValue - Could not allocate memory.\n");
+            PepCtrlLog("lReadRegULongValue leaving. (Could not allocate memory)\n");
 
             return FALSE;
         }
@@ -121,6 +123,8 @@ static BOOLEAN lReadRegULongValue(
         PepCtrlLog("lReadRegULongValue - Could not query the registry value size. (0x%X)\n", status);
     }
 
+	PepCtrlLog("lReadRegULongValue leaving.\n");
+
     return bResult;
 }
 
@@ -138,9 +142,11 @@ static BOOLEAN lReadRegStringValue(
     ULONG ulValueInfoLen, ulResultLen;
     size_t DefaultValueLen = 0;
 
-    PepCtrlLog("lReadRegStringValue called with the value name of \"%ws\".\n", pszValueName);
+    PepCtrlLog("lReadRegStringValue entering.\n");
 
     PAGED_CODE()
+
+    PepCtrlLog("lReadRegStringValue - Value Name: \"%ws\".\n", pszValueName);
 
     *ppszValue = 0;
 
@@ -155,7 +161,7 @@ static BOOLEAN lReadRegStringValue(
 
         if (!pValueInfo)
         {
-            PepCtrlLog("lReadRegStringValue - Could not allocate memory.\n");
+            PepCtrlLog("lReadRegStringValue leaving.  (Could not allocate memory)\n");
 
             return FALSE;
         }
@@ -210,6 +216,8 @@ static BOOLEAN lReadRegStringValue(
         PepCtrlLog("lReadRegStringValue - Could not query the registry value size. (0x%X)\n", status);
     }
 
+	PepCtrlLog("lReadRegStringValue leaving.\n");
+
     return bResult;
 }
 
@@ -223,9 +231,11 @@ static BOOLEAN lWriteRegULongValue(
     UNICODE_STRING ValueName;
     NTSTATUS status;
 
-    PepCtrlLog("lWriteRegULongValue called with the value name of \"%ws\".\n", pszValueName);
+    PepCtrlLog("lWriteRegULongValue entering.\n");
 
     PAGED_CODE()
+
+	PepCtrlLog("lWriteRegULongValue - Value Name: \"%ws\".\n", pszValueName);
 
     RtlInitUnicodeString(&ValueName, pszValueName);
 
@@ -242,6 +252,8 @@ static BOOLEAN lWriteRegULongValue(
         PepCtrlLog("lWriteRegULongValue - Could not set the registry value. (0x%X)\n", status);
     }
 
+	PepCtrlLog("lWriteRegULongValue leaving.\n");
+
     return bResult;
 }
 
@@ -256,9 +268,11 @@ static BOOLEAN lWriteRegStringValue(
     NTSTATUS status;
     size_t length;
 
-    PepCtrlLog("lWriteRegStringValue called with the value name of \"%ws\".\n", pszValueName);
+    PepCtrlLog("lWriteRegStringValue entering.\n");
 
     PAGED_CODE()
+
+    PepCtrlLog("lWriteRegStringValue - Value Name: \"%ws\".\n", pszValueName);
 
     RtlInitUnicodeString(&ValueName, pszValueName);
 
@@ -276,6 +290,8 @@ static BOOLEAN lWriteRegStringValue(
     {
         PepCtrlLog("lWriteRegStringValue - Could not set the registry value. (0x%X)\n", status);
     }
+
+	PepCtrlLog("lWriteRegStringValue leaving.\n");
 
     return bResult;
 }
@@ -296,9 +312,11 @@ BOOLEAN PepCtrlReadRegSettings(
     size_t SettingsLen, SettingsRegPathLen;
     ULONG ulDisposition;
 
-    PepCtrlLog("PepCtrlReadRegSettings called with a registry path of \"%ws\".\n", pRegistryPath->Buffer);
+    PepCtrlLog("PepCtrlReadRegSettings entering.\n");
 
     PAGED_CODE()
+
+	PepCtrlLog("PepCtrlReadRegSettings - Registry Path: \"%ws\".\n", pRegistryPath->Buffer);
 
     RtlStringCbLengthW(CPepCtrlSettingsRegKeyName, NTSTRSAFE_MAX_CCH, &SettingsLen);
 
@@ -307,7 +325,7 @@ BOOLEAN PepCtrlReadRegSettings(
 
     if (!pszSettingsRegPath)
     {
-        PepCtrlLog("PepCtrlReadRegSettings - Could not allocate memory for the settings registry key name.\n");
+        PepCtrlLog("PepCtrlReadRegSettings leaving.  (Could not allocate memory for the settings registry key name\n");
 
         return FALSE;
     }
@@ -348,6 +366,8 @@ BOOLEAN PepCtrlReadRegSettings(
 
     UtFreePagedMem(pszSettingsRegPath);
 
+	PepCtrlLog("PepCtrlReadRegSettings leaving.\n");
+
     return bResult;
 }
 
@@ -366,10 +386,12 @@ BOOLEAN PepCtrlWriteRegSettings(
     size_t SettingsLen, SettingsRegPathLen;
     ULONG ulDisposition;
 
-    PepCtrlLog("PepCtrlWriteRegSettings - entering (Registry Path: \"%ws\", Port Type: 0x%X, Port Device Name: \"%ws\")\n",
-               pRegistryPath->Buffer, ulPortType, pszPortDeviceName);
+    PepCtrlLog("PepCtrlWriteRegSettings entering.\n");
 
     PAGED_CODE()
+
+	PepCtrlLog("PepCtrlWriteRegSettings - Registry Path: \"%ws\", Port Type: 0x%X, Port Device Name: \"%ws\"\n",
+               pRegistryPath->Buffer, ulPortType, pszPortDeviceName);
 
     RtlStringCbLengthW(CPepCtrlSettingsRegKeyName, NTSTRSAFE_MAX_CCH, &SettingsLen);
 
@@ -378,7 +400,7 @@ BOOLEAN PepCtrlWriteRegSettings(
 
     if (!pszSettingsRegPath)
     {
-        PepCtrlLog("PepCtrlWriteRegSettings leaving (Could not allocate memory for the settings registry key name).\n");
+        PepCtrlLog("PepCtrlWriteRegSettings leaving.  (Could not allocate memory for the settings registry key name).\n");
 
         return FALSE;
     }
@@ -419,11 +441,11 @@ BOOLEAN PepCtrlWriteRegSettings(
 
     UtFreePagedMem(pszSettingsRegPath);
 
-    PepCtrlLog("PepCtrlWriteRegSettings - leaving\n");
+    PepCtrlLog("PepCtrlWriteRegSettings leaving.\n");
 
     return bResult;
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

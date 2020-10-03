@@ -65,13 +65,22 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(
   _Out_ PBOOLEAN pbValue)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pvContext;
+	BOOLEAN bResult;
+
+	PepCtrlLog("lPepLogicReadBitPort entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("lPepLogicReadBitPort - Port Data pointer: 0x%p\n",
-               pPortData);
+    PepCtrlLog("lPepLogicReadBitPort - Port Data pointer: 0x%p  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
 
-    return pPortData->Funcs.pReadBitPortFunc(&pPortData->Object, pbValue);
+	bResult = pPortData->Funcs.pReadBitPortFunc(&pPortData->Object, pbValue);
+
+	PepCtrlLog("lPepLogicReadBitPort leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+
+	return bResult;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -82,13 +91,20 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
   _In_ ULONG ulDelayNanoSeconds)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pvContext;
+	BOOLEAN bResult;
+
+	PepCtrlLog("lPepLogicWritePort entering.\n");
 
     PAGED_CODE()
 
     PepCtrlLog("lPepLogicWritePort - Port Data pointer: 0x%p\n",
                pPortData);
 
-    return pPortData->Funcs.pWritePortFunc(&pPortData->Object, pucData, ulDataLen, ulDelayNanoSeconds);
+	bResult = pPortData->Funcs.pWritePortFunc(&pPortData->Object, pucData, ulDataLen, ulDelayNanoSeconds);
+
+	PepCtrlLog("lPepLogicWritePort leaving.\n");
+
+	return bResult;
 }
 
 static VOID __cdecl lPepLogicLog(
@@ -450,7 +466,7 @@ BOOLEAN PepCtrlInitPortData(
 
     if (pPortData->LogicData.pvLogicContext == NULL)
     {
-        PepCtrlLog("PepCtrlInitPortData leaving (Call to UtPepLogicAllocLogicContext failed.)\n");
+        PepCtrlLog("PepCtrlInitPortData leaving.  (Call to UtPepLogicAllocLogicContext failed.)\n");
 
         return FALSE;
     }
@@ -472,7 +488,7 @@ BOOLEAN PepCtrlInitPortData(
 
         PepCtrlUninitPortData(pPortData);
 
-        PepCtrlLog("PepCtrlInitPortData leaving (Could not allocate memory for the registry path.)\n");
+        PepCtrlLog("PepCtrlInitPortData leaving.  (Could not allocate memory for the registry path.)\n");
 
         return FALSE;
     }
@@ -489,7 +505,7 @@ BOOLEAN PepCtrlInitPortData(
     {
         PepCtrlUninitPortData(pPortData);
 
-        PepCtrlLog("PepCtrlInitPortData leaving (Could not read the registry settings.)\n");
+        PepCtrlLog("PepCtrlInitPortData leaving.  (Could not read the registry settings.)\n");
 
         return FALSE;
     }
@@ -534,7 +550,7 @@ BOOLEAN PepCtrlInitPortData(
 
         PepCtrlUninitPortData(pPortData);
 
-        PepCtrlLog("PepCtrlInitPortData leaving (Could not allocate memory for the Plug and Play data.)\n");
+        PepCtrlLog("PepCtrlInitPortData leaving.  (Could not allocate memory for the Plug and Play data.)\n");
 
         return FALSE;
     }
@@ -551,7 +567,7 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID PepCtrlUninitPortData(
   _In_ TPepCtrlPortData* pPortData)
 {
-    PepCtrlLog("PepCtrlUninitPortData enter.\n");
+    PepCtrlLog("PepCtrlUninitPortData entering.\n");
 
     PAGED_CODE()
 

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -150,7 +150,7 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
 
 		UtFreePagedMem(pParallelPortInfo);
 
-        PepCtrlLog("lAllocParallelPortInfo leaving (IRP could not be allocated)\n");
+        PepCtrlLog("lAllocParallelPortInfo leaving.  (IRP could not be allocated)\n");
 
 		return NULL;
 	}
@@ -241,7 +241,7 @@ static PPARALLEL_PORT_INFORMATION lAllocParallelPortInfo(
 
     UtFreePagedMem(pParallelPortInfo);
 
-    PepCtrlLog("lAllocParallelPortInfo leaving (Parallel port could not be allocated).\n");
+    PepCtrlLog("lAllocParallelPortInfo leaving.  (Parallel port could not be allocated).\n");
 
     return NULL;
 }
@@ -257,7 +257,7 @@ static BOOLEAN lAllocParallelPort(
     IO_STATUS_BLOCK IoStatusBlock;
     LARGE_INTEGER TimeoutInteger;
 
-    PepCtrlLog("lAllocParallelPort entering\n");
+    PepCtrlLog("lAllocParallelPort entering.\n");
 
     PAGED_CODE()
 
@@ -446,7 +446,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
 
     if (status != STATUS_SUCCESS)
     {
-        PepCtrlLog("PepCtrlAllocParallelPort leaving (Could not get Device Object pointer).\n");
+        PepCtrlLog("PepCtrlAllocParallelPort leaving.  (Could not get Device Object pointer).\n");
 
         return FALSE;
     }
@@ -460,7 +460,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
         pObject->pPortFileObject = NULL;
         pObject->pPortDeviceObject = NULL;
 
-        PepCtrlLog("PepCtrlAllocParallelPort leaving (Failed to allocate the parallel port.)\n");
+        PepCtrlLog("PepCtrlAllocParallelPort leaving.  (Failed to allocate the parallel port.)\n");
 
         return FALSE;
     }
@@ -478,7 +478,7 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
         pObject->pPortFileObject = NULL;
         pObject->pPortDeviceObject = NULL;
 
-        PepCtrlLog("PepCtrlAllocParallelPort leaving (Failed to allocate the parallel port information.)\n");
+        PepCtrlLog("PepCtrlAllocParallelPort leaving.  (Failed to allocate the parallel port information.)\n");
 
         return FALSE;
     }
@@ -542,5 +542,5 @@ LPGUID TPEPCTRLAPI PepCtrlGetParallelPortDevInterfaceGuid(VOID)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

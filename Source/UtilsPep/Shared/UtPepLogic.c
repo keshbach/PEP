@@ -22,6 +22,38 @@
 
 #include <UtilsPep/UtPepLogic.h>
 
+#pragma region "Programmer Protocol"
+
+/*
+	Only the data and status register are used by the programmer.
+
+
+	A command is written to the programmer through the data register and there
+	are eight units that can be addressed and each units can accept a nibble of data.
+
+	Bits   Definition
+	----   ---------------------------------
+	0-3    Data
+	4-6    Unit to address
+	7      Trigger the unit to load the data
+
+	Unit   Definition
+	----   -----------------------------------------------
+	0      Sets lower nibble of data to program (bits 0-3)
+	1      Sets upper nibble of data to program (bits 4-7)
+	2      Sets address lines A0-A3
+	3      Sets address lines A4-A7
+	4      Sets address lines A8-A11
+	5      Shift in address lines A12-A19 and set the Vpp voltage to either +12VDC, +21VDC or +25VDC
+	6
+	7
+
+
+	Data is read from the programmer one bit through the busy bit of the status register.
+*/
+
+#pragma endregion
+
 #pragma region "Constants"
 
 /*
@@ -92,14 +124,14 @@
    Parallel Port Data Macro
 
    Bits   Definition
-   ----   ----------
+   ----   ---------------------------------
    0-3    Data
-   4-6    Unit to select (Have 8 choices)
-   7      Enable the unit (1 - enable unit, 0 - disable unit)
+   4-6    Unit to address
+   7      Trigger the unit to load the data
 */
 
-#define MPortData(data, unit, enable) \
-    (UINT8)((data & 0x0F) | ((unit & 0x07) << 4) | ((enable & 0x01) << 7))
+#define MPortData(data, unit, trigger) \
+    (UINT8)((data & 0x0F) | ((unit & 0x07) << 4) | ((trigger & 0x01) << 7))
 
 /*
   Macro to select the Vcc mode
@@ -268,7 +300,7 @@ static BOOLEAN lWritePortData(
 #endif
 
 #if defined(PEPLOGIC_ALL_MESSAGES)
-    pLogicData->pLogFunc("lWritePortData called.\n");
+    pLogicData->pLogFunc("lWritePortData entering.\n");
     pLogicData->pLogFunc("lWritePortData - Writing Data: 0x%X, Unit: 0x%X\n", (ULONG)nData, (ULONG)nUnit);
 #endif
 
@@ -279,7 +311,11 @@ static BOOLEAN lWritePortData(
     bResult = pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, nTmpData,
                                          MArrayLen(nTmpData), CWaitNanoSeconds);
 
-    return bResult;
+#if defined(PEPLOGIC_ALL_MESSAGES)
+	pLogicData->pLogFunc("lWritePortData leaving.\n");
+#endif
+
+	return bResult;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -296,7 +332,7 @@ static BOOLEAN lReadByteFromProgrammer(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lReadByteFromProgrammer called.\n");
+    pLogicData->pLogFunc("lReadByteFromProgrammer entering.\n");
 
     *pnByte = 0;
 
@@ -307,12 +343,16 @@ static BOOLEAN lReadByteFromProgrammer(
 		if (!pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, &nTmpData,
                                         sizeof(nTmpData), CWaitNanoSeconds))
 		{
+			pLogicData->pLogFunc("lReadByteFromProgrammer leaving.  (Write port failed)\n");
+
 			return FALSE;
 		}
 
 		if (!pLogicData->pReadBitPortFunc(pLogicData->pvDeviceContext, &bValue))
         {
-            return FALSE;
+			pLogicData->pLogFunc("lReadByteFromProgrammer leaving.  (Read bit from port failed)\n");
+			
+			return FALSE;
         }
 
         nPortOutput = (bValue == TRUE) ? 0x01 : 0x00;
@@ -330,6 +370,8 @@ static BOOLEAN lReadByteFromProgrammer(
 
     *pnByte = nData;
 
+	pLogicData->pLogFunc("lReadByteFromProgrammer leaving.\n");
+
     return TRUE;
 }
 
@@ -345,15 +387,19 @@ static BOOLEAN lWriteByteToProgrammer(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lWriteByteToProgrammer called.\n");
+    pLogicData->pLogFunc("lWriteByteToProgrammer entering.\n");
 
     pLogicData->pLogFunc("lWriteByteToProgrammer - Writing the byte 0x%X\n", (ULONG)nByte);
 
     if (lWritePortData(pLogicData, nDataLow, CUnit0_DataBits0To3) &&
         lWritePortData(pLogicData, nDataHigh, CUnit1_DataBits4To7))
     {
-        return TRUE;
+		pLogicData->pLogFunc("lWriteByteToProgrammer leaving.\n");
+		
+		return TRUE;
     }
+
+	pLogicData->pLogFunc("lWriteByteToProgrammer leaving.  (Write port data failed)\n");
 
     return FALSE;
 }
@@ -372,7 +418,7 @@ static BOOLEAN lSetProgrammerAddress(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lSetProgrammerAddress called.\n");
+    pLogicData->pLogFunc("lSetProgrammerAddress entering.\n");
 
     pData->nLastAddress = nAddress;
     
@@ -384,7 +430,7 @@ static BOOLEAN lSetProgrammerAddress(
 
         if (!lWritePortData(pLogicData, (UINT8)nAddress, CUnit2_AddressLines0To3))
         {
-            pLogicData->pLogFunc("lSetProgrammerAddress failed.\n");
+			pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)\n");
 
             return FALSE;
         }
@@ -399,7 +445,7 @@ static BOOLEAN lSetProgrammerAddress(
 
         if (!lWritePortData(pLogicData, (UINT8)nAddress, CUnit3_AddressLines4To7))
         {
-            pLogicData->pLogFunc("lSetProgrammerAddress failed.\n");
+			pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)\n");
 
             return FALSE;
         }
@@ -414,7 +460,7 @@ static BOOLEAN lSetProgrammerAddress(
 
         if (!lWritePortData(pLogicData, (UINT8)nAddress, CUnit4_AddressLines8To11))
         {
-            pLogicData->pLogFunc("lSetProgrammerAddress failed.\n");
+			pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)\n");
 
             return FALSE;
         }
@@ -441,7 +487,7 @@ static BOOLEAN lSetProgrammerAddress(
                                 CEnableAddressLines12To19Unit | nEnable | nData,
                                 CUnit5_AddressLines12To19AndVppMode))
             {
-                pLogicData->pLogFunc("lSetProgrammerAddress failed.\n");
+				pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)\n");
 
                 return FALSE;
             }
@@ -450,7 +496,7 @@ static BOOLEAN lSetProgrammerAddress(
 	    }
     }
 
-    pLogicData->pLogFunc("lSetProgrammerAddress finished.\n");
+    pLogicData->pLogFunc("lSetProgrammerAddress leaving.\n");
 
     return TRUE;
 }
@@ -461,17 +507,22 @@ static BOOLEAN lSetProgrammerVppMode(
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     UINT8 nData;
+	BOOLEAN bResult;
 
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lSetProgrammerVppMode called.\n");
+    pLogicData->pLogFunc("lSetProgrammerVppMode entering.\n");
 
     nData = lVppModeToData(pLogicData, pData->Modes.nVppMode);
 
-    return lWritePortData(pLogicData, CDisableAddressLines12To19Unit | nData,
-                          CUnit5_AddressLines12To19AndVppMode);
+	bResult = lWritePortData(pLogicData, CDisableAddressLines12To19Unit | nData,
+                             CUnit5_AddressLines12To19AndVppMode);
+
+	pLogicData->pLogFunc("lSetProgrammerVppMode leaving.\n");
+
+	return bResult;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -479,24 +530,38 @@ static UINT8 lPinPulseModeToData(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nPinPulseMode)
 {
+	UINT8 nData;
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lPinPulseModeToData called.\n");
+    pLogicData->pLogFunc("lPinPulseModeToData entering.\n");
 
     switch (nPinPulseMode)
     {
         case CUtPepLogicPinPulse1Mode:
-            return 0;
+            nData = 0;
+			break;
         case CUtPepLogicPinPulse2Mode:
-            return CN0;
+            nData = CN0;
+			break;
         case CUtPepLogicPinPulse3Mode:
-            return CN1;
+            nData = CN1;
+			break;
         case CUtPepLogicPinPulse4Mode:
+			nData = CN0 | CN1;
+			break;
         default:
-            return CN0 | CN1;
+			pLogicData->pLogFunc("lPinPulseModeToData - Unknown pin pulse mode: 0x%X.\n", nPinPulseMode);
+
+			nData = CN0 | CN1;
+			break;
     }
+
+	pLogicData->pLogFunc("lPinPulseModeToData leaving.\n");
+
+	return nData;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -504,25 +569,35 @@ static UINT8 lVppModeToData(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nVppMode)
 {
+	UINT8 nData;
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lVppModeToData called.\n");
+    pLogicData->pLogFunc("lVppModeToData entering.\n");
 
     switch (nVppMode)
     {
         case CUtPepLogic12VDCVppMode:
-            return CEnable12Vpp;
+            nData = CEnable12Vpp;
+			break;
         case CUtPepLogic21VDCVppMode:
-            return CEnable21Vpp;
+            nData = CEnable21Vpp;
+			break;
         case CUtPepLogic25VDCVppMode:
-            return CEnable25Vpp;
+            nData = CEnable25Vpp;
+			break;
+		default:
+			pLogicData->pLogFunc("lVppModeToData - Unknown Vpp mode: 0x%X.\n", nVppMode);
+
+			nData = CUtPepLogic12VDCVppMode;
+			break;
     }
 
-    pLogicData->pLogFunc("lVppModeToData - Unknown Vpp mode - defaulting to +12VDC.\n");
+    pLogicData->pLogFunc("lVppModeToData leaving.\n");
 
-    return CUtPepLogic12VDCVppMode;
+    return nData;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -535,7 +610,7 @@ static BOOLEAN lResetProgrammerState(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lResetProgrammerState called.\n");
+    pLogicData->pLogFunc("lResetProgrammerState entering.\n");
 
     if (lWritePortData(pLogicData,
                        MEnableTriggerProgramPulse(FALSE) |
@@ -546,8 +621,12 @@ static BOOLEAN lResetProgrammerState(
         lWritePortData(pLogicData, lPinPulseModeToData(pLogicData, pData->Modes.nPinPulseMode),
                        CUnit6_LedAndVpp))
     {
-        return TRUE;
+		pLogicData->pLogFunc("lResetProgrammerState leaving.\n");
+
+		return TRUE;
     }
+
+	pLogicData->pLogFunc("lResetProgrammerState leaving.  (Write failed)\n");
 
     return FALSE;
 }
@@ -563,7 +642,7 @@ static BOOLEAN lEnableProgrammerReadMode(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lEnableProgrammerReadMode called.\n");
+    pLogicData->pLogFunc("lEnableProgrammerReadMode entering.\n");
 
     if (lWritePortData(pLogicData, lPinPulseModeToData(pLogicData, pData->Modes.nPinPulseMode) | CN2,
                        CUnit6_LedAndVpp) &&
@@ -585,8 +664,12 @@ static BOOLEAN lEnableProgrammerReadMode(
 			}
 		}
 
+		pLogicData->pLogFunc("lEnableProgrammerReadMode leaving.\n");
+
         return TRUE;
 	}
+
+	pLogicData->pLogFunc("lEnableProgrammerReadMode leaving.  (Write port data failed)\n");
 
     return FALSE;
 }
@@ -602,7 +685,7 @@ static BOOLEAN lEnableProgrammerWriteMode(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lEnableProgrammerWriteMode called.\n");
+    pLogicData->pLogFunc("lEnableProgrammerWriteMode entering.\n");
 
     if (lWritePortData(pLogicData,
                        MEnableTriggerProgramPulse(FALSE) |
@@ -625,9 +708,13 @@ static BOOLEAN lEnableProgrammerWriteMode(
 				pLogicData->pLogFunc("lEnableProgrammerWriteMode - Sleep failed.\n");
 			}
 		}
-		
+
+		pLogicData->pLogFunc("lEnableProgrammerWriteMode leaving.\n");
+
 		return TRUE;
     }
+
+	pLogicData->pLogFunc("lEnableProgrammerWriteMode leaving.  (Write port data failed)\n");
 
     return FALSE;
 }
@@ -645,7 +732,7 @@ static BOOLEAN lWaitForProgramPulse(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lWaitForProgramPulse called.\n");
+    pLogicData->pLogFunc("lWaitForProgramPulse entering.\n");
 
 	switch (pData->Modes.nPinPulseMode)
 	{
@@ -658,6 +745,9 @@ static BOOLEAN lWaitForProgramPulse(
 			IntervalNanoseconds.QuadPart = (LONGLONG)MMicroToNanoseconds(250); /* 250 us */
 			break;
 		default:
+			pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Cannot determine sleep delay because of unknown pin pulse mode: 0x%X)\n",
+				                 pData->Modes.nPinPulseMode);
+
 			return FALSE;
 	}
 
@@ -665,6 +755,8 @@ static BOOLEAN lWaitForProgramPulse(
 
 	if (!UtSleep(&IntervalNanoseconds))
 	{
+		pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Sleep failed)\n");
+
 		return FALSE;
 	}
 
@@ -678,7 +770,12 @@ static BOOLEAN lWaitForProgramPulse(
         case CUtPepLogicPinPulse4Mode:
             nData = MPortData(PVAR, CUnit_DontCare, CUnitOff);
             break;
-    }
+		default:
+			pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Cannot determine data to write because of unknown pin pulse mode: 0x%X)\n",
+				                 pData->Modes.nPinPulseMode);
+
+			return FALSE;
+	}
 
     pLogicData->pLogFunc("lWaitForProgramPulse - Checking if program pulse finished.\n");
 
@@ -689,6 +786,7 @@ static BOOLEAN lWaitForProgramPulse(
         if (bValue)
         {
             pLogicData->pLogFunc("lWaitForProgramPulse - Program pulse has finished.\n");
+			pLogicData->pLogFunc("lWaitForProgramPulse leaving.\n");
 
             return TRUE;
         }
@@ -699,6 +797,8 @@ static BOOLEAN lWaitForProgramPulse(
     {
         pLogicData->pLogFunc("lWaitForProgramPulse - Unable to retrieve program pulse status.\n");
     }
+
+	pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Failure occurred)\n");
 
     return FALSE;
 }
@@ -786,7 +886,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetProgrammerMode(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetProgrammerMode called.\n");
+    pLogicData->pLogFunc("UtPepLogicSetProgrammerMode entering.\n");
 
     switch (nProgrammerMode)
 	{
@@ -817,6 +917,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetProgrammerMode(
             break;
 	}
 
+	pLogicData->pLogFunc("UtPepLogicSetProgrammerMode leaving.\n");
+
     return bResult;
 }
 
@@ -832,7 +934,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVccMode(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetVccMode called.\n");
+    pLogicData->pLogFunc("UtPepLogicSetVccMode entering.\n");
 
     switch (nVccMode)
 	{
@@ -869,6 +971,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVccMode(
             break;
 	}
 
+	pLogicData->pLogFunc("UtPepLogicSetVccMode leaving.\n");
+
 	return bResult;
 }
 
@@ -884,7 +988,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetPinPulseMode called.\n");
+    pLogicData->pLogFunc("UtPepLogicSetPinPulseMode entering.\n");
 
     switch (nPinPulseMode)
 	{
@@ -950,6 +1054,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
             break;
 	}
 
+	pLogicData->pLogFunc("UtPepLogicSetPinPulseMode leaving.\n");
+
 	return bResult;
 }
 
@@ -965,7 +1071,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVppMode(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetVppMode called.\n");
+    pLogicData->pLogFunc("UtPepLogicSetVppMode entering.\n");
 
     switch (nVppMode)
 	{
@@ -1000,6 +1106,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVppMode(
         lSetProgrammerVppMode(pLogicData);
     }
 
+	pLogicData->pLogFunc("UtPepLogicSetVppMode leaving.\n");
+
 	return bResult;
 }
 
@@ -1008,13 +1116,19 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddress(
   _In_ TUtPepLogicData* pLogicData,
   _In_ UINT32 nAddress)
 {
+	BOOLEAN bResult;
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetAddress called.\n");
+    pLogicData->pLogFunc("UtPepLogicSetAddress entering.\n");
 
-    return lSetProgrammerAddress(pLogicData, nAddress);
+	bResult = lSetProgrammerAddress(pLogicData, nAddress);
+
+	pLogicData->pLogFunc("UtPepLogicSetAddress leaving.\n");
+
+	return bResult;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -1030,7 +1144,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddressWithDelay(
 	PAGED_CODE()
 #endif
 
-	pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay called.\n");
+	pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay entering.\n");
 
 	bResult = lSetProgrammerAddress(pLogicData, nAddress);
 
@@ -1046,6 +1160,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddressWithDelay(
 		}
 	}
 
+	pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay leaving.\n");
+
 	return bResult;
 }
 
@@ -1055,21 +1171,26 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicGetData(
   _Out_ UINT8* pnData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
+	BOOLEAN bResult;
 
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicGetData called.\n");
+    pLogicData->pLogFunc("UtPepLogicGetData entering.\n");
 
     if (pData->Modes.nProgrammerMode != CUtPepLogicProgrammerReadMode)
     {
-        pLogicData->pLogFunc("UtPepLogicGetData - Error not in programmer read mode.\n");
+		pLogicData->pLogFunc("UtPepLogicGetData leaving.  (Not in programmer read mode)\n");
 
         return FALSE;
     }
 
-    return lReadByteFromProgrammer(pLogicData, pnData);
+    bResult = lReadByteFromProgrammer(pLogicData, pnData);
+
+	pLogicData->pLogFunc("UtPepLogicGetData leaving.\n");
+
+	return bResult;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -1078,21 +1199,26 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetData(
   _In_ UINT8 nData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
+	BOOLEAN bResult;
 
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetData called.\n");
+    pLogicData->pLogFunc("UtPepLogicSetData entering.\n");
 
     if (pData->Modes.nProgrammerMode != CUtPepLogicProgrammerWriteMode)
     {
-        pLogicData->pLogFunc("UtPepLogicSetData - Error not in programmer write mode.\n");
+        pLogicData->pLogFunc("UtPepLogicSetData leaving. (Not in programmer write mode)\n");
 
         return FALSE;
     }
 
-    return lWriteByteToProgrammer(pLogicData, nData);
+	bResult = lWriteByteToProgrammer(pLogicData, nData);
+
+	pLogicData->pLogFunc("UtPepLogicSetData leaving.\n");
+
+	return bResult;
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -1107,7 +1233,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicTriggerProgram called.\n");
+    pLogicData->pLogFunc("UtPepLogicTriggerProgram entering.\n");
 
     *pbSuccess = FALSE;
 
@@ -1122,6 +1248,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
                                 MEnableVpp(TRUE),
                             CUnit7_Programmer))
         {
+			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to disable reset program pulse)\n");
+
             return FALSE;
         }
 
@@ -1134,6 +1262,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
                                 MEnableVpp(TRUE),
                             CUnit7_Programmer))
         {
+			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to enable trigger program pulse)\n");
+
             return FALSE;
         }
 
@@ -1146,6 +1276,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
                                 MEnableVpp(TRUE),
                             CUnit7_Programmer))
         {
+			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to disable trigger program pulse)\n");
+
             return FALSE;
         }
 
@@ -1160,6 +1292,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
                                 MEnableVpp(TRUE),
                             CUnit7_Programmer))
         {
+			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to disable reset program pulse)\n");
+
             return FALSE;
         }
 
@@ -1169,6 +1303,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
     {
         pLogicData->pLogFunc("UtPepLogicTriggerProgram - Programmer not in the write mode.\n");
     }
+
+	pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.\n");
 
     return bResult;
 }
@@ -1186,11 +1322,11 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetOutputEnable called.\n");
+    pLogicData->pLogFunc("UtPepLogicSetOutputEnable entering.\n");
 
     if (pData->Modes.nProgrammerMode != CUtPepLogicProgrammerReadMode)
     {
-        pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Error not in programmer read mode.\n");
+        pLogicData->pLogFunc("UtPepLogicSetOutputEnable leaving.  (Not in programmer read mode)\n");
 
         return FALSE;
     }
@@ -1230,6 +1366,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
 		}
 	}
 
+	pLogicData->pLogFunc("UtPepLogicSetOutputEnable leaving.\n");
+
 	return bResult;
 }
 
@@ -1244,7 +1382,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicReset called.\n");
+    pLogicData->pLogFunc("UtPepLogicReset entering.\n");
 
     if (pData->Modes.nProgrammerMode != CUtPepLogicProgrammerNoneMode)
     {
@@ -1267,6 +1405,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
         pData->nLastAddress = 0xFFFFFFFF;
     }
 
+	pLogicData->pLogFunc("UtPepLogicReset leaving.\n");
+
     return bResult;
 }
 
@@ -1283,7 +1423,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetDelays(
 	PAGED_CODE()
 #endif
 
-	pLogicData->pLogFunc("UtPepLogicSetDelays called.\n");
+	pLogicData->pLogFunc("UtPepLogicSetDelays entering.\n");
 
 	if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
 	{
@@ -1298,6 +1438,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetDelays(
 	{
 		pLogicData->pLogFunc("UtPepLogicSetDelays - Delay settings cannot be changed.\n");
 	}
+
+	pLogicData->pLogFunc("UtPepLogicSetDelays leaving.\n");
 
 	return bResult;
 }

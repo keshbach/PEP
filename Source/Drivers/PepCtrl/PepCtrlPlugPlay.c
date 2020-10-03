@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <Ntifs.h> // include this for ObQueryNameString
@@ -210,7 +210,7 @@ static BOOLEAN lDoesSymbolicLinkNameMatchDeviceName(
 
         ObDereferenceObject(pFileObject);
 
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving (Call to ObQueryNameString to get the device name failed).\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving.  (Call to ObQueryNameString to get the device name failed).\n");
 
         return FALSE;
     }
@@ -624,7 +624,7 @@ static NTSTATUS lDeviceInterfaceChange(
         PepCtrlLog("lDeviceInterfaceChange - Unknown Notification Event GUID received.\n");
     }
 
-    PepCtrlLog("lDeviceInterfaceChange leaving\n");
+    PepCtrlLog("lDeviceInterfaceChange leaving.\n");
 
     return STATUS_SUCCESS;
 }
@@ -866,5 +866,5 @@ BOOLEAN PepCtrlPlugPlayIsDevicePresent(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
