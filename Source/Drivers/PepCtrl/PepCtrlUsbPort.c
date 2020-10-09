@@ -61,18 +61,22 @@ static NTSTATUS lUsbPortIoCompletion(
   _In_ PIRP pIrp,
   _In_ PVOID pvContext)
 {
-    PepCtrlLog("lUsbPortIoCompletion entering.\n");
+    PepCtrlLog("lUsbPortIoCompletion entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pDeviceObject;
 	pIrp;
 
-    PepCtrlLog("lUsbPortIoCompletion - setting the event.\n");
+    PepCtrlLog("lUsbPortIoCompletion - setting the event.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	KeSetEvent((PKEVENT)pvContext, IO_NO_INCREMENT, FALSE);
 
-    PepCtrlLog("lUsbPortIoCompletion - finished setting the event.\n");
+    PepCtrlLog("lUsbPortIoCompletion - finished setting the event.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("lUsbPortIoCompletion leaving.\n");
+    PepCtrlLog("lUsbPortIoCompletion leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	return STATUS_MORE_PROCESSING_REQUIRED;
 }
@@ -88,17 +92,20 @@ static BOOLEAN lResetUsbPort(
     PIRP pIrp;
     LARGE_INTEGER TimeoutInteger;
 
-    PAGED_CODE()
+    PepCtrlLog("lResetUsbPort entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("lResetUsbPort entering.\n");
+	PAGED_CODE()
 
-    PepCtrlLog("lResetUsbPort - Initializing event\n");
+    PepCtrlLog("lResetUsbPort - Initializing event.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    PepCtrlLog("lResetUsbPort - Building Device IO Control Request\n");
+    PepCtrlLog("lResetUsbPort - Building Device IO Control Request.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pIrp = IoBuildDeviceIoControlRequest(IOCTL_USBPRINT_SOFT_RESET,
                                          pObject->pPortDeviceObject,
@@ -107,53 +114,66 @@ static BOOLEAN lResetUsbPort(
 
     if (!pIrp)
     {
-        PepCtrlLog("lResetUsbPort leaving (IRP could not be allocated)\n");
+        PepCtrlLog("lResetUsbPort leaving (IRP could not be allocated).  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
 
-    PepCtrlLog("lResetUsbPort - Setting the completion routine\n");
+    PepCtrlLog("lResetUsbPort - Setting the completion routine.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     IoSetCompletionRoutine(pIrp, lUsbPortIoCompletion, &Event, TRUE, TRUE, TRUE);
 
-    PepCtrlLog("lResetUsbPort - Calling IoCallDriver\n");
+    PepCtrlLog("lResetUsbPort - Calling IoCallDriver.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     status = IoCallDriver(pObject->pPortDeviceObject, pIrp);
 
-    PepCtrlLog("lResetUsbPort - Finished calling IoCallDriver  (Error Code: 0x%X)\n", status);
+    PepCtrlLog("lResetUsbPort - Finished calling IoCallDriver (Error Code: 0x%X).  (Thread: 0x%p)\n",
+		       status, PsGetCurrentThread());
 
     if (status == STATUS_PENDING)
     {
-        PepCtrlLog("lResetUsbPort - Call to IoCallDriver returned status pending\n");
+        PepCtrlLog("lResetUsbPort - Call to IoCallDriver returned status pending.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         TimeoutInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
-        PepCtrlLog("lResetUsbPort - Waiting for the IoCallDriver event to be set\n");
+        PepCtrlLog("lResetUsbPort - Waiting for the IoCallDriver event to be set.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
 
-        PepCtrlLog("lResetUsbPort - Finished waiting for the IoCallDriver event to be set  (Error Code: 0x%X)\n", status);
+        PepCtrlLog("lResetUsbPort - Finished waiting for the IoCallDriver event to be set  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+                   status, PsGetCurrentThread());
 
         if (status == STATUS_TIMEOUT)
         {
-            PepCtrlLog("lResetUsbPort - Call to IoCallDriver timed out\n");
+            PepCtrlLog("lResetUsbPort - Call to IoCallDriver timed out.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
-            PepCtrlLog("lResetUsbPort - Cancelling the IRP\n");
+            PepCtrlLog("lResetUsbPort - Cancelling the IRP.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             if (IoCancelIrp(pIrp))
             {
-                PepCtrlLog("lResetUsbPort - IRP cancel routine found and called\n");
+                PepCtrlLog("lResetUsbPort - IRP cancel routine found and called.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
             else
             {
-                PepCtrlLog("lResetUsbPort - IRP cancel bit set\n");
+                PepCtrlLog("lResetUsbPort - IRP cancel bit set.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
 
-            PepCtrlLog("lResetUsbPort - Waiting for the IRP to be cancelled\n");
+            PepCtrlLog("lResetUsbPort - Waiting for the IRP to be cancelled.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
-            PepCtrlLog("lResetUsbPort - Finished waiting for the IRP to be cancelled  (Error Code: 0x%X)\n", status);
+            PepCtrlLog("lResetUsbPort - Finished waiting for the IRP to be cancelled  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+				       status, PsGetCurrentThread());
 
             status = STATUS_UNSUCCESSFUL;
         }
@@ -163,40 +183,49 @@ static BOOLEAN lResetUsbPort(
     {
         if (status == STATUS_SUCCESS)
         {
-            PepCtrlLog("lResetUsbPort - Call to IoCallDriver succeeded  (IO Status Block: 0x%X)\n", IoStatusBlock.Status);
+            PepCtrlLog("lResetUsbPort - Call to IoCallDriver succeeded  (IO Status Block: 0x%X).  (Thread: 0x%p)\n",
+				       IoStatusBlock.Status, PsGetCurrentThread());
 
             if (NT_SUCCESS(IoStatusBlock.Status))
             {
-                PepCtrlLog("lResetUsbPort - IO Status Block succeeded.\n");
+                PepCtrlLog("lResetUsbPort - IO Status Block succeeded.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
 
                 bResult = TRUE;
             }
             else
             {
-                PepCtrlLog("lResetUsbPort - IO Status Block failed.\n");
+                PepCtrlLog("lResetUsbPort - IO Status Block failed.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
         }
         else
         {
-            PepCtrlLog("lResetUsbPort - Call to IoCallDriver succeeded.  (Error Code: 0x%X)\n", status);
+            PepCtrlLog("lResetUsbPort - Call to IoCallDriver succeeded.  (Error Code: 0x%X)  (Thread: 0x%p)\n",
+				       status, PsGetCurrentThread());
         }
     }
     else
     {
-        PepCtrlLog("lResetUsbPort - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
+        PepCtrlLog("lResetUsbPort - Call to IoCallDriver failed.  (Error Code: 0x%X)  (Thread: 0x%p)\n",
+                   status, PsGetCurrentThread());
     }
 
-    PepCtrlLog("lResetUsbPort - Completing the IRP.\n");
+    PepCtrlLog("lResetUsbPort - Completing the IRP.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("lResetUsbPort - Waiting for the IRP to complete.\n");
+    PepCtrlLog("lResetUsbPort - Waiting for the IRP to complete.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
-    PepCtrlLog("lResetUsbPort - Finished waiting for the IRP to complete  (Error Code: 0x%X)\n", status);
+    PepCtrlLog("lResetUsbPort - Finished waiting for the IRP to complete  (Error Code: 0x%X)  (Thread: 0x%p)\n",
+		       status, PsGetCurrentThread());
 
-    PepCtrlLog("lResetUsbPort leaving.\n");
+    PepCtrlLog("lResetUsbPort leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -213,17 +242,20 @@ static BOOLEAN lReadDeviceId(
     LARGE_INTEGER TimeoutInteger;
     UINT8 data[50];
 
-    PAGED_CODE()
+    PepCtrlLog("lReadDeviceId entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("lReadDeviceId entering.\n");
+	PAGED_CODE()
 
-    PepCtrlLog("lReadDeviceId - Initializing event\n");
+    PepCtrlLog("lReadDeviceId - Initializing event.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    PepCtrlLog("lReadDeviceId - Building Device IO Control Request\n");
+    PepCtrlLog("lReadDeviceId - Building Device IO Control Request.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pIrp = IoBuildDeviceIoControlRequest(IOCTL_USBPRINT_GET_1284_ID,
                                          pObject->pPortDeviceObject,
@@ -232,53 +264,66 @@ static BOOLEAN lReadDeviceId(
 
     if (!pIrp)
     {
-        PepCtrlLog("lReadDeviceId leaving (IRP could not be allocated)\n");
+        PepCtrlLog("lReadDeviceId leaving.  (IRP could not be allocated)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
 
-    PepCtrlLog("lReadDeviceId - Setting the completion routine\n");
+    PepCtrlLog("lReadDeviceId - Setting the completion routine.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     IoSetCompletionRoutine(pIrp, lUsbPortIoCompletion, &Event, TRUE, TRUE, TRUE);
 
-    PepCtrlLog("lReadDeviceId - Calling IoCallDriver\n");
+    PepCtrlLog("lReadDeviceId - Calling IoCallDriver.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     status = IoCallDriver(pObject->pPortDeviceObject, pIrp);
 
-    PepCtrlLog("lReadDeviceId - Finished calling IoCallDriver  (Error Code: 0x%X)\n", status);
+    PepCtrlLog("lReadDeviceId - Finished calling IoCallDriver (Error Code: 0x%X).  (Thread: 0x%p)\n",
+		       status, PsGetCurrentThread());
 
     if (status == STATUS_PENDING)
     {
-        PepCtrlLog("lReadDeviceId - Call to IoCallDriver returned status pending\n");
+        PepCtrlLog("lReadDeviceId - Call to IoCallDriver returned status pending.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         TimeoutInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
-        PepCtrlLog("lReadDeviceId - Waiting for the IoCallDriver event to be set\n");
+        PepCtrlLog("lReadDeviceId - Waiting for the IoCallDriver event to be set.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
 
-        PepCtrlLog("lReadDeviceId - Finished waiting for the IoCallDriver event to be set  (Error Code: 0x%X)\n", status);
+        PepCtrlLog("lReadDeviceId - Finished waiting for the IoCallDriver event to be set (Error Code: 0x%X).  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
 
         if (status == STATUS_TIMEOUT)
         {
-            PepCtrlLog("lReadDeviceId - Call to IoCallDriver timed out\n");
+            PepCtrlLog("lReadDeviceId - Call to IoCallDriver timed out.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
-            PepCtrlLog("lReadDeviceId - Cancelling the IRP\n");
+            PepCtrlLog("lReadDeviceId - Cancelling the IRP.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             if (IoCancelIrp(pIrp))
             {
-                PepCtrlLog("lReadDeviceId - IRP cancel routine found and called\n");
+                PepCtrlLog("lReadDeviceId - IRP cancel routine found and called.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
             else
             {
-                PepCtrlLog("lReadDeviceId - IRP cancel bit set\n");
+                PepCtrlLog("lReadDeviceId - IRP cancel bit set.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
 
-            PepCtrlLog("lReadDeviceId - Waiting for the IRP to be cancelled\n");
+            PepCtrlLog("lReadDeviceId - Waiting for the IRP to be cancelled.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
-            PepCtrlLog("lReadDeviceId - Finished waiting for the IRP to be cancelled  (Error Code: 0x%X)\n", status);
+            PepCtrlLog("lReadDeviceId - Finished waiting for the IRP to be cancelled  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+				       status, PsGetCurrentThread());
 
             status = STATUS_UNSUCCESSFUL;
         }
@@ -288,40 +333,49 @@ static BOOLEAN lReadDeviceId(
     {
         if (status == STATUS_SUCCESS)
         {
-            PepCtrlLog("lReadDeviceId - Call to IoCallDriver succeeded  (IO Status Block: 0x%X)\n", IoStatusBlock.Status);
+            PepCtrlLog("lReadDeviceId - Call to IoCallDriver succeeded  (IO Status Block: 0x%X).  (Thread: 0x%p)\n",
+				       IoStatusBlock.Status, PsGetCurrentThread());
 
             if (NT_SUCCESS(IoStatusBlock.Status))
             {
-                PepCtrlLog("lReadDeviceId - IO Status Block succeeded.\n");
+                PepCtrlLog("lReadDeviceId - IO Status Block succeeded.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
 
                 bResult = TRUE;
             }
             else
             {
-                PepCtrlLog("lReadDeviceId - IO Status Block failed.\n");
+                PepCtrlLog("lReadDeviceId - IO Status Block failed.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
         }
         else
         {
-            PepCtrlLog("lReadDeviceId - Call to IoCallDriver succeeded.  (Error Code: 0x%X)\n", status);
+            PepCtrlLog("lReadDeviceId - Call to IoCallDriver succeeded.  (Error Code: 0x%X)  (Thread: 0x%p)\n",
+				       status, PsGetCurrentThread());
         }
     }
     else
     {
-        PepCtrlLog("lReadDeviceId - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
+        PepCtrlLog("lReadDeviceId - Call to IoCallDriver failed.  (Error Code: 0x%X)  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
     }
 
-    PepCtrlLog("lReadDeviceId - Completing the IRP.\n");
+    PepCtrlLog("lReadDeviceId - Completing the IRP.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("lReadDeviceId - Waiting for the IRP to complete.\n");
+    PepCtrlLog("lReadDeviceId - Waiting for the IRP to complete.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
-    PepCtrlLog("lReadDeviceId - Finished waiting for the IRP to complete  (Error Code: 0x%X)\n", status);
+    PepCtrlLog("lReadDeviceId - Finished waiting for the IRP to complete  (Error Code: 0x%X)  (Thread: 0x%p)\n",
+		       status, PsGetCurrentThread());
 
-    PepCtrlLog("lReadDeviceId leaving.\n");
+    PepCtrlLog("lReadDeviceId leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -340,17 +394,20 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
     PIRP pIrp;
 	LARGE_INTEGER TimeoutInteger;
 
-    PAGED_CODE()
+    PepCtrlLog("PepCtrlReadBitUsbPort entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlReadBitUsbPort entering.\n");
+	PAGED_CODE()
 
-    PepCtrlLog("PepCtrlReadBitUsbPort - Initializing event\n");
+    PepCtrlLog("PepCtrlReadBitUsbPort - Initializing event.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    PepCtrlLog("PepCtrlReadBitUsbPort - Building Device IO Control Request\n");
+    PepCtrlLog("PepCtrlReadBitUsbPort - Building Device IO Control Request. (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pIrp = IoBuildDeviceIoControlRequest(IOCTL_USBPRINT_GET_LPT_STATUS,
                                          pObject->pPortDeviceObject,
@@ -359,53 +416,66 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
 
 	if (!pIrp)
 	{
-        PepCtrlLog("PepCtrlReadBitUsbPort leaving (IRP could not be allocated)\n");
+        PepCtrlLog("PepCtrlReadBitUsbPort leaving (IRP could not be allocated).  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
 		return FALSE;
 	}
 
-    PepCtrlLog("PepCtrlReadBitUsbPort - Setting the completion routine\n");
+    PepCtrlLog("PepCtrlReadBitUsbPort - Setting the completion routine.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	IoSetCompletionRoutine(pIrp, lUsbPortIoCompletion, &Event, TRUE, TRUE, TRUE);
 
-    PepCtrlLog("PepCtrlReadBitUsbPort - Calling IoCallDriver\n");
+    PepCtrlLog("PepCtrlReadBitUsbPort - Calling IoCallDriver.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     status = IoCallDriver(pObject->pPortDeviceObject, pIrp);
 
-    PepCtrlLog("PepCtrlReadBitUsbPort - Finished calling IoCallDriver  (Error Code: 0x%X)\n", status);
+    PepCtrlLog("PepCtrlReadBitUsbPort - Finished calling IoCallDriver  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+		       status, PsGetCurrentThread());
 
     if (status == STATUS_PENDING)
     {
-        PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver returned status pending\n");
+        PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver returned status pending.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         TimeoutInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
-        PepCtrlLog("PepCtrlReadBitUsbPort - Waiting for the IoCallDriver event to be set\n");
+        PepCtrlLog("PepCtrlReadBitUsbPort - Waiting for the IoCallDriver event to be set.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
 
-        PepCtrlLog("PepCtrlReadBitUsbPort - Finished waiting for the IoCallDriver event to be set  (Error Code: 0x%X)\n", status);
+        PepCtrlLog("PepCtrlReadBitUsbPort - Finished waiting for the IoCallDriver event to be set  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
 
 		if (status == STATUS_TIMEOUT)
 		{
-            PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver timed out\n");
+            PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver timed out.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
-            PepCtrlLog("PepCtrlReadBitUsbPort - Cancelling the IRP\n");
+            PepCtrlLog("PepCtrlReadBitUsbPort - Cancelling the IRP.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             if (IoCancelIrp(pIrp))
             {
-                PepCtrlLog("PepCtrlReadBitUsbPort - IRP cancel routine found and called\n");
+                PepCtrlLog("PepCtrlReadBitUsbPort - IRP cancel routine found and called.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
             else
             {
-                PepCtrlLog("PepCtrlReadBitUsbPort - IRP cancel bit set\n");
+                PepCtrlLog("PepCtrlReadBitUsbPort - IRP cancel bit set.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
 
-            PepCtrlLog("PepCtrlReadBitUsbPort - Waiting for the IRP to be cancelled\n");
+            PepCtrlLog("PepCtrlReadBitUsbPort - Waiting for the IRP to be cancelled.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
 			status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         
-            PepCtrlLog("PepCtrlReadBitUsbPort - Finished waiting for the IRP to be cancelled  (Error Code: 0x%X)\n", status);
+            PepCtrlLog("PepCtrlReadBitUsbPort - Finished waiting for the IRP to be cancelled  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+				       status, PsGetCurrentThread());
 
             status = STATUS_UNSUCCESSFUL;
         }
@@ -415,40 +485,49 @@ BOOLEAN TPEPCTRLAPI PepCtrlReadBitUsbPort(
 	{
 		if (status == STATUS_SUCCESS)
 		{
-            PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver succeeded  (IO Status Block: 0x%X)\n", IoStatusBlock.Status);
+            PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver succeeded  (IO Status Block: 0x%X).  (Thread: 0x%p)\n",
+				       IoStatusBlock.Status, PsGetCurrentThread());
 
 			if (NT_SUCCESS(IoStatusBlock.Status))
 			{
-                PepCtrlLog("PepCtrlReadBitUsbPort - IO Status Block succeeded.\n");
+                PepCtrlLog("PepCtrlReadBitUsbPort - IO Status Block succeeded.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
 
 				bResult = TRUE;
 			}
 			else
 			{
-                PepCtrlLog("PepCtrlReadBitUsbPort - IO Status Block failed.\n");
+                PepCtrlLog("PepCtrlReadBitUsbPort - IO Status Block failed.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
 			}
         }
 		else
 		{
-            PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver succeeded.  (Error Code: 0x%X)\n", status);
+            PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver succeeded.  (Error Code: 0x%X)  (Thread: 0x%p)\n",
+				       status, PsGetCurrentThread());
 		}
 	}
 	else
 	{
-        PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
+        PepCtrlLog("PepCtrlReadBitUsbPort - Call to IoCallDriver failed.  (Error Code: 0x%X)  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
 	}
 
-    PepCtrlLog("PepCtrlReadBitUsbPort - Completing the IRP.\n");
+    PepCtrlLog("PepCtrlReadBitUsbPort - Completing the IRP.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("PepCtrlReadBitUsbPort - Waiting for the IRP to complete.\n");
+    PepCtrlLog("PepCtrlReadBitUsbPort - Waiting for the IRP to complete.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
-    PepCtrlLog("PepCtrlReadBitUsbPort - Finished waiting for the IRP to complete  (Error Code: 0x%X)\n", status);
+    PepCtrlLog("PepCtrlReadBitUsbPort - Finished waiting for the IRP to complete  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+		       status, PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlReadBitUsbPort leaving.\n");
+    PepCtrlLog("PepCtrlReadBitUsbPort leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -467,24 +546,28 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
     LARGE_INTEGER OffsetInteger, TimeoutInteger;
     PIRP pIrp;
 
+	PepCtrlLog("PepCtrlWriteUsbPort entering.  (Thread: 0x%p)\n",
+               PsGetCurrentThread());
+
 	PAGED_CODE()
 
 	// TODO: Implement support for waiting.
 	ulWaitNanoSeconds;
 
-    PepCtrlLog("PepCtrlWriteUsbPort entering.\n");
-
-    PepCtrlLog("PepCtrlWriteUsbPort - Initializing event\n");
+    PepCtrlLog("PepCtrlWriteUsbPort - Initializing event.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	RtlZeroMemory(&IoStatusBlock, sizeof(IoStatusBlock));
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    PepCtrlLog("PepCtrlWriteUsbPort - Initializing offset large integer\n");
+    PepCtrlLog("PepCtrlWriteUsbPort - Initializing offset large integer.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     OffsetInteger.QuadPart = 0;
 
-    PepCtrlLog("PepCtrlWriteUsbPort - Building IO Control Request\n");
+    PepCtrlLog("PepCtrlWriteUsbPort - Building IO Control Request.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pIrp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
                                         pObject->pPortDeviceObject,
@@ -493,53 +576,66 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
 
 	if (!pIrp) 
 	{
-        PepCtrlLog("PepCtrlWriteUsbPort leaving (IRP could not be allocated)\n");
+        PepCtrlLog("PepCtrlWriteUsbPort leaving (IRP could not be allocated).  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
 		return FALSE;
 	}
 
-    PepCtrlLog("PepCtrlWriteUsbPort - Setting the completion routine\n");
+    PepCtrlLog("PepCtrlWriteUsbPort - Setting the completion routine.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	IoSetCompletionRoutine(pIrp, lUsbPortIoCompletion, &Event, TRUE, TRUE, TRUE);
 
-    PepCtrlLog("PepCtrlWriteUsbPort - Calling the port device driver\n");
+    PepCtrlLog("PepCtrlWriteUsbPort - Calling the port device driver.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     status = IoCallDriver(pObject->pPortDeviceObject, pIrp);
 
-    PepCtrlLog("PepCtrlWriteUsbPort - Finished calling the port device driver  (Error Code: 0x%X)\n", status);
+    PepCtrlLog("PepCtrlWriteUsbPort - Finished calling the port device driver  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+		       status, PsGetCurrentThread());
 
     if (status == STATUS_PENDING)
     {
-        PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver returned status pending\n");
+        PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver returned status pending.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         TimeoutInteger.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
-        PepCtrlLog("PepCtrlWriteUsbPort - Waiting for the IoCallDriver event to be set\n");
+        PepCtrlLog("PepCtrlWriteUsbPort - Waiting for the IoCallDriver event to be set.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &TimeoutInteger);
 
-        PepCtrlLog("PepCtrlWriteUsbPort - Finished waiting for the IoCallDriver event to be set  (Error Code: 0x%X)\n", status);
+        PepCtrlLog("PepCtrlWriteUsbPort - Finished waiting for the IoCallDriver event to be set  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+                   status, PsGetCurrentThread());
 
 		if (status == STATUS_TIMEOUT)
 		{
-            PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver timed out\n");
+            PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver timed out.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
-            PepCtrlLog("PepCtrlWriteUsbPort - Cancelling the IRP\n");
+            PepCtrlLog("PepCtrlWriteUsbPort - Cancelling the IRP.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
 			if (IoCancelIrp(pIrp))
             {
-                PepCtrlLog("PepCtrlWriteUsbPort - IRP cancel routine found and called\n");
+                PepCtrlLog("PepCtrlWriteUsbPort - IRP cancel routine found and called.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
             else
             {
-                PepCtrlLog("PepCtrlWriteUsbPort - IRP cancel bit set\n");
+                PepCtrlLog("PepCtrlWriteUsbPort - IRP cancel bit set.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
 
-            PepCtrlLog("PepCtrlWriteUsbPort - Waiting for the IRP to be cancelled\n");
+            PepCtrlLog("PepCtrlWriteUsbPort - Waiting for the IRP to be cancelled.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
 			status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
-            PepCtrlLog("PepCtrlWriteUsbPort - Finished waiting for the IRP to be cancelled  (Error Code: 0x%X)\n", status);
+            PepCtrlLog("PepCtrlWriteUsbPort - Finished waiting for the IRP to be cancelled  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+				       status, PsGetCurrentThread());
 
             status = STATUS_UNSUCCESSFUL;
         }
@@ -549,40 +645,49 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteUsbPort(
 	{
 		if (status == STATUS_SUCCESS)
 		{
-            PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver succeeded  (IO Status Block: 0x%X)\n", IoStatusBlock.Status);
+            PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver succeeded  (IO Status Block: 0x%X).  (Thread: 0x%p)\n",
+				       IoStatusBlock.Status, PsGetCurrentThread());
 
 			if (NT_SUCCESS(IoStatusBlock.Status))
 			{
-                PepCtrlLog("PepCtrlWriteUsbPort - IO Status Block succeeded.\n");
+                PepCtrlLog("PepCtrlWriteUsbPort - IO Status Block succeeded.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
 
 				bResult = TRUE;
 			}
 			else
 			{
-                PepCtrlLog("PepCtrlWriteUsbPort - IO Status Block failed.\n");
+                PepCtrlLog("PepCtrlWriteUsbPort - IO Status Block failed.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
 			}
 		}
 		else
 		{
-            PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver succeeded.  (Error Code: 0x%X)\n", status);
+            PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver succeeded  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+				       status, PsGetCurrentThread());
 		}
 	}
 	else
 	{
-        PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver failed.  (Error Code: 0x%X)\n", status);
+        PepCtrlLog("PepCtrlWriteUsbPort - Call to IoCallDriver failed  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
 	}
 
-    PepCtrlLog("PepCtrlWriteUsbPort - Completing the IRP.\n");
+    PepCtrlLog("PepCtrlWriteUsbPort - Completing the IRP.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-    PepCtrlLog("PepCtrlWriteUsbPort - Waiting for the IRP to complete.\n");
+    PepCtrlLog("PepCtrlWriteUsbPort - Waiting for the IRP to complete.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
 
-    PepCtrlLog("PepCtrlWriteUsbPort - Finished waiting for the IRP to complete  (Error Code: 0x%X)\n", status);
+    PepCtrlLog("PepCtrlWriteUsbPort - Finished waiting for the IRP to complete  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+		       status, PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlWriteUsbPort leaving.\n");
+    PepCtrlLog("PepCtrlWriteUsbPort leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -596,33 +701,38 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocUsbPort(
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     UNICODE_STRING DeviceName;
 
-    PAGED_CODE()
+	PepCtrlLog("PepCtrlAllocUsbPort entering.  (Thread: 0x%p)\n",
+               PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlAllocUsbPort entering.\n");
+    PAGED_CODE()
 
     RtlInitUnicodeString(&DeviceName, pszDeviceName);
 
-    PepCtrlLog("PepCtrlAllocUsbPort - Getting Device Object pointer to \"%ws\"\n", pszDeviceName);
+    PepCtrlLog("PepCtrlAllocUsbPort - Getting Device Object pointer to \"%ws\".  (Thread: 0x%p)\n",
+		       pszDeviceName, PsGetCurrentThread());
 
     status = IoGetDeviceObjectPointer(&DeviceName, GENERIC_ALL,
                                       &pObject->pPortFileObject,
                                       &pObject->pPortDeviceObject);
 
-    PepCtrlLog("PepCtrlAllocUsbPort - Finished getting Device Object pointer to \"%ws\"  (Error Code: 0x%X)\n",
-               pszDeviceName, status);
+    PepCtrlLog("PepCtrlAllocUsbPort - Finished getting Device Object pointer to \"%ws\"  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+               pszDeviceName, status, PsGetCurrentThread());
 
     if (NT_SUCCESS(status))
     {
-        PepCtrlLog("PepCtrlAllocUsbPort - Got Device Object pointer to \"%ws\"\n", pszDeviceName);
+        PepCtrlLog("PepCtrlAllocUsbPort - Got Device Object pointer to \"%ws\".  (Thread: 0x%p)\n",
+			       pszDeviceName, PsGetCurrentThread());
 
         bResult = TRUE;
     }
     else
     {
-        PepCtrlLog("PepCtrlAllocUsbPort - Failed to get device object pointer\n");
+        PepCtrlLog("PepCtrlAllocUsbPort - Failed to get device object pointer.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
-    PepCtrlLog("PepCtrlAllocUsbPort leaving.\n");
+    PepCtrlLog("PepCtrlAllocUsbPort leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -631,15 +741,18 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN TPEPCTRLAPI PepCtrlFreeUsbPort(
   _In_ TPepCtrlObject* pObject)
 {
-    PAGED_CODE()
+	PepCtrlLog("PepCtrlFreeUsbPort entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
+	
+	PAGED_CODE()
 
-    PepCtrlLog("PepCtrlFreeUsbPort entering.\n");
-
-    PepCtrlLog("PepCtrlFreeUsbPort - USB Printer port being released.\n");
+    PepCtrlLog("PepCtrlFreeUsbPort - USB Printer port being released.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     ObDereferenceObject(pObject->pPortFileObject);
 
-    PepCtrlLog("PepCtrlFreeUsbPort leaving.\n");
+    PepCtrlLog("PepCtrlFreeUsbPort leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return TRUE;
 }
@@ -647,14 +760,16 @@ BOOLEAN TPEPCTRLAPI PepCtrlFreeUsbPort(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 LPGUID TPEPCTRLAPI PepCtrlGetUsbPortDevInterfaceGuid(VOID)
 {
-    PepCtrlLog("PepCtrlGetUsbPortDevInterfaceGuid entering.\n");
+    PepCtrlLog("PepCtrlGetUsbPortDevInterfaceGuid entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     RtlCopyBytes(&l_UsbPrintGuid, &GUID_DEVINTERFACE_USBPRINT,
                  sizeof(l_UsbPrintGuid));
 
-    PepCtrlLog("PepCtrlGetUsbPortDevInterfaceGuid leaving.\n");
+    PepCtrlLog("PepCtrlGetUsbPortDevInterfaceGuid leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return &l_UsbPrintGuid;
 }

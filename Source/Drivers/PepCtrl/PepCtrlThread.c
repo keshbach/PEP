@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -23,23 +23,27 @@ BOOLEAN PepCtrlThreadStart(
     BOOLEAN bResult = FALSE;
     NTSTATUS Status;
 
-    PepCtrlLog("PepCtrlThreadStart entering.\n");
+    PepCtrlLog("PepCtrlThreadStart entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlThreadStart - Creating the thread.\n");
+    PepCtrlLog("PepCtrlThreadStart - Creating the thread.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     Status = PsCreateSystemThread(phThread, DELETE | SYNCHRONIZE, NULL, NULL, NULL,
                                   pStartRoutine, pvContext);
 
-    PepCtrlLog("PepCtrlThreadStart - Creation of the thread status: 0x%X\n", Status);
+    PepCtrlLog("PepCtrlThreadStart - Creation of the thread status: 0x%X.  (Thread: 0x%p)\n",
+		       Status, PsGetCurrentThread());
 
     if (NT_SUCCESS(Status))
     {
         bResult = TRUE;
     }
 
-    PepCtrlLog("PepCtrlThreadStart leaving.\n");
+    PepCtrlLog("PepCtrlThreadStart leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -52,61 +56,73 @@ BOOLEAN PepCtrlThreadStop(
     NTSTATUS Status;
     PKTHREAD Thread;
 
-    PepCtrlLog("PepCtrlThreadStop entering.\n");
+    PepCtrlLog("PepCtrlThreadStop entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlThreadStop - Retrieving a thread object from the thread handle.\n");
+    PepCtrlLog("PepCtrlThreadStop - Retrieving a thread object from the thread handle.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     Status = ObReferenceObjectByHandle(hThread, 0, *PsThreadType,
                                        KernelMode, &Thread, NULL);
 
     if (NT_SUCCESS(Status))
     {
-        PepCtrlLog("PepCtrlThreadStop - Retrieved the thread object.\n");
+        PepCtrlLog("PepCtrlThreadStop - Retrieved the thread object.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
-        PepCtrlLog("PepCtrlThreadStop - Waiting for the thread to end.\n");
+        PepCtrlLog("PepCtrlThreadStop - Waiting for the thread to end.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         Status = KeWaitForSingleObject(Thread, Executive, KernelMode, FALSE, NULL);
 
         if (NT_SUCCESS(Status))
         {
-            PepCtrlLog("PepCtrlThreadStop - Thread has ended.\n");
+            PepCtrlLog("PepCtrlThreadStop - Thread has ended.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
         else
         {
-            PepCtrlLog("PepCtrlThreadStop - Failed to wait for the thread to end.  (0x%X)\n", Status);
+            PepCtrlLog("PepCtrlThreadStop - Failed to wait for the thread to end (0x%X).  (Thread: 0x%p)\n",
+				       Status, PsGetCurrentThread());
         }
 
-        PepCtrlLog("PepCtrlThreadStop - Closing the thread handle.\n");
+        PepCtrlLog("PepCtrlThreadStop - Closing the thread handle.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         Status = ZwClose(hThread);
 
         if (NT_SUCCESS(Status))
         {
-            PepCtrlLog("PepCtrlThreadStop - Thread handle closed.\n");
+            PepCtrlLog("PepCtrlThreadStop - Thread handle closed.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             bResult = TRUE;
         }
         else
         {
-            PepCtrlLog("PepCtrlThreadStop - Failed to close the thread handle.  (0x%X)\n", Status);
+            PepCtrlLog("PepCtrlThreadStop - Failed to close the thread handle (0x%X).  (Thread: 0x%p)\n",
+				       Status, PsGetCurrentThread());
         }
 
-        PepCtrlLog("PepCtrlThreadStop - Releasing the thread object.\n");
+        PepCtrlLog("PepCtrlThreadStop - Releasing the thread object.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         ObDereferenceObject(Thread);
     }
     else
     {
-        PepCtrlLog("PepCtrlThreadStop - Could not retrieve the thread object from the thread handle.  (0x%X)\n", Status);
+        PepCtrlLog("PepCtrlThreadStop - Could not retrieve the thread object from the thread handle (0x%X).  (Thread: 0x%p)\n",
+			       Status, PsGetCurrentThread());
     }
 
-    PepCtrlLog("PepCtrlThreadStop leaving.\n");
+    PepCtrlLog("PepCtrlThreadStop leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/

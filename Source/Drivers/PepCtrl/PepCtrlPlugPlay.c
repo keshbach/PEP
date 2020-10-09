@@ -132,104 +132,126 @@ static BOOLEAN lDoesSymbolicLinkNameMatchDeviceName(
     ULONG ulNameLen;
     UNICODE_STRING DeviceName;
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName entering.\n");
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Calling IoGetDeviceObjectPointer.\n");
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Calling IoGetDeviceObjectPointer.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     Status = IoGetDeviceObjectPointer(pSymbolicLinkName, FILE_ALL_ACCESS, &pFileObject, &pDeviceObject);
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Finished calling IoGetDeviceObjectPointer (Status: 0x%X)\n", Status);
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Finished calling IoGetDeviceObjectPointer (Status: 0x%X).  (Thread: 0x%p)\n",
+		       Status, PsGetCurrentThread());
 
     if (Status != STATUS_SUCCESS)
     {
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving (Call to IoGetDeviceObjectPointer failed).\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving (Call to IoGetDeviceObjectPointer failed).  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Calling ObQueryNameString to get the size of the device name.\n");
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Calling ObQueryNameString to get the size of the device name.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     Status = ObQueryNameString(pFileObject, NULL, 0, &ulNameLen);
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Finished calling ObQueryNameString to get the size of the device name (Status: 0x%X)\n", Status);
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Finished calling ObQueryNameString to get the size of the device name (Status: 0x%X).  (Thread: 0x%p)\n",
+               Status, PsGetCurrentThread());
 
     if (Status == STATUS_NOT_SUPPORTED)
     {
         // When querying the symbolic link for a parallel port this will will always fail.
 
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Device does not support the querying of it's name.  Assuming the device is a parallel port.\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Device does not support the querying of it's name.  Assuming the device is a parallel port.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         ObDereferenceObject(pFileObject);
 
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving.\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return TRUE;
     }
 
     if (Status != STATUS_INFO_LENGTH_MISMATCH)
     {
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         ObDereferenceObject(pFileObject);
 
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving (Call to ObQueryNameString to get the size of the device name failed).\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving  (Call to ObQueryNameString to get the size of the device name failed).  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Allocating memory for the device name.\n");
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Allocating memory for the device name.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pObjectNameInformation = (POBJECT_NAME_INFORMATION)UtAllocPagedMem(ulNameLen);
 
     if (pObjectNameInformation == NULL)
     {
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         ObDereferenceObject(pFileObject);
 
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving (Call to allocate memory for the device name failed).\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving (Call to allocate memory for the device name failed).  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Calling ObQueryNameString to get the device name.\n");
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Calling ObQueryNameString to get the device name.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     Status = ObQueryNameString(pFileObject, pObjectNameInformation, ulNameLen, &ulNameLen);
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Finished calling ObQueryNameString to get the device name (Status: 0x%X)\n", Status);
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Finished calling ObQueryNameString to get the device name (Status: 0x%X).  (Thread: 0x%p)\n",
+		       Status, PsGetCurrentThread());
 
     if (Status != STATUS_SUCCESS)
     {
         UtFreePagedMem(pObjectNameInformation);
 
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         ObDereferenceObject(pFileObject);
 
-        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving.  (Call to ObQueryNameString to get the device name failed).\n");
+        PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving.  (Call to ObQueryNameString to get the device name failed).  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Symbolic link name resolved to the device name \"%ws\".\n", pObjectNameInformation->Name.Buffer);
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Symbolic link name resolved to the device name \"%ws\".  (Thread: 0x%p)\n",
+		       pObjectNameInformation->Name.Buffer, PsGetCurrentThread());
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Checking if the device name is \"%ws\".\n", pszDeviceName);
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Checking if the device name is \"%ws\".  (Thread: 0x%p)\n",
+		       pszDeviceName, PsGetCurrentThread());
 
     RtlInitUnicodeString(&DeviceName, pszDeviceName);
 
     bResult = RtlEqualUnicodeString(&pObjectNameInformation->Name, &DeviceName, FALSE);
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.\n");
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName - Dereferencing the file object.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     ObDereferenceObject(pFileObject);
 
     UtFreePagedMem(pObjectNameInformation);
 
-    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving.\n");
+    PepCtrlLog("lDoesSymbolicLinkNameMatchDeviceName leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -242,21 +264,22 @@ static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lAllocDeviceInterfaceChangeEn
     TPepCtrlPlugPlayDeviceInterfaceChangeEntry* pDeviceInterfaceChangeEntry;
     SIZE_T DeviceInterfaceChangeEntryLen;
 
-    PepCtrlLog("lAllocDeviceInterfaceChangeEntry entering.\n");
+    PepCtrlLog("lAllocDeviceInterfaceChangeEntry entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     DeviceInterfaceChangeEntryLen = sizeof(TPepCtrlPlugPlayDeviceInterfaceChangeEntry) + pSymbolicLinkName->Length;
 
-    PepCtrlLog("lAllocDeviceInterfaceChangeEntry - Allocating memory for the entry (Allocating %d bytes).\n",
-               (ULONG)DeviceInterfaceChangeEntryLen);
+    PepCtrlLog("lAllocDeviceInterfaceChangeEntry - Allocating memory for the entry (Allocating %d bytes).  (Thread: 0x%p)\n",
+               (ULONG)DeviceInterfaceChangeEntryLen, PsGetCurrentThread());
 
     pDeviceInterfaceChangeEntry = (TPepCtrlPlugPlayDeviceInterfaceChangeEntry*)UtAllocPagedMem(DeviceInterfaceChangeEntryLen);
 
     if (pDeviceInterfaceChangeEntry)
     {
-        PepCtrlLog("lAllocDeviceInterfaceChangeEntry - Successfully allocated memory for the device interface change entry pointer: 0x%p\n",
-                   pDeviceInterfaceChangeEntry);
+        PepCtrlLog("lAllocDeviceInterfaceChangeEntry - Successfully allocated memory for the device interface change entry pointer: 0x%p.  (Thread: 0x%p)\n",
+                   pDeviceInterfaceChangeEntry, PsGetCurrentThread());
 
         RtlZeroMemory(pDeviceInterfaceChangeEntry, DeviceInterfaceChangeEntryLen);
 
@@ -270,10 +293,12 @@ static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lAllocDeviceInterfaceChangeEn
     }
     else
     {
-        PepCtrlLog("lAllocDeviceInterfaceChangeEntry - Failed to allocate memory for the device interface change entry.\n");
+        PepCtrlLog("lAllocDeviceInterfaceChangeEntry - Failed to allocate memory for the device interface change entry.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
-    PepCtrlLog("lAllocDeviceInterfaceChangeEntry leaving.\n");
+    PepCtrlLog("lAllocDeviceInterfaceChangeEntry leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return pDeviceInterfaceChangeEntry;
 }
@@ -285,17 +310,20 @@ static VOID lEmptyDeviceInterfaceChangeList(
     PSLIST_ENTRY pEntry;
     TPepCtrlPlugPlayDeviceInterfaceChangeEntry* pDeviceInterfaceChangeEntry;
 
-    PepCtrlLog("lEmptyDeviceInterfaceChangeList entering.\n");
+    PepCtrlLog("lEmptyDeviceInterfaceChangeList entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("lEmptyDeviceInterfaceChangeList - Flushing the list.\n");
+    PepCtrlLog("lEmptyDeviceInterfaceChangeList - Flushing the list.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pEntry = ExInterlockedFlushSList(&pPlugPlayData->DeviceInterfaceChangeList);
 
     while (pEntry)
     {
-        PepCtrlLog("lEmptyDeviceInterfaceChangeList - Entry found.\n");
+        PepCtrlLog("lEmptyDeviceInterfaceChangeList - Entry found.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         pDeviceInterfaceChangeEntry = CONTAINING_RECORD(pEntry, 
                                                         TPepCtrlPlugPlayDeviceInterfaceChangeEntry,
@@ -303,15 +331,17 @@ static VOID lEmptyDeviceInterfaceChangeList(
 
         pEntry = pEntry->Next;
 
-        PepCtrlLog("lEmptyDeviceInterfaceChangeList - Attempting to free the memory for the device interface change entry pointer: 0x%p\n",
-                   pDeviceInterfaceChangeEntry);
+        PepCtrlLog("lEmptyDeviceInterfaceChangeList - Attempting to free the memory for the device interface change entry pointer: 0x%p.  (Thread: 0x%p)\n",
+                   pDeviceInterfaceChangeEntry, PsGetCurrentThread());
 
         UtFreePagedMem(pDeviceInterfaceChangeEntry);
 
-        PepCtrlLog("lEmptyDeviceInterfaceChangeList - Memory for the entry was freed.\n");
+        PepCtrlLog("lEmptyDeviceInterfaceChangeList - Memory for the entry was freed.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
-    PepCtrlLog("lEmptyDeviceInterfaceChangeList leaving.\n");
+    PepCtrlLog("lEmptyDeviceInterfaceChangeList leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -322,13 +352,15 @@ static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lPopDeviceInterfaceChangeEntr
     PSLIST_ENTRY pEntry;
 
 #if defined(PEP_CTRL_LOG_ALL_MESSAGES)
-    PepCtrlLog("lPopDeviceInterfaceChangeEntry entering.\n");
+    PepCtrlLog("lPopDeviceInterfaceChangeEntry entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 #endif
 
     PAGED_CODE()
 
 #if defined(PEP_CTRL_LOG_ALL_MESSAGES)
-    PepCtrlLog("lPopDeviceInterfaceChangeEntry - Attempting to pop an entry from the list.\n");
+    PepCtrlLog("lPopDeviceInterfaceChangeEntry - Attempting to pop an entry from the list.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 #endif
 
     pEntry = InterlockedPopEntrySList(&pPlugPlayData->DeviceInterfaceChangeList);
@@ -336,25 +368,28 @@ static TPepCtrlPlugPlayDeviceInterfaceChangeEntry* lPopDeviceInterfaceChangeEntr
     if (pEntry)
     {
 #if defined(PEP_CTRL_LOG_ALL_MESSAGES)
-        PepCtrlLog("lPopDeviceInterfaceChangeEntry - Entry found.\n");
+        PepCtrlLog("lPopDeviceInterfaceChangeEntry - Entry found.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 #endif
 
         pDeviceInterfaceChangeEntry = CONTAINING_RECORD(pEntry, TPepCtrlPlugPlayDeviceInterfaceChangeEntry, ListEntry);
 
 #if defined(PEP_CTRL_LOG_ALL_MESSAGES)
-        PepCtrlLog("lPopDeviceInterfaceChangeEntry - Device Interface Change Entry pointer: 0x%p\n",
-                   pDeviceInterfaceChangeEntry);
+        PepCtrlLog("lPopDeviceInterfaceChangeEntry - Device Interface Change Entry pointer: 0x%p.  (Thread: 0x%p)\n",
+                   pDeviceInterfaceChangeEntry, PsGetCurrentThread());
 #endif
     }
     else
     {
 #if defined(PEP_CTRL_LOG_ALL_MESSAGES)
-        PepCtrlLog("lPopDeviceInterfaceChangeEntry - No entry found.\n");
+        PepCtrlLog("lPopDeviceInterfaceChangeEntry - No entry found.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 #endif
     }
 
 #if defined(PEP_CTRL_LOG_ALL_MESSAGES)
-    PepCtrlLog("lPopDeviceInterfaceChangeEntry leaving.\n");
+    PepCtrlLog("lPopDeviceInterfaceChangeEntry leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 #endif
 
     return pDeviceInterfaceChangeEntry;
@@ -369,18 +404,20 @@ static BOOLEAN lPushDeviceInterfaceChangeEntry(
     BOOLEAN bResult = FALSE;
     TPepCtrlPlugPlayDeviceInterfaceChangeEntry* pDeviceInterfaceChangeEntry;
 
-    PepCtrlLog("lPushDeviceInterfaceChangeEntry entering.\n");
+    PepCtrlLog("lPushDeviceInterfaceChangeEntry entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("lPushDeviceInterfaceChangeEntry - Allocating a device interface change entry.\n");
+    PepCtrlLog("lPushDeviceInterfaceChangeEntry - Allocating a device interface change entry.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pDeviceInterfaceChangeEntry = lAllocDeviceInterfaceChangeEntry(ChangeType, pSymbolicLinkName);
 
     if (pDeviceInterfaceChangeEntry)
     {
-        PepCtrlLog("lPushDeviceInterfaceChangeEntry - Device interface change entry allocated.  (Entry Pointer: 0x%p)\n",
-                   pDeviceInterfaceChangeEntry);
+        PepCtrlLog("lPushDeviceInterfaceChangeEntry - Device interface change entry allocated  (Entry Pointer: 0x%p).  (Thread: 0x%p)\n",
+                   pDeviceInterfaceChangeEntry, PsGetCurrentThread());
 
         InterlockedPushEntrySList(&pPlugPlayData->DeviceInterfaceChangeList,
                                   &pDeviceInterfaceChangeEntry->ListEntry);
@@ -389,10 +426,12 @@ static BOOLEAN lPushDeviceInterfaceChangeEntry(
     }
     else
     {
-        PepCtrlLog("lPushDeviceInterfaceChangeEntry - Failed to allocate memory for the entry.\n");
+        PepCtrlLog("lPushDeviceInterfaceChangeEntry - Failed to allocate memory for the entry.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
-    PepCtrlLog("lPushDeviceInterfaceChangeEntry leaving.\n");
+    PepCtrlLog("lPushDeviceInterfaceChangeEntry leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -405,48 +444,56 @@ static VOID lProcessDeviceInterfaceChangeEntry(
     UNICODE_STRING SymbolicLinkName;
     SIZE_T SymbolicLinkNameLen;
 
-    PepCtrlLog("lProcessDeviceInterfaceChangeEntry entering.\n");
+    PepCtrlLog("lProcessDeviceInterfaceChangeEntry entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     if (pDeviceInterfaceChangeEntry->ChangeType == PepCtrlPlugPlayDeviceInterfaceArrived)
     {
-        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Processing device interface arrived.\n");
+        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Processing device interface arrived.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         if (pPlugPlayData->pszSymbolicLinkName == NULL)
         {
-            PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device arrived checking if matches requested device.\n");
+            PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device arrived checking if matches requested device.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             if (lDoesSymbolicLinkNameMatchDeviceName(&pDeviceInterfaceChangeEntry->SymbolicLinkName,
                                                      pPlugPlayData->pszDeviceName))
             {
-                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device arrived matches the requested device.\n");
+                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device arrived matches the requested device.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
 
                 SymbolicLinkNameLen = pDeviceInterfaceChangeEntry->SymbolicLinkName.Length + sizeof(WCHAR);
 
-                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Allocating memory for the symbolic link name.  (Allocating %d bytes)\n",
-                           (ULONG)SymbolicLinkNameLen);
+                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Allocating memory for the symbolic link name.  (Allocating %d bytes)  (Thread: 0x%p)\n",
+                           (ULONG)SymbolicLinkNameLen, PsGetCurrentThread());
 
                 pPlugPlayData->pszSymbolicLinkName = (PWSTR)UtAllocPagedMem(SymbolicLinkNameLen);
 
                 if (pPlugPlayData->pszSymbolicLinkName)
                 {
-                    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Memory allocated for the symbolic link name.\n");
+                    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Memory allocated for the symbolic link name.  (Thread: 0x%p)\n",
+						       PsGetCurrentThread());
 
                     RtlZeroMemory(pPlugPlayData->pszSymbolicLinkName, SymbolicLinkNameLen);
 
                     RtlCopyMemory(pPlugPlayData->pszSymbolicLinkName, pDeviceInterfaceChangeEntry->SymbolicLinkName.Buffer,
                                   pDeviceInterfaceChangeEntry->SymbolicLinkName.Length);
 
-                    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Attempting to allocate the device.\n");
+                    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Attempting to allocate the device.  (Thread: 0x%p)\n",
+						       PsGetCurrentThread());
 
                     if (pPlugPlayData->pDeviceArrivedFunc(pPlugPlayData->pDeviceObject))
                     {
-                        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device was successfully allocated.\n");
+                        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device was successfully allocated.  (Thread: 0x%p)\n",
+							       PsGetCurrentThread());
                     }
                     else
                     {
-                        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device could not be allocated.\n");
+                        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device could not be allocated.  (Thread: 0x%p)\n",
+							       PsGetCurrentThread());
 
                         UtFreePagedMem(pPlugPlayData->pszSymbolicLinkName);
 
@@ -455,22 +502,26 @@ static VOID lProcessDeviceInterfaceChangeEntry(
                 }
                 else
                 {
-                    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Failed to allocate memory for the symbolic link name.\n");
+                    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Failed to allocate memory for the symbolic link name.  (Thread: 0x%p)\n",
+						       PsGetCurrentThread());
                 }
             }
             else
             {
-                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device arrived does not match the requested device.\n");
+                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device arrived does not match the requested device.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
         }
         else
         {
-            PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Already have the device ignoring device interface arrived.\n");
+            PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Already have the device ignoring device interface arrived.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
     }
     else if (pDeviceInterfaceChangeEntry->ChangeType == PepCtrlPlugPlayDeviceInterfaceRemoved)
     {
-        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Processing device interface removed.\n");
+        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Processing device interface removed.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
         
         if (pPlugPlayData->pszSymbolicLinkName != NULL)
         {
@@ -478,7 +529,8 @@ static VOID lProcessDeviceInterfaceChangeEntry(
 
             if (RtlEqualUnicodeString(&SymbolicLinkName, &pDeviceInterfaceChangeEntry->SymbolicLinkName, TRUE))
             {
-                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device removed matches the existing device.\n");
+                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device removed matches the existing device.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
 
                 UtFreePagedMem(pPlugPlayData->pszSymbolicLinkName);
                 
@@ -488,27 +540,32 @@ static VOID lProcessDeviceInterfaceChangeEntry(
             }
             else
             {
-                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device removed does not match the existing device.\n");
+                PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Device removed does not match the existing device.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
             }
         }
         else
         {
-            PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Have no device ignoring device interface removed.\n");
+            PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Have no device ignoring device interface removed.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
     }
     else
     {
-        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Unknown change type received.\n");
+        PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Unknown change type received.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
-    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Attempting to free the memory for the device interface change entry. (Entry Pointer: 0x%p)\n",
-               pDeviceInterfaceChangeEntry);
+    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Attempting to free the memory for the device interface change entry. (Entry Pointer: 0x%p)  (Thread: 0x%p)\n",
+               pDeviceInterfaceChangeEntry, PsGetCurrentThread());
 
     UtFreePagedMem(pDeviceInterfaceChangeEntry);
 
-    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Memory freed for the device interface change entry.\n");
+    PepCtrlLog("lProcessDeviceInterfaceChangeEntry - Memory freed for the device interface change entry.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("lProcessDeviceInterfaceChangeEntry leaving.\n");
+    PepCtrlLog("lProcessDeviceInterfaceChangeEntry leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -521,12 +578,13 @@ static VOID lDeviceInterfaceChangeThreadStart(
     NTSTATUS Status;
     TPepCtrlPlugPlayDeviceInterfaceChangeEntry* pDeviceInterfaceChangeEntry;
 
-    PepCtrlLog("lDeviceInterfaceChangeThreadStart entering.\n");
+    PepCtrlLog("lDeviceInterfaceChangeThreadStart entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("lDeviceInterfaceChangeThreadStart - Plug 'n Play Data Pointer: 0x%p\n",
-               pPlugPlayData);
+    PepCtrlLog("lDeviceInterfaceChangeThreadStart - Plug 'n Play Data Pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPlugPlayData, PsGetCurrentThread());
 
     Timeout.QuadPart = MMillisecondsToRelativeTime(CTimeoutMs);
 
@@ -537,7 +595,8 @@ static VOID lDeviceInterfaceChangeThreadStart(
 
         if (Status == STATUS_SUCCESS)
         {
-            PepCtrlLog("lDeviceInterfaceChangeThreadStart - Thread told to quit.\n");
+            PepCtrlLog("lDeviceInterfaceChangeThreadStart - Thread told to quit.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             bQuit = TRUE;
         }
@@ -547,19 +606,21 @@ static VOID lDeviceInterfaceChangeThreadStart(
 
             if (pDeviceInterfaceChangeEntry)
             {
-                PepCtrlLog("lDeviceInterfaceChangeThreadStart - Device Interface Change Entry found (Entry Pointer: 0x%p)\n",
-                           pDeviceInterfaceChangeEntry);
+                PepCtrlLog("lDeviceInterfaceChangeThreadStart - Device Interface Change Entry found (Entry Pointer: 0x%p).  (Thread: 0x%p)\n",
+                           pDeviceInterfaceChangeEntry, PsGetCurrentThread());
 
                 lProcessDeviceInterfaceChangeEntry(pPlugPlayData, pDeviceInterfaceChangeEntry);
             }
         }
         else
         {
-            PepCtrlLog("lDeviceInterfaceChangeThreadStart - Unknown Status: 0x%X\n", Status);
+            PepCtrlLog("lDeviceInterfaceChangeThreadStart - Unknown Status: 0x%X.  (Thread: 0x%p)\n",
+				       Status, PsGetCurrentThread());
         }
     }
 
-    PepCtrlLog("lDeviceInterfaceChangeThreadStart leaving.\n");
+    PepCtrlLog("lDeviceInterfaceChangeThreadStart leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -570,61 +631,70 @@ static NTSTATUS lDeviceInterfaceChange(
     PDEVICE_INTERFACE_CHANGE_NOTIFICATION pNotification;
     TPepCtrlPlugPlayData* pPlugPlayData;
 
-    PepCtrlLog("lDeviceInterfaceChange entering.\n");
+    PepCtrlLog("lDeviceInterfaceChange entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     pNotification = (PDEVICE_INTERFACE_CHANGE_NOTIFICATION)pvNotificationStructure;
     pPlugPlayData = (TPepCtrlPlugPlayData*)pvContext;
 
-    PepCtrlLog("lDeviceInterfaceChange - Plug 'n Play Data pointer: 0x%p\n",
-               pPlugPlayData);
+    PepCtrlLog("lDeviceInterfaceChange - Plug 'n Play Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPlugPlayData, PsGetCurrentThread());
 
     if (pNotification->Version != 1)
     {
-        PepCtrlLog("lDeviceInterfaceChange leaving - Received unknown notification version of %d.\n",
-                   (ULONG)pNotification->Version);
+        PepCtrlLog("lDeviceInterfaceChange leaving - Received unknown notification version of %d.  (Thread: 0x%p)\n",
+                   (ULONG)pNotification->Version, PsGetCurrentThread());
 
         return STATUS_SUCCESS;
     }
 
-    PepCtrlLog("lDeviceInterfaceChange - Symbolic link name \"%ws\".\n",
-               pNotification->SymbolicLinkName->Buffer);
+    PepCtrlLog("lDeviceInterfaceChange - Symbolic link name \"%ws\".  (Thread: 0x%p)\n",
+               pNotification->SymbolicLinkName->Buffer, PsGetCurrentThread());
 
     if (IsEqualGUID((LPGUID)&pNotification->Event, (LPGUID)&GUID_DEVICE_INTERFACE_ARRIVAL))
     {
-        PepCtrlLog("lDeviceInterfaceChange - GUID_DEVICE_INTERFACE_ARRIVAL event GUID received.\n");
+        PepCtrlLog("lDeviceInterfaceChange - GUID_DEVICE_INTERFACE_ARRIVAL event GUID received.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         if (lPushDeviceInterfaceChangeEntry(pPlugPlayData, PepCtrlPlugPlayDeviceInterfaceArrived,
                                             pNotification->SymbolicLinkName))
         {
-            PepCtrlLog("lDeviceInterfaceChange - Adding new device interface change entry.\n");
+            PepCtrlLog("lDeviceInterfaceChange - Adding new device interface change entry.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
         else
         {
-            PepCtrlLog("lDeviceInterfaceChange - Failed to add new device interface change entry.\n");
+            PepCtrlLog("lDeviceInterfaceChange - Failed to add new device interface change entry.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
     }
     else if (IsEqualGUID((LPGUID)&pNotification->Event, (LPGUID)&GUID_DEVICE_INTERFACE_REMOVAL))
     {
-        PepCtrlLog("lDeviceInterfaceChange - GUID_DEVICE_INTERFACE_REMOVAL event GUID received.\n");
+        PepCtrlLog("lDeviceInterfaceChange - GUID_DEVICE_INTERFACE_REMOVAL event GUID received.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         if (lPushDeviceInterfaceChangeEntry(pPlugPlayData, PepCtrlPlugPlayDeviceInterfaceRemoved,
                                             pNotification->SymbolicLinkName))
         {
-            PepCtrlLog("lDeviceInterfaceChange - Adding new device interface change entry.\n");
+            PepCtrlLog("lDeviceInterfaceChange - Adding new device interface change entry.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
         else
         {
-            PepCtrlLog("lDeviceInterfaceChange - Failed to add new device interface change entry.\n");
+            PepCtrlLog("lDeviceInterfaceChange - Failed to add new device interface change entry.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
     }
     else
     {
-        PepCtrlLog("lDeviceInterfaceChange - Unknown Notification Event GUID received.\n");
+        PepCtrlLog("lDeviceInterfaceChange - Unknown Notification Event GUID received.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
-    PepCtrlLog("lDeviceInterfaceChange leaving.\n");
+    PepCtrlLog("lDeviceInterfaceChange leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return STATUS_SUCCESS;
 }
@@ -641,21 +711,22 @@ PVOID PepCtrlPlugPlayAlloc(
     SIZE_T PlugPlayDataLen;
     TPepCtrlPlugPlayData* pPlugPlayData;
 
-    PepCtrlLog("PepCtrlPlugPlayAlloc entering.\n");
+    PepCtrlLog("PepCtrlPlugPlayAlloc entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     PlugPlayDataLen = sizeof(TPepCtrlPlugPlayData);
 
-    PepCtrlLog("PepCtrlPlugPlayAlloc - Attempting to allocate memory for the Plug 'n Play Data.  (Allocating %d bytes)\n",
-               (ULONG)PlugPlayDataLen);
+    PepCtrlLog("PepCtrlPlugPlayAlloc - Attempting to allocate memory for the Plug 'n Play Data.  (Allocating %d bytes)  (Thread: 0x%p)\n",
+               (ULONG)PlugPlayDataLen, PsGetCurrentThread());
 
     pPlugPlayData = (TPepCtrlPlugPlayData*)UtAllocNonPagedMem(PlugPlayDataLen);
 
     if (pPlugPlayData)
     {
-        PepCtrlLog("PepCtrlPlugPlayAlloc - Memory allocated for the Plug 'n Play Data.  (Data Pointer: 0x%p)\n",
-                   pPlugPlayData);
+        PepCtrlLog("PepCtrlPlugPlayAlloc - Memory allocated for the Plug 'n Play Data.  (Data Pointer: 0x%p)  (Thread: 0x%p)\n",
+                   pPlugPlayData, PsGetCurrentThread());
 
         RtlZeroMemory(pPlugPlayData, PlugPlayDataLen);
 
@@ -670,10 +741,12 @@ PVOID PepCtrlPlugPlayAlloc(
     }
     else
     {
-        PepCtrlLog("PepCtrlPlugPlayAlloc - Failed to allocate memory for the Plug 'n Play Data.\n");
+        PepCtrlLog("PepCtrlPlugPlayAlloc - Failed to allocate memory for the Plug 'n Play Data.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
-    PepCtrlLog("PepCtrlPlugPlayAlloc leaving.\n");
+    PepCtrlLog("PepCtrlPlugPlayAlloc leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return pPlugPlayData;
 }
@@ -684,18 +757,21 @@ VOID PepCtrlPlugPlayFree(
 {
     TPepCtrlPlugPlayData* pPlugPlayData = (TPepCtrlPlugPlayData*)pvData;
 
-    PepCtrlLog("PepCtrlPlugPlayFree entering.\n");
+    PepCtrlLog("PepCtrlPlugPlayFree entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlPlugPlayFree - Freeing the memory for the Plug 'n Play Data  (Pointer: 0x%p).\n",
-               pPlugPlayData);
+    PepCtrlLog("PepCtrlPlugPlayFree - Freeing the memory for the Plug 'n Play Data  (Pointer: 0x%p).  (Thread: 0x%p)\n",
+               pPlugPlayData, PsGetCurrentThread());
 
     UtFreeNonPagedMem(pPlugPlayData);
 
-    PepCtrlLog("PepCtrlPlugPlayFree - Memory freed for the Plug 'n Play Data.\n");
+    PepCtrlLog("PepCtrlPlugPlayFree - Memory freed for the Plug 'n Play Data.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlPlugPlayFree leaving.\n");
+    PepCtrlLog("PepCtrlPlugPlayFree leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -708,32 +784,38 @@ BOOLEAN PepCtrlPlugPlayRegister(
     TPepCtrlPlugPlayData* pPlugPlayData = (TPepCtrlPlugPlayData*)pvData;
     NTSTATUS Status;
 
-    PepCtrlLog("PepCtrlPlugPlayRegister entering.\n");
+    PepCtrlLog("PepCtrlPlugPlayRegister entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlPlugPlayRegister - Plug 'n Play Data pointer: 0x%p\n",
-               pPlugPlayData);
+    PepCtrlLog("PepCtrlPlugPlayRegister - Plug 'n Play Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPlugPlayData, PsGetCurrentThread());
 
-	PepCtrlLog("PepCtrlPlugPlayRegister - Clearing the quit device interface change thread event.\n");
+	PepCtrlLog("PepCtrlPlugPlayRegister - Clearing the quit device interface change thread event.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	KeClearEvent(&pPlugPlayData->QuitDeviceInterfaceChangeThreadEvent);
 
-    PepCtrlLog("PepCtrlPlugPlayRegister - Creating the device interface change thread.\n");
+    PepCtrlLog("PepCtrlPlugPlayRegister - Creating the device interface change thread.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     if (FALSE == PepCtrlThreadStart(lDeviceInterfaceChangeThreadStart, pPlugPlayData,
                                     &pPlugPlayData->hDeviceInterfaceChangeThread))
     {
-        PepCtrlLog("PepCtrlPlugPlayRegister leaving (Failed to create the device interface change thread.)\n");
+        PepCtrlLog("PepCtrlPlugPlayRegister leaving.  (Failed to create the device interface change thread)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
 
-    PepCtrlLog("PepCtrlPlugPlayRegister - Device interface change thread successfully created\n");
+    PepCtrlLog("PepCtrlPlugPlayRegister - Device interface change thread successfully created.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pPlugPlayData->pszDeviceName = pszDeviceName;
 
-    PepCtrlLog("PepCtrlPlugPlayRegister - Registering for Plug and Play Notification\n");
+    PepCtrlLog("PepCtrlPlugPlayRegister - Registering for Plug and Play Notification.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     Status = IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
                                             PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
@@ -743,33 +825,40 @@ BOOLEAN PepCtrlPlugPlayRegister(
                                             pPlugPlayData,
                                             &pPlugPlayData->pvPnPNotificationEntry);
 
-    PepCtrlLog("PepCtrlPlugPlayRegister - Registered Plug and Play Notification (Status: 0x%X)\n", Status);
+    PepCtrlLog("PepCtrlPlugPlayRegister - Registered Plug and Play Notification (Status: 0x%X).  (Thread: 0x%p)\n",
+		       Status, PsGetCurrentThread());
 
     if (NT_SUCCESS(Status))
     {
-        PepCtrlLog("PepCtrlPlugPlayRegister - Successfully registered for Plug and Play notification.\n");
+        PepCtrlLog("PepCtrlPlugPlayRegister - Successfully registered for Plug and Play notification.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         bResult = TRUE;
     }
     else
     {
-        PepCtrlLog("PepCtrlPlugPlayRegister - Failed to register for Plug and Play notification.\n");
+        PepCtrlLog("PepCtrlPlugPlayRegister - Failed to register for Plug and Play notification.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
-        PepCtrlLog("PepCtrlPlugPlayRegister - Stopping the device interface change thread.\n");
+        PepCtrlLog("PepCtrlPlugPlayRegister - Stopping the device interface change thread.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         if (PepCtrlThreadStop(pPlugPlayData->hDeviceInterfaceChangeThread))
         {
-            PepCtrlLog("PepCtrlPlugPlayRegister - Successfully stopped the device interface change thread.\n");
+            PepCtrlLog("PepCtrlPlugPlayRegister - Successfully stopped the device interface change thread.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
         else
         {
-            PepCtrlLog("PepCtrlPlugPlayRegister - Failed to stop the device interface change thread.\n");
+            PepCtrlLog("PepCtrlPlugPlayRegister - Failed to stop the device interface change thread.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
 
         pPlugPlayData->hDeviceInterfaceChangeThread = NULL;
     }
         
-    PepCtrlLog("PepCtrlPlugPlayRegister leaving.\n");
+    PepCtrlLog("PepCtrlPlugPlayRegister leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -783,44 +872,52 @@ BOOLEAN PepCtrlPlugPlayUnregister(
     NTSTATUS Status;
     UNICODE_STRING SymbolicLinkName;
  
-    PepCtrlLog("PepCtrlPlugPlayUnregister entering.\n");
+    PepCtrlLog("PepCtrlPlugPlayUnregister entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlPlugPlayUnregister - Plug 'n Play Data pointer: 0x%p\n",
-               pPlugPlayData);
+    PepCtrlLog("PepCtrlPlugPlayUnregister - Plug 'n Play Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPlugPlayData, PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlPlugPlayUnregister - Setting the quit device interface change thread event.\n");
+    PepCtrlLog("PepCtrlPlugPlayUnregister - Setting the quit device interface change thread event.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     KeSetEvent(&pPlugPlayData->QuitDeviceInterfaceChangeThreadEvent, 0, FALSE);
 
-    PepCtrlLog("PepCtrlPlugPlayUnregister - Stopping the device interface change thread.\n");
+    PepCtrlLog("PepCtrlPlugPlayUnregister - Stopping the device interface change thread.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     if (PepCtrlThreadStop(pPlugPlayData->hDeviceInterfaceChangeThread))
     {
-        PepCtrlLog("PepCtrlPlugPlayUnregister - Successfully stopped the device interface change thread.\n");
+        PepCtrlLog("PepCtrlPlugPlayUnregister - Successfully stopped the device interface change thread.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
     else
     {
-        PepCtrlLog("PepCtrlPlugPlayUnregister - Failed to stop the device interface change thread.\n");
+        PepCtrlLog("PepCtrlPlugPlayUnregister - Failed to stop the device interface change thread.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
     pPlugPlayData->hDeviceInterfaceChangeThread = NULL;
 
-    PepCtrlLog("PepCtrlPlugPlayUnregister - Unregistering Plug and Play Notification.\n");
+    PepCtrlLog("PepCtrlPlugPlayUnregister - Unregistering Plug and Play Notification.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     Status = IoUnregisterPlugPlayNotification(pPlugPlayData->pvPnPNotificationEntry);
 
-    PepCtrlLog("PepCtrlPlugPlayUnregister - Unregistered Plug and Play Notification.  (Error Code: 0x%X)\n",
-               Status);
+    PepCtrlLog("PepCtrlPlugPlayUnregister - Unregistered Plug and Play Notification  (Error Code: 0x%X).  (Thread: 0x%p)\n",
+               Status, PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlPlugPlayUnregister - Emptying the device interface change list.\n");
+    PepCtrlLog("PepCtrlPlugPlayUnregister - Emptying the device interface change list.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     lEmptyDeviceInterfaceChangeList(pPlugPlayData);
 
     if (pPlugPlayData->pszSymbolicLinkName)
     {
-        PepCtrlLog("PepCtrlPlugPlayUnregister - Device present simulating a device interface removed change event.\n");
+        PepCtrlLog("PepCtrlPlugPlayUnregister - Device present simulating a device interface removed change event.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         RtlInitUnicodeString(&SymbolicLinkName, pPlugPlayData->pszSymbolicLinkName);
 
@@ -829,17 +926,20 @@ BOOLEAN PepCtrlPlugPlayUnregister(
 
         if (pDeviceInterfaceChangeEntry)
         {
-            PepCtrlLog("PepCtrlPlugPlayUnregister - Processing the simulated device interface removed change event.\n");
+            PepCtrlLog("PepCtrlPlugPlayUnregister - Processing the simulated device interface removed change event.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             lProcessDeviceInterfaceChangeEntry(pPlugPlayData, pDeviceInterfaceChangeEntry);
         }
         else
         {
-            PepCtrlLog("PepCtrlPlugPlayUnregister - Failed to simulate a device interface removed change event.\n");
+            PepCtrlLog("PepCtrlPlugPlayUnregister - Failed to simulate a device interface removed change event.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
         }
     }
 
-    PepCtrlLog("PepCtrlPlugPlayUnregister leaving.\n");
+    PepCtrlLog("PepCtrlPlugPlayUnregister leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return TRUE;
 }
@@ -851,16 +951,18 @@ BOOLEAN PepCtrlPlugPlayIsDevicePresent(
     TPepCtrlPlugPlayData* pPlugPlayData = (TPepCtrlPlugPlayData*)pvData;
     BOOLEAN bDevicePresent;
 
-    PepCtrlLog("PepCtrlPlugPlayIsDevicePresent entering.\n");
+    PepCtrlLog("PepCtrlPlugPlayIsDevicePresent entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlPlugPlayIsDevicePresent - Plug 'n Play Data pointer: 0x%p\n",
-               pPlugPlayData);
+    PepCtrlLog("PepCtrlPlugPlayIsDevicePresent - Plug 'n Play Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPlugPlayData, PsGetCurrentThread());
 
     bDevicePresent = (pPlugPlayData->pszSymbolicLinkName != NULL) ? TRUE : FALSE;
 
-    PepCtrlLog("PepCtrlPlugPlayIsDevicePresent leaving.\n");
+    PepCtrlLog("PepCtrlPlugPlayIsDevicePresent leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bDevicePresent;
 }

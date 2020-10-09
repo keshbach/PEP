@@ -93,16 +93,18 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pvContext;
 	BOOLEAN bResult;
 
-	PepCtrlLog("lPepLogicWritePort entering.\n");
+	PepCtrlLog("lPepLogicWritePort entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("lPepLogicWritePort - Port Data pointer: 0x%p\n",
-               pPortData);
+    PepCtrlLog("lPepLogicWritePort - Port Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
 
 	bResult = pPortData->Funcs.pWritePortFunc(&pPortData->Object, pucData, ulDataLen, ulDelayNanoSeconds);
 
-	PepCtrlLog("lPepLogicWritePort leaving.\n");
+	PepCtrlLog("lPepLogicWritePort leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
 	return bResult;
 }
@@ -129,22 +131,25 @@ static BOOLEAN lPortDeviceArrived(
     UINT32* pnStatusChange;
     TPepCtrlObject* pPepCtrlObject;
 
-    PepCtrlLog("lPortDeviceArrived entering.\n");
+    PepCtrlLog("lPortDeviceArrived entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     pPepCtrlObject = &pPortData->Object;
 
-    PepCtrlLog("lPortDeviceArrived - Port Data pointer: 0x%p\n",
-               pPortData);
-    PepCtrlLog("lPortDeviceArrived - Control Object pointer: 0x%p\n",
-               pPepCtrlObject);
+    PepCtrlLog("lPortDeviceArrived - Port Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
+    PepCtrlLog("lPortDeviceArrived - Control Object pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPepCtrlObject, PsGetCurrentThread());
 
-    PepCtrlLog("lPortDeviceArrived - Attempting to allocate the port.\n");
+    PepCtrlLog("lPortDeviceArrived - Attempting to allocate the port.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     if (pPortData->Funcs.pAllocPortFunc(pPepCtrlObject, pPortData->RegSettings.pszPortDeviceName))
     {
-        PepCtrlLog("lPortDeviceArrived - Successfully allocated the port.\n");
+        PepCtrlLog("lPortDeviceArrived - Successfully allocated the port.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         pIrp = pPortData->pIrp;
 
@@ -154,12 +159,14 @@ static BOOLEAN lPortDeviceArrived(
     }
     else
     {
-        PepCtrlLog("lPortDeviceArrived - Failed to allocate the port.\n");
+        PepCtrlLog("lPortDeviceArrived - Failed to allocate the port.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
     if (pIrp)
     {
-        PepCtrlLog("lPortDeviceArrived - Completing status change IRP.\n");
+        PepCtrlLog("lPortDeviceArrived - Completing status change IRP.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         IoSetCancelRoutine(pIrp, NULL);
 
@@ -173,7 +180,8 @@ static BOOLEAN lPortDeviceArrived(
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
     }
 
-    PepCtrlLog("lPortDeviceArrived leaving.\n");
+    PepCtrlLog("lPortDeviceArrived leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -186,26 +194,30 @@ static VOID lPortDeviceRemoved(
     UINT32* pnStatusChange;
     TPepCtrlObject* pPepCtrlObject;
 
-    PepCtrlLog("lPortDeviceRemoved entering.\n");
+    PepCtrlLog("lPortDeviceRemoved entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     pPepCtrlObject = &pPortData->Object;
 
-    PepCtrlLog("lPortDeviceRemoved - Port Data pointer: 0x%p\n",
-               pPortData);
-    PepCtrlLog("lPortDeviceRemoved - Control Object pointer: 0x%p\n",
-               pPepCtrlObject);
+    PepCtrlLog("lPortDeviceRemoved - Port Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
+    PepCtrlLog("lPortDeviceRemoved - Control Object pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPepCtrlObject, PsGetCurrentThread());
 
-    PepCtrlLog("lPortDeviceRemoved - Attempting to free the port.\n");
+    PepCtrlLog("lPortDeviceRemoved - Attempting to free the port.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     if (pPortData->Funcs.pFreePortFunc(pPepCtrlObject))
     {
-        PepCtrlLog("lPortDeviceRemoved - Successfully freed the port.\n");
+        PepCtrlLog("lPortDeviceRemoved - Successfully freed the port.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
     else
     {
-        PepCtrlLog("lPortDeviceRemoved - Failed to free the port.\n");
+        PepCtrlLog("lPortDeviceRemoved - Failed to free the port.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
     pIrp = pPortData->pIrp;
@@ -214,7 +226,8 @@ static VOID lPortDeviceRemoved(
 
     if (pIrp)
     {
-        PepCtrlLog("lPortDeviceRemoved - Completing status change IRP.\n");
+        PepCtrlLog("lPortDeviceRemoved - Completing status change IRP.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         IoSetCancelRoutine(pIrp, NULL);
 
@@ -228,7 +241,8 @@ static VOID lPortDeviceRemoved(
         IoCompleteRequest(pIrp, IO_NO_INCREMENT);
     }
 
-    PepCtrlLog("lPortDeviceRemoved leaving.\n");
+    PepCtrlLog("lPortDeviceRemoved leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -241,14 +255,15 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
     TPepCtrlPortData* pPortData;
     LARGE_INTEGER Interval;
 
-    PepCtrlLog("lPepPlugPlayDeviceArrived entering.\n");
+    PepCtrlLog("lPepPlugPlayDeviceArrived entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
-    PepCtrlLog("lPepPlugPlayDeviceArrived - Port Data pointer: 0x%p\n",
-               pPortData);
+    PepCtrlLog("lPepPlugPlayDeviceArrived - Port Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
 
     while (!bQuit)
     {
@@ -262,20 +277,23 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
                     bCallPortArrivedFunc = TRUE;
                     break;
                 case CPepCtrlStateDeviceControl:
-                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unsupported state of CPepCtrlStateDeviceControl\n");
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unsupported state of CPepCtrlStateDeviceControl.  (Thread: 0x%p)\n",
+						       PsGetCurrentThread());
                     break;
                 case CPepCtrlStateDeviceArrived:
-                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unsupported state of CPepCtrlStateDeviceArrived\n");
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unsupported state of CPepCtrlStateDeviceArrived.  (Thread: 0x%p)\n",
+						       PsGetCurrentThread());
                     break;
                 case CPepCtrlStateDeviceRemoved:
-                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unsupported state of CPepCtrlStateDeviceRemoved\n");
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unsupported state of CPepCtrlStateDeviceRemoved.  (Thread: 0x%p)\n",
+				               PsGetCurrentThread());
                     break;
                 case CPepCtrlStateUnloading:
                 case CPepCtrlStateChangePortSettings:
                     break;
                 default:
-                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unknown state of %d\n",
-                               pPortData->nState);
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unknown state of %d.  (Thread: 0x%p)\n",
+                               pPortData->nState, PsGetCurrentThread());
                     break;
             }
 
@@ -289,8 +307,8 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
 
                 if (pPortData->nState != CPepCtrlStateDeviceArrived)
                 {
-                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: State should be CPepCtrlStateDeviceArrived not %d\n",
-                               pPortData->nState);
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: State should be CPepCtrlStateDeviceArrived not %d.  (Thread: 0x%p)\n",
+                               pPortData->nState, PsGetCurrentThread());
                 }
 
                 pPortData->nState = CPepCtrlStateRunning;
@@ -317,8 +335,8 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
                     bQuit = TRUE;
                     break;
                 default:
-                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unknown state of %d\n",
-                               pPortData->nState);
+                    PepCtrlLog("lPepPlugPlayDeviceArrived - ERROR: Unknown state of %d.  (Thread: 0x%p)\n",
+                               pPortData->nState, PsGetCurrentThread());
 
                     bQuit = TRUE;
                     break;
@@ -326,7 +344,8 @@ static BOOLEAN TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceArrived(
         }
     }
 
-    PepCtrlLog("lPepPlugPlayDeviceArrived leaving.\n");
+    PepCtrlLog("lPepPlugPlayDeviceArrived leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -341,14 +360,15 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
     LARGE_INTEGER Interval;
     INT32 nOriginalState;
 
-    PepCtrlLog("lPepPlugPlayDeviceRemoved entering.\n");
+    PepCtrlLog("lPepPlugPlayDeviceRemoved entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
     pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
-    PepCtrlLog("lPepPlugPlayDeviceRemoved - Port Data pointer: 0x%p\n",
-               pPortData);
+    PepCtrlLog("lPepPlugPlayDeviceRemoved - Port Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
 
     while (!bQuit)
     {
@@ -365,19 +385,22 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
                     bCallPortRemovedFunc = TRUE;
                     break;
                 case CPepCtrlStateDeviceControl:
-                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceControl\n");
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceControl.  (Thread: 0x%p)\n",
+						       PsGetCurrentThread());
                     break;
                 case CPepCtrlStateDeviceArrived:
-                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceArrived\n");
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceArrived.  (Thread: 0x%p)\n",
+						       PsGetCurrentThread());
                     break;
                 case CPepCtrlStateDeviceRemoved:
-                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceRemoved\n");
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unsupported state of CPepCtrlStateDeviceRemoved.  (Thread: 0x%p)\n",
+						       PsGetCurrentThread());
                     break;
                 case CPepCtrlStateChangePortSettings:
                     break;
                 default:
-                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unknown state of %d\n",
-                               pPortData->nState);
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unknown state of %d.  (Thread: 0x%p)\n",
+                               pPortData->nState, PsGetCurrentThread());
                     break;
             }
 
@@ -391,8 +414,8 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
 
                 if (pPortData->nState != CPepCtrlStateDeviceRemoved)
                 {
-                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: State should be CPepCtrlStateDeviceRemoved not %d\n",
-                              pPortData->nState);
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: State should be CPepCtrlStateDeviceRemoved not %d.  (Thread: 0x%p)\n",
+                              pPortData->nState, PsGetCurrentThread());
                 }
 
                 pPortData->nState = nOriginalState;
@@ -423,14 +446,15 @@ static VOID TPEPCTRLPLUGPLAYAPI lPepPlugPlayDeviceRemoved(
                     bQuit = TRUE;
                     break;
                 default:
-                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unknown state of %d\n",
-                               pPortData->nState);
+                    PepCtrlLog("lPepPlugPlayDeviceRemoved - ERROR: Unknown state of %d.  (Thread: 0x%p)\n",
+                               pPortData->nState, PsGetCurrentThread());
                     break;
             }
         }
     }
 
-    PepCtrlLog("lPepPlugPlayDeviceRemoved leaving.\n");
+    PepCtrlLog("lPepPlugPlayDeviceRemoved leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 }
 
 #pragma endregion
@@ -444,20 +468,22 @@ BOOLEAN PepCtrlInitPortData(
 {
     ULONG ulPortType;
 
-    PepCtrlLog("PepCtrlInitPortData entering.\n");
+    PepCtrlLog("PepCtrlInitPortData entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlInitPortData - Driver Object pointer: 0x%p\n",
-               pDriverObject);
-    PepCtrlLog("PepCtrlInitPortData - Device Object pointer: 0x%p\n",
-               pDeviceObject);
-    PepCtrlLog("PepCtrlInitPortData - Port Data pointer: 0x%p\n",
-               pPortData);
+    PepCtrlLog("PepCtrlInitPortData - Driver Object pointer: 0x%p.  (Thread: 0x%p)\n",
+               pDriverObject, PsGetCurrentThread());
+    PepCtrlLog("PepCtrlInitPortData - Device Object pointer: 0x%p.  (Thread: 0x%p)\n",
+               pDeviceObject, PsGetCurrentThread());
+    PepCtrlLog("PepCtrlInitPortData - Port Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
 
     RtlZeroMemory(pPortData, sizeof(TPepCtrlPortData));
 
-    PepCtrlLog("PepCtrlInitPortData - Calling UtPepLogicAllocLogicContext.\n");
+    PepCtrlLog("PepCtrlInitPortData - Calling UtPepLogicAllocLogicContext.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pPortData->pDriverObject = pDriverObject;
     pPortData->pDeviceObject = pDeviceObject;
@@ -466,7 +492,8 @@ BOOLEAN PepCtrlInitPortData(
 
     if (pPortData->LogicData.pvLogicContext == NULL)
     {
-        PepCtrlLog("PepCtrlInitPortData leaving.  (Call to UtPepLogicAllocLogicContext failed.)\n");
+        PepCtrlLog("PepCtrlInitPortData leaving.  (Call to UtPepLogicAllocLogicContext failed.)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
@@ -478,34 +505,40 @@ BOOLEAN PepCtrlInitPortData(
 
     ExInitializeFastMutex(&pPortData->FastMutex);
 
-    PepCtrlLog("PepCtrlInitPortData - Allocating memory for the registry path.\n");
+    PepCtrlLog("PepCtrlInitPortData - Allocating memory for the registry path.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pPortData->RegSettings.pszRegistryPath = (LPWSTR)UtAllocPagedMem(pRegistryPath->Length + sizeof(WCHAR));
 
     if (pPortData->RegSettings.pszRegistryPath == NULL)
     {
-        PepCtrlLog("PepCtrlInitPortData - Failed to allocate memory for the registry path.\n");
+        PepCtrlLog("PepCtrlInitPortData - Failed to allocate memory for the registry path.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         PepCtrlUninitPortData(pPortData);
 
-        PepCtrlLog("PepCtrlInitPortData leaving.  (Could not allocate memory for the registry path.)\n");
+        PepCtrlLog("PepCtrlInitPortData leaving.  (Could not allocate memory for the registry path.)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
 
-    PepCtrlLog("PepCtrlInitPortData - Memory allocated for the registry path.\n");
+    PepCtrlLog("PepCtrlInitPortData - Memory allocated for the registry path.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     RtlCopyMemory(pPortData->RegSettings.pszRegistryPath, pRegistryPath->Buffer,
                   pRegistryPath->Length + sizeof(WCHAR));
 
-    PepCtrlLog("PepCtrlInitPortData - Reading the registry settings.\n");
+    PepCtrlLog("PepCtrlInitPortData - Reading the registry settings.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     if (!PepCtrlReadRegSettings(pRegistryPath, &ulPortType,
                                 &pPortData->RegSettings.pszPortDeviceName))
     {
         PepCtrlUninitPortData(pPortData);
 
-        PepCtrlLog("PepCtrlInitPortData leaving.  (Could not read the registry settings.)\n");
+        PepCtrlLog("PepCtrlInitPortData leaving.  (Could not read the registry settings.)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
@@ -518,26 +551,33 @@ BOOLEAN PepCtrlInitPortData(
         switch (pPortData->RegSettings.nPortType)
         {
             case CPepCtrlParallelPortType:
-                PepCtrlLog("PepCtrlInitPortData - Parallel Port type retrieved from the registry.\n");
+                PepCtrlLog("PepCtrlInitPortData - Parallel Port type retrieved from the registry.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
                 break;
             case CPepCtrlUsbPrintPortType:
-                PepCtrlLog("PepCtrlInitPortData - USB Print Port type retrieved from the registry.\n");
+                PepCtrlLog("PepCtrlInitPortData - USB Print Port type retrieved from the registry.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
                 break;
             default:
-                PepCtrlLog("PepCtrlInitPortData - Unknown Port type retrieved from the registry.\n");
+                PepCtrlLog("PepCtrlInitPortData - Unknown Port type retrieved from the registry.  (Thread: 0x%p)\n",
+					       PsGetCurrentThread());
                 break;
         }
 
-        PepCtrlLog("PepCtrlInitPortData - Port Device Name \"%ws\" retrieved from the registry.\n", pPortData->RegSettings.pszPortDeviceName);
+        PepCtrlLog("PepCtrlInitPortData - Port Device Name \"%ws\" retrieved from the registry.  (Thread: 0x%p)\n",
+			       pPortData->RegSettings.pszPortDeviceName,
+			       PsGetCurrentThread());
 
         PepCtrlInitPortTypeFuncs(pPortData);
     }
     else
     {
-        PepCtrlLog("PepCtrlInitPortData - No Port type retrieved from the registry.\n");
+        PepCtrlLog("PepCtrlInitPortData - No Port type retrieved from the registry.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
     }
 
-    PepCtrlLog("PepCtrlInitPortData - Attempting to allocate the plug 'n play data.\n");
+    PepCtrlLog("PepCtrlInitPortData - Attempting to allocate the plug 'n play data.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     pPortData->pvPlugPlayData = PepCtrlPlugPlayAlloc(pPortData->pDriverObject,
                                                      pPortData->pDeviceObject,
@@ -546,19 +586,22 @@ BOOLEAN PepCtrlInitPortData(
 
     if (pPortData->pvPlugPlayData == NULL)
     {
-        PepCtrlLog("PepCtrlInitPortData - Failed to allocate the plug 'n play data.\n");
+        PepCtrlLog("PepCtrlInitPortData - Failed to allocate the plug 'n play data.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         PepCtrlUninitPortData(pPortData);
 
-        PepCtrlLog("PepCtrlInitPortData leaving.  (Could not allocate memory for the Plug and Play data.)\n");
+        PepCtrlLog("PepCtrlInitPortData leaving.  (Could not allocate memory for the Plug and Play data.)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
 
-    PepCtrlLog("PepCtrlInitPortData - Successfully allocated the plug 'n play data.  (Pointer: 0x%p)\n",
-               pPortData->pvPlugPlayData);
+    PepCtrlLog("PepCtrlInitPortData - Successfully allocated the plug 'n play data.  (Pointer: 0x%p)  (Thread: 0x%p)\n",
+               pPortData->pvPlugPlayData, PsGetCurrentThread());
 
-    PepCtrlLog("PepCtrlInitPortData leaving.\n");
+    PepCtrlLog("PepCtrlInitPortData leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return TRUE;
 }
@@ -567,58 +610,66 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID PepCtrlUninitPortData(
   _In_ TPepCtrlPortData* pPortData)
 {
-    PepCtrlLog("PepCtrlUninitPortData entering.\n");
+    PepCtrlLog("PepCtrlUninitPortData entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlUninitPortData - Port Data pointer: 0x%p\n",
-               pPortData);
+    PepCtrlLog("PepCtrlUninitPortData - Port Data pointer: 0x%p.  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
 
     if (pPortData->pvPlugPlayData)
     {
-        PepCtrlLog("PepCtrlUninitPortData - Deleting the memory allocated for the Plug and Play data.\n");
+        PepCtrlLog("PepCtrlUninitPortData - Deleting the memory allocated for the Plug and Play data.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         PepCtrlPlugPlayFree(pPortData->pvPlugPlayData);
     }
 
     if (pPortData->RegSettings.pszPortDeviceName)
     {
-        PepCtrlLog("PepCtrlUninitPortData - Deleting the memory allocated for the port's device name.\n");
+        PepCtrlLog("PepCtrlUninitPortData - Deleting the memory allocated for the port's device name.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         UtFreePagedMem(pPortData->RegSettings.pszPortDeviceName);
     }
 
     if (pPortData->RegSettings.pszRegistryPath)
     {
-        PepCtrlLog("PepCtrlUninitPortData - Deleting the memory allocated for the registry path.\n");
+        PepCtrlLog("PepCtrlUninitPortData - Deleting the memory allocated for the registry path.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         UtFreePagedMem(pPortData->RegSettings.pszRegistryPath);
     }
 
     if (pPortData->LogicData.pvLogicContext)
     {
-        PepCtrlLog("PepCtrlUninitPortData - Calling UtPepLogicFreeLogicContext.\n");
+        PepCtrlLog("PepCtrlUninitPortData - Calling UtPepLogicFreeLogicContext.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         UtPepLogicFreeLogicContext(pPortData->LogicData.pvLogicContext);
     }
 
-    PepCtrlLog("PepCtrlUninitPortData leaving.\n");
+    PepCtrlLog("PepCtrlUninitPortData leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 }
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID PepCtrlInitPortTypeFuncs(
   _In_ TPepCtrlPortData* pPortData)
 {
-    PepCtrlLog("PepCtrlInitPortTypeFuncs entering.\n");
+    PepCtrlLog("PepCtrlInitPortTypeFuncs entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("PepCtrlInitPortTypeFuncs - Port Data pointer: 0x%p\n",
-               pPortData);
+    PepCtrlLog("PepCtrlInitPortTypeFuncs - Port Data pointer: 0x%p  (Thread: 0x%p)\n",
+               pPortData, PsGetCurrentThread());
 
     if (pPortData->RegSettings.nPortType == CPepCtrlParallelPortType)
     {
-        PepCtrlLog("PepCtrlInitPortTypeFuncs - Initializing with Parallel Port functions.\n");
+        PepCtrlLog("PepCtrlInitPortTypeFuncs - Initializing with Parallel Port functions.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         pPortData->Funcs.pAllocPortFunc = &PepCtrlAllocParallelPort;
         pPortData->Funcs.pFreePortFunc = &PepCtrlFreeParallelPort;
@@ -628,7 +679,8 @@ VOID PepCtrlInitPortTypeFuncs(
     }
     else if (pPortData->RegSettings.nPortType == CPepCtrlUsbPrintPortType)
     {
-        PepCtrlLog("PepCtrlInitPortTypeFuncs - Initializing with Usb Port functions.\n");
+        PepCtrlLog("PepCtrlInitPortTypeFuncs - Initializing with Usb Port functions.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         pPortData->Funcs.pAllocPortFunc = &PepCtrlAllocUsbPort;
         pPortData->Funcs.pFreePortFunc = &PepCtrlFreeUsbPort;
@@ -638,7 +690,8 @@ VOID PepCtrlInitPortTypeFuncs(
     }
     else
     {
-        PepCtrlLog("PepCtrlInitPortTypeFuncs - Initializing with no functions.\n");
+        PepCtrlLog("PepCtrlInitPortTypeFuncs - Initializing with no functions.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         pPortData->Funcs.pAllocPortFunc = NULL;
         pPortData->Funcs.pFreePortFunc = NULL;
@@ -647,7 +700,8 @@ VOID PepCtrlInitPortTypeFuncs(
         pPortData->Funcs.pGetDeviceInterfaceGuidFunc = NULL;
     }
 
-    PepCtrlLog("PepCtrlInitPortTypeFuncs leaving.\n");
+    PepCtrlLog("PepCtrlInitPortTypeFuncs leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 }
 
 /***************************************************************************/

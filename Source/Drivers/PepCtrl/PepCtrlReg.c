@@ -65,11 +65,13 @@ static BOOLEAN lReadRegULongValue(
     NTSTATUS status;
     ULONG ulValueInfoLen, ulResultLen;
 
-	PepCtrlLog("lReadRegULongValue entering.\n");
+	PepCtrlLog("lReadRegULongValue entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("lReadRegULongValue - Value Name: \"%ws\".\n", pszValueName);
+    PepCtrlLog("lReadRegULongValue - Value Name: \"%ws\".  (Thread: 0x%p)\n",
+		       pszValueName, PsGetCurrentThread());
 
     RtlInitUnicodeString(&ValueName, pszValueName);
 
@@ -82,7 +84,8 @@ static BOOLEAN lReadRegULongValue(
 
         if (!pValueInfo)
         {
-            PepCtrlLog("lReadRegULongValue leaving. (Could not allocate memory)\n");
+            PepCtrlLog("lReadRegULongValue leaving  (Could not allocate memory).  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             return FALSE;
         }
@@ -100,11 +103,13 @@ static BOOLEAN lReadRegULongValue(
         {
             if (NT_ERROR(status))
             {
-                PepCtrlLog("lReadRegULongValue - Could not query the registry value. (0x%X)\n", status);
+                PepCtrlLog("lReadRegULongValue - Could not query the registry value (0x%X).  (Thread: 0x%p)\n",
+					       status, PsGetCurrentThread());
             }
             else if (pValueInfo->Type != REG_DWORD)
             {
-                PepCtrlLog("lReadRegULongValue - Wrong registry value type found. (0x%X)\n", pValueInfo->Type);
+                PepCtrlLog("lReadRegULongValue - Wrong registry value type found (0x%X).  (Thread: 0x%p)\n",
+					       pValueInfo->Type, PsGetCurrentThread());
             }
         }
 
@@ -112,7 +117,8 @@ static BOOLEAN lReadRegULongValue(
     }
     else if (status == STATUS_OBJECT_NAME_NOT_FOUND)
     {
-        PepCtrlLog("lReadRegULongValue - The registry value does not exist.  Returning the default value.\n");
+        PepCtrlLog("lReadRegULongValue - The registry value does not exist.  Returning the default value.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         *pulValue = ulDefaultValue;
 
@@ -120,10 +126,12 @@ static BOOLEAN lReadRegULongValue(
     }
     else
     {
-        PepCtrlLog("lReadRegULongValue - Could not query the registry value size. (0x%X)\n", status);
+        PepCtrlLog("lReadRegULongValue - Could not query the registry value size (0x%X).  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
     }
 
-	PepCtrlLog("lReadRegULongValue leaving.\n");
+	PepCtrlLog("lReadRegULongValue leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -142,11 +150,13 @@ static BOOLEAN lReadRegStringValue(
     ULONG ulValueInfoLen, ulResultLen;
     size_t DefaultValueLen = 0;
 
-    PepCtrlLog("lReadRegStringValue entering.\n");
+    PepCtrlLog("lReadRegStringValue entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("lReadRegStringValue - Value Name: \"%ws\".\n", pszValueName);
+    PepCtrlLog("lReadRegStringValue - Value Name: \"%ws\".  (Thread: 0x%p)\n",
+		       pszValueName, PsGetCurrentThread());
 
     *ppszValue = 0;
 
@@ -161,7 +171,8 @@ static BOOLEAN lReadRegStringValue(
 
         if (!pValueInfo)
         {
-            PepCtrlLog("lReadRegStringValue leaving.  (Could not allocate memory)\n");
+            PepCtrlLog("lReadRegStringValue leaving.  (Could not allocate memory)  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             return FALSE;
         }
@@ -182,11 +193,13 @@ static BOOLEAN lReadRegStringValue(
         {
             if (NT_ERROR(status))
             {
-                PepCtrlLog("lReadRegStringValue - Could not query the registry value. (0x%X)\n", status);
+                PepCtrlLog("lReadRegStringValue - Could not query the registry value (0x%X).  (Thread: 0x%p)\n",
+					       status, PsGetCurrentThread());
             }
             else if (pValueInfo->Type != REG_SZ)
             {
-                PepCtrlLog("lReadRegStringValue - Wrong registry value type found. (0x%X)\n", pValueInfo->Type);
+                PepCtrlLog("lReadRegStringValue - Wrong registry value type found (0x%X).  (Thread: 0x%p)\n",
+					       pValueInfo->Type, PsGetCurrentThread());
             }
         }
 
@@ -194,7 +207,8 @@ static BOOLEAN lReadRegStringValue(
     }
     else if (status == STATUS_OBJECT_NAME_NOT_FOUND)
     {
-        PepCtrlLog("lReadRegStringValue - The registry value does not exist.  Returning the default value.\n");
+        PepCtrlLog("lReadRegStringValue - The registry value does not exist.  Returning the default value.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         RtlStringCchLengthW(pszDefaultValue, NTSTRSAFE_MAX_CCH, &DefaultValueLen);
 
@@ -202,7 +216,8 @@ static BOOLEAN lReadRegStringValue(
 
         if (*ppszValue == NULL)
         {
-            PepCtrlLog("lReadRegStringValue - Could not allocate memory for the default value.\n");
+            PepCtrlLog("lReadRegStringValue - Could not allocate memory for the default value.  (Thread: 0x%p)\n",
+				       PsGetCurrentThread());
 
             return FALSE;
         }
@@ -213,10 +228,12 @@ static BOOLEAN lReadRegStringValue(
     }
     else
     {
-        PepCtrlLog("lReadRegStringValue - Could not query the registry value size. (0x%X)\n", status);
+        PepCtrlLog("lReadRegStringValue - Could not query the registry value size (0x%X).  (Thread: 0x%p)\n", 
+			       status, PsGetCurrentThread());
     }
 
-	PepCtrlLog("lReadRegStringValue leaving.\n");
+	PepCtrlLog("lReadRegStringValue leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -231,11 +248,13 @@ static BOOLEAN lWriteRegULongValue(
     UNICODE_STRING ValueName;
     NTSTATUS status;
 
-    PepCtrlLog("lWriteRegULongValue entering.\n");
+    PepCtrlLog("lWriteRegULongValue entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-	PepCtrlLog("lWriteRegULongValue - Value Name: \"%ws\".\n", pszValueName);
+	PepCtrlLog("lWriteRegULongValue - Value Name: \"%ws\".  (Thread: 0x%p)\n",
+		       pszValueName, PsGetCurrentThread());
 
     RtlInitUnicodeString(&ValueName, pszValueName);
 
@@ -243,16 +262,19 @@ static BOOLEAN lWriteRegULongValue(
 
     if (NT_SUCCESS(status))
     {
-        PepCtrlLog("lWriteRegULongValue - Successfully set the registry value.\n");
+        PepCtrlLog("lWriteRegULongValue - Successfully set the registry value.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         bResult = TRUE;
     }
     else
     {
-        PepCtrlLog("lWriteRegULongValue - Could not set the registry value. (0x%X)\n", status);
+        PepCtrlLog("lWriteRegULongValue - Could not set the registry value (0x%X).  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
     }
 
-	PepCtrlLog("lWriteRegULongValue leaving.\n");
+	PepCtrlLog("lWriteRegULongValue leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -268,11 +290,13 @@ static BOOLEAN lWriteRegStringValue(
     NTSTATUS status;
     size_t length;
 
-    PepCtrlLog("lWriteRegStringValue entering.\n");
+    PepCtrlLog("lWriteRegStringValue entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-    PepCtrlLog("lWriteRegStringValue - Value Name: \"%ws\".\n", pszValueName);
+    PepCtrlLog("lWriteRegStringValue - Value Name: \"%ws\".  (Thread: 0x%p)\n",
+		       pszValueName, PsGetCurrentThread());
 
     RtlInitUnicodeString(&ValueName, pszValueName);
 
@@ -282,16 +306,19 @@ static BOOLEAN lWriteRegStringValue(
 
     if (NT_SUCCESS(status))
     {
-        PepCtrlLog("lWriteRegStringValue - Successfully set the registry value.\n");
+        PepCtrlLog("lWriteRegStringValue - Successfully set the registry value.  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         bResult = TRUE;
     }
     else
     {
-        PepCtrlLog("lWriteRegStringValue - Could not set the registry value. (0x%X)\n", status);
+        PepCtrlLog("lWriteRegStringValue - Could not set the registry value (0x%X).  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
     }
 
-	PepCtrlLog("lWriteRegStringValue leaving.\n");
+	PepCtrlLog("lWriteRegStringValue leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -312,11 +339,13 @@ BOOLEAN PepCtrlReadRegSettings(
     size_t SettingsLen, SettingsRegPathLen;
     ULONG ulDisposition;
 
-    PepCtrlLog("PepCtrlReadRegSettings entering.\n");
+    PepCtrlLog("PepCtrlReadRegSettings entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-	PepCtrlLog("PepCtrlReadRegSettings - Registry Path: \"%ws\".\n", pRegistryPath->Buffer);
+	PepCtrlLog("PepCtrlReadRegSettings - Registry Path: \"%ws\".  (Thread: 0x%p)\n",
+		       pRegistryPath->Buffer, PsGetCurrentThread());
 
     RtlStringCbLengthW(CPepCtrlSettingsRegKeyName, NTSTRSAFE_MAX_CCH, &SettingsLen);
 
@@ -325,7 +354,8 @@ BOOLEAN PepCtrlReadRegSettings(
 
     if (!pszSettingsRegPath)
     {
-        PepCtrlLog("PepCtrlReadRegSettings leaving.  (Could not allocate memory for the settings registry key name\n");
+        PepCtrlLog("PepCtrlReadRegSettings leaving.  (Could not allocate memory for the settings registry key name)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
@@ -344,7 +374,8 @@ BOOLEAN PepCtrlReadRegSettings(
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL, NULL);
 
-    PepCtrlLog("PepCtrlReadRegSettings - Opening the registry key \"%ws\".\n", pszSettingsRegPath);
+    PepCtrlLog("PepCtrlReadRegSettings - Opening the registry key \"%ws\".  (Thread: 0x%p)\n",
+		       pszSettingsRegPath, PsGetCurrentThread());
 
     status = ZwCreateKey(&hRegKey, KEY_READ | KEY_WRITE, &RegPathObj, 0, NULL,
                          REG_OPTION_NON_VOLATILE, &ulDisposition);
@@ -361,12 +392,14 @@ BOOLEAN PepCtrlReadRegSettings(
     }
     else
     {
-        PepCtrlLog("PepCtrlReadRegSettings - Could not open the root registry key. (0x%X)\n", status);
+        PepCtrlLog("PepCtrlReadRegSettings - Could not open the root registry key (0x%X).  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
     }
 
     UtFreePagedMem(pszSettingsRegPath);
 
-	PepCtrlLog("PepCtrlReadRegSettings leaving.\n");
+	PepCtrlLog("PepCtrlReadRegSettings leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
@@ -386,12 +419,13 @@ BOOLEAN PepCtrlWriteRegSettings(
     size_t SettingsLen, SettingsRegPathLen;
     ULONG ulDisposition;
 
-    PepCtrlLog("PepCtrlWriteRegSettings entering.\n");
+    PepCtrlLog("PepCtrlWriteRegSettings entering.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     PAGED_CODE()
 
-	PepCtrlLog("PepCtrlWriteRegSettings - Registry Path: \"%ws\", Port Type: 0x%X, Port Device Name: \"%ws\"\n",
-               pRegistryPath->Buffer, ulPortType, pszPortDeviceName);
+	PepCtrlLog("PepCtrlWriteRegSettings - Registry Path: \"%ws\", Port Type: 0x%X, Port Device Name: \"%ws\".  (Thread: 0x%p)\n",
+               pRegistryPath->Buffer, ulPortType, pszPortDeviceName, PsGetCurrentThread());
 
     RtlStringCbLengthW(CPepCtrlSettingsRegKeyName, NTSTRSAFE_MAX_CCH, &SettingsLen);
 
@@ -400,7 +434,8 @@ BOOLEAN PepCtrlWriteRegSettings(
 
     if (!pszSettingsRegPath)
     {
-        PepCtrlLog("PepCtrlWriteRegSettings leaving.  (Could not allocate memory for the settings registry key name).\n");
+        PepCtrlLog("PepCtrlWriteRegSettings leaving.  (Could not allocate memory for the settings registry key name)  (Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
         return FALSE;
     }
@@ -419,7 +454,8 @@ BOOLEAN PepCtrlWriteRegSettings(
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL, NULL);
 
-    PepCtrlLog("PepCtrlWriteRegSettings - Creating the registry key \"%ws\".\n", pszSettingsRegPath);
+    PepCtrlLog("PepCtrlWriteRegSettings - Creating the registry key \"%ws\".  (Thread: 0x%p)\n",
+		       pszSettingsRegPath, PsGetCurrentThread());
 
     status = ZwCreateKey(&hRegKey, GENERIC_WRITE | KEY_SET_VALUE | KEY_CREATE_SUB_KEY,
                          &RegPathObj, 0, NULL, REG_OPTION_NON_VOLATILE, &ulDisposition);
@@ -436,12 +472,14 @@ BOOLEAN PepCtrlWriteRegSettings(
     }
     else
     {
-        PepCtrlLog("PepCtrlWriteRegSettings - Could not create the root registry key. (0x%X)\n", status);
+        PepCtrlLog("PepCtrlWriteRegSettings - Could not create the root registry key (0x%X).  (Thread: 0x%p)\n",
+			       status, PsGetCurrentThread());
     }
 
     UtFreePagedMem(pszSettingsRegPath);
 
-    PepCtrlLog("PepCtrlWriteRegSettings leaving.\n");
+    PepCtrlLog("PepCtrlWriteRegSettings leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread());
 
     return bResult;
 }
