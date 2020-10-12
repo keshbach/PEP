@@ -708,7 +708,8 @@ NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
 
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
-	PepCtrlLog("PepCtrlDeviceControl_GetPortStatus leaving.  (Thread: 0x%p)\n");
+	PepCtrlLog("PepCtrlDeviceControl_GetPortStatus leaving.  (Thread: 0x%p)\n",
+		       PsGetCurrentThread);
 
 	return Status;
 }
