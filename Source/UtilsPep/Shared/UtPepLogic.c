@@ -112,6 +112,16 @@
 
 #pragma region "Macros"
 
+#if defined(BUILD_USER_LIB)
+#define MCurrentThreadId() (UINT_PTR)GetCurrentThreadId()
+
+#define _IRQL_requires_max_(x)
+#elif defined(BUILD_DRIVER_LIB)
+#define MCurrentThreadId() PsGetCurrentThread()
+#else
+#error Unsupported configuration
+#endif
+
 /*
     Byte Reversal Macro
 */
@@ -295,13 +305,18 @@ static BOOLEAN lWritePortData(
     BOOLEAN bResult = FALSE;
     UINT8 nTmpData[3];
 
+#if defined(PEPLOGIC_ALL_MESSAGES)
+	pLogicData->pLogFunc("lWritePortData entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+#endif
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
 #if defined(PEPLOGIC_ALL_MESSAGES)
-    pLogicData->pLogFunc("lWritePortData entering.\n");
-    pLogicData->pLogFunc("lWritePortData - Writing Data: 0x%X, Unit: 0x%X\n", (ULONG)nData, (ULONG)nUnit);
+    pLogicData->pLogFunc("lWritePortData entering.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 #endif
 
     nTmpData[0] = MPortData(nData, nUnit, CUnitOff);
@@ -312,7 +327,8 @@ static BOOLEAN lWritePortData(
                                          MArrayLen(nTmpData), CWaitNanoSeconds);
 
 #if defined(PEPLOGIC_ALL_MESSAGES)
-	pLogicData->pLogFunc("lWritePortData leaving.\n");
+	pLogicData->pLogFunc("lWritePortData leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 #endif
 
 	return bResult;
@@ -328,11 +344,12 @@ static BOOLEAN lReadByteFromProgrammer(
     UINT8 nTmpData, nPortOutput;
     BOOLEAN bValue;
 
-#if defined(BUILD_DRIVER_LIB)
-    PAGED_CODE()
-#endif
+    pLogicData->pLogFunc("lReadByteFromProgrammer entering.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
-    pLogicData->pLogFunc("lReadByteFromProgrammer entering.\n");
+#if defined(BUILD_DRIVER_LIB)
+	PAGED_CODE()
+#endif
 
     *pnByte = 0;
 
@@ -343,14 +360,16 @@ static BOOLEAN lReadByteFromProgrammer(
 		if (!pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, &nTmpData,
                                         sizeof(nTmpData), CWaitNanoSeconds))
 		{
-			pLogicData->pLogFunc("lReadByteFromProgrammer leaving.  (Write port failed)\n");
+			pLogicData->pLogFunc("lReadByteFromProgrammer leaving.  (Write port failed)  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
 			return FALSE;
 		}
 
 		if (!pLogicData->pReadBitPortFunc(pLogicData->pvDeviceContext, &bValue))
         {
-			pLogicData->pLogFunc("lReadByteFromProgrammer leaving.  (Read bit from port failed)\n");
+			pLogicData->pLogFunc("lReadByteFromProgrammer leaving.  (Read bit from port failed)  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 			
 			return FALSE;
         }
@@ -366,11 +385,13 @@ static BOOLEAN lReadByteFromProgrammer(
 
     nData = ~nData;
 
-    pLogicData->pLogFunc("lReadByteFromProgrammer - Retrieved the byte 0x%X\n", (ULONG)nData);
+    pLogicData->pLogFunc("lReadByteFromProgrammer - Retrieved the byte 0x%X.  (Thread: 0x%p)\n",
+		                 (ULONG)nData, MCurrentThreadId());
 
     *pnByte = nData;
 
-	pLogicData->pLogFunc("lReadByteFromProgrammer leaving.\n");
+	pLogicData->pLogFunc("lReadByteFromProgrammer leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return TRUE;
 }
@@ -383,23 +404,27 @@ static BOOLEAN lWriteByteToProgrammer(
     UINT8 nDataLow = nByte & 0x0F;
     UINT8 nDataHigh = nByte >> 4;
 
+	pLogicData->pLogFunc("lWriteByteToProgrammer entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lWriteByteToProgrammer entering.\n");
-
-    pLogicData->pLogFunc("lWriteByteToProgrammer - Writing the byte 0x%X\n", (ULONG)nByte);
+    pLogicData->pLogFunc("lWriteByteToProgrammer - Writing the byte 0x%X.  (Thread: 0x%p)\n",
+		                 (ULONG)nByte, MCurrentThreadId());
 
     if (lWritePortData(pLogicData, nDataLow, CUnit0_DataBits0To3) &&
         lWritePortData(pLogicData, nDataHigh, CUnit1_DataBits4To7))
     {
-		pLogicData->pLogFunc("lWriteByteToProgrammer leaving.\n");
+		pLogicData->pLogFunc("lWriteByteToProgrammer leaving.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 		
 		return TRUE;
     }
 
-	pLogicData->pLogFunc("lWriteByteToProgrammer leaving.  (Write port data failed)\n");
+	pLogicData->pLogFunc("lWriteByteToProgrammer leaving.  (Write port data failed)  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return FALSE;
 }
@@ -414,23 +439,27 @@ static BOOLEAN lSetProgrammerAddress(
 	UINT32 nIndex;
     UINT8 nEnable, nData;
 
+	pLogicData->pLogFunc("lSetProgrammerAddress entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("lSetProgrammerAddress entering.\n");
-
     pData->nLastAddress = nAddress;
     
-    pLogicData->pLogFunc("lSetProgrammerAddress - Setting Programmer Address to 0x%X\n", nAddress);
+    pLogicData->pLogFunc("lSetProgrammerAddress - Setting Programmer Address to 0x%X.  (Thread: 0x%p)\n",
+		                 nAddress, MCurrentThreadId());
 
     if ((nLastAddress & 0x0F) != (nAddress & 0x0F))
     {
-        pLogicData->pLogFunc("lSetProgrammerAddress - Setting Address lines 0 - 3\n");
+        pLogicData->pLogFunc("lSetProgrammerAddress - Setting Address lines 0 - 3.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
         if (!lWritePortData(pLogicData, (UINT8)nAddress, CUnit2_AddressLines0To3))
         {
-			pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)\n");
+			pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             return FALSE;
         }
@@ -441,11 +470,13 @@ static BOOLEAN lSetProgrammerAddress(
 
     if ((nLastAddress & 0x0F) != (nAddress & 0x0F))
     {
-        pLogicData->pLogFunc("lSetProgrammerAddress - Setting Address lines 4 - 7\n");
+        pLogicData->pLogFunc("lSetProgrammerAddress - Setting Address lines 4 - 7.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
         if (!lWritePortData(pLogicData, (UINT8)nAddress, CUnit3_AddressLines4To7))
         {
-			pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)\n");
+			pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             return FALSE;
         }
@@ -456,11 +487,13 @@ static BOOLEAN lSetProgrammerAddress(
 
     if ((nLastAddress & 0x0F) != (nAddress & 0x0F))
     {
-        pLogicData->pLogFunc("lSetProgrammerAddress - Setting Address lines 8 - 11\n");
+        pLogicData->pLogFunc("lSetProgrammerAddress - Setting Address lines 8 - 11.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
         if (!lWritePortData(pLogicData, (UINT8)nAddress, CUnit4_AddressLines8To11))
         {
-			pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)\n");
+			pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             return FALSE;
         }
@@ -478,7 +511,8 @@ static BOOLEAN lSetProgrammerAddress(
 	    {
 		    nEnable = (nAddress & 1) ? CAddressLines12To19On : CAddressLines12To19Off;
 
-            pLogicData->pLogFunc("lSetProgrammerAddress - Setting Address line %d\n", nIndex + 12);
+            pLogicData->pLogFunc("lSetProgrammerAddress - Setting Address line %d.  (Thread: 0x%p)\n",
+				                 nIndex + 12, MCurrentThreadId());
 
             if (!lWritePortData(pLogicData,
                                 CDisableAddressLines12To19Unit | nEnable | nData,
@@ -487,7 +521,8 @@ static BOOLEAN lSetProgrammerAddress(
                                 CEnableAddressLines12To19Unit | nEnable | nData,
                                 CUnit5_AddressLines12To19AndVppMode))
             {
-				pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)\n");
+				pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Write port data failed)  (Thread: 0x%p)\n",
+					                 MCurrentThreadId());
 
                 return FALSE;
             }
@@ -496,7 +531,8 @@ static BOOLEAN lSetProgrammerAddress(
 	    }
     }
 
-    pLogicData->pLogFunc("lSetProgrammerAddress leaving.\n");
+    pLogicData->pLogFunc("lSetProgrammerAddress leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return TRUE;
 }
@@ -509,18 +545,20 @@ static BOOLEAN lSetProgrammerVppMode(
     UINT8 nData;
 	BOOLEAN bResult;
 
+	pLogicData->pLogFunc("lSetProgrammerVppMode entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
-
-    pLogicData->pLogFunc("lSetProgrammerVppMode entering.\n");
 
     nData = lVppModeToData(pLogicData, pData->Modes.nVppMode);
 
 	bResult = lWritePortData(pLogicData, CDisableAddressLines12To19Unit | nData,
                              CUnit5_AddressLines12To19AndVppMode);
 
-	pLogicData->pLogFunc("lSetProgrammerVppMode leaving.\n");
+	pLogicData->pLogFunc("lSetProgrammerVppMode leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
@@ -532,11 +570,12 @@ static UINT8 lPinPulseModeToData(
 {
 	UINT8 nData;
 
+	pLogicData->pLogFunc("lPinPulseModeToData entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
-
-    pLogicData->pLogFunc("lPinPulseModeToData entering.\n");
 
     switch (nPinPulseMode)
     {
@@ -553,13 +592,15 @@ static UINT8 lPinPulseModeToData(
 			nData = CN0 | CN1;
 			break;
         default:
-			pLogicData->pLogFunc("lPinPulseModeToData - Unknown pin pulse mode: 0x%X.\n", nPinPulseMode);
+			pLogicData->pLogFunc("lPinPulseModeToData - Unknown pin pulse mode: 0x%X.  (Thread: 0x%p)\n",
+				                 nPinPulseMode, MCurrentThreadId());
 
 			nData = CN0 | CN1;
 			break;
     }
 
-	pLogicData->pLogFunc("lPinPulseModeToData leaving.\n");
+	pLogicData->pLogFunc("lPinPulseModeToData leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return nData;
 }
@@ -571,11 +612,12 @@ static UINT8 lVppModeToData(
 {
 	UINT8 nData;
 
+	pLogicData->pLogFunc("lVppModeToData entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
-
-    pLogicData->pLogFunc("lVppModeToData entering.\n");
 
     switch (nVppMode)
     {
@@ -589,13 +631,15 @@ static UINT8 lVppModeToData(
             nData = CEnable25Vpp;
 			break;
 		default:
-			pLogicData->pLogFunc("lVppModeToData - Unknown Vpp mode: 0x%X.\n", nVppMode);
+			pLogicData->pLogFunc("lVppModeToData - Unknown Vpp mode: 0x%X.  (Thread: 0x%p)\n",
+				                 nVppMode, MCurrentThreadId());
 
 			nData = CUtPepLogic12VDCVppMode;
 			break;
     }
 
-    pLogicData->pLogFunc("lVppModeToData leaving.\n");
+    pLogicData->pLogFunc("lVppModeToData leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return nData;
 }
@@ -606,11 +650,12 @@ static BOOLEAN lResetProgrammerState(
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
+	pLogicData->pLogFunc("lResetProgrammerState entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
-
-    pLogicData->pLogFunc("lResetProgrammerState entering.\n");
 
     if (lWritePortData(pLogicData,
                        MEnableTriggerProgramPulse(FALSE) |
@@ -621,12 +666,14 @@ static BOOLEAN lResetProgrammerState(
         lWritePortData(pLogicData, lPinPulseModeToData(pLogicData, pData->Modes.nPinPulseMode),
                        CUnit6_LedAndVpp))
     {
-		pLogicData->pLogFunc("lResetProgrammerState leaving.\n");
+		pLogicData->pLogFunc("lResetProgrammerState leaving.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
 		return TRUE;
     }
 
-	pLogicData->pLogFunc("lResetProgrammerState leaving.  (Write failed)\n");
+	pLogicData->pLogFunc("lResetProgrammerState leaving.  (Write failed)  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return FALSE;
 }
@@ -638,11 +685,12 @@ static BOOLEAN lEnableProgrammerReadMode(
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 	LARGE_INTEGER IntervalNanoseconds;
 
+	pLogicData->pLogFunc("lEnableProgrammerReadMode entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
-
-    pLogicData->pLogFunc("lEnableProgrammerReadMode entering.\n");
 
     if (lWritePortData(pLogicData, lPinPulseModeToData(pLogicData, pData->Modes.nPinPulseMode) | CN2,
                        CUnit6_LedAndVpp) &&
@@ -654,22 +702,26 @@ static BOOLEAN lEnableProgrammerReadMode(
     {
 		if (pData->DelaySettings.nChipEnableNanoSeconds > 0)
 		{
-			pLogicData->pLogFunc("lEnableProgrammerReadMode - Chip Enable delay detected.\n");
+			pLogicData->pLogFunc("lEnableProgrammerReadMode - Chip Enable delay detected.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
 			IntervalNanoseconds.QuadPart = pData->DelaySettings.nChipEnableNanoSeconds;
 
 			if (!UtSleep(&IntervalNanoseconds))
 			{
-				pLogicData->pLogFunc("lEnableProgrammerReadMode - Sleep failed.\n");
+				pLogicData->pLogFunc("lEnableProgrammerReadMode - Sleep failed.  (Thread: 0x%p)\n",
+					                 MCurrentThreadId());
 			}
 		}
 
-		pLogicData->pLogFunc("lEnableProgrammerReadMode leaving.\n");
+		pLogicData->pLogFunc("lEnableProgrammerReadMode leaving.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
         return TRUE;
 	}
 
-	pLogicData->pLogFunc("lEnableProgrammerReadMode leaving.  (Write port data failed)\n");
+	pLogicData->pLogFunc("lEnableProgrammerReadMode leaving.  (Write port data failed)  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return FALSE;
 }
@@ -681,11 +733,12 @@ static BOOLEAN lEnableProgrammerWriteMode(
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 	LARGE_INTEGER IntervalNanoseconds;
 
+	pLogicData->pLogFunc("lEnableProgrammerWriteMode entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
-
-    pLogicData->pLogFunc("lEnableProgrammerWriteMode entering.\n");
 
     if (lWritePortData(pLogicData,
                        MEnableTriggerProgramPulse(FALSE) |
@@ -699,22 +752,26 @@ static BOOLEAN lEnableProgrammerWriteMode(
     {
 		if (pData->DelaySettings.nChipEnableNanoSeconds > 0)
 		{
-			pLogicData->pLogFunc("lEnableProgrammerWriteMode - Chip Enable delay detected.\n");
+			pLogicData->pLogFunc("lEnableProgrammerWriteMode - Chip Enable delay detected.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
 			IntervalNanoseconds.QuadPart = pData->DelaySettings.nChipEnableNanoSeconds;
 
 			if (!UtSleep(&IntervalNanoseconds))
 			{
-				pLogicData->pLogFunc("lEnableProgrammerWriteMode - Sleep failed.\n");
+				pLogicData->pLogFunc("lEnableProgrammerWriteMode - Sleep failed.  (Thread: 0x%p)\n",
+					                 MCurrentThreadId());
 			}
 		}
 
-		pLogicData->pLogFunc("lEnableProgrammerWriteMode leaving.\n");
+		pLogicData->pLogFunc("lEnableProgrammerWriteMode leaving.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
 		return TRUE;
     }
 
-	pLogicData->pLogFunc("lEnableProgrammerWriteMode leaving.  (Write port data failed)\n");
+	pLogicData->pLogFunc("lEnableProgrammerWriteMode leaving.  (Write port data failed)  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return FALSE;
 }
@@ -728,11 +785,12 @@ static BOOLEAN lWaitForProgramPulse(
     UINT8 nData;
     BOOLEAN bValue;
 
+	pLogicData->pLogFunc("lWaitForProgramPulse entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
-
-    pLogicData->pLogFunc("lWaitForProgramPulse entering.\n");
 
 	switch (pData->Modes.nPinPulseMode)
 	{
@@ -745,17 +803,19 @@ static BOOLEAN lWaitForProgramPulse(
 			IntervalNanoseconds.QuadPart = (LONGLONG)MMicroToNanoseconds(250); /* 250 us */
 			break;
 		default:
-			pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Cannot determine sleep delay because of unknown pin pulse mode: 0x%X)\n",
-				                 pData->Modes.nPinPulseMode);
+			pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Cannot determine sleep delay because of unknown pin pulse mode: 0x%X)  (Thread: 0x%p)\n",
+				                 pData->Modes.nPinPulseMode, MCurrentThreadId());
 
 			return FALSE;
 	}
 
-	pLogicData->pLogFunc("lWaitForProgramPulse - Putting thread to sleep briefly.\n");
+	pLogicData->pLogFunc("lWaitForProgramPulse - Putting thread to sleep briefly.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	if (!UtSleep(&IntervalNanoseconds))
 	{
-		pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Sleep failed)\n");
+		pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Sleep failed)  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
 		return FALSE;
 	}
@@ -771,13 +831,14 @@ static BOOLEAN lWaitForProgramPulse(
             nData = MPortData(PVAR, CUnit_DontCare, CUnitOff);
             break;
 		default:
-			pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Cannot determine data to write because of unknown pin pulse mode: 0x%X)\n",
-				                 pData->Modes.nPinPulseMode);
+			pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Cannot determine data to write because of unknown pin pulse mode: 0x%X)  (Thread: 0x%p)\n",
+				                 pData->Modes.nPinPulseMode, MCurrentThreadId());
 
 			return FALSE;
 	}
 
-    pLogicData->pLogFunc("lWaitForProgramPulse - Checking if program pulse finished.\n");
+    pLogicData->pLogFunc("lWaitForProgramPulse - Checking if program pulse finished.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     if (pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, &nData,
                                    sizeof(nData), CWaitNanoSeconds) &&
@@ -785,20 +846,25 @@ static BOOLEAN lWaitForProgramPulse(
     {
         if (bValue)
         {
-            pLogicData->pLogFunc("lWaitForProgramPulse - Program pulse has finished.\n");
-			pLogicData->pLogFunc("lWaitForProgramPulse leaving.\n");
+            pLogicData->pLogFunc("lWaitForProgramPulse - Program pulse has finished.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
+			pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             return TRUE;
         }
 
-        pLogicData->pLogFunc("lWaitForProgramPulse - Program pulse did not finish.\n");
+        pLogicData->pLogFunc("lWaitForProgramPulse - Program pulse did not finish.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
     }
     else
     {
-        pLogicData->pLogFunc("lWaitForProgramPulse - Unable to retrieve program pulse status.\n");
+        pLogicData->pLogFunc("lWaitForProgramPulse - Unable to retrieve program pulse status.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
     }
 
-	pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Failure occurred)\n");
+	pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Failure occurred)  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return FALSE;
 }
@@ -882,30 +948,34 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetProgrammerMode(
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+	pLogicData->pLogFunc("UtPepLogicSetProgrammerMode entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetProgrammerMode entering.\n");
-
     switch (nProgrammerMode)
 	{
 		case CUtPepLogicProgrammerReadMode:
-            pLogicData->pLogFunc("UtPepLogicSetProgrammerMode - Setting the programmer to the read mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetProgrammerMode - Setting the programmer to the read mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             pData->Modes.nProgrammerMode = nProgrammerMode;
 
             bResult = lEnableProgrammerReadMode(pLogicData);
             break;
 		case CUtPepLogicProgrammerWriteMode:
-            pLogicData->pLogFunc("UtPepLogicSetProgrammerMode - Setting the programmer to the write mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetProgrammerMode - Setting the programmer to the write mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             pData->Modes.nProgrammerMode = nProgrammerMode;
 
             bResult = lEnableProgrammerWriteMode(pLogicData);
             break;
         case CUtPepLogicProgrammerNoneMode:
-            pLogicData->pLogFunc("UtPepLogicSetProgrammerMode - Setting the programmer to the none mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetProgrammerMode - Setting the programmer to the none mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             bResult = lInitModes(pData) &&
 				          lInitDelaySettings(pData) &&
@@ -913,11 +983,13 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetProgrammerMode(
                           lSetProgrammerVppMode(pLogicData);
             break;
         default:
-            pLogicData->pLogFunc("UtPepLogicSetProgrammerMode - Invalid programmer mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetProgrammerMode - Invalid programmer mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
             break;
 	}
 
-	pLogicData->pLogFunc("UtPepLogicSetProgrammerMode leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicSetProgrammerMode leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return bResult;
 }
@@ -930,16 +1002,18 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVccMode(
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+	pLogicData->pLogFunc("UtPepLogicSetVccMode entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetVccMode entering.\n");
-
     switch (nVccMode)
 	{
 		case CUtPepLogic5VDCMode:
-            pLogicData->pLogFunc("UtPepLogicSetVccMode - Trying to set the programmer to the +5VDC mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetVccMode - Trying to set the programmer to the +5VDC mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
             {
@@ -949,11 +1023,13 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVccMode(
             }
             else
             {
-                pLogicData->pLogFunc("UtPepLogicSetVccMode - Programmer not in the none mode.\n");
+                pLogicData->pLogFunc("UtPepLogicSetVccMode - Programmer not in the none mode.  (Thread: 0x%p)\n",
+					                 MCurrentThreadId());
             }
 			break;
 		case CUtPepLogic625VDCMode:
-            pLogicData->pLogFunc("UtPepLogicSetVccMode - Trying to set the programmer to the +6.25VDC mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetVccMode - Trying to set the programmer to the +6.25VDC mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
             {
@@ -963,15 +1039,18 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVccMode(
             }
             else
             {
-                pLogicData->pLogFunc("UtPepLogicSetVccMode - Programmer not in the none mode.\n");
+                pLogicData->pLogFunc("UtPepLogicSetVccMode - Programmer not in the none mode.  (Thread: 0x%p)\n",
+					                 MCurrentThreadId());
             }
 			break;
         default:
-            pLogicData->pLogFunc("UtPepLogicSetVccMode - Invalid VCC mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetVccMode - Invalid VCC mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
             break;
 	}
 
-	pLogicData->pLogFunc("UtPepLogicSetVccMode leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicSetVccMode leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
@@ -984,16 +1063,18 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+	pLogicData->pLogFunc("UtPepLogicSetPinPulseMode entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetPinPulseMode entering.\n");
-
     switch (nPinPulseMode)
 	{
         case CUtPepLogicPinPulse1Mode:
-            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Trying to set the programmer to the VEN08 and WE08 pin mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Trying to set the programmer to the VEN08 and WE08 pin mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
             {
@@ -1003,11 +1084,13 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
             }
             else
             {
-                pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Programmer not in the none mode.\n");
+                pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Programmer not in the none mode.  (Thread: 0x%p)\n",
+					                 MCurrentThreadId());
             }
             break;
         case CUtPepLogicPinPulse2Mode:
-            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Trying to set the programmer to the ~VP5 and Vpp16 pin mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Trying to set the programmer to the ~VP5 and Vpp16 pin mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
             {
@@ -1017,13 +1100,14 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
             }
             else
             {
-                pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Programmer not in the none mode.\n");
+                pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Programmer not in the none mode.  (Thread: 0x%p)\n",
+					                 MCurrentThreadId());
             }
             break;
         case CUtPepLogicPinPulse3Mode:
-            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Trying to set the programmer to the Vpp32 pin mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Trying to set the programmer to the Vpp32 pin mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
-            if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
             if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
             {
                 pData->Modes.nPinPulseMode = nPinPulseMode;
@@ -1032,11 +1116,13 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
             }
             else
             {
-                pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Programmer not in the none mode.\n");
+                pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Programmer not in the none mode.  (Thread: 0x%p)\n",
+					                 MCurrentThreadId());
             }
             break;
         case CUtPepLogicPinPulse4Mode:
-            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Trying to set the programmer to the Vpp64 pin mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Trying to set the programmer to the Vpp64 pin mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
             {
@@ -1046,15 +1132,18 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetPinPulseMode(
             }
             else
             {
-                pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Programmer not in the none mode.\n");
+                pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Programmer not in the none mode.  (Thread: 0x%p)\n",
+					                 MCurrentThreadId());
             }
             break;
         default:
-            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Invalid pin mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetPinPulseMode - Invalid pin mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
             break;
 	}
 
-	pLogicData->pLogFunc("UtPepLogicSetPinPulseMode leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicSetPinPulseMode leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
@@ -1067,37 +1156,42 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVppMode(
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+	pLogicData->pLogFunc("UtPepLogicSetVppMode entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetVppMode entering.\n");
-
     switch (nVppMode)
 	{
         case CUtPepLogic12VDCVppMode:
-            pLogicData->pLogFunc("UtPepLogicSetVppMode - Setting the programmer to the +12VDC Vpp mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetVppMode - Setting the programmer to the +12VDC Vpp mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             pData->Modes.nVppMode = nVppMode;
 
 		    bResult = TRUE;
             break;
         case CUtPepLogic21VDCVppMode:
-            pLogicData->pLogFunc("UtPepLogicSetVppMode - Setting the programmer to the +21VDC Vpp mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetVppMode - Setting the programmer to the +21VDC Vpp mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             pData->Modes.nVppMode = nVppMode;
 
 		    bResult = TRUE;
             break;
         case CUtPepLogic25VDCVppMode:
-            pLogicData->pLogFunc("UtPepLogicSetVppMode - Setting the programmer to the +25VDC Vpp mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetVppMode - Setting the programmer to the +25VDC Vpp mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             pData->Modes.nVppMode = nVppMode;
 
 		    bResult = TRUE;
             break;
         default:
-            pLogicData->pLogFunc("UtPepLogicSetVppMode - Invalid Vpp mode.\n");
+            pLogicData->pLogFunc("UtPepLogicSetVppMode - Invalid Vpp mode.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
             break;
 	}
 
@@ -1106,7 +1200,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetVppMode(
         lSetProgrammerVppMode(pLogicData);
     }
 
-	pLogicData->pLogFunc("UtPepLogicSetVppMode leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicSetVppMode leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
@@ -1118,15 +1213,17 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddress(
 {
 	BOOLEAN bResult;
 
+	pLogicData->pLogFunc("UtPepLogicSetAddress entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetAddress entering.\n");
-
 	bResult = lSetProgrammerAddress(pLogicData, nAddress);
 
-	pLogicData->pLogFunc("UtPepLogicSetAddress leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicSetAddress leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
@@ -1140,27 +1237,31 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddressWithDelay(
 	BOOLEAN bResult;
 	LARGE_INTEGER IntervalNanoseconds;
 
+	pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
 	PAGED_CODE()
 #endif
-
-	pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay entering.\n");
 
 	bResult = lSetProgrammerAddress(pLogicData, nAddress);
 
 	if (bResult && nDelayNanoSeconds > 0)
 	{
-		pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay - Delay detected.\n");
+		pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay - Delay detected.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
 		IntervalNanoseconds.QuadPart = nDelayNanoSeconds;
 
 		if (!UtSleep(&IntervalNanoseconds))
 		{
-			pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay - Sleep failed.\n");
+			pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay - Sleep failed.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 		}
 	}
 
-	pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
@@ -1173,22 +1274,25 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicGetData(
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 	BOOLEAN bResult;
 
+	pLogicData->pLogFunc("UtPepLogicGetData entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicGetData entering.\n");
-
     if (pData->Modes.nProgrammerMode != CUtPepLogicProgrammerReadMode)
     {
-		pLogicData->pLogFunc("UtPepLogicGetData leaving.  (Not in programmer read mode)\n");
+		pLogicData->pLogFunc("UtPepLogicGetData leaving.  (Not in programmer read mode)  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
         return FALSE;
     }
 
     bResult = lReadByteFromProgrammer(pLogicData, pnData);
 
-	pLogicData->pLogFunc("UtPepLogicGetData leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicGetData leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
@@ -1201,22 +1305,25 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetData(
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 	BOOLEAN bResult;
 
+	pLogicData->pLogFunc("UtPepLogicSetData entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetData entering.\n");
-
     if (pData->Modes.nProgrammerMode != CUtPepLogicProgrammerWriteMode)
     {
-        pLogicData->pLogFunc("UtPepLogicSetData leaving. (Not in programmer write mode)\n");
+        pLogicData->pLogFunc("UtPepLogicSetData leaving. (Not in programmer write mode)  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
         return FALSE;
     }
 
 	bResult = lWriteByteToProgrammer(pLogicData, nData);
 
-	pLogicData->pLogFunc("UtPepLogicSetData leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicSetData leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
@@ -1229,11 +1336,12 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
     BOOLEAN bResult = FALSE;
 
+	pLogicData->pLogFunc("UtPepLogicTriggerProgram entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
-
-    pLogicData->pLogFunc("UtPepLogicTriggerProgram entering.\n");
 
     *pbSuccess = FALSE;
 
@@ -1248,7 +1356,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
                                 MEnableVpp(TRUE),
                             CUnit7_Programmer))
         {
-			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to disable reset program pulse)\n");
+			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to disable reset program pulse)  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             return FALSE;
         }
@@ -1262,7 +1371,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
                                 MEnableVpp(TRUE),
                             CUnit7_Programmer))
         {
-			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to enable trigger program pulse)\n");
+			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to enable trigger program pulse)  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             return FALSE;
         }
@@ -1276,7 +1386,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
                                 MEnableVpp(TRUE),
                             CUnit7_Programmer))
         {
-			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to disable trigger program pulse)\n");
+			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to disable trigger program pulse)  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             return FALSE;
         }
@@ -1292,7 +1403,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
                                 MEnableVpp(TRUE),
                             CUnit7_Programmer))
         {
-			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to disable reset program pulse)\n");
+			pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Failed to disable reset program pulse)  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 
             return FALSE;
         }
@@ -1301,10 +1413,12 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicTriggerProgram(
     }
     else
     {
-        pLogicData->pLogFunc("UtPepLogicTriggerProgram - Programmer not in the write mode.\n");
+        pLogicData->pLogFunc("UtPepLogicTriggerProgram - Programmer not in the write mode.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
     }
 
-	pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicTriggerProgram leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return bResult;
 }
@@ -1318,15 +1432,17 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
 	BOOLEAN bResult, bOutputEnableChanged;
 	LARGE_INTEGER IntervalNanoseconds;
 
+	pLogicData->pLogFunc("UtPepLogicSetOutputEnable entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
 
-    pLogicData->pLogFunc("UtPepLogicSetOutputEnable entering.\n");
-
     if (pData->Modes.nProgrammerMode != CUtPepLogicProgrammerReadMode)
     {
-        pLogicData->pLogFunc("UtPepLogicSetOutputEnable leaving.  (Not in programmer read mode)\n");
+        pLogicData->pLogFunc("UtPepLogicSetOutputEnable leaving.  (Not in programmer read mode)  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
         return FALSE;
     }
@@ -1335,11 +1451,13 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
 
 	if (bOutputEnableChanged)
 	{
-		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable state being changed.\n");
+		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable state being changed.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 	}
 	else
 	{
-		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable state not being changed.\n");
+		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable state not being changed.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 	}
 
 	bResult = lWritePortData(pLogicData,
@@ -1356,17 +1474,20 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
 
 	if (bOutputEnableChanged && bResult && pData->DelaySettings.nOutputEnableNanoSeconds > 0)
 	{
-		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable Delay detected.\n");
+		pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Output Enable Delay detected.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 
 		IntervalNanoseconds.QuadPart = pData->DelaySettings.nOutputEnableNanoSeconds;
 
 		if (!UtSleep(&IntervalNanoseconds))
 		{
-			pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Sleep failed.\n");
+			pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Sleep failed.  (Thread: 0x%p)\n",
+				                 MCurrentThreadId());
 		}
 	}
 
-	pLogicData->pLogFunc("UtPepLogicSetOutputEnable leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicSetOutputEnable leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
@@ -1378,11 +1499,12 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
     BOOLEAN bResult = FALSE;
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
+	pLogicData->pLogFunc("UtPepLogicReset entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
     PAGED_CODE()
 #endif
-
-    pLogicData->pLogFunc("UtPepLogicReset entering.\n");
 
     if (pData->Modes.nProgrammerMode != CUtPepLogicProgrammerNoneMode)
     {
@@ -1405,7 +1527,8 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicReset(
         pData->nLastAddress = 0xFFFFFFFF;
     }
 
-	pLogicData->pLogFunc("UtPepLogicReset leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicReset leaving.  (Thread: 0x%p)\n",
+		                 MCurrentThreadId());
 
     return bResult;
 }
@@ -1419,11 +1542,12 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetDelays(
 	BOOLEAN bResult = FALSE;
 	TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 
+	pLogicData->pLogFunc("UtPepLogicSetDelays entering.  (Thread: 0x%p)\n",
+                         MCurrentThreadId());
+
 #if defined(BUILD_DRIVER_LIB)
 	PAGED_CODE()
 #endif
-
-	pLogicData->pLogFunc("UtPepLogicSetDelays entering.\n");
 
 	if (pData->Modes.nProgrammerMode == CUtPepLogicProgrammerNoneMode)
 	{
@@ -1432,14 +1556,17 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetDelays(
 
 		bResult = TRUE;
 
-		pLogicData->pLogFunc("UtPepLogicSetDelays - Delay settings changed.\n");
+		pLogicData->pLogFunc("UtPepLogicSetDelays - Delay settings changed.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 	}
 	else
 	{
-		pLogicData->pLogFunc("UtPepLogicSetDelays - Delay settings cannot be changed.\n");
+		pLogicData->pLogFunc("UtPepLogicSetDelays - Delay settings cannot be changed.  (Thread: 0x%p)\n",
+			                 MCurrentThreadId());
 	}
 
-	pLogicData->pLogFunc("UtPepLogicSetDelays leaving.\n");
+	pLogicData->pLogFunc("UtPepLogicSetDelays leaving  (Thread: 0x%p).\n",
+		                 MCurrentThreadId());
 
 	return bResult;
 }
