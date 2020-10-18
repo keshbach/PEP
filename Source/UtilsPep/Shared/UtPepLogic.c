@@ -114,8 +114,6 @@
 
 #if defined(BUILD_USER_LIB)
 #define MCurrentThreadId() (UINT_PTR)GetCurrentThreadId()
-
-#define _IRQL_requires_max_(x)
 #elif defined(BUILD_DRIVER_LIB)
 #define MCurrentThreadId() PsGetCurrentThread()
 #else
