@@ -1,13 +1,18 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2018 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
 #include "MainForm.h"
+
 #include "Application.h"
 
+#include "ToolStripMenuItem.h"
+
 #include "Includes/UtTemplates.h"
+
+#pragma region "Local Functions"
 
 #pragma unmanaged
 
@@ -64,41 +69,62 @@ static BOOL lDestroyTaskbarList3(
 
 #pragma managed
 
+#pragma endregion
+
+#pragma region "Constructor"
+
 Common::Forms::MainForm::MainForm()
 {
     m_pTaskbarList3 = NULL;
     m_nProgressBarTotal = 0;
-    m_MenuItemHelpList = gcnew System::Collections::Generic::List<MenuItemHelp^>();
     m_SelectedControl = nullptr;
     m_StatusStrip = nullptr;
     m_ToolStripStatusLabelHelp = nullptr;
     m_bFindStatusStrip = true;
     m_ToolStripItemVisibleDict = nullptr;
+	m_ContextMenuStripList = nullptr;
 
+	m_ToolStripDrownDownItemList = gcnew System::Collections::Generic::List<System::Windows::Forms::ToolStripDropDownItem^>();
+    m_ContextMenuStripList = gcnew System::Collections::Generic::List<System::Windows::Forms::ContextMenuStrip^>();
 
-    m_MenuItemHelpList2 = gcnew Common::Forms::MenuItemHelpList();
+	m_OpenedToolStripDropDownItemStack = gcnew System::Collections::Generic::Stack<System::Windows::Forms::ToolStripDropDownItem^>();
+	m_OpenedContextMenuStrip = nullptr;
 
+	m_nMenuOpenedCount = 0;
 
+	m_LastMousePoint = gcnew System::Drawing::Point();
 
-    s_MainFormDesignMode = nullptr;
+	m_Timer = gcnew Common::Forms::FormTimer;
 
-    Common::Forms::Application::ProcessMessageList->Add(this);
+	m_Timer->FormObject = this;
+	m_Timer->Interval = 200;
+
+	m_Timer->Tick += gcnew System::EventHandler(TimerTick);
+
+	m_Timer->Stop();
 }
+
+#pragma endregion
+
+#pragma region "Deconstructor"
 
 Common::Forms::MainForm::~MainForm()
 {
+	ClearMenus();
+
     DestroyMenuStatusStrip();
 
-    Common::Forms::Application::ProcessMessageList->Remove(this);
-
-    delete m_MenuItemHelpList;
-
-    m_MenuItemHelpList = nullptr;
     m_StatusStrip = nullptr;
     m_SelectedControl = nullptr;
 
-    s_MainFormDesignMode = nullptr;
+	m_Timer->FormObject = nullptr;
+
+	m_Timer->Tick -= gcnew System::EventHandler(TimerTick);
+
+	m_Timer = nullptr;
 }
+
+#pragma endregion
 
 System::Boolean Common::Forms::MainForm::BeginTaskbarListProgressBar(
   System::UInt64 nTotal)
@@ -153,7 +179,39 @@ System::Boolean Common::Forms::MainForm::EndTaskbarListProgressBar()
     return true;
 }
 
-// IProcessMessage overrides
+void Common::Forms::MainForm::RefreshMenuHelp()
+{
+	System::Windows::Forms::MenuStrip^ MenuStrip;
+	System::Windows::Forms::TextBox^ TextBox;
+
+	ClearMenus();
+
+	for each (System::Windows::Forms::Control^ control in this->Controls)
+	{
+		if (IsInstance<System::Windows::Forms::MenuStrip^>(control))
+		{
+			MenuStrip = (System::Windows::Forms::MenuStrip^)control;
+
+			EnumMenuStrip(MenuStrip);
+		}
+		else if (IsInstance<System::Windows::Forms::TextBox^>(control))
+		{
+			TextBox = (System::Windows::Forms::TextBox^)control;
+
+			if (TextBox->ContextMenuStrip != nullptr)
+			{
+				TextBox->ContextMenuStrip->Opened += gcnew System::EventHandler(this, &Common::Forms::MainForm::ContextMenuOpened);
+				TextBox->ContextMenuStrip->Closed += gcnew System::Windows::Forms::ToolStripDropDownClosedEventHandler(this, &Common::Forms::MainForm::ContextMenuClosed);
+
+				m_ContextMenuStripList->Add(TextBox->ContextMenuStrip);
+
+				EnumContextMenuStrip(TextBox->ContextMenuStrip);
+			}
+		}
+	}
+}
+
+#pragma region "IProcessMessage"
 
 void Common::Forms::MainForm::ProcessKeyDown(
   System::Windows::Forms::Control^ control,
@@ -163,104 +221,85 @@ void Common::Forms::MainForm::ProcessKeyDown(
     control;
     nVirtKey;
     nData;
-
-    CreateMenuStatusStrip();
 }
 
-void Common::Forms::MainForm::ProcessSysKeyDown(
-  System::Windows::Forms::Control^ control,
-  System::Int32 nVirtKey,
-  System::Int32 nData)
+void Common::Forms::MainForm::ProcessKeyUp(
+	System::Windows::Forms::Control^ control,
+	System::Int32 nVirtKey,
+	System::Int32 nData)
 {
-    control;
-    nVirtKey;
-    nData;
+	System::Windows::Forms::ToolStripItemCollection^ toolStripItemCollection;
 
-    CreateMenuStatusStrip();
-}
+	control;
+	nVirtKey;
+	nData;
 
-void Common::Forms::MainForm::ProcessLeftButtonDown(
-  System::Windows::Forms::Control^ control,
-  System::Int32 nXPos,
-  System::Int32 nYPos)
-{
-    control;
-    nXPos;
-    nYPos;
+	if (m_nMenuOpenedCount > 0)
+	{
+		if (m_OpenedToolStripDropDownItemStack->Count > 0)
+		{
+			toolStripItemCollection = m_OpenedToolStripDropDownItemStack->Peek()->DropDownItems;
+		}
+		else
+		{
+			toolStripItemCollection = m_OpenedContextMenuStrip->Items;
+		}
 
-    CreateMenuStatusStrip();
-}
+		for each (System::Windows::Forms::ToolStripItem^ toolStripItem in toolStripItemCollection)
+		{
+			if (toolStripItem->Selected)
+			{
+				ShowStatusLabelHelp(toolStripItem);
 
-void Common::Forms::MainForm::ProcessLeftButtonUp(
-  System::Windows::Forms::Control^ control,
-  System::Int32 nXPos,
-  System::Int32 nYPos)
-{
-    control;
-    nXPos;
-    nYPos;
-
-    CreateMenuStatusStrip();
+				return;
+			}
+		}
+	}
 }
 
 void Common::Forms::MainForm::ProcessMouseMove(
-    System::Windows::Forms::Control^ control,
-    System::Int32 nXPos,
-    System::Int32 nYPos)
+  System::Windows::Forms::Control^ control,
+  System::Int32 nXPos,
+  System::Int32 nYPos)
 {
-    System::Windows::Forms::ToolStrip^ ToolStrip = nullptr;
-    System::Windows::Forms::ToolStripItem^ ToolStripItem;
+	System::Windows::Forms::ToolStrip^ ToolStrip;
+	System::Windows::Forms::ToolStripItem^ ToolStripItem;
+	POINT Point;
 
-    nXPos;
-    nYPos;
+	if (m_nMenuOpenedCount > 0)
+	{
+		if (IsInstance<System::Windows::Forms::ToolStrip^>(control))
+		{
+			Point.x = nXPos;
+			Point.y = nYPos;
 
-    CreateMenuStatusStrip();
+			::ClientToScreen((HWND)control->Handle.ToPointer(), &Point);
 
-    if (IsInstance<System::Windows::Forms::ToolStrip^>(control))
-    {
-        m_SelectedControl = control;
+			if (m_LastMousePoint->X != Point.x || m_LastMousePoint->Y != Point.y)
+			{
+				m_LastMousePoint->X = Point.x;
+				m_LastMousePoint->Y = Point.y;
 
-        if (IsInstance<System::Windows::Forms::MenuStrip^>(control) ||
-            IsInstance<System::Windows::Forms::ToolStripDropDownMenu^>(control))
-        {
-            ToolStrip = dynamic_cast<System::Windows::Forms::ToolStrip^>(control);
+				ToolStrip = (System::Windows::Forms::ToolStrip^)control;
 
-            ToolStripItem = ToolStrip->GetItemAt(nXPos, nYPos);
+				ToolStripItem = ToolStrip->GetItemAt(nXPos, nYPos);
 
-            if (ToolStripItem != nullptr)
-            {
-                ShowStatusLabelHelp(FindToolStripItemHelpText(ToolStripItem));
-            }
-            else
-            {
-                ShowStatusLabelHelp("");
-            }
-        }
-        else
-        {
-            // Unknown control type
+				ShowStatusLabelHelp(ToolStripItem);
+			}
+		}
+		else
+		{
+			m_LastMousePoint->X = nXPos;
+			m_LastMousePoint->Y = nYPos;
 
-            ShowStatusLabelHelp("");
-        }
-    }
-    else
-    {
-        DestroyMenuStatusStrip();
-
-        m_SelectedControl = nullptr;
-    }
+			ShowStatusLabelHelp(nullptr);
+		}
+	}
 }
 
-void Common::Forms::MainForm::OnHandleCreated(
-  System::EventArgs^ e)
-{
-    if (this->DesignMode)
-    {
-        s_MainFormDesignMode = this;
-    }
+#pragma endregion
 
-    System::Windows::Forms::Form::OnHandleCreated(e);
-}
+#pragma region "Internal Helpers"
 
 void Common::Forms::MainForm::CreateMenuStatusStrip()
 {
@@ -312,9 +351,23 @@ void Common::Forms::MainForm::DestroyMenuStatusStrip()
 }
 
 void Common::Forms::MainForm::ShowStatusLabelHelp(
-  System::String^ text)
+  System::Windows::Forms::ToolStripItem^ ToolStripItem)
 {
-    if (m_ToolStripItemVisibleDict == nullptr)
+	Common::Forms::ToolStripMenuItem^ ToolStripMenuItem;
+	System::String^ HelpText;
+
+	if (IsInstance<Common::Forms::ToolStripMenuItem^>(ToolStripItem))
+	{
+		ToolStripMenuItem = (Common::Forms::ToolStripMenuItem^)ToolStripItem;
+
+		HelpText = ToolStripMenuItem->HelpText;
+	}
+	else
+	{
+		HelpText = "";
+	}
+
+	if (m_ToolStripItemVisibleDict == nullptr)
     {
         m_ToolStripItemVisibleDict = gcnew System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Boolean>();
 
@@ -328,7 +381,7 @@ void Common::Forms::MainForm::ShowStatusLabelHelp(
         m_ToolStripStatusLabelHelp->Visible = true;
     }
 
-    m_ToolStripStatusLabelHelp->Text = text;
+    m_ToolStripStatusLabelHelp->Text = HelpText;
 }
 
 System::Windows::Forms::StatusStrip^ Common::Forms::MainForm::FindStatusStrip()
@@ -344,20 +397,212 @@ System::Windows::Forms::StatusStrip^ Common::Forms::MainForm::FindStatusStrip()
     return nullptr;
 }
 
-System::String^ Common::Forms::MainForm::FindToolStripItemHelpText(
-  System::Windows::Forms::ToolStripItem^ ToolStripItem)
+void Common::Forms::MainForm::EnumMenuStrip(
+  System::Windows::Forms::MenuStrip^ MenuStrip)
 {
-    for each (Common::Forms::MenuItemHelp^ menuItemHelp in Common::Forms::Application::MainForm->MenuStripHelp)
-    {
-        if (System::Object::ReferenceEquals(menuItemHelp->MenuItem, ToolStripItem))
-        {
-            return menuItemHelp->HelpText;
-        }
-    }
+	System::Windows::Forms::ToolStripDropDownItem^ ToolStripDropDownItem;
 
-    return L"";
+	for each (System::Windows::Forms::ToolStripItem^ toolStripItem in MenuStrip->Items)
+	{
+		if (IsInstance<System::Windows::Forms::ToolStripDropDownItem^>(toolStripItem))
+		{
+			ToolStripDropDownItem = (System::Windows::Forms::ToolStripDropDownItem^)toolStripItem;
+
+			ToolStripDropDownItem->DropDownOpened += gcnew System::EventHandler(this, &Common::Forms::MainForm::DropDownOpened);
+			ToolStripDropDownItem->DropDownClosed += gcnew System::EventHandler(this, &Common::Forms::MainForm::DropDownClosed);
+
+			m_ToolStripDrownDownItemList->Add(ToolStripDropDownItem);
+
+			EnumToolStripDropDownItem(ToolStripDropDownItem);
+    	}
+	}
 }
 
+void Common::Forms::MainForm::EnumContextMenuStrip(
+  System::Windows::Forms::ContextMenuStrip^ ContextMenuStrip)
+{
+	System::Windows::Forms::ToolStripDropDownItem^ ToolStripDropDownItem;
+
+	for each (System::Windows::Forms::ToolStripItem^ ToolStripItem in ContextMenuStrip->Items)
+	{
+		if (IsInstance<System::Windows::Forms::ToolStripDropDownItem^>(ToolStripItem))
+		{
+			ToolStripDropDownItem = (System::Windows::Forms::ToolStripDropDownItem^)ToolStripItem;
+
+			if (ToolStripDropDownItem->HasDropDownItems)
+			{
+				ToolStripDropDownItem->DropDownOpened += gcnew System::EventHandler(this, &Common::Forms::MainForm::DropDownOpened);
+				ToolStripDropDownItem->DropDownClosed += gcnew System::EventHandler(this, &Common::Forms::MainForm::DropDownClosed);
+
+				m_ToolStripDrownDownItemList->Add(ToolStripDropDownItem);
+
+				EnumToolStripDropDownItem(ToolStripDropDownItem);
+			}
+		}
+	}
+}
+
+void Common::Forms::MainForm::EnumToolStripDropDownItem(
+  System::Windows::Forms::ToolStripDropDownItem^ ToolStripDropDownItem)
+{
+	System::Windows::Forms::ToolStripDropDownItem^ ChildToolStripDropDownItem;
+
+	for each (System::Windows::Forms::ToolStripItem^ ToolStripItem in ToolStripDropDownItem->DropDownItems)
+	{
+		if (IsInstance<System::Windows::Forms::ToolStripDropDownItem^>(ToolStripItem))
+		{
+			ChildToolStripDropDownItem = (System::Windows::Forms::ToolStripDropDownItem^)ToolStripItem;
+
+			if (ChildToolStripDropDownItem->DropDownItems->Count > 0)
+			{
+    			ChildToolStripDropDownItem->DropDownOpened += gcnew System::EventHandler(this, &Common::Forms::MainForm::DropDownOpened);
+	    		ChildToolStripDropDownItem->DropDownClosed += gcnew System::EventHandler(this, &Common::Forms::MainForm::DropDownClosed);
+
+		    	m_ToolStripDrownDownItemList->Add(ChildToolStripDropDownItem);
+
+				EnumToolStripDropDownItem(ChildToolStripDropDownItem);
+			}
+		}
+	}
+}
+
+void Common::Forms::MainForm::ClearMenus()
+{
+	for each (System::Windows::Forms::ToolStripDropDownItem^ toolStripDropDownItem in m_ToolStripDrownDownItemList)
+	{
+		toolStripDropDownItem->DropDownOpened -= gcnew System::EventHandler(this, &Common::Forms::MainForm::DropDownOpened);
+		toolStripDropDownItem->DropDownClosed -= gcnew System::EventHandler(this, &Common::Forms::MainForm::DropDownClosed);
+	}
+	
+	m_ToolStripDrownDownItemList->Clear();
+
+	for each (System::Windows::Forms::ContextMenuStrip^ contextMenuStrip in m_ContextMenuStripList)
+	{
+		contextMenuStrip->Opened -= gcnew System::EventHandler(this, &Common::Forms::MainForm::ContextMenuOpened);
+		contextMenuStrip->Closed -= gcnew System::Windows::Forms::ToolStripDropDownClosedEventHandler(this, &Common::Forms::MainForm::ContextMenuClosed);
+	}
+
+	m_ContextMenuStripList->Clear();
+}
+
+void Common::Forms::MainForm::IncreaseMenuOpenedCount()
+{
+	++m_nMenuOpenedCount;
+
+	if (m_nMenuOpenedCount == 1)
+	{
+		CreateMenuStatusStrip();
+
+		m_LastMousePoint->X = GET_X_LPARAM(::GetMessagePos());
+		m_LastMousePoint->Y = GET_Y_LPARAM(::GetMessagePos());
+
+		m_Timer->Start();
+	}
+
+	ShowStatusLabelHelp(nullptr);
+}
+
+void Common::Forms::MainForm::DecreaseMenuOpenedCount()
+{
+	--m_nMenuOpenedCount;
+
+	if (m_nMenuOpenedCount == 0)
+	{
+		m_Timer->Stop();
+
+		DestroyMenuStatusStrip();
+	}
+	else
+	{
+		ShowStatusLabelHelp(nullptr);
+	}
+}
+
+void Common::Forms::MainForm::DropDownOpened(
+  System::Object^ sender,
+  System::EventArgs^ e)
+{
+	sender;
+	e;
+
+	m_OpenedToolStripDropDownItemStack->Push((System::Windows::Forms::ToolStripDropDownItem^)sender);
+
+	IncreaseMenuOpenedCount();
+}
+
+void Common::Forms::MainForm::DropDownClosed(
+  System::Object^ sender,
+  System::EventArgs^ e)
+{
+	sender;
+	e;
+
+	m_OpenedToolStripDropDownItemStack->Pop();
+
+	DecreaseMenuOpenedCount();
+}
+
+void Common::Forms::MainForm::ContextMenuOpened(
+  System::Object^ sender,
+  System::EventArgs^ e)
+{
+	sender;
+	e;
+
+	m_OpenedContextMenuStrip = (System::Windows::Forms::ContextMenuStrip^)sender;
+
+	IncreaseMenuOpenedCount();
+}
+
+void Common::Forms::MainForm::ContextMenuClosed(
+  System::Object^ sender,
+  System::Windows::Forms::ToolStripDropDownClosedEventArgs^ e)
+{
+	sender;
+	e;
+
+	m_OpenedContextMenuStrip = nullptr;
+
+	DecreaseMenuOpenedCount();
+}
+
+void Common::Forms::MainForm::TimerTick(
+  System::Object^ sender, 
+  System::EventArgs^ e)
+{
+	Common::Forms::FormTimer^ formTimer = (Common::Forms::FormTimer^)sender;
+	MainForm^ mainForm = (MainForm^)formTimer->FormObject;
+	Control^ control;
+	POINT Point;
+	HWND hWnd;
+
+	e;
+
+	Point.x = GET_X_LPARAM(::GetMessagePos());
+	Point.y = GET_Y_LPARAM(::GetMessagePos());
+
+	if (mainForm->m_LastMousePoint->X == Point.x && mainForm->m_LastMousePoint->Y == Point.y)
+	{
+		return;
+    }
+
+	mainForm->m_LastMousePoint->X = Point.x;
+	mainForm->m_LastMousePoint->Y = Point.y;
+
+	hWnd = ::WindowFromPoint(Point);
+
+	control = System::Windows::Forms::Control::FromHandle(System::IntPtr::IntPtr(hWnd));
+
+	if (IsInstance<System::Windows::Forms::ToolStrip^>(control))
+	{
+		::ScreenToClient(hWnd, &Point);
+	}
+
+	mainForm->ProcessMouseMove(control, Point.x, Point.y);
+}
+
+#pragma endregion
+
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2018 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

@@ -1,10 +1,12 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2009-2018 Kevin Eshbach
+//  Copyright (C) 2009-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
 #include "MenuStrip.h"
+
+#include "Includes/UtTemplates.h"
 
 Common::Forms::MenuStrip::MenuStrip()
 {
@@ -65,7 +67,7 @@ void Common::Forms::MenuStrip::EnumToolStripItems(
   System::Windows::Forms::ToolStripItemCollection^ ToolStripItemCollection,
   System::Collections::Generic::List<TToolStripItemState^>^ ToolStripItemStateList)
 {
-    System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem;
+	System::Windows::Forms::ToolStripDropDownItem^ ToolStripDropDownItem;
     TToolStripItemState^ ToolStripItemState;
     System::Boolean bAddItem;
 
@@ -73,13 +75,13 @@ void Common::Forms::MenuStrip::EnumToolStripItems(
     {
         bAddItem = true;
 
-        if (ToolStripItem->GetType() == System::Windows::Forms::ToolStripMenuItem::typeid)
-        {
-            ToolStripMenuItem = (System::Windows::Forms::ToolStripMenuItem^)ToolStripItem;
+		if (IsInstance<System::Windows::Forms::ToolStripDropDownItem^>(ToolStripItem))
+		{
+    		ToolStripDropDownItem = (System::Windows::Forms::ToolStripDropDownItem^)ToolStripItem;
 
-            if (ToolStripMenuItem->DropDownItems->Count > 0)
+            if (ToolStripDropDownItem->DropDownItems->Count > 0)
             {
-                EnumToolStripItems(ToolStripMenuItem->DropDownItems,
+                EnumToolStripItems(ToolStripDropDownItem->DropDownItems,
                                    ToolStripItemStateList);
 
                 bAddItem = false;
@@ -114,5 +116,5 @@ System::Boolean Common::Forms::MenuStrip::IsToolStripItemInArray(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2009-2018 Kevin Eshbach
+//  Copyright (C) 2009-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

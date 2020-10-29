@@ -267,14 +267,12 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="FormLocation.cpp" />
-    <ClCompile Include="MenuItemHelp.cpp" />
-    <ClCompile Include="MenuItemHelpList.cpp" />
     <ClCompile Include="MyApplicationContext.cpp" />
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ImageManager.cpp" />
     <ClCompile Include="MainForm.cpp" />
     <ClCompile Include="MessageBox.cpp" />
-    <ClCompile Include="ProcessMessage.cpp" />
+    <ClCompile Include="MyThreadContext.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -282,6 +280,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="FormTimer.cpp" />
+    <ClCompile Include="ToolStripMenuItem.cpp" />
     <ClCompile Include="UiUtilNetDllMain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -303,17 +302,16 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="FormLocation.h" />
     <ClInclude Include="IFormLocation.h" />
-    <ClInclude Include="MenuItemHelp.h" />
-    <ClInclude Include="MenuItemHelpList.h" />
     <ClInclude Include="MyApplicationContext.h" />
     <ClInclude Include="ImageManager.h" />
     <ClInclude Include="IProcessMessage.h" />
     <ClInclude Include="MainForm.h" />
     <ClInclude Include="MessageBox.h" />
-    <ClInclude Include="ProcessMessage.h" />
+    <ClInclude Include="MyThreadContext.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="FormTimer.h" />
+    <ClInclude Include="ToolStripMenuItem.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="WaitCursor.h" />
   </ItemGroup>
