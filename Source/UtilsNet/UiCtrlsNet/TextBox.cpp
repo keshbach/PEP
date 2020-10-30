@@ -27,6 +27,8 @@ Common::Forms::TextBox::~TextBox()
     {
         m_Timer->Stop();
 
+		m_Timer->Tick -= gcnew System::EventHandler(TimerEventProcessor);
+
         delete m_Timer;
 
         m_Timer = nullptr;
