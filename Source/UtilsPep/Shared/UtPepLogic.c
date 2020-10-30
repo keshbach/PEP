@@ -793,11 +793,17 @@ static BOOLEAN lWaitForProgramPulse(
 	switch (pData->Modes.nPinPulseMode)
 	{
 		case CUtPepLogicPinPulse1Mode:
+			pLogicData->pLogFunc("lWaitForProgramPulse - Using a 1.1 msecs pulse.  (Thread: 0x%p)\n",
+                                 MCurrentThreadId());
+
 			IntervalNanoseconds.QuadPart = (LONGLONG)MMilliToNanoseconds(1.1); /* 1.1 msec */
 			break;
 		case CUtPepLogicPinPulse2Mode:
 		case CUtPepLogicPinPulse3Mode:
 		case CUtPepLogicPinPulse4Mode:
+			pLogicData->pLogFunc("lWaitForProgramPulse - Using a 250 us pulse.  (Thread: 0x%p)\n",
+                                 MCurrentThreadId());
+
 			IntervalNanoseconds.QuadPart = (LONGLONG)MMicroToNanoseconds(250); /* 250 us */
 			break;
 		default:
@@ -821,12 +827,18 @@ static BOOLEAN lWaitForProgramPulse(
     switch (pData->Modes.nPinPulseMode)
     {
         case CUtPepLogicPinPulse1Mode:
+			pLogicData->pLogFunc("lWaitForProgramPulse - Preparing to read the PFIX value.  (Thread: 0x%p)\n",
+                                 MCurrentThreadId());
+
             nData = MPortData(PFIX, CUnit_DontCare, CUnitOff);
             break;
         case CUtPepLogicPinPulse2Mode:
         case CUtPepLogicPinPulse3Mode:
         case CUtPepLogicPinPulse4Mode:
-            nData = MPortData(PVAR, CUnit_DontCare, CUnitOff);
+			pLogicData->pLogFunc("lWaitForProgramPulse - Preparing to read the PVAR value.  (Thread: 0x%p)\n",
+                                 MCurrentThreadId());
+			
+			nData = MPortData(PVAR, CUnit_DontCare, CUnitOff);
             break;
 		default:
 			pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Cannot determine data to write because of unknown pin pulse mode: 0x%X)  (Thread: 0x%p)\n",
@@ -842,7 +854,7 @@ static BOOLEAN lWaitForProgramPulse(
                                    sizeof(nData), CWaitNanoSeconds) &&
         pLogicData->pReadBitPortFunc(pLogicData->pvDeviceContext, &bValue))
     {
-        if (bValue)
+        if (!bValue)
         {
             pLogicData->pLogFunc("lWaitForProgramPulse - Program pulse has finished.  (Thread: 0x%p)\n",
 				                 MCurrentThreadId());

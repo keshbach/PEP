@@ -30,7 +30,8 @@ static VOID UTPEPDEVICESAPI l2708ProgramDevice(const TDeviceIOFuncs* pDeviceIOFu
 static VOID UTPEPDEVICESAPI l2708VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
 static VOID UTPEPDEVICESAPI l2716ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
-static VOID UTPEPDEVICESAPI l2716ProgramDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l2716ProgramDeviceWith25VDC(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
+static VOID UTPEPDEVICESAPI l2716ProgramDeviceWith12VDC(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 static VOID UTPEPDEVICESAPI l2716VerifyDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, const LPBYTE pbyData, ULONG ulDataLen);
 
 static VOID UTPEPDEVICESAPI lTMS2716ReadDevice(const TDeviceIOFuncs* pDeviceIOFuncs, UINT32 nChipEnableNanoseconds, UINT32 nOutputEnableNanoseconds, LPBYTE pbyData, ULONG ulDataLen);
@@ -436,7 +437,7 @@ DEVICES_BEGIN
             DEVICE_ROM_BITSPERVALUE(8)
             DEVICE_ROM_VPP_25VDC
             DEVICE_ROM_READ_FUNC(l2716ReadDevice)
-            DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDevice)
+            DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDeviceWith25VDC)
             DEVICE_ROM_VERIFY_FUNC(l2716VerifyDevice)
         DEVICE_ROM_DATA_END
     DEVICE_DATA_END
@@ -457,7 +458,7 @@ DEVICES_BEGIN
             DEVICE_ROM_BITSPERVALUE(8)
             DEVICE_ROM_VPP_12dot75VDC
             DEVICE_ROM_READ_FUNC(l2716ReadDevice)
-            DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDevice)
+            DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDeviceWith12VDC)
             DEVICE_ROM_VERIFY_FUNC(l2716VerifyDevice)
         DEVICE_ROM_DATA_END
     DEVICE_DATA_END
@@ -478,7 +479,7 @@ DEVICES_BEGIN
             DEVICE_ROM_BITSPERVALUE(8)
             DEVICE_ROM_VPP_25VDC
             DEVICE_ROM_READ_FUNC(l2716ReadDevice)
-            DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDevice)
+            DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDeviceWith25VDC)
             DEVICE_ROM_VERIFY_FUNC(l2716VerifyDevice)
         DEVICE_ROM_DATA_END
     DEVICE_DATA_END
@@ -499,7 +500,7 @@ DEVICES_BEGIN
             DEVICE_ROM_BITSPERVALUE(8)
             DEVICE_ROM_VPP_12dot75VDC
             DEVICE_ROM_READ_FUNC(l2716ReadDevice)
-            DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDevice)
+            DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDeviceWith12VDC)
             DEVICE_ROM_VERIFY_FUNC(l2716VerifyDevice)
         DEVICE_ROM_DATA_END
     DEVICE_DATA_END
@@ -520,7 +521,7 @@ DEVICES_BEGIN
 			DEVICE_ROM_BITSPERVALUE(8)
 			DEVICE_ROM_VPP_25VDC
 			DEVICE_ROM_READ_FUNC(l2716ReadDevice)
-			DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDevice)
+			DEVICE_ROM_PROGRAM_FUNC(l2716ProgramDeviceWith25VDC)
 			DEVICE_ROM_VERIFY_FUNC(l2716VerifyDevice)
 		DEVICE_ROM_DATA_END
 	DEVICE_DATA_END
@@ -807,11 +808,50 @@ static VOID UTPEPDEVICESAPI l2708ProgramDevice(
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    pDeviceIOFuncs;
-	nChipEnableNanoseconds;
+	BOOL bErrorOccurred = FALSE;
+	ULONG ulTmpBufferLen = ulDataLen / 32;
+	ULONG ulAddress;
+
 	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	// Since the Chip Enable pin of the 2708 is mapped to the Output Enable pin flip the 
+	// delay parameters and just wait for the chip to power up before attempting a read.
+
+	if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+		FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
+		FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse1Mode) ||
+		FALSE == UtPepCtrlSetVppMode(eUtPepCtrl25VDCVppMode) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerWriteMode))
+	{
+		bErrorOccurred = TRUE;
+
+		goto End;
+	}
+
+	for (ulAddress = 0; ulAddress < ulDataLen; ulAddress += ulTmpBufferLen)
+	{
+		if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
+			FALSE == UtPepCtrlProgramData(ulAddress, pbyData + ulAddress,
+				                          ulTmpBufferLen))
+		{
+			bErrorOccurred = TRUE;
+
+			goto End;
+		}
+
+		pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
+	}
+
+	pDeviceIOFuncs->pProgressDeviceIOFunc(ulDataLen);
+
+End:
+	UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI l2708VerifyDevice(
@@ -948,18 +988,70 @@ End:
     pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoRead);
 }
 
-static VOID UTPEPDEVICESAPI l2716ProgramDevice(
+static VOID UTPEPDEVICESAPI l2716ProgramDeviceWith25VDC(
   const TDeviceIOFuncs* pDeviceIOFuncs,
   UINT32 nChipEnableNanoseconds, 
   UINT32 nOutputEnableNanoseconds,
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-    pDeviceIOFuncs;
+	pDeviceIOFuncs;
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
-    pbyData;
-    ulDataLen;
+	pbyData;
+	ulDataLen;
+
+	/*BOOL bErrorOccurred = FALSE;
+	ULONG ulTmpBufferLen = ulDataLen / CGenericBytesPerOperation;
+	ULONG ulAddress;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoWrite);
+
+	if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+		FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
+		FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse2Mode) ||
+		FALSE == UtPepCtrlSetVppMode(eUtPepCtrl12VDCVppMode) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerWriteMode))
+	{
+		bErrorOccurred = TRUE;
+
+		goto End;
+	}
+
+	for (ulAddress = 0; ulAddress < ulDataLen; ulAddress += ulTmpBufferLen)
+	{
+		if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
+			FALSE == UtPepCtrlProgramData(ulAddress, pbyData + ulAddress,
+				ulTmpBufferLen))
+		{
+			bErrorOccurred = TRUE;
+
+			goto End;
+		}
+
+		pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
+	}
+
+	pDeviceIOFuncs->pProgressDeviceIOFunc(ulDataLen);
+
+End:
+	UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoWrite);*/
+}
+
+static VOID UTPEPDEVICESAPI l2716ProgramDeviceWith12VDC(
+  const TDeviceIOFuncs* pDeviceIOFuncs,
+  UINT32 nChipEnableNanoseconds,
+  UINT32 nOutputEnableNanoseconds,
+  const LPBYTE pbyData,
+  ULONG ulDataLen)
+{
+	pDeviceIOFuncs;
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+	pbyData;
+	ulDataLen;
 }
 
 static VOID UTPEPDEVICESAPI l2716VerifyDevice(
@@ -1044,8 +1136,8 @@ static VOID UTPEPDEVICESAPI lTMS2716ReadDevice(
   ULONG ulDataLen)
 {
     BOOL bErrorOccurred = FALSE;
-    ULONG ulTmpBufferLen = ulDataLen / 32;
     ULONG ulAddress, ulTmpAddress;
+	TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[1];
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
 
@@ -1060,19 +1152,22 @@ static VOID UTPEPDEVICESAPI lTMS2716ReadDevice(
         goto End;
     }
 
-    for (ulAddress = 0; ulAddress < ulDataLen; ulAddress += ulTmpBufferLen)
+	for (ulAddress = 0; ulAddress < ulDataLen; ++ulAddress)
     {
         ulTmpAddress = (ulAddress & 0x0400) << 2;
         ulTmpAddress |= (ulAddress & 0x03FF);
 
-        if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
-            FALSE == UtPepCtrlReadData(ulTmpAddress, pbyData + ulAddress,
-                                       ulTmpBufferLen))
-        {
-            bErrorOccurred = TRUE;
+		ReadUserDataWithDelay[0].nAddress = ulTmpAddress;
+		ReadUserDataWithDelay[0].bPerformRead = TRUE;
+		ReadUserDataWithDelay[0].nDelayNanoSeconds = nOutputEnableNanoseconds;
 
-            goto End;
-        }
+		if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
+			FALSE == UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay, 1, pbyData + ulAddress, 1))
+		{
+			bErrorOccurred = TRUE;
+
+			goto End;
+		}
 
         pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
     }
@@ -1095,6 +1190,8 @@ static VOID UTPEPDEVICESAPI lTMS2716ProgramDevice(
 	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;
+
+	// Note: pull OE pin low to send +12VDC to the Vcc pin
 }
 
 static VOID UTPEPDEVICESAPI lTMS2716VerifyDevice(
@@ -1105,9 +1202,9 @@ static VOID UTPEPDEVICESAPI lTMS2716VerifyDevice(
   ULONG ulDataLen)
 {
     BOOL bErrorOccurred = FALSE;
-    ULONG ulTmpBufferLen = ulDataLen / 32;
-    LPBYTE pbyTmpBuffer = (LPBYTE)UtAllocMem(ulTmpBufferLen);
-    ULONG ulAddress, ulTmpAddress, ulIndex;
+    ULONG ulAddress, ulTmpAddress;
+	TUtPepCtrlReadUserDataWithDelay ReadUserDataWithDelay[1];
+	BYTE byData;
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
 
@@ -1122,28 +1219,28 @@ static VOID UTPEPDEVICESAPI lTMS2716VerifyDevice(
         goto End;
     }
 
-    for (ulAddress = 0; ulAddress < ulDataLen; ulAddress += ulTmpBufferLen)
-    {
-        ulTmpAddress = (ulAddress & 0x0400) << 2;
+	for (ulAddress = 0; ulAddress < ulDataLen; ++ulAddress)
+	{
+		ulTmpAddress = (ulAddress & 0x0400) << 2;
         ulTmpAddress |= (ulAddress & 0x03FF);
 
-        if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
-            FALSE == UtPepCtrlReadData(ulTmpAddress, pbyTmpBuffer,
-                                       ulTmpBufferLen))
+		ReadUserDataWithDelay[0].nAddress = ulTmpAddress;
+		ReadUserDataWithDelay[0].bPerformRead = TRUE;
+		ReadUserDataWithDelay[0].nDelayNanoSeconds = nOutputEnableNanoseconds;
+
+		if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
+			FALSE == UtPepCtrlReadUserDataWithDelay(ReadUserDataWithDelay, 1, &byData, 1))
         {
             bErrorOccurred = TRUE;
 
             goto End;
         }
 
-        for (ulIndex = 0; ulIndex < ulTmpBufferLen; ++ulIndex)
+		if (pbyData[ulAddress] != byData)
         {
-            if (pbyData[ulAddress + ulIndex] != pbyTmpBuffer[ulIndex])
-            {
-                pDeviceIOFuncs->pVerifyByteErrorDeviceIOFunc(ulAddress + ulIndex,
-                                                             pbyData[ulAddress + ulIndex],
-                                                             pbyTmpBuffer[ulIndex]);
-            }
+            pDeviceIOFuncs->pVerifyByteErrorDeviceIOFunc(ulAddress,
+                                                         pbyData[ulAddress],
+                                                         byData);
         }
 
         pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
@@ -1153,8 +1250,6 @@ End:
     UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
 
     pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoVerify);
-
-    UtFreeMem(pbyTmpBuffer);
 }
 
 /***************************************************************************/
