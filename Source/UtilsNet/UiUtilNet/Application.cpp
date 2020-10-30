@@ -12,6 +12,8 @@
 
 #include "IProcessMessage.h"
 
+#include "Includes/UtTemplates.h"
+
 static void lHandleProcessMessage(
   Common::Forms::IProcessMessage^ ProcessMessage,
   LPMSG pMsg)
@@ -41,6 +43,7 @@ System::Boolean Common::Forms::Application::Run(Common::Forms::MainForm^ MainFor
 	MSG Msg;
 	System::Windows::Forms::Control^ Control;
 	System::Windows::Forms::Message^ Message;
+	System::Windows::Forms::IMessageFilter^ MessageFilter;
 
 	if (!Initialize(MainForm))
     {
@@ -57,6 +60,22 @@ System::Boolean Common::Forms::Application::Run(Common::Forms::MainForm^ MainFor
 
 		if (bResult == TRUE)
 		{
+			if (Msg.message == WM_KEYDOWN &&
+				IsInstance<System::Windows::Forms::IMessageFilter^>(MainForm))
+			{
+				MessageFilter = (System::Windows::Forms::IMessageFilter^)MainForm;
+
+				Message = System::Windows::Forms::Message::Create(System::IntPtr::IntPtr(Msg.hwnd),
+					                                              Msg.message,
+					                                              System::IntPtr::IntPtr((LPVOID)Msg.wParam),
+					                                              System::IntPtr::IntPtr(Msg.lParam));
+
+				if (MessageFilter->PreFilterMessage(*Message))
+				{
+					continue;
+				}
+			}
+
 			lHandleProcessMessage(MainForm, &Msg);
 
 			Control = System::Windows::Forms::Control::FromHandle(System::IntPtr::IntPtr(Msg.hwnd));
