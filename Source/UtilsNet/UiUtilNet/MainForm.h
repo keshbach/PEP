@@ -65,6 +65,10 @@ namespace Common
 			virtual void ProcessKeyUp(System::Windows::Forms::Control^ control, System::Int32 nVirtKey, System::Int32 nData);
 			virtual void ProcessMouseMove(System::Windows::Forms::Control^ control, System::Int32 nXPos, System::Int32 nYPos);
 
+		protected:
+			// Form overrides
+			virtual void OnLoad(System::EventArgs^ e) override;
+
         private:
             void CreateMenuStatusStrip();
             void DestroyMenuStatusStrip();

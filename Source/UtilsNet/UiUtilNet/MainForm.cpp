@@ -299,6 +299,18 @@ void Common::Forms::MainForm::ProcessMouseMove(
 
 #pragma endregion
 
+#pragma region "Form Overrides"
+
+void Common::Forms::MainForm::OnLoad(
+  System::EventArgs^ e)
+{
+	System::Windows::Forms::Form::OnLoad(e);
+
+	RefreshMenuHelp();
+}
+
+#pragma endregion
+
 #pragma region "Internal Helpers"
 
 void Common::Forms::MainForm::CreateMenuStatusStrip()
