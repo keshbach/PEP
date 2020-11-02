@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2014 Kevin Eshbach
+//  Copyright (C) 2014-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 //
@@ -1130,13 +1130,15 @@ static BOOL lInitZip(
             switch (CentralDirectoryRecord.nVersionMadeBy >> 8)
             {
                 case CMSDOS:
-                    break;
-                default:
+					break;
+				// Disable version made by check for the time being since some zip files have been
+				// found to contain other values
+                /*default:
                     *pnErrorCode = CUtZipOperatingSystemNotSupported;
 
                     lEmptyFileRecordVec(pZip->pFileRecordVec);
 
-                    return FALSE;
+                    return FALSE;*/
             }
 
             pszFileName = new (std::nothrow) CHAR[CentralDirectoryRecord.nFileNameLen];
@@ -4730,5 +4732,5 @@ BOOL UtZipCopyDirectory(
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2014 Kevin Eshbach
+//  Copyright (C) 2014-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
