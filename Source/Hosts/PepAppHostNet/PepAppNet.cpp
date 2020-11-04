@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -45,11 +45,7 @@ System::UInt32 Pep::Application::Startup::Execute()
 
 		Pep::Programmer::Config::Initialize(AppForm);
 
-        System::Windows::Forms::Application::AddMessageFilter(AppForm);
-
         Common::Forms::Application::Run(AppForm);
-
-        System::Windows::Forms::Application::RemoveMessageFilter(AppForm);
 
 		Pep::Programmer::Config::Uninitialize();
 	}
@@ -74,5 +70,5 @@ System::UInt32 Pep::Application::Startup::Execute()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
