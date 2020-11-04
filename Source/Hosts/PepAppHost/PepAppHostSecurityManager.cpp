@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -72,12 +72,21 @@ HRESULT STDMETHODCALLTYPE PepAppHostSecurityManager::OpenThreadToken(
   BOOL bOpenAsSelf,
   HANDLE* phThreadToken)
 {
+	BOOL bResult;
+
     if (phThreadToken == NULL)
     {
         return E_POINTER;
     }
 
-    return ::OpenThreadToken(::GetCurrentThread(), dwDesiredAccess, bOpenAsSelf, phThreadToken) ? S_OK : E_FAIL;
+	bResult = ::OpenThreadToken(::GetCurrentThread(), dwDesiredAccess, bOpenAsSelf, phThreadToken);
+	
+	if (bResult == FALSE && ::GetLastError() == ERROR_NO_TOKEN && bOpenAsSelf)
+	{
+		bResult = ::OpenProcessToken(::GetCurrentProcess(), dwDesiredAccess, phThreadToken);
+	}
+
+	return bResult ? S_OK : E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE PepAppHostSecurityManager::SetThreadToken(
@@ -115,11 +124,14 @@ HRESULT STDMETHODCALLTYPE PepAppHostSecurityManager::SetSecurityContext(
   EContextType eContextType,
   IHostSecurityContext* pSecurityContext)
 {
-    return S_OK;
+	eContextType;
+	pSecurityContext;
+	
+	return S_OK;
 }
 
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
