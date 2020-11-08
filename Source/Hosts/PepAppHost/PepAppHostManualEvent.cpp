@@ -68,14 +68,27 @@ HRESULT STDMETHODCALLTYPE PepAppHostManualEvent::Wait(
   DWORD dwMilliseconds,
   DWORD option)
 {
-    option;
+	DWORD dwResult;
 
     if (m_hEvent)
     {
-        switch (::WaitForSingleObject(m_hEvent, dwMilliseconds))
+		if (option & WAIT_ALERTABLE)
+		{
+			dwResult = ::WaitForSingleObjectEx(m_hEvent, dwMilliseconds, TRUE);
+		}
+		else
+		{
+			dwResult = ::WaitForSingleObject(m_hEvent, dwMilliseconds);
+		}
+
+		switch (dwResult)
         {
             case WAIT_OBJECT_0:
                 return S_OK;
+			case WAIT_ABANDONED:
+				return HOST_E_ABANDONED;
+			case WAIT_IO_COMPLETION:
+				return HOST_E_INTERRUPTED;
             case WAIT_TIMEOUT:
                 return HOST_E_TIMEOUT;
         }

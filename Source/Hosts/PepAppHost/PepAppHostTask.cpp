@@ -102,16 +102,27 @@ HRESULT STDMETHODCALLTYPE PepAppHostTask::Join(
   DWORD dwMilliseconds,
   DWORD option)
 {
-    option;
+	DWORD dwResult;
 
     if (m_hThread)
     {
-        switch (::WaitForSingleObject(m_hThread, dwMilliseconds))
+		if (option & WAIT_ALERTABLE)
+		{
+			dwResult = ::WaitForSingleObjectEx(m_hThread, dwMilliseconds, TRUE);
+		}
+		else
+		{
+			dwResult = ::WaitForSingleObject(m_hThread, dwMilliseconds);
+		}
+
+        switch (dwResult)
         {
             case WAIT_OBJECT_0:
                 return S_OK;
             case WAIT_TIMEOUT:
                 return HOST_E_TIMEOUT;
+			case WAIT_IO_COMPLETION:
+				return HOST_E_INTERRUPTED;
         }
     }
 
@@ -135,6 +146,11 @@ HRESULT STDMETHODCALLTYPE PepAppHostTask::SetPriority(
 HRESULT STDMETHODCALLTYPE PepAppHostTask::GetPriority(
   int* pPriority)
 {
+	if (pPriority == NULL)
+	{
+		return E_POINTER;
+	}
+
     if (m_hThread)
     {
         *pPriority = ::GetThreadPriority(m_hThread);
