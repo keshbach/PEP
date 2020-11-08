@@ -934,6 +934,10 @@ static VOID UTPEPDEVICESAPI lGenericProgramDevice(
 	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI l2764NMOSProgramDevice(
@@ -1043,7 +1047,10 @@ static VOID UTPEPDEVICESAPI l27513ReadDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoRead);
 }
 
 static VOID UTPEPDEVICESAPI l27513ProgramDevice(
@@ -1057,7 +1064,10 @@ static VOID UTPEPDEVICESAPI l27513ProgramDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI l27513VerifyDevice(
@@ -1071,7 +1081,10 @@ static VOID UTPEPDEVICESAPI l27513VerifyDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoVerify);
 }
 
 static VOID UTPEPDEVICESAPI l27C011ProgramDevice(
@@ -1085,7 +1098,10 @@ static VOID UTPEPDEVICESAPI l27C011ProgramDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 /***************************************************************************/

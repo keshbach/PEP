@@ -810,7 +810,10 @@ static VOID UTPEPDEVICESAPI l27020ProgramDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI l27040ProgramDevice(
@@ -824,7 +827,10 @@ static VOID UTPEPDEVICESAPI l27040ProgramDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI l27080ProgramDevice(
@@ -838,7 +844,10 @@ static VOID UTPEPDEVICESAPI l27080ProgramDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 /***************************************************************************/

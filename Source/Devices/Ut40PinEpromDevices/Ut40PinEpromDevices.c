@@ -887,7 +887,10 @@ static VOID UTPEPDEVICESAPI l27Cx02ProgramDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI l27Cx02VerifyDevice(

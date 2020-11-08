@@ -688,7 +688,10 @@ static VOID UTPEPDEVICESAPI lGenericProgramDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 /*
@@ -706,7 +709,10 @@ static VOID UTPEPDEVICESAPI l1702ReadDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoRead);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoRead);
 }
 
 static VOID UTPEPDEVICESAPI l1702ProgramDevice(
@@ -720,7 +726,10 @@ static VOID UTPEPDEVICESAPI l1702ProgramDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI l1702VerifyDevice(
@@ -734,7 +743,10 @@ static VOID UTPEPDEVICESAPI l1702VerifyDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoVerify);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoVerify);
 }
 
 /*
@@ -1000,45 +1012,10 @@ static VOID UTPEPDEVICESAPI l2716ProgramDeviceWith25VDC(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
 	pbyData;
-	ulDataLen;
 
-	/*BOOL bErrorOccurred = FALSE;
-	ULONG ulTmpBufferLen = ulDataLen / CGenericBytesPerOperation;
-	ULONG ulAddress;
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
 
-	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoWrite);
-
-	if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
-		FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
-		FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse2Mode) ||
-		FALSE == UtPepCtrlSetVppMode(eUtPepCtrl12VDCVppMode) ||
-		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerWriteMode))
-	{
-		bErrorOccurred = TRUE;
-
-		goto End;
-	}
-
-	for (ulAddress = 0; ulAddress < ulDataLen; ulAddress += ulTmpBufferLen)
-	{
-		if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
-			FALSE == UtPepCtrlProgramData(ulAddress, pbyData + ulAddress,
-				ulTmpBufferLen))
-		{
-			bErrorOccurred = TRUE;
-
-			goto End;
-		}
-
-		pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
-	}
-
-	pDeviceIOFuncs->pProgressDeviceIOFunc(ulDataLen);
-
-End:
-	UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
-
-	pDeviceIOFuncs->pEndDeviceIOFunc(bErrorOccurred, edoWrite);*/
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI l2716ProgramDeviceWith12VDC(
@@ -1052,7 +1029,10 @@ static VOID UTPEPDEVICESAPI l2716ProgramDeviceWith12VDC(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
 	pbyData;
-	ulDataLen;
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI l2716VerifyDevice(
@@ -1190,9 +1170,12 @@ static VOID UTPEPDEVICESAPI lTMS2716ProgramDevice(
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
-    ulDataLen;
 
 	// Note: pull OE pin low to send +12VDC to the Vcc pin
+
+	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
 
 static VOID UTPEPDEVICESAPI lTMS2716VerifyDevice(
