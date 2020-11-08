@@ -80,7 +80,7 @@ static LPCWSTR l_psz2764PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_LowChipEnable,    
     CDevicePin_Address10,
-    CDevicePin_OutputEnable,
+    CDevicePin_LowOutputEnable,
     CDevicePin_Address11,
     CDevicePin_Address9,
     CDevicePin_Address8,
@@ -140,7 +140,7 @@ static LPCWSTR l_psz27128PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_LowChipEnable,
     CDevicePin_Address10,
-    CDevicePin_OutputEnable,
+    CDevicePin_LowOutputEnable,
     CDevicePin_Address11,
     CDevicePin_Address9,
     CDevicePin_Address8,
@@ -170,7 +170,7 @@ static LPCWSTR l_psz27256PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_LowChipEnable,
     CDevicePin_Address10,
-    CDevicePin_OutputEnable,
+    CDevicePin_LowOutputEnable,
     CDevicePin_Address11,
     CDevicePin_Address9,
     CDevicePin_Address8,
@@ -200,7 +200,7 @@ static LPCWSTR l_psz27512PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_LowChipEnable,
     CDevicePin_Address10,
-    CDevicePin_OutputEnable_Vpp,
+    CDevicePin_LowOutputEnable_Vpp,
     CDevicePin_Address11,
     CDevicePin_Address9,
     CDevicePin_Address8,
@@ -209,7 +209,7 @@ static LPCWSTR l_psz27512PinNames[] = {
     CDevicePin_Vcc};
 
 static LPCWSTR l_psz27513PinNames[] = {
-    CDevicePin_Reset,
+    CDevicePin_LowReset,
     CDevicePin_Address12,
     CDevicePin_Address7,
     CDevicePin_Address6,
@@ -230,16 +230,16 @@ static LPCWSTR l_psz27513PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_LowChipEnable,
     CDevicePin_Address10,
-    CDevicePin_OutputEnable,
+    CDevicePin_LowOutputEnable,
     CDevicePin_Address11,
     CDevicePin_Address9,
     CDevicePin_Address8,
     CDevicePin_Address13,
-    CDevicePin_WriteEnable,
+    CDevicePin_LowWriteEnable,
     CDevicePin_Vcc};
 
 static LPCWSTR l_psz27C011PinNames[] = {
-    CDevicePin_Reset_Vpp,
+    CDevicePin_LowReset_Vpp,
     CDevicePin_Address12,
     CDevicePin_Address7,
     CDevicePin_Address6,
@@ -260,12 +260,12 @@ static LPCWSTR l_psz27C011PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_LowChipEnable,
     CDevicePin_Address10,
-    CDevicePin_OutputEnable,
+    CDevicePin_LowOutputEnable,
     CDevicePin_Address11,
     CDevicePin_Address9,
     CDevicePin_Address8,
     CDevicePin_Address13,
-    CDevicePin_WriteEnable_LowProgram,
+    CDevicePin_LowWriteEnable_LowProgram,
     CDevicePin_Vcc};
 
 DEVICES_BEGIN

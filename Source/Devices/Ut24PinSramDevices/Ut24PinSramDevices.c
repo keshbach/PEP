@@ -41,8 +41,8 @@ static LPCWSTR l_psz4118PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_LowChipEnable1,
     CDevicePin_NotUsed,
-    CDevicePin_OutputEnable,
-    CDevicePin_WriteEnable,
+    CDevicePin_LowOutputEnable,
+    CDevicePin_LowWriteEnable,
     CDevicePin_Address9,
     CDevicePin_Address8,
     CDevicePin_Vcc};
@@ -67,8 +67,8 @@ static LPCWSTR l_psz6116PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_LowChipEnable,
     CDevicePin_Address10,
-    CDevicePin_OutputEnable,
-    CDevicePin_WriteEnable,
+    CDevicePin_LowOutputEnable,
+    CDevicePin_LowWriteEnable,
     CDevicePin_Address9,
     CDevicePin_Address8,
     CDevicePin_Vcc};

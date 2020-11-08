@@ -134,9 +134,9 @@ static LPCWSTR l_psz2716PinNames[] = {
     CDevicePin_Data5,
     CDevicePin_Data6,
     CDevicePin_Data7,
-    CDevicePin_LowChipEnable,
+    CDevicePin_LowChipEnable_Vpp,
     CDevicePin_Address10,
-    CDevicePin_OutputEnable,
+    CDevicePin_LowOutputEnable,
     CDevicePin_Vpp,
     CDevicePin_Address9,
     CDevicePin_Address8,
@@ -188,7 +188,7 @@ static LPCWSTR l_psz2732PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_LowChipEnable,
     CDevicePin_Address10,
-    CDevicePin_OutputEnable,
+    CDevicePin_LowOutputEnable_Vpp,
     CDevicePin_Address11,
     CDevicePin_Address9,
     CDevicePin_Address8,
@@ -240,37 +240,37 @@ static LPCWSTR l_psz57C43PinNames[] = {
     CDevicePin_Data7,
     CDevicePin_HighChipSelect2,
     CDevicePin_Address11,
-    CDevicePin_ChipSelect1_Vpp,
+    CDevicePin_LowChipSelect1_Vpp,
     CDevicePin_Address10,
     CDevicePin_Address9,
     CDevicePin_Address8,
     CDevicePin_Vcc};
 
 static LPCWSTR l_psz2758PinNames[] = {
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L"",
-    L""};
+	CDevicePin_Address7,
+	CDevicePin_Address6,
+	CDevicePin_Address5,
+	CDevicePin_Address4,
+	CDevicePin_Address3,
+	CDevicePin_Address2,
+	CDevicePin_Address1,
+	CDevicePin_Address0,
+	CDevicePin_Data0,
+	CDevicePin_Data1,
+	CDevicePin_Data2,
+	CDevicePin_Ground,
+	CDevicePin_Data3,
+	CDevicePin_Data4,
+	CDevicePin_Data5,
+	CDevicePin_Data6,
+	CDevicePin_Data7,
+	CDevicePin_LowChipEnable_Vpp,
+	L"AR",
+	CDevicePin_LowOutputEnable,
+	CDevicePin_Vpp,
+	CDevicePin_Address9,
+	CDevicePin_Address8,
+	CDevicePin_Vcc };
 
 DEVICES_BEGIN
     DEVICE_DATA_BEGIN(1702)
@@ -407,8 +407,8 @@ DEVICES_BEGIN
         DEVICE_ADAPTER_NONE
         DEVICE_MESSAGE_NONE
         DEVICE_DIPSWITCHES(TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE)
-		DEVICE_CHIP_ENABLE_NANO_SECS_NONE
-		DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+		DEVICE_CHIP_ENABLE_NANO_SECS(450)
+		DEVICE_OUTPUT_ENABLE_NANO_SECS(450)
 		DEVICE_INIT_FUNC(lGenericInit)
         DEVICE_UNINIT_FUNC(lGenericUninit)
         DEVICE_ROM_DATA_BEGIN
@@ -812,6 +812,7 @@ static VOID UTPEPDEVICESAPI l2708ProgramDevice(
 	ULONG ulTmpBufferLen = ulDataLen / 32;
 	ULONG ulAddress;
 
+	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;

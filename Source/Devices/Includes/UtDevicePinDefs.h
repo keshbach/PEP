@@ -26,24 +26,25 @@
 #define CDevicePin_InputOutputRegisteredOutput L"I/O/Q"
 #define CDevicePin_NotUsed L"N/C"
 #define CDevicePin_Strobe L"STROBE"
-#define CDevicePin_WriteEnable L"~WE"
-#define CDevicePin_Reset L"~RST"
+#define CDevicePin_LowWriteEnable L"~WE"
+#define CDevicePin_LowReset L"~RST"
 
 #define CDevicePin_HighProgram L"PGM"
 #define CDevicePin_LowProgram L"~PGM"
 
-#define CDevicePin_WriteEnable_LowProgram L"~WE/~PGM"
+#define CDevicePin_LowWriteEnable_LowProgram L"~WE/~PGM"
 
-#define CDevicePin_OutputEnable_Vpp L"~OE/VPP"
-#define CDevicePin_ChipSelect1_Vpp L"~CS1/VPP"
-#define CDevicePin_Byte_Vpp L"~BYTE/VPP"
-#define CDevicePin_Reset_Vpp L"~RST/VPP"
+#define CDevicePin_LowOutputEnable_Vpp L"~OE/VPP"
+#define CDevicePin_LowChipSelect1_Vpp L"~CS1/VPP"
+#define CDevicePin_LowByte_Vpp L"~BYTE/VPP"
+#define CDevicePin_LowReset_Vpp L"~RST/VPP"
 
-#define CDevicePin_OutputEnable L"~OE"
+#define CDevicePin_LowOutputEnable L"~OE"
 
 #define CDevicePin_LowChipEnable L"~CE"
 #define CDevicePin_LowChipEnable1 L"~CE1"
 #define CDevicePin_LowChipEnable2 L"~CE2"
+#define CDevicePin_LowChipEnable_Vpp L"~CE/VPP"
 
 #define CDevicePin_HighChipEnable L"CE"
 #define CDevicePin_HighChipEnable1 L"CE1"
