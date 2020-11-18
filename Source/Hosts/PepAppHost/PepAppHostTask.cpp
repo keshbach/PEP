@@ -1,16 +1,40 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
 #include "PepAppHostTask.h"
 
-PepAppHostTask::PepAppHostTask()
+#include "UtPepAppHostTasks.h"
+#include "UtPepAppHostUtility.h"
+
+#pragma region "Local Functions"
+
+static VOID NTAPI lPepAppHostTaskAsynchronousProcedureCall(
+  _In_ ULONG_PTR pParameter)
 {
-    m_ulRefCount = 0;
-    m_pCLRTask = NULL;
-    m_hThread = NULL;
+	pParameter;
+}
+
+#pragma endregion
+
+PepAppHostTask::PepAppHostTask(
+  DWORD dwThreadId)
+{
+	m_ulRefCount = 0;
+	m_pCLRTask = NULL;
+	m_hThread = NULL;
+	m_dwThreadId = dwThreadId;
+	m_pStartAddress = NULL;
+	m_pvParameter = NULL;
+
+	if (FALSE == ::DuplicateHandle(::GetCurrentProcess(), ::GetCurrentThread(),
+                                   ::GetCurrentProcess(), &m_hThread,
+                                   0, FALSE, DUPLICATE_SAME_ACCESS))
+	{
+		// How handle this?
+	}
 }
 
 PepAppHostTask::PepAppHostTask(
@@ -18,9 +42,14 @@ PepAppHostTask::PepAppHostTask(
   LPTHREAD_START_ROUTINE pStartAddress,
   PVOID pvParameter)
 {
-    m_ulRefCount = 0;
+	m_ulRefCount = 0;
     m_pCLRTask = NULL;
-    m_hThread = ::CreateThread(NULL, dwStackSize, pStartAddress, pvParameter, CREATE_SUSPENDED, NULL);
+	m_pStartAddress = pStartAddress;
+	m_pvParameter = pvParameter;
+
+	m_hThread = ::CreateThread(NULL, dwStackSize, ThreadTask, this,
+                               CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION,
+                               &m_dwThreadId);
 }
 
 PepAppHostTask::~PepAppHostTask()
@@ -36,6 +65,11 @@ PepAppHostTask::~PepAppHostTask()
 
         m_pCLRTask = NULL;
     }
+
+	if (m_pStartAddress == NULL)
+	{
+		UtPepAppHostTasksDestroy(m_dwThreadId);
+	}
 }
 
 #pragma region "IUnknown"
@@ -92,38 +126,22 @@ HRESULT STDMETHODCALLTYPE PepAppHostTask::Alert(void)
 {
     if (m_hThread)
     {
-        return S_OK;
+		if (::QueueUserAPC(lPepAppHostTaskAsynchronousProcedureCall, m_hThread, NULL))
+		{
+			return S_OK;
+		}
     }
 
-    return E_NOTIMPL;
+	return E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE PepAppHostTask::Join(
   DWORD dwMilliseconds,
-  DWORD option)
+  DWORD dwOption)
 {
-	DWORD dwResult;
-
     if (m_hThread)
     {
-		if (option & WAIT_ALERTABLE)
-		{
-			dwResult = ::WaitForSingleObjectEx(m_hThread, dwMilliseconds, TRUE);
-		}
-		else
-		{
-			dwResult = ::WaitForSingleObject(m_hThread, dwMilliseconds);
-		}
-
-        switch (dwResult)
-        {
-            case WAIT_OBJECT_0:
-                return S_OK;
-            case WAIT_TIMEOUT:
-                return HOST_E_TIMEOUT;
-			case WAIT_IO_COMPLETION:
-				return HOST_E_INTERRUPTED;
-        }
+		return UtPepAppHostUtilityWait(m_hThread, dwMilliseconds, dwOption);
     }
 
     return E_FAIL;
@@ -181,6 +199,21 @@ HRESULT STDMETHODCALLTYPE PepAppHostTask::SetCLRTask(
 
 #pragma endregion
 
+DWORD WINAPI PepAppHostTask::ThreadTask(
+  _In_ LPVOID pvParameter)
+{
+	PepAppHostTask* pThis = (PepAppHostTask*)pvParameter;
+	DWORD dwResult;
+
+	dwResult = pThis->m_pStartAddress(pThis->m_pvParameter);
+
+	UtPepAppHostTasksDestroy(pThis->m_dwThreadId);
+
+	pThis->Release();
+
+	return dwResult;
+}
+
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

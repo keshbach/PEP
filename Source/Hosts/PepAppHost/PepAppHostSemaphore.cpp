@@ -1,10 +1,12 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
 #include "PepAppHostSemaphore.h"
+
+#include "UtPepAppHostUtility.h"
 
 PepAppHostSemaphore::PepAppHostSemaphore(
   DWORD dwInitial,
@@ -64,32 +66,11 @@ HRESULT STDMETHODCALLTYPE PepAppHostSemaphore::QueryInterface(
 
 HRESULT STDMETHODCALLTYPE PepAppHostSemaphore::Wait(
   DWORD dwMilliseconds,
-  DWORD option)
+  DWORD dwOption)
 {
-	DWORD dwResult;
-
     if (m_hSemaphore)
     {
-		if (option & WAIT_ALERTABLE)
-		{
-			dwResult = ::WaitForSingleObjectEx(m_hSemaphore, dwMilliseconds, TRUE);
-		}
-		else
-		{
-			dwResult = ::WaitForSingleObject(m_hSemaphore, dwMilliseconds);
-		}
-		
-		switch (dwResult)
-        {
-            case WAIT_OBJECT_0:
-                return S_OK;
-			case WAIT_ABANDONED:
-				return HOST_E_ABANDONED;
-			case WAIT_IO_COMPLETION:
-				return HOST_E_INTERRUPTED;
-            case WAIT_TIMEOUT:
-                return HOST_E_TIMEOUT;
-        }
+		return UtPepAppHostUtilityWait(m_hSemaphore, dwMilliseconds, dwOption);
     }
 
     return E_FAIL;
@@ -113,5 +94,5 @@ HRESULT STDMETHODCALLTYPE PepAppHostSemaphore::ReleaseSemaphore(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

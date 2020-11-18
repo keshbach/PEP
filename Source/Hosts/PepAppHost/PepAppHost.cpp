@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -14,6 +14,8 @@
 #include <new>
 
 #include "PepAppActionOnCLREvent.h"
+
+#include "UtPepAppHostTasks.h"
 
 #pragma region "Constants"
 
@@ -36,6 +38,7 @@ typedef HRESULT (__stdcall* TPepAppHostNetExecuteInAppDomainFunc)(void* cookie);
 typedef struct tagTPepAppHostRuntimeData
 {
     BOOL bCOMInitialized;
+	BOOL bPepAppHostTasksInitialized;
     BOOL bRuntimeStarted;
     ICLRMetaHost* pCLRMetaHost;
     ICLRRuntimeInfo* pCLRRuntimeInfo;
@@ -74,6 +77,15 @@ static BOOL lInitialize(
     }
 
     pPepAppHostRuntimeData->bCOMInitialized = TRUE;
+
+	if (FALSE == UtPepAppHostTasksInitialize())
+	{
+		lUninitialize(pPepAppHostRuntimeData);
+
+		return FALSE;
+	}
+
+	pPepAppHostRuntimeData->bPepAppHostTasksInitialized = TRUE;
 
     if (S_OK != ::CLRCreateInstance(CLSID_CLRMetaHost, IID_ICLRMetaHost,
                                     (LPVOID*)&pPepAppHostRuntimeData->pCLRMetaHost))
@@ -302,6 +314,13 @@ static BOOL lUninitialize(
         pPepAppHostRuntimeData->pCLRMetaHost = NULL;
     }
 
+	if (pPepAppHostRuntimeData->bPepAppHostTasksInitialized == TRUE)
+	{
+		UtPepAppHostTasksUninitialize();
+
+		pPepAppHostRuntimeData->bPepAppHostTasksInitialized = FALSE;
+	}
+
     if (pPepAppHostRuntimeData->bCOMInitialized)
     {
         ::CoUninitialize();
@@ -355,5 +374,5 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

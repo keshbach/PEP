@@ -1,17 +1,14 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
-
-class PepAppHostTask;
 
 class PepAppHostTaskManager : public IHostTaskManager
 {
 private:
     ULONG m_ulRefCount;
     ICLRTaskManager* m_pCLRTaskManager;
-    PepAppHostTask* m_pDummyHostTask;
 
 public:
     PepAppHostTaskManager();
@@ -31,8 +28,8 @@ public:
 public:
     virtual HRESULT STDMETHODCALLTYPE GetCurrentTask(IHostTask** ppTask);
     virtual HRESULT STDMETHODCALLTYPE CreateTask(DWORD dwStackSize, LPTHREAD_START_ROUTINE pStartAddress, PVOID pvParameter, IHostTask** ppTask);
-    virtual HRESULT STDMETHODCALLTYPE Sleep(DWORD dwMilliseconds, DWORD option);
-    virtual HRESULT STDMETHODCALLTYPE SwitchToTask(DWORD option);
+    virtual HRESULT STDMETHODCALLTYPE Sleep(DWORD dwMilliseconds, DWORD dwOption);
+    virtual HRESULT STDMETHODCALLTYPE SwitchToTask(DWORD dwOption);
     virtual HRESULT STDMETHODCALLTYPE SetUILocale(LCID lcid);
     virtual HRESULT STDMETHODCALLTYPE SetLocale(LCID lcid);
     virtual HRESULT STDMETHODCALLTYPE CallNeedsHostHook(SIZE_T target, BOOL* pbCallNeedsHostHook);
@@ -50,5 +47,5 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

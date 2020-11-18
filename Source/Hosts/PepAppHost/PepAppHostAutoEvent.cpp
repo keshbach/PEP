@@ -1,10 +1,12 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
 #include "PepAppHostAutoEvent.h"
+
+#include "UtPepAppHostUtility.h"
 
 PepAppHostAutoEvent::PepAppHostAutoEvent(
   SIZE_T Cookie)
@@ -64,32 +66,11 @@ HRESULT STDMETHODCALLTYPE PepAppHostAutoEvent::QueryInterface(
 
 HRESULT STDMETHODCALLTYPE PepAppHostAutoEvent::Wait(
   DWORD dwMilliseconds,
-  DWORD option)
+  DWORD dwOption)
 {
-	DWORD dwResult;
-
     if (m_hEvent)
     {
-		if (option & WAIT_ALERTABLE)
-		{
-			dwResult = ::WaitForSingleObjectEx(m_hEvent, dwMilliseconds, TRUE);
-		}
-		else
-		{
-			dwResult = ::WaitForSingleObject(m_hEvent, dwMilliseconds);
-		}
-	
-		switch (dwResult)
-        {
-            case WAIT_OBJECT_0:
-                return S_OK;
-			case WAIT_ABANDONED:
-				return HOST_E_ABANDONED;
-			case WAIT_IO_COMPLETION:
-				return HOST_E_INTERRUPTED;
-            case WAIT_TIMEOUT:
-                return HOST_E_TIMEOUT;
-        }
+		return UtPepAppHostUtilityWait(m_hEvent, dwMilliseconds, dwOption);
     }
 
     return E_FAIL;
@@ -111,5 +92,5 @@ HRESULT STDMETHODCALLTYPE PepAppHostAutoEvent::Set(void)
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

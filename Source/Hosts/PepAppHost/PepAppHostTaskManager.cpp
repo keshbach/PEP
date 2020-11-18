@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -10,11 +10,13 @@
 
 #include "PepAppHostTask.h"
 
+#include "UtPepAppHostTasks.h"
+#include "UtPepAppHostUtility.h"
+
 PepAppHostTaskManager::PepAppHostTaskManager()
 {
     m_ulRefCount = 0;
     m_pCLRTaskManager = NULL;
-    m_pDummyHostTask = new (std::nothrow) PepAppHostTask();
 }
 
 PepAppHostTaskManager::~PepAppHostTaskManager()
@@ -24,13 +26,6 @@ PepAppHostTaskManager::~PepAppHostTaskManager()
         m_pCLRTaskManager->Release();
 
         m_pCLRTaskManager = NULL;
-    }
-
-    if (m_pDummyHostTask)
-    {
-        delete m_pDummyHostTask;
-
-        m_pDummyHostTask = NULL;
     }
 }
 
@@ -74,12 +69,29 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::QueryInterface(
 HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::GetCurrentTask(
   IHostTask** ppTask)
 {
+	PepAppHostTask* pPepAppHostTask;
+
     if (ppTask == NULL)
     {
         return E_POINTER;
     }
 
-    *ppTask = m_pDummyHostTask;
+	if (FALSE == UtPepAppHostTasksFind(::GetCurrentThreadId(), &pPepAppHostTask))
+	{
+		return E_FAIL;
+	}
+
+	if (pPepAppHostTask == NULL)
+	{
+		if (FALSE == UtPepAppHostTasksCreate(::GetCurrentThreadId(), &pPepAppHostTask))
+		{
+			return E_FAIL;
+		}
+	}
+
+	*ppTask = pPepAppHostTask;
+
+	(*ppTask)->AddRef();
 
     return S_OK;
 }
@@ -90,42 +102,34 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::CreateTask(
   PVOID pvParameter,
   IHostTask** ppTask)
 {
-    PepAppHostTask* pPepAppHostTask;
-
     if (ppTask == NULL)
     {
         return E_POINTER;
     }
 
-    pPepAppHostTask = new (std::nothrow) PepAppHostTask(dwStackSize, pStartAddress, pvParameter);
+	if (FALSE == UtPepAppHostTasksCreate(dwStackSize, pStartAddress, pvParameter, ppTask))
+	{
+		return E_FAIL;
+	}
 
-    if (pPepAppHostTask)
-    {
-        pPepAppHostTask->AddRef();
-
-        *ppTask = pPepAppHostTask;
-
-        return S_OK;
-    }
-
-    return E_FAIL;
-}
-
-HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::Sleep(
-  DWORD dwMilliseconds,
-  DWORD option)
-{
-    option;
-
-    ::Sleep(dwMilliseconds);
+	(*ppTask)->AddRef();
 
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::SwitchToTask(
-  DWORD option)
+HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::Sleep(
+  DWORD dwMilliseconds,
+  DWORD dwOption)
 {
-    option;
+	return UtPepAppHostUtilitySleep(dwMilliseconds, dwOption);
+}
+
+HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::SwitchToTask(
+  DWORD dwOption)
+{
+    dwOption;
+
+	::SwitchToThread();
 
     return S_OK;
 }
@@ -143,7 +147,11 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::SetLocale(
 {
     lcid;
 
-    return E_NOTIMPL;
+	if (!::SetThreadLocale(lcid)) {
+		return E_FAIL;
+	}
+
+	return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::CallNeedsHostHook(
@@ -210,13 +218,18 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::SetStackGuarantee(
 {
     guarantee;
 
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::GetStackGuarantee(
   ULONG* pGuarantee)
 {
-    pGuarantee;
+	if (pGuarantee == NULL)
+	{
+		return E_POINTER;
+	}
+
+    *pGuarantee = 0;
 
     return E_NOTIMPL;
 }
@@ -239,5 +252,5 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::SetCLRTaskManager(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
