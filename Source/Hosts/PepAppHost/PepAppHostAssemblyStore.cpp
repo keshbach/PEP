@@ -59,6 +59,12 @@ HRESULT STDMETHODCALLTYPE PepAppHostAssemblyStore::ProvideAssembly(
   IStream** ppStmAssemblyImage,
   IStream** ppStmPDB)
 {
+	pBindInfo;
+	pAssemblyId;
+	pContext;
+	ppStmAssemblyImage;
+	ppStmPDB;
+
 	return E_NOTIMPL;
 }
 
@@ -68,6 +74,11 @@ HRESULT STDMETHODCALLTYPE PepAppHostAssemblyStore::ProvideModule(
   IStream** ppStmModuleImage,
   IStream** ppStmPDB)
 {
+	pBindInfo;
+	pdwModuleId;
+	ppStmModuleImage;
+	ppStmPDB;
+
 	return E_NOTIMPL;
 }
 

@@ -55,6 +55,8 @@ HRESULT STDMETHODCALLTYPE PepAppCLRAssemblyReferenceList::QueryInterface(
 HRESULT STDMETHODCALLTYPE PepAppCLRAssemblyReferenceList::IsStringAssemblyReferenceInList(
   LPCWSTR pwzAssemblyName)
 {
+	pwzAssemblyName;
+
 	return E_FAIL;
 }
 

@@ -13,6 +13,7 @@ Pep::Application::PepAppHostNetAppDomainManager::PepAppHostNetAppDomainManager()
 void Pep::Application::PepAppHostNetAppDomainManager::InitializeNewDomain(
   System::AppDomainSetup^ AppDomainInfo)
 {
+	AppDomainInfo;
 }
 
 System::Object^ Pep::Application::PepAppHostNetAppDomainManager::InitializeLifetimeService()
