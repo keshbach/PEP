@@ -84,7 +84,7 @@ HRESULT UtPepAppHostUtilityWait(
 				{
 					if (Msg.message == WM_QUIT)
 					{
-						::PostQuitMessage(Msg.wParam);
+						::PostQuitMessage((int)Msg.wParam);
 
 						return S_OK;
 					}
@@ -172,7 +172,7 @@ HRESULT UtPepAppHostUtilitySleep(
 				{
 					if (Msg.message == WM_QUIT)
 					{
-						::PostQuitMessage(Msg.wParam);
+						::PostQuitMessage((int)Msg.wParam);
 
 						return S_OK;
 					}
