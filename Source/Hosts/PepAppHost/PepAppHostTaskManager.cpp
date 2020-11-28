@@ -89,6 +89,8 @@ HRESULT STDMETHODCALLTYPE PepAppHostTaskManager::GetCurrentTask(
 		}
 	}
 
+	pPepAppHostTask->AddRef();
+
 	*ppTask = pPepAppHostTask;
 
     return S_OK;

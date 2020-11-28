@@ -44,6 +44,8 @@ PepAppHostTask::PepAppHostTask(
 {
 	m_ulRefCount = 0;
     m_pCLRTask = NULL;
+	m_hThread = NULL;
+	m_dwThreadId = 0;
 	m_pStartAddress = pStartAddress;
 	m_pvParameter = pvParameter;
 
@@ -83,7 +85,9 @@ ULONG STDMETHODCALLTYPE PepAppHostTask::Release()
 {
     if (::InterlockedDecrement(&m_ulRefCount) == 0)
     {
-        delete this;
+		UtPepAppHostTasksDestroy(m_dwThreadId);
+		
+		delete this;
 
         return 0;
     }
@@ -206,10 +210,6 @@ DWORD WINAPI PepAppHostTask::ThreadTask(
 	DWORD dwResult;
 
 	dwResult = pThis->m_pStartAddress(pThis->m_pvParameter);
-
-	UtPepAppHostTasksDestroy(pThis->m_dwThreadId);
-
-	pThis->Release();
 
 	return dwResult;
 }
