@@ -22,11 +22,11 @@ static void lHandleProcessMessage(
 	{
 		case WM_KEYDOWN:
 			ProcessMessage->ProcessKeyDown(System::Windows::Forms::Control::FromHandle(System::IntPtr::IntPtr(pMsg->hwnd)),
-                                           pMsg->wParam, pMsg->lParam);
+                                           (int)pMsg->wParam, (int)pMsg->lParam);
 			break;
 		case WM_KEYUP:
 			ProcessMessage->ProcessKeyUp(System::Windows::Forms::Control::FromHandle(System::IntPtr::IntPtr(pMsg->hwnd)),
-				                         pMsg->wParam, pMsg->lParam);
+				                         (int)pMsg->wParam, (int)pMsg->lParam);
 			break;
 		case WM_MOUSEMOVE:
 			ProcessMessage->ProcessMouseMove(System::Windows::Forms::Control::FromHandle(System::IntPtr::IntPtr(pMsg->hwnd)),
