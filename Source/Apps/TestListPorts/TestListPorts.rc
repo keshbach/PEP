@@ -2,8 +2,7 @@
 /*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
 /***************************************************************************/
 
-#include <winver.h>
-#include <winuser.h>
+#include <windows.h>
 
 #include <Includes/UtVersion.h>
 

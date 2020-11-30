@@ -2,8 +2,7 @@
 /*  Copyright (C) 2016-2016 Kevin Eshbach                                  */
 /***************************************************************************/
 
-#include <winver.h>
-#include <ntdef.h>
+#include <windows.h>
 
 #include <Includes/UtVersion.h>
 
