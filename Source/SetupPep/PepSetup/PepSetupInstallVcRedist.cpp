@@ -19,7 +19,7 @@
 
 // Visual Studio Redistributable definitions
 
-#if _MSC_VER != 1916
+#if _MSC_VER != 1920
 #error Check if Visual Studio Redistributable needs to be changed.
 #endif
 
