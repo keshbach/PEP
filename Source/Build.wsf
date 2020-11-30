@@ -46,7 +46,7 @@
         x86
     </resource>
 
-    <resource id="VcVarsAllFile">C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat</resource>
+    <resource id="VcVarsAllFile">C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat</resource>
 
     <script language="VBScript">
       <![CDATA[

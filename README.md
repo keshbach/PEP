@@ -14,8 +14,9 @@ I just had to replace my laptop back in March 2019 and found that laptops do not
 
 ## Building
 
-- Install Visual Studio 2017
-- Install WDK for Windows 10, version 1809 (Also install the Visual Studio extensions when prompted.)
+- Install Visual Studio 2019
+- Install Windows 10 SDK, version 10.0.19041.1
+- Install WDK for Windows 10, version 2004 (Also install the Visual Studio extensions when prompted.)
 - Launch a Command Prompt and go to the 'Source' directory
 - Run the command "cscript build.wsf /verbose:+ /binaryType:Release" (without the quotes) to build the release configuration (To build the debug configuration replace "Release" with "Debug".)
 
