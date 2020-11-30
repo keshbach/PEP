@@ -555,8 +555,15 @@ BOOLEAN TPEPCTRLAPI PepCtrlAllocParallelPort(
 
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
-    PepCtrlLog("Port Address:        0x%X.\n", pParallelPortInfo->OriginalController);
-    PepCtrlLog("System Port Address: 0x%X.\n", pParallelPortInfo->Controller);
+#if defined(AMD64)
+	PepCtrlLog("Port Address:        0x%p.\n", (PVOID)(pParallelPortInfo->OriginalController.QuadPart));
+#elif defined(i386)
+	PepCtrlLog("Port Address:        0x%p.\n", (PVOID)(pParallelPortInfo->OriginalController.LowPart));
+#else
+#error Unknown CPU architecture
+#endif
+
+    PepCtrlLog("System Port Address: 0x%p.\n", pParallelPortInfo->Controller);
 
     PepCtrlLog("PepCtrlAllocParallelPort leaving.  (Thread: 0x%p)\n",
 		       PsGetCurrentThread());

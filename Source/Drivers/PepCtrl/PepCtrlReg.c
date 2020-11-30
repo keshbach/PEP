@@ -342,7 +342,10 @@ BOOLEAN PepCtrlReadRegSettings(
     PepCtrlLog("PepCtrlReadRegSettings entering.  (Thread: 0x%p)\n",
 		       PsGetCurrentThread());
 
-    PAGED_CODE()
+	PAGED_CODE()
+
+	*pulPortType = 0;
+	*ppszPortDeviceName = NULL;
 
 	PepCtrlLog("PepCtrlReadRegSettings - Registry Path: \"%ws\".  (Thread: 0x%p)\n",
 		       pRegistryPath->Buffer, PsGetCurrentThread());
