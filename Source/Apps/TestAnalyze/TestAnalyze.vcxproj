@@ -23,20 +23,20 @@
     <ProjectGuid>{6B7D9D54-4A05-4410-83A2-05F5FE195C6D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>TestAnalyze</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
@@ -44,14 +44,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
@@ -188,7 +188,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;$(PlatformTarget);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;$(PlatformTarget);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PreBuildEvent>
       <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestAnalyze" "Test Analyze Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
@@ -221,7 +221,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;$(PlatformTarget);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;$(PlatformTarget);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PreBuildEvent>
       <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestAnalyze" "Test Analyze Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
