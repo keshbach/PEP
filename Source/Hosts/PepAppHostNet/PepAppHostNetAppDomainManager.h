@@ -11,8 +11,7 @@ using namespace System::Runtime::InteropServices;
 using namespace System::Security::Permissions;
 using namespace System::Security;
 
-[assembly:System::Security::AllowPartiallyTrustedCallersAttribute()];
-
+//[assembly:System::Security::AllowPartiallyTrustedCallersAttribute()];
 namespace Pep
 {
 	namespace Application

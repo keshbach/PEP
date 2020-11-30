@@ -1540,6 +1540,9 @@ VOID UtPALDeviceCombinatorialRead(
     TPALDeviceAdapterData* pOutputData = NULL;
     ULONG ulFuseSize, ulAddress, ulTmpAddress, ulTotalAddresses;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     ulTotalAddresses = 1 << UtPALDeviceGetTotalPinTypes(epdptInput);
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulTotalAddresses, edoRead);
@@ -1673,6 +1676,9 @@ VOID UtPALDeviceCombinatorialReadAdapter(
     ULONG ulFuseSize, ulAddress, ulTmpAddress, ulTotalAddresses;
     UINT nPin, nShiftAddressTotal;
     WCHAR cAdapterMsg[100];
+
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
 
     ulTotalAddresses = 1 << UtPALDeviceGetTotalPinTypes(epdptInput);
 

@@ -658,6 +658,9 @@ static VOID UTPEPDEVICESAPI l27Cx00ReadDevice(
     ULONG ulTmpBufferLen = (ulDataLen / sizeof(WORD)) / 64;
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen / sizeof(WORD), edoRead);
 
 	if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
@@ -727,6 +730,8 @@ static VOID UTPEPDEVICESAPI l27Cx00VerifyDevice(
     LPWORD pwTmpBuffer = (LPWORD)UtAllocMem(ulTmpBufferLen * sizeof(WORD));
     ULONG ulAddress, ulIndex;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
     pbyData;
     ulDataLen;
 

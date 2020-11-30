@@ -951,6 +951,9 @@ static VOID UTPEPDEVICESAPI l2764NMOSProgramDevice(
     ULONG ulTmpBufferLen = ulDataLen / CGenericBytesPerOperation;
     ULONG ulAddress;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
 
     if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
@@ -996,6 +999,9 @@ static VOID UTPEPDEVICESAPI l2764CMOSProgramDevice(
     BOOL bErrorOccurred = FALSE;
     ULONG ulTmpBufferLen = ulDataLen / CGenericBytesPerOperation;
     ULONG ulAddress;
+
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
 
     pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoWrite);
 

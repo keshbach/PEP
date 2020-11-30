@@ -75,7 +75,10 @@ static VOID lAllocRegisteredDataWithNoDuplicateStates(
   TRegisteredData** ppNewRegisteredData,
   ULONG* pulNewRegisteredDataLen)
 {
-    *ppNewRegisteredData = NULL;
+	pRegisteredData;
+	ulRegisteredDataLen;
+	
+	*ppNewRegisteredData = NULL;
     *pulNewRegisteredDataLen = 0;
 }
 
@@ -111,6 +114,14 @@ static BOOL lTranslateDataToRegisteredPalFuseMap(
     UINT nInputPinsPAL24[24], nOutputPinsPAL24[24];
     UINT nPinPAL20, nPinPAL24;
     ULONG ulInputPinsLen, ulOutputPinsLen, ulIndex;
+
+	pContinueDeviceIOFunc;
+	pLogMessageFunc;
+	pRegisteredData;
+	ulRegisteredDataLen;
+	pPALData;
+	pbyFuseData;
+	ulFuseDataLen;
 
     /* Pre-cache the input and output pins */
 
@@ -292,6 +303,9 @@ VOID UtPALDeviceRegisteredRead(
     TPALDeviceAdapterData* pOutputData;
     ULONG ulFuseSize, ulAddress, ulTmpAddress, ulTotalAddresses, ulStateIndex;
     ULONG ulTotalStates;
+
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
 
     ulTotalAddresses = 1 << UtPALDeviceGetTotalPinTypes(epdptInput);
 

@@ -813,6 +813,9 @@ static VOID UTPEPDEVICESAPI l27Cx02ReadDevice(
     ULONG ulAddress, ulTmpAddress, ulIndex, ulTmpIndex;
     TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay;
 
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
+
     pReadUserDataWithDelay = (TUtPepCtrlReadUserDataWithDelay*)UtAllocMem(
                                  (sizeof(TUtPepCtrlReadUserDataWithDelay) * 2) * ulTmpBufferLen);
 
@@ -905,6 +908,9 @@ static VOID UTPEPDEVICESAPI l27Cx02VerifyDevice(
     ULONG ulAddress, ulTmpAddress, ulIndex, ulTmpIndex;
     TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay;
     LPWORD pwTmpData;
+
+	nChipEnableNanoseconds;
+	nOutputEnableNanoseconds;
 
     pReadUserDataWithDelay = (TUtPepCtrlReadUserDataWithDelay*)UtAllocMem(
                                  (sizeof(TUtPepCtrlReadUserDataWithDelay) * 2) * ulTmpBufferLen);
