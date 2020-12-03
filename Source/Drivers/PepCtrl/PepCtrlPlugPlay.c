@@ -2,6 +2,8 @@
 /*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
+#include <Includes/UtCompiler.h>
+
 #include <Ntifs.h> // include this for ObQueryNameString
 
 #include <wdmguid.h>
@@ -95,11 +97,13 @@ static VOID lEmptyDeviceInterfaceChangeList(_In_ TPepCtrlPlugPlayData* pPlugPlay
 _IRQL_requires_max_(PASSIVE_LEVEL)
 static VOID lProcessDeviceInterfaceChangeEntry(_In_ TPepCtrlPlugPlayData* pPlugPlayData, _In_ TPepCtrlPlugPlayDeviceInterfaceChangeEntry* pDeviceInterfaceChangeEntry);
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
-static KSTART_ROUTINE lDeviceInterfaceChangeThreadStart;
+_IRQL_requires_same_
+_Function_class_(lDeviceInterfaceChangeThreadStart)
+static VOID lDeviceInterfaceChangeThreadStart(_In_ PVOID pvStartContext);
 
+_Function_class_(lDeviceInterfaceChange)
 _IRQL_requires_max_(PASSIVE_LEVEL)
-static DRIVER_NOTIFICATION_CALLBACK_ROUTINE lDeviceInterfaceChange;
+static NTSTATUS lDeviceInterfaceChange(_In_ PVOID pvNotificationStructure, _Inout_opt_ PVOID pvContext);
 
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text (PAGE, lDoesSymbolicLinkNameMatchDeviceName)
@@ -568,7 +572,8 @@ static VOID lProcessDeviceInterfaceChangeEntry(
 		       PsGetCurrentThread());
 }
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
+_IRQL_requires_same_
+_Function_class_(lDeviceInterfaceChangeThreadStart)
 static VOID lDeviceInterfaceChangeThreadStart(
   _In_ PVOID pvStartContext)
 {
@@ -623,10 +628,11 @@ static VOID lDeviceInterfaceChangeThreadStart(
 		       PsGetCurrentThread());
 }
 
+_Function_class_(lDeviceInterfaceChange)
 _IRQL_requires_max_(PASSIVE_LEVEL)
 static NTSTATUS lDeviceInterfaceChange(
   _In_ PVOID pvNotificationStructure,
-  _In_ PVOID pvContext)
+  _Inout_opt_ PVOID pvContext)
 {
     PDEVICE_INTERFACE_CHANGE_NOTIFICATION pNotification;
     TPepCtrlPlugPlayData* pPlugPlayData;

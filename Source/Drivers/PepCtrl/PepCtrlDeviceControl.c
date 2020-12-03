@@ -2,6 +2,8 @@
 /*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
+#include <Includes/UtCompiler.h>
+
 #include <ntddk.h>
 
 #include <ntstrsafe.h>
@@ -795,7 +797,7 @@ NTSTATUS PepCtrlDeviceControl_GetPortSettings(
 {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     size_t PortDeviceNameLen = 0;
-    UINT32 Length;
+    size_t Length;
     TPepCtrlPortSettings* pPortSettings;
 
     pvInBuf;
@@ -806,14 +808,14 @@ NTSTATUS PepCtrlDeviceControl_GetPortSettings(
 
 	PAGED_CODE()
 
-    Length = sizeof(UINT32);
+    Length = sizeof(Length);
 
     if (pPortData->RegSettings.nPortType == CPepCtrlParallelPortType ||
         pPortData->RegSettings.nPortType == CPepCtrlUsbPrintPortType)
     {
         RtlStringCchLengthW(pPortData->RegSettings.pszPortDeviceName, NTSTRSAFE_MAX_CCH, &PortDeviceNameLen);
 
-        Length += (((UINT32)PortDeviceNameLen + 1) * sizeof(WCHAR));
+        Length += ((PortDeviceNameLen + 1) * sizeof(WCHAR));
     }
 
     if (ulOutBufLen < Length)

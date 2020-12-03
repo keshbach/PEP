@@ -2,6 +2,8 @@
 /*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
+#include <Includes/UtCompiler.h>
+
 #include <ntddk.h>
 
 #include <ntstrsafe.h>

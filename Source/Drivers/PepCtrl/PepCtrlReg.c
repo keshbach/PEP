@@ -2,6 +2,8 @@
 /*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
+#include <Includes/UtCompiler.h>
+
 #include <ntddk.h>
 
 #include <ntstrsafe.h>
@@ -30,7 +32,7 @@
 #pragma endregion
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-static BOOLEAN lReadRegULongValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ ULONG ulDefaultValue, _In_ _Out_ PULONG pulValue);
+static BOOLEAN lReadRegULongValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ ULONG ulDefaultValue, _Out_ PULONG pulValue);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lReadRegStringValue(_In_ HANDLE hRegKey, _In_ LPCWSTR pszValueName, _In_ LPCWSTR pszDefaultValue, _Out_ LPWSTR* ppszValue);
@@ -57,7 +59,7 @@ static BOOLEAN lReadRegULongValue(
   _In_ HANDLE hRegKey,
   _In_ LPCWSTR pszValueName,
   _In_ ULONG ulDefaultValue,
-  _In_ _Out_ PULONG pulValue)
+  _Out_ PULONG pulValue)
 {
     BOOLEAN bResult = FALSE;
     UNICODE_STRING ValueName;
@@ -68,7 +70,9 @@ static BOOLEAN lReadRegULongValue(
 	PepCtrlLog("lReadRegULongValue entering.  (Thread: 0x%p)\n",
 		       PsGetCurrentThread());
 
-    PAGED_CODE()
+	PAGED_CODE()
+
+	*pulValue = 0;
 
     PepCtrlLog("lReadRegULongValue - Value Name: \"%ws\".  (Thread: 0x%p)\n",
 		       pszValueName, PsGetCurrentThread());
