@@ -38,16 +38,16 @@
 
 DRIVER_INITIALIZE DriverEntry;
 
-__drv_dispatchType(IRP_MJ_CLOSE)
+_Dispatch_type_(IRP_MJ_CLOSE)
 static DRIVER_DISPATCH lPepCtrlIrpClose;
 
-__drv_dispatchType(IRP_MJ_POWER)
+_Dispatch_type_(IRP_MJ_POWER)
 static DRIVER_DISPATCH lPepCtrlIrpPower;
 
-__drv_dispatchType(IRP_MJ_CREATE)
+_Dispatch_type_(IRP_MJ_CREATE)
 static DRIVER_DISPATCH lPepCtrlIrpCreate;
 
-__drv_dispatchType(IRP_MJ_DEVICE_CONTROL)
+_Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
 static DRIVER_DISPATCH lPepCtrlIrpDeviceControl;
 
 static DRIVER_UNLOAD lPepCtrlDriverUnload;
@@ -64,7 +64,7 @@ static DRIVER_UNLOAD lPepCtrlDriverUnload;
 
 #pragma region "Type Defs"
 
-typedef NTSTATUS (*TDeviceControlFunc)(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_ PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
+typedef NTSTATUS (*TDeviceControlFunc)(_In_ PIRP pIrp, _In_ TPepCtrlPortData* pPortData, _In_ const PVOID pvInBuf, _In_ ULONG ulInBufLen, _Out_writes_(ulOutBufLen) PVOID pvOutBuf, _In_ ULONG ulOutBufLen);
 
 typedef struct tagTDeviceControlFuncs
 {
@@ -103,9 +103,10 @@ static TDeviceControlFuncs l_DeviceControlFuncs[] = {
 
 #pragma region "Local Functions"
 
+_Use_decl_annotations_
 static NTSTATUS lPepCtrlIrpClose(
   _In_ PDEVICE_OBJECT pDeviceObject,
-  _In_ PIRP pIrp)
+  _Inout_ PIRP pIrp)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -130,9 +131,10 @@ static NTSTATUS lPepCtrlIrpClose(
     return STATUS_SUCCESS;
 }
 
+_Use_decl_annotations_
 static NTSTATUS lPepCtrlIrpPower(
   _In_ PDEVICE_OBJECT pDeviceObject,
-  _In_ PIRP pIrp)
+  _Inout_ PIRP pIrp)
 {
     PIO_STACK_LOCATION pIrpSp = IoGetCurrentIrpStackLocation(pIrp);
     NTSTATUS Status = STATUS_SUCCESS;
@@ -191,9 +193,10 @@ static NTSTATUS lPepCtrlIrpPower(
     return STATUS_SUCCESS;
 }
 
+_Use_decl_annotations_
 static NTSTATUS lPepCtrlIrpCreate(
   _In_ PDEVICE_OBJECT pDeviceObject,
-  _In_ PIRP pIrp)
+  _Inout_ PIRP pIrp)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
 
@@ -226,9 +229,10 @@ static NTSTATUS lPepCtrlIrpCreate(
     return STATUS_SUCCESS;
 }
 
+_Use_decl_annotations_
 static NTSTATUS lPepCtrlIrpDeviceControl(
   _In_ PDEVICE_OBJECT pDeviceObject,
-  _In_ PIRP pIrp)
+  _Inout_ PIRP pIrp)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -239,6 +243,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
     ULONG ulInBufLen, ulOutBufLen, ulIndex;
     BOOLEAN bFuncFound, bExecuteSleep;
 	LARGE_INTEGER SleepInteger;
+    INT32 nPreviousState;
 
     PAGED_CODE()
 
@@ -254,6 +259,8 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
 
         ExAcquireFastMutex(&pPortData->FastMutex);
 
+        nPreviousState = pPortData->nState;
+
         switch (pPortData->nState)
         {
             case CPepCtrlStateRunning:
@@ -264,11 +271,6 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
                 break;
             case CPepCtrlStateDeviceArrived:
             case CPepCtrlStateDeviceRemoved:
-				PepCtrlLog("lPepCtrlIrpDeviceControl - State of \"%s\" detected for I/O Control Code: %s.  (Thread: 0x%p)\n",
-					       PepCtrlHelperTranslateState(pPortData->nState),
-					       PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
-					       PsGetCurrentThread());
-
 				if (pIrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_PEPCTRL_GET_DEVICE_STATUS ||
 					pIrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_PEPCTRL_DEVICE_NOTIFICATION)
                 {
@@ -290,23 +292,40 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
             case CPepCtrlStateUnloading:
             case CPepCtrlStateChangePortSettings:
                 bMonitorState = FALSE;
-
-                PepCtrlLog("lPepCtrlIrpDeviceControl - Invalid state of \"%s\" for I/O Control Code: %s.  (Thread: 0x%p)\n",
-                           PepCtrlHelperTranslateState(pPortData->nState),
-                           PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
-					       PsGetCurrentThread());
                 break;
             default:
                 bMonitorState = FALSE;
-
-                PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: Unknown state of \"%s\" for I/O Control Code: %s.  (Thread: 0x%p)\n",
-                           PepCtrlHelperTranslateState(pPortData->nState),
-                           PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
-					       PsGetCurrentThread());
                 break;
         }
 
         ExReleaseFastMutex(&pPortData->FastMutex);
+
+        switch (nPreviousState)
+        {
+            case CPepCtrlStateRunning:
+                break;
+            case CPepCtrlStateDeviceArrived:
+            case CPepCtrlStateDeviceRemoved:
+                PepCtrlLog("lPepCtrlIrpDeviceControl - State of \"%s\" detected for I/O Control Code: %s.  (Thread: 0x%p)\n",
+                           PepCtrlHelperTranslateState(nPreviousState),
+                           PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
+                           PsGetCurrentThread());
+                break;
+            case CPepCtrlStateDeviceControl:
+            case CPepCtrlStateUnloading:
+            case CPepCtrlStateChangePortSettings:
+                PepCtrlLog("lPepCtrlIrpDeviceControl - Invalid state of \"%s\" for I/O Control Code: %s.  (Thread: 0x%p)\n",
+                           PepCtrlHelperTranslateState(nPreviousState),
+                           PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
+                           PsGetCurrentThread());
+                break;
+            default:
+                PepCtrlLog("lPepCtrlIrpDeviceControl - ERROR: Unknown state of \"%s\" for I/O Control Code: %s.  (Thread: 0x%p)\n",
+                           PepCtrlHelperTranslateState(nPreviousState),
+                           PepCtrlHelperTranslateControlCode(pIrpSp->Parameters.DeviceIoControl.IoControlCode),
+                           PsGetCurrentThread());
+                break;
+        }
 
 		if (bExecuteSleep)
 		{
@@ -389,6 +408,7 @@ static NTSTATUS lPepCtrlIrpDeviceControl(
     return Status;
 }
 
+_Use_decl_annotations_
 static VOID lPepCtrlDriverUnload(
   _In_ PDRIVER_OBJECT pDriverObject)
 {
@@ -420,7 +440,6 @@ static VOID lPepCtrlDriverUnload(
             PepCtrlLog("lPepCtrlDriverUnload - Could not unregister the Plug and Play notification.  (Thread: 0x%p)\n",
 				       PsGetCurrentThread());
         }
-
     }
 
     PepCtrlUninitPortData(pPortData);
@@ -447,7 +466,8 @@ static VOID lPepCtrlDriverUnload(
 
 #pragma region "Driver Entry"
 
-NTSTATUS __stdcall DriverEntry(
+_Use_decl_annotations_
+NTSTATUS DriverEntry(
   _In_ PDRIVER_OBJECT pDriverObject,
   _In_ PUNICODE_STRING pRegistryPath)
 {

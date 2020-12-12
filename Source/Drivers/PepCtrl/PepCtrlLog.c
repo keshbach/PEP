@@ -172,6 +172,7 @@ VOID PepCtrlLogCloseFile()
     //DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "PepCtrl: PepCtrlLogCloseFile closing");
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID __cdecl PepCtrlLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...)
 {
     va_list arguments;
@@ -183,6 +184,7 @@ VOID __cdecl PepCtrlLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...)
     va_end(arguments);
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID __cdecl PepCtrlLogV(
   _In_z_ PCSTR pszFormat,
   _In_ va_list argList)

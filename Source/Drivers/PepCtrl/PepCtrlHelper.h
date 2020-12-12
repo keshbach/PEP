@@ -7,8 +7,10 @@
 
 #if !defined(NDEBUG)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 PCSTR PepCtrlHelperTranslateControlCode(_In_ ULONG ulIOControlCode);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 PCSTR PepCtrlHelperTranslateState(_In_ INT32 nState);
 
 #else

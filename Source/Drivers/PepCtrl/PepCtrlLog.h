@@ -13,8 +13,10 @@ VOID PepCtrlLogOpenFile(_In_z_ PCWSTR pszLogFile);
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID PepCtrlLogCloseFile();
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID __cdecl PepCtrlLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 VOID __cdecl PepCtrlLogV(_In_z_ PCSTR pszFormat, _In_ va_list argList);
 
 #else
