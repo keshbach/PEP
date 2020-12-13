@@ -59,8 +59,10 @@ typedef struct tagTPepCtrlObject
 
 typedef struct tagTPepCtrlRegSettings
 {
+    _Field_z_
     LPWSTR pszRegistryPath;
     UINT32 nPortType;
+    _Field_z_
     LPWSTR pszPortDeviceName;
 } TPepCtrlRegSettings;
 

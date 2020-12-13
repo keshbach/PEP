@@ -29,13 +29,31 @@
 
 #include "PepCtrlHelper.h"
 
-#pragma region "Type Defs"
+#pragma region "Structures"
+
+#if defined(_MSC_VER)
+#if defined(_X86_)
+#pragma pack(push, 4)
+#elif defined(_WIN64)
+#pragma pack(push, 8)
+#else
+#error Need to specify cpu architecture to configure structure padding
+#endif
+#else
+#error Need to specify how to enable byte aligned structure padding
+#endif
 
 typedef struct tagTDeviceControlCancelWorkItemData
 {
 	PIO_WORKITEM pWorkItem;
 	PIRP pIrp;
 } TDeviceControlCancelWorkItemData;
+
+#if defined(_MSC_VER)
+#pragma pack(pop)
+#else
+#error Need to specify how to restore original structure padding
+#endif
 
 #pragma endregion
 
@@ -823,6 +841,8 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 
 		return Status;
 	}
+
+	*((UINT32*)pvOutBuf) = 0; // Suppress C6101 warning
 
     if (pPortData->pIrp == NULL)
 	{
