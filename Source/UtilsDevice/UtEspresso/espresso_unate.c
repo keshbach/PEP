@@ -66,12 +66,12 @@ static TPSet_Family abs_covered_many(
 static TEspressoInt32 abs_select_restricted(
   TPCubeContext pCubeContext,
   TPSet_Family A,
-  TPSet restrict)
+  TPSet restricted)
 {
     register TEspressoInt32 i, best_var, best_count, *count;
 
     /* Sum the elements in these columns */
-    count = sf_count_restricted(pCubeContext, A, restrict);
+    count = sf_count_restricted(pCubeContext, A, restricted);
 
     /* Find which variable has maximum weight */
     best_var = -1;
@@ -108,7 +108,7 @@ TPSet_Family unate_complement(
   TPSet_Family A)			/* disposes of A */
 {
     TPSet_Family Abar;
-    register TPSet p, p1, restrict;
+    register TPSet p, p1, restricted;
     register TEspressoInt32 i;
     TEspressoInt32 max_i, min_set_ord, j;
 
@@ -141,18 +141,18 @@ TPSet_Family unate_complement(
 	/* Select splitting variable as the variable which belongs to a set
 	 * of the smallest size, and which has greatest column count
 	 */
-	restrict = MSet_New(A->nSF_size);
+	restricted = MSet_New(A->nSF_size);
 	min_set_ord = A->nSF_size + 1;
 	MForeachi_Set(A, i, p)
     {
 	    if (MSize(p) < (TEspressoUInt32)min_set_ord)
         {
-		    set_copy(restrict, p);
+		    set_copy(restricted, p);
 		    min_set_ord = MSize(p);
 	    }
         else if (MSize(p) == (TEspressoUInt32)min_set_ord) 
         {
-		   set_or(restrict, restrict, p);
+		   set_or(restricted, restricted, p);
 	    }
 	}
 
@@ -166,18 +166,18 @@ TPSet_Family unate_complement(
 	}
     else if (min_set_ord == 1)
     {
-	    Abar = unate_complement(pCubeContext, abs_covered_many(pCubeContext, A, restrict));
+	    Abar = unate_complement(pCubeContext, abs_covered_many(pCubeContext, A, restricted));
 	    sf_free(pCubeContext, A);
 	    MForeachi_Set(Abar, i, p)
         {
-		    set_or(p, p, restrict);
+		    set_or(p, p, restricted);
 	    }
 
 	/* else, recur as usual */
 	}
     else
     {
-	    max_i = abs_select_restricted(pCubeContext, A, restrict);
+	    max_i = abs_select_restricted(pCubeContext, A, restricted);
 
 	    /* Select those rows of A which are not covered by max_i,
 	     * recursively find all minimal covers of these rows, and
@@ -202,7 +202,7 @@ TPSet_Family unate_complement(
 
 	    Abar = sf_append(pCubeContext, Abar, unate_complement(pCubeContext, A));
 	}
-	MSet_Free(restrict);
+	MSet_Free(restricted);
     }
 
     return Abar;
