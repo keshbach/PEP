@@ -29,9 +29,23 @@
 
 #include "PepCtrlHelper.h"
 
-static DRIVER_CANCEL lDeviceControlCancelIrpRoutine;
+#pragma region "Type Defs"
+
+typedef struct tagTDeviceControlCancelWorkItemData
+{
+	PIO_WORKITEM pWorkItem;
+	PIRP pIrp;
+} TDeviceControlCancelWorkItemData;
+
+#pragma endregion
+
+static DRIVER_CANCEL lDeviceControlCancelIrp;
+
+static IO_WORKITEM_ROUTINE lDeviceControlCancelWorkItem;
 
 #if defined(ALLOC_PRAGMA)
+#pragma alloc_text (PAGE, lDeviceControlCancelWorkItem)
+
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetProgrammerMode)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetVccMode)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetPinPulseMode)
@@ -51,96 +65,152 @@ static DRIVER_CANCEL lDeviceControlCancelIrpRoutine;
 
 #pragma region "Local Functions"
 
-_IRQL_requires_min_(DISPATCH_LEVEL)
-static VOID lDeviceControlCancelIrpRoutine(
-  _In_ _Out_ PDEVICE_OBJECT pDeviceObject,
-  _In_ PIRP pIrp)
+_Use_decl_annotations_
+static VOID lDeviceControlCancelIrp(
+  _Inout_ PDEVICE_OBJECT pDeviceObject,
+  _Inout_ _IRQL_uses_cancel_ PIRP pIrp)
 {
-    BOOLEAN bQuit = FALSE;
+	TDeviceControlCancelWorkItemData* pDeviceControlCancelWorkItemData;
+
+	IoReleaseCancelSpinLock(pIrp->CancelIrql);
+
+	pDeviceControlCancelWorkItemData = (TDeviceControlCancelWorkItemData*)UtAllocNonPagedMem(sizeof(TDeviceControlCancelWorkItemData));
+
+	if (pDeviceControlCancelWorkItemData)
+	{
+		pDeviceControlCancelWorkItemData->pWorkItem = IoAllocateWorkItem(pDeviceObject);
+
+		if (pDeviceControlCancelWorkItemData->pWorkItem)
+		{
+			pDeviceControlCancelWorkItemData->pIrp = pIrp;
+
+			IoQueueWorkItem(pDeviceControlCancelWorkItemData->pWorkItem, lDeviceControlCancelWorkItem,
+			                DelayedWorkQueue, pDeviceControlCancelWorkItemData);
+		}
+		else
+		{
+			UtFreeNonPagedMem(pDeviceControlCancelWorkItemData);
+		}
+	}
+}
+
+_Use_decl_annotations_
+static void lDeviceControlCancelWorkItem(
+  _In_ PDEVICE_OBJECT pDeviceObject,
+  _In_opt_ PVOID pvContext)
+{
+	BOOLEAN bQuit = FALSE;
 	TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
+	TDeviceControlCancelWorkItemData* pDeviceControlCancelWorkItemData = (TDeviceControlCancelWorkItemData*)pvContext;
+	INT32 nOriginalState;
+	PIRP pOriginalPortDataIrp;
 
-    PepCtrlLog("lDeviceControlCancelIrpRoutine entering.  (Thread: 0x%p)\n",
-		       PsGetCurrentThread());
+	PepCtrlLog("lDeviceControlCancelWorkItem entering.  (Thread: 0x%p)\n",
+               PsGetCurrentThread());
 
-    IoReleaseCancelSpinLock(pIrp->CancelIrql);
+	PAGED_CODE()
 
-    while (!bQuit)
-    {
-        if (ExTryToAcquireFastMutex(&pPortData->FastMutex))
-        {
-            switch (pPortData->nState)
-            {
-                case CPepCtrlStateRunning:
-                    if (pPortData->pIrp == pIrp)
-                    {
-                        PepCtrlLog("lDeviceControlCancelIrpRoutine - Clearing out the existing device notification IRP.  (Thread: 0x%p)\n",
-							       PsGetCurrentThread());
+	if (pvContext == NULL)
+	{
+		PepCtrlLog("lDeviceControlCancelWorkItem leaving.  (pvContext is null.  Thread: 0x%p)\n",
+			       PsGetCurrentThread());
 
-                        pPortData->pIrp = NULL;
-                    }
-
-                    bQuit = TRUE;
-                    break;
-                case CPepCtrlStateUnloading:
-                case CPepCtrlStateDeviceArrived:
-                case CPepCtrlStateDeviceRemoved:
-                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Invalid state of \"%s\".  (Thread: 0x%p)\n",
-						       PepCtrlHelperTranslateState(pPortData->nState),
-						       PsGetCurrentThread());
-
-                    bQuit = TRUE;
-                    break;
-                case CPepCtrlStateDeviceControl:
-                case CPepCtrlStateChangePortSettings:
-                    break;
-                default:
-                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Unknown state of \"%s\".  (Thread: 0x%p)\n",
-						       PepCtrlHelperTranslateState(pPortData->nState),
-						       PsGetCurrentThread());
-
-                    bQuit = TRUE;
-                    break;
-            }
-
-            ExReleaseFastMutex(&pPortData->FastMutex);
-        }
-        else
-        {
-            switch (pPortData->nState)
-            {
-                case CPepCtrlStateUnloading:
-                    bQuit = TRUE;
-                    break;
-                case CPepCtrlStateRunning:
-                case CPepCtrlStateDeviceControl:
-                case CPepCtrlStateChangePortSettings:
-                    break;
-                case CPepCtrlStateDeviceArrived:
-                case CPepCtrlStateDeviceRemoved:
-                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Invalid state of \"%s\".  (Thread: 0x%p)\n",
-						       PepCtrlHelperTranslateState(pPortData->nState),
-						       PsGetCurrentThread());
-
-                    bQuit = TRUE;
-                    break;
-                default:
-                    PepCtrlLog("lDeviceControlCancelIrpRoutine - ERROR: Unknown state of \"%s\".  (Thread: 0x%p)\n",
-						       PepCtrlHelperTranslateState(pPortData->nState),
-						       PsGetCurrentThread());
-
-                    bQuit = TRUE;
-                    break;
-            }
-        }
+		return;
     }
 
-	pIrp->IoStatus.Status = STATUS_CANCELLED;
-	pIrp->IoStatus.Information = 0;
+	while (!bQuit)
+	{
+		if (ExTryToAcquireFastMutex(&pPortData->FastMutex))
+		{
+			nOriginalState = pPortData->nState;
 
-	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+			switch (pPortData->nState)
+			{
+				case CPepCtrlStateRunning:
+					pOriginalPortDataIrp = pPortData->pIrp;
 
-    PepCtrlLog("lDeviceControlCancelIrpRoutine leaving.  (Thread: 0x%p)\n",
-		       PsGetCurrentThread());
+					if (pPortData->pIrp == pDeviceControlCancelWorkItemData->pIrp)
+					{
+						pPortData->pIrp = NULL;
+					}
+
+					bQuit = TRUE;
+					break;
+				case CPepCtrlStateUnloading:
+				case CPepCtrlStateDeviceArrived:
+				case CPepCtrlStateDeviceRemoved:
+					bQuit = TRUE;
+					break;
+				case CPepCtrlStateDeviceControl:
+				case CPepCtrlStateChangePortSettings:
+					break;
+				default:
+					bQuit = TRUE;
+					break;
+			}
+
+			ExReleaseFastMutex(&pPortData->FastMutex);
+
+			switch (nOriginalState)
+			{
+    			case CPepCtrlStateRunning:
+					PepCtrlLog("lDeviceControlCancelWorkItem - Clearing out the existing device notification IRP.  (Thread: 0x%p)\n",
+						       PsGetCurrentThread());
+
+					pDeviceControlCancelWorkItemData->pIrp->IoStatus.Status = STATUS_CANCELLED;
+					pDeviceControlCancelWorkItemData->pIrp->IoStatus.Information = 0;
+
+					IoCompleteRequest(pDeviceControlCancelWorkItemData->pIrp, IO_NO_INCREMENT);
+					break;
+				case CPepCtrlStateUnloading:
+				case CPepCtrlStateDeviceArrived:
+				case CPepCtrlStateDeviceRemoved:
+					PepCtrlLog("lDeviceControlCancelWorkItem - ERROR: Invalid state of \"%s\".  (Thread: 0x%p)\n",
+						       PepCtrlHelperTranslateState(pPortData->nState), PsGetCurrentThread());
+					break;
+				case CPepCtrlStateDeviceControl:
+				case CPepCtrlStateChangePortSettings:
+					break;
+				default:
+					PepCtrlLog("lDeviceControlCancelWorkItem - ERROR: Unknown state of \"%s\".  (Thread: 0x%p)\n",
+					           PepCtrlHelperTranslateState(pPortData->nState), PsGetCurrentThread());
+					break;
+			}
+		}
+		else
+		{
+			switch (pPortData->nState)
+			{
+				case CPepCtrlStateUnloading:
+					bQuit = TRUE;
+					break;
+				case CPepCtrlStateRunning:
+				case CPepCtrlStateDeviceControl:
+				case CPepCtrlStateChangePortSettings:
+					break;
+				case CPepCtrlStateDeviceArrived:
+				case CPepCtrlStateDeviceRemoved:
+					PepCtrlLog("lDeviceControlCancelWorkItem - ERROR: Invalid state of \"%s\".  (Thread: 0x%p)\n",
+						       PepCtrlHelperTranslateState(pPortData->nState), PsGetCurrentThread());
+
+					bQuit = TRUE;
+					break;
+				default:
+					PepCtrlLog("lDeviceControlCancelWorkItem - ERROR: Unknown state of \"%s\".  (Thread: 0x%p)\n",
+						       PepCtrlHelperTranslateState(pPortData->nState), PsGetCurrentThread());
+
+					bQuit = TRUE;
+					break;
+			}
+		}
+	}
+
+	IoFreeWorkItem(pDeviceControlCancelWorkItemData->pWorkItem);
+
+	UtFreeNonPagedMem(pDeviceControlCancelWorkItemData);
+
+	PepCtrlLog("lDeviceControlCancelWorkItem leaving.  (Thread: 0x%p)\n",
+               PsGetCurrentThread());
 }
 
 #pragma endregion
@@ -151,7 +221,7 @@ NTSTATUS PepCtrlDeviceControl_SetProgrammerMode(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -202,7 +272,7 @@ NTSTATUS PepCtrlDeviceControl_SetVccMode(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -253,7 +323,7 @@ NTSTATUS PepCtrlDeviceControl_SetPinPulseMode(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -304,7 +374,7 @@ NTSTATUS PepCtrlDeviceControl_SetVppMode(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -355,7 +425,7 @@ NTSTATUS PepCtrlDeviceControl_SetAddress(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -406,7 +476,7 @@ NTSTATUS PepCtrlDeviceControl_SetAddressWithDelay(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -462,7 +532,7 @@ NTSTATUS PepCtrlDeviceControl_GetData(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -515,7 +585,7 @@ NTSTATUS PepCtrlDeviceControl_SetData(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -566,7 +636,7 @@ NTSTATUS PepCtrlDeviceControl_TriggerProgram(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -622,7 +692,7 @@ NTSTATUS PepCtrlDeviceControl_SetOutputEnable(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -673,7 +743,7 @@ NTSTATUS PepCtrlDeviceControl_GetDeviceStatus(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -722,7 +792,7 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -730,7 +800,6 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 	pvInBuf;
 	ulInBufLen;
 	pvOutBuf;
-	ulOutBufLen;
 
     PepCtrlLog("PepCtrlDeviceControl_DeviceNotification entering.  (Thread: 0x%p)\n",
 		       PsGetCurrentThread());
@@ -764,7 +833,7 @@ NTSTATUS PepCtrlDeviceControl_DeviceNotification(
 
 		IoMarkIrpPending(pIrp);
 
-		IoSetCancelRoutine(pIrp, lDeviceControlCancelIrpRoutine);
+		IoSetCancelRoutine(pIrp, lDeviceControlCancelIrp);
 
 		Status = STATUS_PENDING;
 
@@ -792,7 +861,7 @@ NTSTATUS PepCtrlDeviceControl_GetPortSettings(
   _In_ TPepCtrlPortData* pPortData, 
   _In_ const PVOID pvInBuf, 
   _In_ ULONG ulInBufLen, 
-  _Out_ PVOID pvOutBuf, 
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -867,7 +936,7 @@ NTSTATUS PepCtrlDeviceControl_SetPortSettings(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -1100,7 +1169,7 @@ NTSTATUS PepCtrlDeviceControl_SetDelaySettings(
   _In_ TPepCtrlPortData* pPortData,
   _In_ const PVOID pvInBuf,
   _In_ ULONG ulInBufLen,
-  _Out_ PVOID pvOutBuf,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
   _In_ ULONG ulOutBufLen)
 {
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
