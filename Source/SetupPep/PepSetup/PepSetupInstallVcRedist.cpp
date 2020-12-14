@@ -19,16 +19,16 @@
 
 // Visual Studio Redistributable definitions
 
-#if _MSC_VER != 1920
+#if _MSC_VER != 1928
 #error Check if Visual Studio Redistributable needs to be changed.
 #endif
 
 #define CVisualStudioVersionSubKeyName L"14.0"
 
 #define CVisualStudioRedistMajorVersion 14
-#define CVisualStudioRedistMinorVersion 22
-#define CVisualStudioRedistBuildVersion 27821
-#define CVisualStudioRedistReleaseBuildVersion 0
+#define CVisualStudioRedistMinorVersion 28
+#define CVisualStudioRedistBuildVersion 29325
+#define CVisualStudioRedistReleaseBuildVersion 2
 
 // Visual Studio Redistributable Command Line Arguments definitions
 

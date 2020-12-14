@@ -40,14 +40,14 @@
 
 #pragma region Enumerations
 
-enum EInstallResult
+enum class EInstallResult
 {
-    eirNone,
-    eirSuccessRebootRequired,
-    eirSuccessRebootInitiated,
-    eirCancelledByUser,
-    eirInstallAlreadyRunning,
-    eirUnknownError
+    None,
+    SuccessRebootRequired,
+    SuccessRebootInitiated,
+    CancelledByUser,
+    InstallAlreadyRunning,
+    UnknownError
 };
 
 #pragma endregion
@@ -237,13 +237,13 @@ static EInstallResult lProcessInstallExitCode(
   _In_ DWORD dwExitCode,
   _In_opt_z_ LPCWSTR pszLogFile)
 {
-    EInstallResult InstallResult = eirUnknownError;
+    EInstallResult InstallResult = EInstallResult::UnknownError;
     WCHAR cMessage[50];
 
     switch (dwExitCode)
     {
         case ERROR_SUCCESS:
-            InstallResult = eirSuccessRebootRequired;
+            InstallResult = EInstallResult::SuccessRebootRequired;
 
             if (pszLogFile)
             {
@@ -251,7 +251,7 @@ static EInstallResult lProcessInstallExitCode(
             }
             break;
         case ERROR_SUCCESS_REBOOT_INITIATED:
-            InstallResult = eirSuccessRebootInitiated;
+            InstallResult = EInstallResult::SuccessRebootInitiated;
 
             if (pszLogFile)
             {
@@ -259,7 +259,7 @@ static EInstallResult lProcessInstallExitCode(
             }
             break;
         case ERROR_SUCCESS_REBOOT_REQUIRED:
-            InstallResult = eirSuccessRebootRequired;
+            InstallResult = EInstallResult::SuccessRebootRequired;
 
             if (pszLogFile)
             {
@@ -267,7 +267,7 @@ static EInstallResult lProcessInstallExitCode(
             }
             break;
         case ERROR_INSTALL_USEREXIT:
-            InstallResult = eirCancelledByUser;
+            InstallResult = EInstallResult::CancelledByUser;
 
             if (pszLogFile)
             {
@@ -275,7 +275,7 @@ static EInstallResult lProcessInstallExitCode(
             }
             break;
         case ERROR_INSTALL_ALREADY_RUNNING:
-            InstallResult = eirInstallAlreadyRunning;
+            InstallResult = EInstallResult::InstallAlreadyRunning;
 
             if (pszLogFile)
             {
@@ -319,7 +319,7 @@ static BOOL lExecuteInstall(
     SHELLEXECUTEINFO ShellExecuteInfo;
     DWORD dwExitCode;
 
-    *pInstallResult = eirUnknownError;
+    *pInstallResult = EInstallResult::UnknownError;
 
     pszMessage = UtPepSetupAllocString(IDS_INSTALLINGFILES);
 
@@ -569,7 +569,7 @@ static DWORD WINAPI lRunInstallThreadProc(
 {
     DWORD dwResult = 0;
     TInstallData* pInstallData = (TInstallData*)pvParameter;
-    EInstallResult InstallResult = eirNone;
+    EInstallResult InstallResult = EInstallResult::None;
     BOOL bAlreadyRunning, bAlreadyInstalled, bRebootAllowed, bUninstall;
     LPCWSTR pszMessage;
     GUID ProductCodeGuid;
@@ -668,7 +668,7 @@ static DWORD WINAPI lRunInstallThreadProc(
     {
         switch (InstallResult)
         {
-            case eirSuccessRebootRequired:
+            case EInstallResult::SuccessRebootRequired:
                 PepSetupModelessDialogDisplayRebootPrompt(&bRebootAllowed);
 
                 if (bRebootAllowed)
@@ -685,14 +685,14 @@ static DWORD WINAPI lRunInstallThreadProc(
 #pragma warning (default:28159)
                 }
                 break;
-            case eirSuccessRebootInitiated:
-            case eirCancelledByUser:
+            case EInstallResult::SuccessRebootInitiated:
+            case EInstallResult::CancelledByUser:
                 // Do nothing
                 break;
-            case eirInstallAlreadyRunning:
+            case EInstallResult::InstallAlreadyRunning:
                 PepSetupModelessDialogDisplayInstallAlreadyRunning();
                 break;
-            case eirUnknownError:
+            case EInstallResult::UnknownError:
                 PepSetupModelessDialogDisplayInstallError();
                 break;
             default:

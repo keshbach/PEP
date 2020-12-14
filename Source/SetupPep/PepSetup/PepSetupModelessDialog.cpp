@@ -26,13 +26,13 @@
 
 #pragma region Enumerations
 
-enum EMessageBoxDescription
+enum class  EMessageBoxDescription
 {
-    embdAppAlreadyRunning,
-    embdUnknownError,
-    embdFailedExtract,
-    embdInstallAlreadyRunning,
-    embdInstallError
+    AppAlreadyRunning,
+    UnknownError,
+    FailedExtract,
+    InstallAlreadyRunning,
+    InstallError
 };
 
 #pragma endregion
@@ -75,19 +75,19 @@ static INT_PTR lHandleDisplayMessageBoxMessage(
 
     switch (MessageBoxDescription)
     {
-        case embdAppAlreadyRunning:
+        case EMessageBoxDescription::AppAlreadyRunning:
             nMessageId = IDS_APPLICATIONALREADYRUNNING;
             break;
-        case embdUnknownError:
+        case EMessageBoxDescription::UnknownError:
             nMessageId = IDS_UNKNOWNERROR;
             break;
-        case embdFailedExtract:
+        case EMessageBoxDescription::FailedExtract:
             nMessageId = IDS_MSICOULDNOTBECOPIED;
             break;
-        case embdInstallAlreadyRunning:
+        case EMessageBoxDescription::InstallAlreadyRunning:
             nMessageId = IDS_ANOTHERINSTALLATIONRUNNING;
             break;
-        case embdInstallError:
+        case EMessageBoxDescription::InstallError:
             nMessageId = IDS_INSTALLATIONERROR;
             break;
         default:
@@ -286,27 +286,27 @@ VOID PepSetupModelessDialogQuitMessagePump()
 
 VOID PepSetupModelessDialogDisplayAppAlreadyRunning()
 {
-    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdAppAlreadyRunning, 0);
+    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, (int)EMessageBoxDescription::AppAlreadyRunning, 0);
 }
 
 VOID PepSetupModelessDialogDisplayUnknownError()
 {
-    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdUnknownError, 0);
+    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, (int)EMessageBoxDescription::UnknownError, 0);
 }
 
 VOID PepSetupModelessDialogDisplayFailedExtractError()
 {
-    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdFailedExtract, 0);
+    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, (int)EMessageBoxDescription::FailedExtract, 0);
 }
 
 VOID PepSetupModelessDialogDisplayInstallAlreadyRunning()
 {
-    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdInstallAlreadyRunning, 0);
+    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, (int)EMessageBoxDescription::InstallAlreadyRunning, 0);
 }
 
 VOID PepSetupModelessDialogDisplayInstallError()
 {
-    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, embdInstallError, 0);
+    ::PostMessage(l_hModelessDialog, WM_DISPLAYMESSAGEBOX, (int)EMessageBoxDescription::InstallError, 0);
 }
 
 VOID PepSetupModelessDialogDisplayMessage(
