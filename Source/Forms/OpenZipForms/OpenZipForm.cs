@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-/*  Copyright (C) 2014-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -15,7 +15,16 @@ namespace OpenZip
             {
                 Open,
                 SaveAs
-            };
+            }
+
+            private enum EActiveItem
+            {
+                None,
+                TreeViewZipFile,
+                TreeViewFolder,
+                ListViewFolder,
+                ListViewFile
+            }
             #endregion
 
             #region "Structures"
@@ -84,6 +93,7 @@ namespace OpenZip
 
             #region "Member Variables"
             private EOpenMode m_OpenMode = EOpenMode.Open;
+            private EActiveItem m_ActiveItem = EActiveItem.None;
 
             private System.String m_sCurrentPath = System.IO.Path.DirectorySeparatorChar.ToString();
             private System.String m_sSelection = "";
@@ -183,6 +193,7 @@ namespace OpenZip
             }
             #endregion
 
+            #region "Internal Helpers"
             private void TreeViewSort()
             {
                 BeginInvoke(m_DelegateTreeViewSort);
@@ -594,10 +605,10 @@ namespace OpenZip
 
                 using (new Common.Forms.WaitCursor(this))
                 {
-                    ZipFileData = (TZipFileData)Item.Tag;
-
-                    if (Item.Tag != null)
+                    if (IsFolder(Item) == false)
                     {
+                        ZipFileData = (TZipFileData)Item.Tag;
+
                         try
                         {
                             m_ZipFile.DeleteFile(ZipFileData.sSrcFileName);
@@ -1053,19 +1064,29 @@ namespace OpenZip
                 treeViewFolder.EndUpdate();
             }
 
-            private void InitTreeViewMenu(
-                System.Windows.Forms.TreeNode TreeNode)
+            private void InitImageKeys()
             {
-                if (TreeNode.Parent != null)
-                {
-                    toolStripMenuItemTreeViewDelete.Enabled = true;
-                    toolStripMenuItemTreeViewRename.Enabled = true;
-                }
-                else
-                {
-                    toolStripMenuItemTreeViewDelete.Enabled = false;
-                    toolStripMenuItemTreeViewRename.Enabled = false;
-                }
+                string sNewFolderImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(OpenZipForms.Resources.Resource.ResourceManager, "AddFolder_16x");
+                string sRenameImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(OpenZipForms.Resources.Resource.ResourceManager, "Rename_16x");
+                string sDeleteFolderImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(OpenZipForms.Resources.Resource.ResourceManager, "DeleteFolder_16x");
+                string sDeleteFileImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(OpenZipForms.Resources.Resource.ResourceManager, "DeleteFile_16x");
+                string sPropertiesImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(OpenZipForms.Resources.Resource.ResourceManager, "Property_16x");
+
+                toolStripButtonNewFolder.ImageKey = sNewFolderImageKey;
+                toolStripButtonRename.ImageKey = sRenameImageKey;
+                toolStripButtonDeleteFolder.ImageKey = sDeleteFolderImageKey;
+                toolStripButtonDeleteFile.ImageKey = sDeleteFileImageKey;
+                toolStripButtonProperties.ImageKey = sPropertiesImageKey;
+
+                toolStripMenuItemZipFileNewFolder.ImageKey = sNewFolderImageKey;
+
+                toolStripMenuItemFolderNewFolder.ImageKey = sNewFolderImageKey;
+                toolStripMenuItemFolderDelete.ImageKey = sDeleteFolderImageKey;
+                toolStripMenuItemFolderRename.ImageKey = sRenameImageKey;
+
+                toolStripMenuItemFileDelete.ImageKey = sDeleteFileImageKey;
+                toolStripMenuItemFileRename.ImageKey = sRenameImageKey;
+                toolStripMenuItemFileProperties.ImageKey = sPropertiesImageKey;
             }
 
             private void VerifyFileName()
@@ -2071,6 +2092,211 @@ namespace OpenZip
                 }
             }
 
+            private void UpdateActiveItem(
+                bool treeViewFolderFocused,
+                bool listViewFolderFileFocused)
+            {
+                m_ActiveItem = EActiveItem.None;
+
+                if (treeViewFolderFocused && treeViewFolder.SelectedNode != null)
+                {
+                    m_ActiveItem = IsFolder(treeViewFolder.SelectedNode) ? EActiveItem.TreeViewFolder : EActiveItem.TreeViewZipFile;
+                }
+
+                if (listViewFolderFileFocused && listViewFolderFile.SelectedItems.Count > 0)
+                {
+                    m_ActiveItem = IsFolder(listViewFolderFile.SelectedItems[0]) ? EActiveItem.ListViewFolder : EActiveItem.ListViewFile;
+                }
+            }
+
+            private void UpdateMenuAndToolStrips()
+            {
+                System.Windows.Forms.ToolStripItem[] ToolStripItems = {
+                    toolStripButtonNewFolder,
+                    toolStripButtonRename,
+                    toolStripButtonDeleteFolder,
+                    toolStripButtonDeleteFile,
+                    toolStripButtonProperties};
+                System.Boolean bEnable = true;
+
+                switch (m_ActiveItem)
+                {
+                    case EActiveItem.None:
+                        bEnable = false;
+                        break;
+                    case EActiveItem.TreeViewZipFile:
+                        toolStripButtonNewFolder.Visible = true;
+                        toolStripSeparatorToolbar1.Visible = false;
+                        toolStripButtonDeleteFolder.Visible = false;
+                        toolStripButtonDeleteFile.Visible = false;
+                        toolStripButtonRename.Visible = false;
+                        toolStripSeparatorToolbar2.Visible = false;
+                        toolStripButtonProperties.Visible = false;
+                        break;
+                    case EActiveItem.TreeViewFolder:
+                        toolStripButtonNewFolder.Visible = true;
+                        toolStripSeparatorToolbar1.Visible = true;
+                        toolStripButtonDeleteFolder.Visible = true;
+                        toolStripButtonDeleteFile.Visible = false;
+                        toolStripButtonRename.Visible = true;
+                        toolStripSeparatorToolbar2.Visible = false;
+                        toolStripButtonProperties.Visible = false;
+
+                        toolStripMenuItemFolderNewFolder.Visible = true;
+                        toolStripSeparatorFolder1.Visible = true;
+                        break;
+                    case EActiveItem.ListViewFolder:
+                        toolStripButtonNewFolder.Visible = false;
+                        toolStripSeparatorToolbar1.Visible = false;
+                        toolStripButtonDeleteFolder.Visible = true;
+                        toolStripButtonDeleteFile.Visible = false;
+                        toolStripButtonRename.Visible = true;
+                        toolStripSeparatorToolbar2.Visible = false;
+                        toolStripButtonProperties.Visible = false;
+
+                        toolStripMenuItemFolderNewFolder.Visible = false;
+                        toolStripSeparatorFolder1.Visible = false;
+                        break;
+                    case EActiveItem.ListViewFile:
+                        toolStripButtonNewFolder.Visible = false;
+                        toolStripSeparatorToolbar1.Visible = false;
+                        toolStripButtonDeleteFolder.Visible = false;
+                        toolStripButtonDeleteFile.Visible = true;
+                        toolStripButtonRename.Visible = true;
+                        toolStripSeparatorToolbar2.Visible = true;
+                        toolStripButtonProperties.Visible = true;
+                        break;
+                    default:
+                        System.Diagnostics.Debug.Assert(false, "Unknown active item");
+                        break;
+                }
+
+                foreach (System.Windows.Forms.ToolStripItem ToolStripItem in ToolStripItems)
+                {
+                    ToolStripItem.Enabled = bEnable;
+                }
+            }
+
+            private static bool IsFolder(
+                System.Windows.Forms.TreeNode TreeNode)
+            {
+                return TreeNode.Parent != null;
+            }
+
+            private static bool IsFolder(
+                System.Windows.Forms.ListViewItem ListViewItem)
+            {
+                return ListViewItem.Tag == null;
+            }
+
+            private void NewFolder()
+            {
+                System.Windows.Forms.TreeNode ParentTreeNode = treeViewFolder.SelectedNode;
+                System.String sNewFolderName = CreateNewFolderName(ParentTreeNode);
+                System.Windows.Forms.TreeNode TreeNode;
+                System.Windows.Forms.ListViewItem ListViewItem;
+
+                TreeNode = CreateTreeNode(sNewFolderName);
+
+                ParentTreeNode.Nodes.Add(TreeNode);
+
+                listViewFolderFile.BeginUpdate();
+
+                listViewFolderFile.Enabled = true;
+
+                listViewFolderFile.ListViewItemSorter = null;
+
+                ListViewItem = AddListViewItem(sNewFolderName);
+
+                ListViewItem.EnsureVisible();
+
+                listViewFolderFile.EndUpdate();
+
+                ListViewItem.BeginEdit();
+            }
+
+            private void DeleteFolder()
+            {
+                switch (m_ActiveItem)
+                {
+                    case EActiveItem.TreeViewFolder:
+                        DeleteTreeNode(treeViewFolder.SelectedNode);
+                        break;
+                    case EActiveItem.ListViewFolder:
+                        DeleteListViewItem(listViewFolderFile.FocusedItem);
+                        break;
+                }
+            }
+
+            private void DeleteFile()
+            {
+                DeleteListViewItem(listViewFolderFile.FocusedItem);
+            }
+
+            private void RenameFolder()
+            {
+                switch (m_ActiveItem)
+                {
+                    case EActiveItem.TreeViewFolder:
+                        treeViewFolder.SelectedNode.BeginEdit();
+                        break;
+                    case EActiveItem.ListViewFolder:
+                        listViewFolderFile.FocusedItem.BeginEdit();
+                        break;
+                }
+            }
+
+            private void RenameFile()
+            {
+                listViewFolderFile.FocusedItem.BeginEdit();
+            }
+
+            private void PropertiesFile()
+            {
+                OpenZip.Forms.PropertiesForm PropertiesForm = new OpenZip.Forms.PropertiesForm();
+                System.Windows.Forms.ListViewItem Item;
+                TZipFileData ZipFileData;
+                System.Text.StringBuilder sb;
+
+                Item = listViewFolderFile.SelectedItems[0];
+
+                ZipFileData = (TZipFileData)Item.Tag;
+
+                PropertiesForm.PropertiesMode = Forms.PropertiesForm.EPropertiesMode.File;
+                PropertiesForm.FileName = Item.Text;
+                PropertiesForm.ReadOnlyFile = false;
+                PropertiesForm.Comment = ZipFileData.sComment;
+
+                if (PropertiesForm.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    ZipFileData.sComment = PropertiesForm.Comment;
+
+                    Item.Tag = ZipFileData;
+
+                    using (new Common.Forms.WaitCursor(this))
+                    {
+                        try
+                        {
+                            m_ZipFile.ChangeFileComment(ZipFileData.sSrcFileName, ZipFileData.sComment);
+                        }
+                        catch (System.Exception exception)
+                        {
+                            sb = new System.Text.StringBuilder();
+
+                            sb.Append("The file's comment could not be changed.");
+                            sb.AppendLine();
+                            sb.AppendLine();
+                            sb.AppendLine(exception.Message);
+
+                            Common.Forms.MessageBox.Show(this, sb.ToString(),
+                                                         System.Windows.Forms.MessageBoxButtons.OK,
+                                                         System.Windows.Forms.MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            }
+            #endregion
+
             #region "Form Event Handlers"
             private void OpenZipForm_Load(
                 object sender,
@@ -2091,12 +2317,24 @@ namespace OpenZip
                         break;
                 }
 
-                treeViewFolder.ImageList = Common.Forms.ImageManager.SmallImageList;
-                listViewFolderFile.SmallImageList = Common.Forms.ImageManager.SmallImageList;
+                treeViewFolder.ImageList = Common.Forms.ImageManager.FileSmallImageList;
+                listViewFolderFile.SmallImageList = Common.Forms.ImageManager.FileSmallImageList;
+                toolStripForm.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
+                contextMenuStripFile.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
+                contextMenuStripFolder.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
+                contextMenuStripZipFile.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
+
+                Common.Forms.ImageManager.AddToolbarSmallImages(OpenZipForms.Resources.Resource.ResourceManager);
 
                 Common.Forms.ImageManager.AddFileSmallImage(m_sZipFile, CZipFileImageName);
 
+                InitImageKeys();
+
                 SetListViewSorter(listViewFolderFile.SortArrow);
+
+                m_ActiveItem = EActiveItem.TreeViewZipFile;
+
+                UpdateMenuAndToolStrips();
 
                 InitZipFile();
 
@@ -2180,12 +2418,16 @@ namespace OpenZip
                 {
                     ZipFileDataList = (System.Collections.Generic.List<TZipFileData>)e.Node.Tag;
 
-                    InitTreeViewMenu(e.Node);
-
-                    if (e.Node.Parent != null)
+                    if (IsFolder(e.Node))
                     {
                         e.Node.ImageKey = Common.Forms.ImageManager.OpenFolderImageName;
                         e.Node.SelectedImageKey = Common.Forms.ImageManager.OpenFolderImageName;
+
+                        treeViewFolder.ContextMenuStrip = contextMenuStripFolder;
+                    }
+                    else
+                    {
+                        treeViewFolder.ContextMenuStrip = contextMenuStripZipFile;
                     }
 
                     listViewFolderFile.BeginUpdate();
@@ -2217,14 +2459,16 @@ namespace OpenZip
                     buttonOK.Enabled = false;
                     textBoxFileName.Text = "";
                 }
+
+                UpdateActiveItem(treeViewFolder.Focused, listViewFolderFile.Focused);
+                UpdateMenuAndToolStrips();
             }
 
             private void treeViewFolder_BeforeSelect(
                 object sender,
                 System.Windows.Forms.TreeViewCancelEventArgs e)
             {
-                if (treeViewFolder.SelectedNode != null &&
-                    treeViewFolder.SelectedNode.Parent != null)
+                if (treeViewFolder.SelectedNode != null && IsFolder(treeViewFolder.SelectedNode))
                 {
                     treeViewFolder.SelectedNode.ImageKey = Common.Forms.ImageManager.FolderImageName;
                     treeViewFolder.SelectedNode.SelectedImageKey = Common.Forms.ImageManager.FolderImageName;
@@ -2297,7 +2541,7 @@ namespace OpenZip
                 object sender,
                 System.Windows.Forms.NodeLabelEditEventArgs e)
             {
-                if (e.Node.Parent == null)
+                if (IsFolder(e.Node) == false)
                 {
                     e.CancelEdit = true;
                 }
@@ -2321,14 +2565,14 @@ namespace OpenZip
                     case System.Windows.Forms.Keys.Apps:
                         e.Handled = true;
 
-                        contextMenuStripTreeView.Show(treeViewFolder, ItemPoint);
+                        treeViewFolder.ContextMenuStrip.Show(treeViewFolder, ItemPoint);
                         break;
                     case System.Windows.Forms.Keys.F10:
                         if (e.Shift == true)
                         {
                             e.Handled = true;
 
-                            contextMenuStripTreeView.Show(treeViewFolder, ItemPoint);
+                            treeViewFolder.ContextMenuStrip.Show(treeViewFolder, ItemPoint);
                         }
                         break;
                 }
@@ -2362,7 +2606,7 @@ namespace OpenZip
             {
                 System.Windows.Forms.TreeNode TreeNode = (System.Windows.Forms.TreeNode)e.Item;
 
-                if (TreeNode.Parent != null)
+                if (IsFolder(TreeNode))
                 {
                     ProcessItemDrag(e.Item);
                 }
@@ -2490,6 +2734,18 @@ namespace OpenZip
                     System.Diagnostics.Debug.Assert(false, "Unknown drop operation.");
                 }
             }
+
+            private void treeViewFolder_Enter(object sender, EventArgs e)
+            {
+                UpdateActiveItem(true, false);
+                UpdateMenuAndToolStrips();
+            }
+
+            private void treeViewFolder_Leave(object sender, EventArgs e)
+            {
+                UpdateActiveItem(false, false);
+                UpdateMenuAndToolStrips();
+            }
             #endregion
 
             #region "List View Event Handlers"
@@ -2511,7 +2767,7 @@ namespace OpenZip
                     {
                         ListViewItem = listViewFolderFile.Items[e.Item];
 
-                        if (ListViewItem.Tag != null)
+                        if (IsFolder(ListViewItem) == false)
                         {
                             // Renaming file
 
@@ -2644,30 +2900,46 @@ namespace OpenZip
                 buttonOK.Enabled = false;
                 textBoxFileName.Text = "";
 
-                if (e.IsSelected && e.Item.Tag != null)
+                if (e.IsSelected)
                 {
-                    switch (m_OpenMode)
+                    if (IsFolder(e.Item) == false)
                     {
-                        case EOpenMode.Open:
-                            AcceptButton = buttonOK;
-                            buttonOK.Enabled = true;
-                            break;
-                        case EOpenMode.SaveAs:
-                            if (m_bAllowOverwrite)
-                            {
+                        switch (m_OpenMode)
+                        {
+                            case EOpenMode.Open:
                                 AcceptButton = buttonOK;
                                 buttonOK.Enabled = true;
-                            }
-                            break;
-                        default:
-                            System.Diagnostics.Debug.Assert(false, "Unknown open mode.");
-                            break;
-                    }
+                                break;
+                            case EOpenMode.SaveAs:
+                                if (m_bAllowOverwrite)
+                                {
+                                    AcceptButton = buttonOK;
+                                    buttonOK.Enabled = true;
+                                }
+                                break;
+                            default:
+                                System.Diagnostics.Debug.Assert(false, "Unknown open mode.");
+                                break;
+                        }
 
-                    textBoxFileName.Text = e.Item.Text;
+                        textBoxFileName.Text = e.Item.Text;
+
+                        listViewFolderFile.ContextMenuStrip = contextMenuStripFile;
+                    }
+                    else
+                    {
+                        listViewFolderFile.ContextMenuStrip = contextMenuStripFolder;
+                    }
+                }
+                else
+                {
+                    listViewFolderFile.ContextMenuStrip = null;
                 }
 
                 textBoxFileName.TextChanged += new System.EventHandler(textBoxFileName_TextChanged);
+
+                UpdateActiveItem(treeViewFolder.Focused, listViewFolderFile.Focused);
+                UpdateMenuAndToolStrips();
             }
 
             private void listViewFolderFile_KeyDown(
@@ -2699,7 +2971,7 @@ namespace OpenZip
 
                         if (ListViewItem != null)
                         {
-                            contextMenuStripListView.Show(listViewFolderFile, ItemPoint);
+                            listViewFolderFile.ContextMenuStrip.Show(listViewFolderFile, ItemPoint);
                         }
                         break;
                     case System.Windows.Forms.Keys.F10:
@@ -2709,7 +2981,7 @@ namespace OpenZip
 
                             if (ListViewItem != null)
                             {
-                                contextMenuStripListView.Show(listViewFolderFile, ItemPoint);
+                                listViewFolderFile.ContextMenuStrip.Show(listViewFolderFile, ItemPoint);
                             }
                         }
                         break;
@@ -2774,6 +3046,11 @@ namespace OpenZip
                     TreeNode.EnsureVisible();
 
                     treeViewFolder.SelectedNode = TreeNode;
+
+                    UpdateActiveItem(true, false);
+                    UpdateMenuAndToolStrips();
+                    UpdateActiveItem(false, false);
+                    UpdateMenuAndToolStrips();
                 }
             }
 
@@ -2912,6 +3189,18 @@ namespace OpenZip
                     System.Diagnostics.Debug.Assert(false, "Unknown drop operation.");
                 }
             }
+
+            private void listViewFolderFile_Enter(object sender, EventArgs e)
+            {
+                UpdateActiveItem(false, true);
+                UpdateMenuAndToolStrips();
+            }
+
+            private void listViewFolderFile_Leave(object sender, EventArgs e)
+            {
+                UpdateActiveItem(false, false);
+                UpdateMenuAndToolStrips();
+            }
             #endregion
 
             #region "Text Box Event Handlers"
@@ -2924,134 +3213,99 @@ namespace OpenZip
             #endregion
 
             #region "Tool Strip Menu Item Event Handlers"
-            private void toolStripMenuItemTreeViewNewFolder_Click(
-                object sender,
-                System.EventArgs e)
-            {
-                System.Windows.Forms.TreeNode ParentTreeNode = treeViewFolder.SelectedNode;
-                System.String sNewFolderName = CreateNewFolderName(ParentTreeNode);
-                System.Windows.Forms.TreeNode TreeNode;
-                System.Windows.Forms.ListViewItem ListViewItem;
-
-                TreeNode = CreateTreeNode(sNewFolderName);
-
-                ParentTreeNode.Nodes.Add(TreeNode);
-
-                listViewFolderFile.BeginUpdate();
-
-                listViewFolderFile.Enabled = true;
-
-                listViewFolderFile.ListViewItemSorter = null;
-
-                ListViewItem = AddListViewItem(sNewFolderName);
-
-                ListViewItem.EnsureVisible();
-
-                listViewFolderFile.EndUpdate();
-
-                ListViewItem.BeginEdit();
-            }
-
-            private void toolStripMenuItemTreeViewDelete_Click(
-                object sender,
-                System.EventArgs e)
-            {
-                System.Windows.Forms.TreeNode TreeNode = treeViewFolder.SelectedNode;
-
-                if (TreeNode.Parent != null)
-                {
-                    DeleteTreeNode(TreeNode);
-                }
-            }
-
-            private void toolStripMenuItemTreeViewRename_Click(
-                object sender,
-                System.EventArgs e)
-            {
-                treeViewFolder.SelectedNode.BeginEdit();
-            }
-
-            private void toolStripMenuItemListViewDelete_Click(
-                object sender,
-                System.EventArgs e)
-            {
-                DeleteListViewItem(listViewFolderFile.FocusedItem);
-            }
-
-            private void toolStripMenuItemListViewRename_Click(
-                object sender,
-                System.EventArgs e)
-            {
-                listViewFolderFile.FocusedItem.BeginEdit();
-            }
-
-            private void toolStripMenuItemListViewProperties_Click(
+            private void toolStripMenuItemZipFileNewFolder_Click(
                 object sender,
                 EventArgs e)
             {
-                OpenZip.Forms.PropertiesForm PropertiesForm = new OpenZip.Forms.PropertiesForm();
-                System.Windows.Forms.ListViewItem Item;
-                TZipFileData ZipFileData;
-                System.Text.StringBuilder sb;
+                NewFolder();
+            }
 
-                Item = listViewFolderFile.SelectedItems[0];
+            private void toolStripMenuItemFolderNewFolder_Click(
+                object sender,
+                System.EventArgs e)
+            {
+                NewFolder();
+            }
 
-                ZipFileData = (TZipFileData)Item.Tag;
+            private void toolStripMenuItemFolderDelete_Click(
+                object sender,
+                System.EventArgs e)
+            {
+                DeleteFolder();
+            }
 
-                PropertiesForm.PropertiesMode = Forms.PropertiesForm.EPropertiesMode.File;
-                PropertiesForm.FileName = Item.Text;
-                PropertiesForm.ReadOnlyFile = false;
-                PropertiesForm.Comment = ZipFileData.sComment;
+            private void toolStripMenuItemFolderRename_Click(
+                object sender,
+                System.EventArgs e)
+            {
+                RenameFolder();
+            }
 
-                if (PropertiesForm.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
-                {
-                    ZipFileData.sComment = PropertiesForm.Comment;
+            private void toolStripMenuItemFileDelete_Click(
+                object sender,
+                System.EventArgs e)
+            {
+                DeleteFile();
+            }
 
-                    Item.Tag = ZipFileData;
+            private void toolStripMenuItemFileRename_Click(
+                object sender,
+                System.EventArgs e)
+            {
+                RenameFile();
+            }
 
-                    using (new Common.Forms.WaitCursor(this))
-                    {
-                        try
-                        {
-                            m_ZipFile.ChangeFileComment(ZipFileData.sSrcFileName, ZipFileData.sComment);
-                        }
-                        catch (System.Exception exception)
-                        {
-                            sb = new System.Text.StringBuilder();
-
-                            sb.Append("The file's comment could not be changed.");
-                            sb.AppendLine();
-                            sb.AppendLine();
-                            sb.AppendLine(exception.Message);
-
-                            Common.Forms.MessageBox.Show(this, sb.ToString(),
-                                                         System.Windows.Forms.MessageBoxButtons.OK,
-                                                         System.Windows.Forms.MessageBoxIcon.Error);
-                        }
-                    }
-                }
+            private void toolStripMenuItemFileProperties_Click(
+                object sender,
+                EventArgs e)
+            {
+                PropertiesFile();
             }
             #endregion
 
-            #region "Context Menu Event Handlers"
-            private void contextMenuStripListView_Opening(
+            #region "Tool Strip Button Event Handlers"
+            private void toolStripButtonNewFolder_Click(
                 object sender,
-                System.ComponentModel.CancelEventArgs e)
+                EventArgs e)
             {
-                System.Windows.Forms.ListViewItem Item;
+                NewFolder();
+            }
 
-                Item = listViewFolderFile.SelectedItems[0];
+            private void toolStripButtonDeleteFolder_Click(
+                object sender,
+                EventArgs e)
+            {
+                DeleteFolder();
+            }
 
-                if (Item.Tag != null)
+            private void toolStripButtonDeleteFile_Click(
+                object sender,
+                EventArgs e)
+            {
+                DeleteFile();
+            }
+
+            private void toolStripButtonRename_Click(
+                object sender,
+                EventArgs e)
+            {
+                switch (m_ActiveItem)
                 {
-                    toolStripSeparatorListView.Visible = true;
-                    toolStripMenuItemListViewProperties.Visible = true;                    
+                    case EActiveItem.TreeViewFolder:
+                    case EActiveItem.ListViewFolder:
+                        RenameFolder();
+                        break;
+                    case EActiveItem.ListViewFile:
+                        RenameFile();
+                        break;
                 }
-                else
-                {
-                    toolStripSeparatorListView.Visible = false;
-                    toolStripMenuItemListViewProperties.Visible = false;                    
-                }
+            }
+
+            private void toolStripButtonProperties_Click(
+                object sender,
+                EventArgs e)
+            {
+                PropertiesFile();
             }
             #endregion
         }
@@ -3059,5 +3313,5 @@ namespace OpenZip
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2014-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2020 Kevin Eshbach                                  */
 /***************************************************************************/

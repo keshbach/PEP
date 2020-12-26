@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -20,11 +20,19 @@ namespace Common
             static System::String^ UnknownFileImageName = L"UnknownFile";
 
         public:
-            static property System::Windows::Forms::ImageList^ SmallImageList
+            static property System::Windows::Forms::ImageList^ FileSmallImageList
             {
                 System::Windows::Forms::ImageList^ get()
                 {
-                    return s_SmallImageList;
+                    return s_FileSmallImageList;
+                }
+            }
+
+            static property System::Windows::Forms::ImageList^ ToolbarSmallImageList
+            {
+                System::Windows::Forms::ImageList^ get()
+                {
+                    return s_ToolbarSmallImageList;
                 }
             }
 
@@ -45,13 +53,17 @@ namespace Common
 
             static System::Boolean AddFileExtensionSmallImage(System::String^ sFileExtension, System::String^ sImageName);
 
+            static System::Boolean AddToolbarSmallImages(System::Resources::ResourceManager^ ResourceManager);
+
+            static System::String^ GenerateToolbarImageKey(System::Resources::ResourceManager^ ResourceManager, System::String^ sImageName);
+
         private:
-            static System::Windows::Forms::ImageList^ s_SmallImageList = nullptr;
-            static System::Collections::Generic::List<System::IntPtr>^ s_IconHandleArrayList = nullptr;
+            static System::Windows::Forms::ImageList^ s_FileSmallImageList = nullptr;
+            static System::Windows::Forms::ImageList^ s_ToolbarSmallImageList = nullptr;
         };
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
