@@ -58,7 +58,7 @@ namespace OpenZip
             this.toolStripMenuItemFileRename = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorFile1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemFileProperties = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripForm = new System.Windows.Forms.ToolStrip();
+            this.toolStripForm = new Common.Forms.ToolStrip();
             this.toolStripButtonNewFolder = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparatorToolbar1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonDeleteFolder = new System.Windows.Forms.ToolStripButton();
@@ -450,7 +450,7 @@ namespace OpenZip
             private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFolderRename;
             private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemFileProperties;
             private System.Windows.Forms.ToolStripSeparator toolStripSeparatorFile1;
-            private System.Windows.Forms.ToolStrip toolStripForm;
+            private Common.Forms.ToolStrip toolStripForm;
             private System.Windows.Forms.ToolStripButton toolStripButtonNewFolder;
             private System.Windows.Forms.ToolStripButton toolStripButtonRename;
             private System.Windows.Forms.ToolStripButton toolStripButtonDeleteFolder;

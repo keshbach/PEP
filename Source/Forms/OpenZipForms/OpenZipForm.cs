@@ -87,8 +87,12 @@ namespace OpenZip
             private const System.Int32 CDragDropExpandNodeDelay = 1000;
             private const System.Int32 CDragDropScrollDelay = 200;
 
-            private System.String m_sZipFile = null;
-            private Common.Zip.File m_ZipFile = null;
+            // Group names
+
+            private const System.String CTreeViewZipFileGroupName = "TreeViewZipFile";
+            private const System.String CTreeViewFolderGroupName = "TreeViewFolder";
+            private const System.String CListViewFolderGroupName = "ListViewFolder";
+            private const System.String CListViewFileGroupName = "ListViewFile";
             #endregion
 
             #region "Member Variables"
@@ -100,6 +104,9 @@ namespace OpenZip
 
             private System.Boolean m_bAllowOverwrite = false;
             private System.Boolean m_bEditingSelectFileNameOnly = true;
+
+            private System.String m_sZipFile = null;
+            private Common.Zip.File m_ZipFile = null;
             #endregion
 
             #region "Static Variables"
@@ -1087,6 +1094,38 @@ namespace OpenZip
                 toolStripMenuItemFileDelete.ImageKey = sDeleteFileImageKey;
                 toolStripMenuItemFileRename.ImageKey = sRenameImageKey;
                 toolStripMenuItemFileProperties.ImageKey = sPropertiesImageKey;
+            }
+
+            private void CreateToolStripGroups()
+            {
+                System.Windows.Forms.ToolStripItem[] TreeViewZipFileGroupItems = {
+                    toolStripButtonNewFolder};
+                System.Windows.Forms.ToolStripItem[] TreeViewFolderGroupItems = {
+                    toolStripButtonNewFolder,
+                    toolStripSeparatorToolbar1,
+                    toolStripButtonDeleteFolder,
+                    toolStripButtonRename};
+                System.Windows.Forms.ToolStripItem[] ListViewFolderGroupItems = {
+                    toolStripButtonDeleteFolder,
+                    toolStripButtonRename};
+                System.Windows.Forms.ToolStripItem[] ListViewFileGroupItems = {
+                    toolStripButtonDeleteFile,
+                    toolStripButtonRename,
+                    toolStripSeparatorToolbar2,
+                    toolStripButtonProperties};
+
+                toolStripForm.CreateGroup(CTreeViewZipFileGroupName, TreeViewZipFileGroupItems);
+                toolStripForm.CreateGroup(CTreeViewFolderGroupName, TreeViewFolderGroupItems);
+                toolStripForm.CreateGroup(CListViewFolderGroupName, ListViewFolderGroupItems);
+                toolStripForm.CreateGroup(CListViewFileGroupName, ListViewFileGroupItems);
+            }
+
+            private void DestroyToolStripGroups()
+            {
+                toolStripForm.DestroyGroup(CTreeViewZipFileGroupName);
+                toolStripForm.DestroyGroup(CTreeViewFolderGroupName);
+                toolStripForm.DestroyGroup(CListViewFolderGroupName);
+                toolStripForm.DestroyGroup(CListViewFileGroupName);
             }
 
             private void VerifyFileName()
@@ -2125,46 +2164,22 @@ namespace OpenZip
                         bEnable = false;
                         break;
                     case EActiveItem.TreeViewZipFile:
-                        toolStripButtonNewFolder.Visible = true;
-                        toolStripSeparatorToolbar1.Visible = false;
-                        toolStripButtonDeleteFolder.Visible = false;
-                        toolStripButtonDeleteFile.Visible = false;
-                        toolStripButtonRename.Visible = false;
-                        toolStripSeparatorToolbar2.Visible = false;
-                        toolStripButtonProperties.Visible = false;
+                        toolStripForm.ActiveGroup = CTreeViewZipFileGroupName;
                         break;
                     case EActiveItem.TreeViewFolder:
-                        toolStripButtonNewFolder.Visible = true;
-                        toolStripSeparatorToolbar1.Visible = true;
-                        toolStripButtonDeleteFolder.Visible = true;
-                        toolStripButtonDeleteFile.Visible = false;
-                        toolStripButtonRename.Visible = true;
-                        toolStripSeparatorToolbar2.Visible = false;
-                        toolStripButtonProperties.Visible = false;
+                        toolStripForm.ActiveGroup = CTreeViewFolderGroupName;
 
                         toolStripMenuItemFolderNewFolder.Visible = true;
                         toolStripSeparatorFolder1.Visible = true;
                         break;
                     case EActiveItem.ListViewFolder:
-                        toolStripButtonNewFolder.Visible = false;
-                        toolStripSeparatorToolbar1.Visible = false;
-                        toolStripButtonDeleteFolder.Visible = true;
-                        toolStripButtonDeleteFile.Visible = false;
-                        toolStripButtonRename.Visible = true;
-                        toolStripSeparatorToolbar2.Visible = false;
-                        toolStripButtonProperties.Visible = false;
+                        toolStripForm.ActiveGroup = CListViewFolderGroupName;
 
                         toolStripMenuItemFolderNewFolder.Visible = false;
                         toolStripSeparatorFolder1.Visible = false;
                         break;
                     case EActiveItem.ListViewFile:
-                        toolStripButtonNewFolder.Visible = false;
-                        toolStripSeparatorToolbar1.Visible = false;
-                        toolStripButtonDeleteFolder.Visible = false;
-                        toolStripButtonDeleteFile.Visible = true;
-                        toolStripButtonRename.Visible = true;
-                        toolStripSeparatorToolbar2.Visible = true;
-                        toolStripButtonProperties.Visible = true;
+                        toolStripForm.ActiveGroup = CListViewFileGroupName;
                         break;
                     default:
                         System.Diagnostics.Debug.Assert(false, "Unknown active item");
@@ -2330,6 +2345,8 @@ namespace OpenZip
 
                 InitImageKeys();
 
+                CreateToolStripGroups();
+
                 SetListViewSorter(listViewFolderFile.SortArrow);
 
                 m_ActiveItem = EActiveItem.TreeViewZipFile;
@@ -2345,6 +2362,8 @@ namespace OpenZip
                 object sender,
                 System.Windows.Forms.FormClosedEventArgs e)
             {
+                DestroyToolStripGroups();
+
                 try
                 {
                     if (m_ZipFile != null)

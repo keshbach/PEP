@@ -271,6 +271,7 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ListViewComboBoxEditEventArgs.cpp" />
+    <ClCompile Include="ToolStrip.cpp" />
     <ClCompile Include="TreeNodeAscendingSorter.cpp" />
     <ClCompile Include="TreeNodeDescendingSorter.cpp" />
     <ClCompile Include="UiCtrlsNetDllMain.cpp">
@@ -314,6 +315,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ListViewComboBoxEditEventArgs.h" />
+    <ClInclude Include="ToolStrip.h" />
     <ClInclude Include="TreeNodeAscendingSorter.h" />
     <ClInclude Include="TreeNodeDescendingSorter.h" />
     <ClInclude Include="UtContextMenuStrip.h" />
