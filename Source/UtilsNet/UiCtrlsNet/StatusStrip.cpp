@@ -76,6 +76,8 @@ void Common::Forms::StatusStrip::ShowGroup(
 {
     TGroupToolStripItems^ GroupToolItems = FindGroup(sGroupName);
 
+    SuspendLayout();
+
     for each (System::Windows::Forms::ToolStripItem^ ToolStripItem in Items)
     {
         ToolStripItem->Visible = false;
@@ -94,6 +96,8 @@ void Common::Forms::StatusStrip::ShowGroup(
     {
         m_sActiveGroupName = L"";
     }
+
+    ResumeLayout();
 }
 
 Common::Forms::StatusStrip::TGroupToolStripItems^ Common::Forms::StatusStrip::FindGroup(
