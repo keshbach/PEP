@@ -63,6 +63,37 @@ Common::Forms::MenuStrip::~MenuStrip()
 	}
 }
 
+void Common::Forms::MenuStrip::UpdateToolStripItemsImageList(
+  System::Windows::Forms::ImageList^ ImageList,
+  System::Windows::Forms::ToolStripItemCollection^ ToolStripItemCollection)
+{
+    System::Boolean bSetImageList = true;
+    System::Windows::Forms::ToolStripDropDownItem^ ToolStripDropDownItem;
+
+    for each (System::Windows::Forms::ToolStripItem ^ ToolStripItem in ToolStripItemCollection)
+    {
+        if (bSetImageList)
+        {
+            if (ToolStripItem->Owner->ImageList != ImageList)
+            {
+                ToolStripItem->Owner->ImageList = ImageList;
+            }
+
+            bSetImageList = false;
+        }
+
+        if (IsInstance<System::Windows::Forms::ToolStripDropDownItem^>(ToolStripItem))
+        {
+            ToolStripDropDownItem = (System::Windows::Forms::ToolStripDropDownItem^)ToolStripItem;
+
+            if (ToolStripDropDownItem->DropDownItems->Count > 0)
+            {
+                UpdateToolStripItemsImageList(ImageList, ToolStripDropDownItem->DropDownItems);
+            }
+        }
+    }
+}
+
 void Common::Forms::MenuStrip::EnumToolStripItems(
   System::Windows::Forms::ToolStripItemCollection^ ToolStripItemCollection,
   System::Collections::Generic::List<TToolStripItemState^>^ ToolStripItemStateList)

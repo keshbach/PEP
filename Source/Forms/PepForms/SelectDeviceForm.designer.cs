@@ -34,14 +34,14 @@
             this.splitContainerDevice = new System.Windows.Forms.SplitContainer();
             this.treeViewDevice = new System.Windows.Forms.TreeView();
             this.labelDevice = new System.Windows.Forms.Label();
-            this.textBoxPinDiagram = new System.Windows.Forms.TextBox();
+            this.textBoxPinDiagram = new Common.Forms.TextBox();
             this.labelPinDiagram = new System.Windows.Forms.Label();
             this.labelFilter = new System.Windows.Forms.Label();
             this.checkedListBoxFilter = new Pep.Forms.CheckedListBox(this.components);
             this.buttonOK = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.labelSearch = new System.Windows.Forms.Label();
-            this.textBoxSearch = new Common.Forms.TextBox();
+            this.textBoxSearch = new Common.Forms.TextBoxTimer();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerDevice)).BeginInit();
             this.splitContainerDevice.Panel1.SuspendLayout();
             this.splitContainerDevice.Panel2.SuspendLayout();
@@ -180,7 +180,7 @@
             this.textBoxSearch.Name = "textBoxSearch";
             this.textBoxSearch.Size = new System.Drawing.Size(493, 20);
             this.textBoxSearch.TabIndex = 3;
-            this.textBoxSearch.KeyPressTimerExpired += new Common.Forms.TextBox.KeyPressTimerExpiredHandler(this.textBoxSearch_KeyPressTimerExpired);
+            this.textBoxSearch.KeyPressTimerExpired += new Common.Forms.TextBoxTimer.KeyPressTimerExpiredHandler(this.textBoxSearch_KeyPressTimerExpired);
             // 
             // SelectDeviceForm
             // 
@@ -222,13 +222,13 @@
             private System.Windows.Forms.Label labelDevice;
             private System.Windows.Forms.TreeView treeViewDevice;
             private System.Windows.Forms.Label labelPinDiagram;
-            private System.Windows.Forms.TextBox textBoxPinDiagram;
+            private Common.Forms.TextBox textBoxPinDiagram;
             private System.Windows.Forms.Label labelFilter;
             private Pep.Forms.CheckedListBox checkedListBoxFilter;
             private System.Windows.Forms.Button buttonOK;
             private System.Windows.Forms.Button buttonCancel;
             private System.Windows.Forms.Label labelSearch;
-            private Common.Forms.TextBox textBoxSearch;
+            private Common.Forms.TextBoxTimer textBoxSearch;
         }
     }
 }

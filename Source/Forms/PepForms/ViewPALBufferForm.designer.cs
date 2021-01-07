@@ -30,7 +30,7 @@
             /// </summary>
             private void InitializeComponent()
             {
-                this.textBoxBuffer = new System.Windows.Forms.TextBox();
+                this.textBoxBuffer = new Common.Forms.TextBox();
                 this.buttonClose = new System.Windows.Forms.Button();
                 this.SuspendLayout();
                 // 
@@ -86,7 +86,7 @@
 
             #endregion
 
-            private System.Windows.Forms.TextBox textBoxBuffer;
+            private Common.Forms.TextBox textBoxBuffer;
             private System.Windows.Forms.Button buttonClose;
         }
     }

@@ -6,6 +6,8 @@
 
 #include "ImageManager.h"
 
+#include "Resource.Designer.h"
+
 #using "UtilNet.dll"
 
 #define CToolbarSmallImageWidth 16
@@ -89,6 +91,8 @@ System::Boolean Common::Forms::ImageManager::Initialize()
     s_ToolbarSmallImageList->ColorDepth = System::Windows::Forms::ColorDepth::Depth32Bit;
     s_ToolbarSmallImageList->ImageSize = System::Drawing::Size(CToolbarSmallImageWidth,
                                                                CToolbarSmallImageHeight);
+
+    AddToolbarSmallImages(UiUtilNet::Resources::Resource::ResourceManager);
 
     return true;
 }

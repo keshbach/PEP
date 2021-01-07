@@ -38,7 +38,7 @@ namespace OpenZip
             this.buttonCancel = new System.Windows.Forms.Button();
             this.tabControlProperties = new System.Windows.Forms.TabControl();
             this.tabPageComment = new System.Windows.Forms.TabPage();
-            this.textBoxComment = new System.Windows.Forms.TextBox();
+            this.textBoxComment = new Common.Forms.TextBox();
             this.tabControlProperties.SuspendLayout();
             this.tabPageComment.SuspendLayout();
             this.SuspendLayout();
@@ -132,7 +132,7 @@ namespace OpenZip
             private System.Windows.Forms.Button buttonCancel;
             private System.Windows.Forms.TabControl tabControlProperties;
             private System.Windows.Forms.TabPage tabPageComment;
-            private System.Windows.Forms.TextBox textBoxComment;
+            private Common.Forms.TextBox textBoxComment;
         }
     }
 }

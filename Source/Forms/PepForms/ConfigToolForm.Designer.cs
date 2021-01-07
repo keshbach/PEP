@@ -36,15 +36,15 @@ namespace Pep
             {
                 this.labelApplication = new System.Windows.Forms.Label();
                 this.labelArguments = new System.Windows.Forms.Label();
-                this.textBoxApplication = new System.Windows.Forms.TextBox();
-                this.textBoxArguments = new System.Windows.Forms.TextBox();
+                this.textBoxApplication = new Common.Forms.TextBox();
+                this.textBoxArguments = new Common.Forms.TextBox();
                 this.buttonApplicationEllipse = new System.Windows.Forms.Button();
                 this.buttonOK = new System.Windows.Forms.Button();
                 this.buttonCancel = new System.Windows.Forms.Button();
                 this.labelDescription2 = new System.Windows.Forms.Label();
                 this.labelDescription1 = new System.Windows.Forms.Label();
                 this.labelDescription = new System.Windows.Forms.Label();
-                this.textBoxDescription = new System.Windows.Forms.TextBox();
+                this.textBoxDescription = new Common.Forms.TextBox();
                 this.SuspendLayout();
                 // 
                 // labelApplication
@@ -194,15 +194,15 @@ namespace Pep
 
             private System.Windows.Forms.Label labelApplication;
             private System.Windows.Forms.Label labelArguments;
-            private System.Windows.Forms.TextBox textBoxApplication;
-            private System.Windows.Forms.TextBox textBoxArguments;
+            private Common.Forms.TextBox textBoxApplication;
+            private Common.Forms.TextBox textBoxArguments;
             private System.Windows.Forms.Button buttonApplicationEllipse;
             private System.Windows.Forms.Button buttonOK;
             private System.Windows.Forms.Button buttonCancel;
             private System.Windows.Forms.Label labelDescription2;
             private System.Windows.Forms.Label labelDescription1;
             private System.Windows.Forms.Label labelDescription;
-            private System.Windows.Forms.TextBox textBoxDescription;
+            private Common.Forms.TextBox textBoxDescription;
         }
     }
 }

@@ -15,56 +15,13 @@ namespace Common
         public ref class TextBox : System::Windows::Forms::TextBox
         {
         public:
-            delegate void KeyPressTimerExpiredHandler(System::Object^ sender, System::EventArgs^ e);
-            [System::ComponentModel::Description("Occurs when the time delay between key presses has expired."),
-                System::ComponentModel::Category("Behavior")]
-            event KeyPressTimerExpiredHandler^ KeyPressTimerExpired;
-
-        public:
-            /// <summary>
-            /// Key press timer delay in seconds.
-            /// </summary>
-
-            [System::ComponentModel::Description("Key press timer delay in seconds."),
-                System::ComponentModel::Category("Behavior")]
-            property System::Double KeyPressTimerDelay
-            {
-                System::Double get()
-                {
-                    return m_dTimerDelay;
-                }
-
-                void set(System::Double value)
-                {
-                    if (value > 0.0)
-                    {
-                        m_dTimerDelay = value;
-
-                        m_Timer->Stop();
-
-                        m_Timer->Interval = (System::Int32)(value * 1000);
-
-                        if (m_bTimerStarted)
-                        {
-                            m_Timer->Start();
-                        }
-                    }
-                }
-            }
-
-        public:
             TextBox();
-
-		public:
-			void CancelKeyPressTimer();
 
         protected:
             /// <summary>
             /// Clean up any resources being used.
             /// </summary>
             ~TextBox();
-
-            virtual void WndProc(System::Windows::Forms::Message% Message) override;
 
         private:
             /// <summary>
@@ -80,17 +37,34 @@ namespace Common
             {
             }
 
-            void HandleChar(System::Windows::Forms::Message% Message);
-            void HandleKeyDown(System::Windows::Forms::Message% Message);
-            static void TimerEventProcessor(System::Object^ Object, System::EventArgs^ EventArgs);
-
         protected:
-            void OnKeyPressTimerExpired(System::EventArgs^ e);
+            virtual void WndProc(System::Windows::Forms::Message% Message) override;
 
         private:
-            System::Double m_dTimerDelay;
-            System::Boolean m_bTimerStarted;
-            Common::Forms::FormTimer^ m_Timer;
+            void CreateContextMenu();
+            void DestroyContextMenu();
+
+        // Context menu event handlers
+        private:
+            void toolStripMenuItemUndo_Click(System::Object^ Object, System::EventArgs^ EventArgs);
+            void toolStripMenuItemCut_Click(System::Object^ Object, System::EventArgs^ EventArgs);
+            void toolStripMenuItemCopy_Click(System::Object^ Object, System::EventArgs^ EventArgs);
+            void toolStripMenuItemPaste_Click(System::Object^ Object, System::EventArgs^ EventArgs);
+            void toolStripMenuItemDelete_Click(System::Object^ Object, System::EventArgs^ EventArgs);
+            void toolStripMenuItemSelectAll_Click(System::Object^ Object, System::EventArgs^ EventArgs);
+            void contextMenuStrip_Opening(System::Object^ Object, System::ComponentModel::CancelEventArgs^ EventArgs);
+
+        private:
+            System::Windows::Forms::ContextMenuStrip^ m_ContextMenuStrip;
+
+            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemUndo;
+            System::Windows::Forms::ToolStripSeparator^ m_ToolStripSeparator1;
+            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemCut;
+            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemCopy;
+            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemPaste;
+            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemDelete;
+            System::Windows::Forms::ToolStripSeparator^ m_ToolStripSeparator2;
+            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemSelectAll;
         };
     }
 }

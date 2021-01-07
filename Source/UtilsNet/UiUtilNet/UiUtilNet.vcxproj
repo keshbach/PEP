@@ -273,6 +273,7 @@
     <ClCompile Include="MainForm.cpp" />
     <ClCompile Include="MessageBox.cpp" />
     <ClCompile Include="MyThreadContext.cpp" />
+    <ClCompile Include="Resource.Designer.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -280,6 +281,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="FormTimer.cpp" />
+    <ClCompile Include="ToolbarImageKey.cpp" />
     <ClCompile Include="ToolStripMenuItem.cpp" />
     <ClCompile Include="UiUtilNetDllMain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -308,9 +310,11 @@
     <ClInclude Include="MainForm.h" />
     <ClInclude Include="MessageBox.h" />
     <ClInclude Include="MyThreadContext.h" />
+    <ClInclude Include="Resource.Designer.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="FormTimer.h" />
+    <ClInclude Include="ToolbarImageKey.h" />
     <ClInclude Include="ToolStripMenuItem.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="WaitCursor.h" />
@@ -323,6 +327,14 @@
       <Project>{46b43ca4-8772-4206-ac2f-00c86cce9034}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Copy_16x.png" />
+    <Image Include="Cut_16x.png" />
+    <Image Include="Delete_16x.png" />
+    <Image Include="Paste_16x.png" />
+    <Image Include="Select_16x.png" />
+    <Image Include="Undo_16x.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

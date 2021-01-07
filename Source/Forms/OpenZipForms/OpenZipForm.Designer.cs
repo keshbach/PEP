@@ -39,7 +39,7 @@ namespace OpenZip
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
             this.labelFileName = new System.Windows.Forms.Label();
-            this.textBoxFileName = new System.Windows.Forms.TextBox();
+            this.textBoxFileName = new Common.Forms.TextBox();
             this.splitContainerFolderFile = new System.Windows.Forms.SplitContainer();
             this.treeViewFolder = new Common.Forms.TreeView();
             this.contextMenuStripFolder = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -276,13 +276,13 @@ namespace OpenZip
             this.toolStripSeparatorFile1,
             this.toolStripMenuItemFileProperties});
             this.contextMenuStripFile.Name = "contextMenuStripListView";
-            this.contextMenuStripFile.Size = new System.Drawing.Size(137, 76);
+            this.contextMenuStripFile.Size = new System.Drawing.Size(181, 98);
             // 
             // toolStripMenuItemFileDelete
             // 
             this.toolStripMenuItemFileDelete.Name = "toolStripMenuItemFileDelete";
             this.toolStripMenuItemFileDelete.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-            this.toolStripMenuItemFileDelete.Size = new System.Drawing.Size(136, 22);
+            this.toolStripMenuItemFileDelete.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemFileDelete.Text = "&Delete";
             this.toolStripMenuItemFileDelete.Click += new System.EventHandler(this.toolStripMenuItemFileDelete_Click);
             // 
@@ -290,24 +290,25 @@ namespace OpenZip
             // 
             this.toolStripMenuItemFileRename.Name = "toolStripMenuItemFileRename";
             this.toolStripMenuItemFileRename.ShortcutKeys = System.Windows.Forms.Keys.F2;
-            this.toolStripMenuItemFileRename.Size = new System.Drawing.Size(136, 22);
+            this.toolStripMenuItemFileRename.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemFileRename.Text = "&Rename";
             this.toolStripMenuItemFileRename.Click += new System.EventHandler(this.toolStripMenuItemFileRename_Click);
             // 
             // toolStripSeparatorFile1
             // 
             this.toolStripSeparatorFile1.Name = "toolStripSeparatorFile1";
-            this.toolStripSeparatorFile1.Size = new System.Drawing.Size(133, 6);
+            this.toolStripSeparatorFile1.Size = new System.Drawing.Size(177, 6);
             // 
             // toolStripMenuItemFileProperties
             // 
             this.toolStripMenuItemFileProperties.Name = "toolStripMenuItemFileProperties";
-            this.toolStripMenuItemFileProperties.Size = new System.Drawing.Size(136, 22);
+            this.toolStripMenuItemFileProperties.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItemFileProperties.Text = "&Properties";
             this.toolStripMenuItemFileProperties.Click += new System.EventHandler(this.toolStripMenuItemFileProperties_Click);
             // 
             // toolStripForm
             // 
+            this.toolStripForm.ActiveGroup = "";
             this.toolStripForm.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButtonNewFolder,
             this.toolStripSeparatorToolbar1,
@@ -431,7 +432,7 @@ namespace OpenZip
             private System.Windows.Forms.Button buttonCancel;
             private System.Windows.Forms.Button buttonOK;
             private System.Windows.Forms.Label labelFileName;
-            private System.Windows.Forms.TextBox textBoxFileName;
+            private Common.Forms.TextBox textBoxFileName;
             private System.Windows.Forms.SplitContainer splitContainerFolderFile;
             private Common.Forms.TreeView treeViewFolder;
             private Common.Forms.ListView listViewFolderFile;

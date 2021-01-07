@@ -107,6 +107,8 @@ namespace OpenZip
 
             private System.String m_sZipFile = null;
             private Common.Zip.File m_ZipFile = null;
+
+            private static System.Boolean s_bInitializeImages = true;
             #endregion
 
             #region "Static Variables"
@@ -2339,9 +2341,14 @@ namespace OpenZip
                 contextMenuStripFolder.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
                 contextMenuStripZipFile.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
 
-                Common.Forms.ImageManager.AddToolbarSmallImages(OpenZipForms.Resources.Resource.ResourceManager);
+                if (s_bInitializeImages)
+                {
+                    Common.Forms.ImageManager.AddToolbarSmallImages(OpenZipForms.Resources.Resource.ResourceManager);
 
-                Common.Forms.ImageManager.AddFileSmallImage(m_sZipFile, CZipFileImageName);
+                    Common.Forms.ImageManager.AddFileSmallImage(m_sZipFile, CZipFileImageName);
+
+                    s_bInitializeImages = false;
+                }
 
                 InitImageKeys();
 

@@ -15,6 +15,28 @@ namespace Common
         public ref class MenuStrip : System::Windows::Forms::MenuStrip
         {
         public:
+            /// <summary>
+            /// Gets or sets the image list that contains the image displayed on a System.Windows.Forms.ToolStrip
+            /// item and updates any children with the image list during a set.
+            /// </summary>
+
+            [System::ComponentModel::BrowsableAttribute(false)]
+            property System::Windows::Forms::ImageList^ ImageList
+            {
+                System::Windows::Forms::ImageList^ get() new
+                {
+                    return System::Windows::Forms::MenuStrip::ImageList;
+                }
+
+                void set(System::Windows::Forms::ImageList^ value) new
+                {
+                    System::Windows::Forms::MenuStrip::ImageList = value;
+
+                    UpdateToolStripItemsImageList(value, this->Items);
+                }
+            }
+
+        public:
             MenuStrip();
 
             /// <summary>
@@ -63,6 +85,8 @@ namespace Common
             };
 
         private:
+            static void UpdateToolStripItemsImageList(System::Windows::Forms::ImageList^ ImageList,
+                                                      System::Windows::Forms::ToolStripItemCollection^ ToolStripItemCollection);
             static void EnumToolStripItems(System::Windows::Forms::ToolStripItemCollection^ ToolStripItemCollection,
                                            System::Collections::Generic::List<TToolStripItemState^>^ ToolStripItemStateList);
             static System::Boolean IsToolStripItemInArray(array<System::Windows::Forms::ToolStripItem^>^ ToolStripItemsArray,
