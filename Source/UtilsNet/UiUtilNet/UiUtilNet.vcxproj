@@ -336,6 +336,9 @@
     <Image Include="Select_16x.png" />
     <Image Include="Undo_16x.png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources.resx" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
