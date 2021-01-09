@@ -3,6 +3,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "ContextMenuStrip.h"
 #include "TextBox.h"
 #include "TextBoxTimer.h"
 
