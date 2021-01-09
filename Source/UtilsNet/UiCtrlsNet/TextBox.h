@@ -44,6 +44,9 @@ namespace Common
             void CreateContextMenu();
             void DestroyContextMenu();
 
+            void CreateToolStripGroups();
+            void DestroyToolStripGroups();
+
         // Context menu event handlers
         private:
             void toolStripMenuItemUndo_Click(System::Object^ Object, System::EventArgs^ EventArgs);
@@ -55,7 +58,7 @@ namespace Common
             void contextMenuStrip_Opening(System::Object^ Object, System::ComponentModel::CancelEventArgs^ EventArgs);
 
         private:
-            System::Windows::Forms::ContextMenuStrip^ m_ContextMenuStrip;
+            Common::Forms::ContextMenuStrip^ m_ContextMenuStrip;
 
             System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemUndo;
             System::Windows::Forms::ToolStripSeparator^ m_ToolStripSeparator1;

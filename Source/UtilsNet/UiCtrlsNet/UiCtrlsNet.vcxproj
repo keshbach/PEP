@@ -270,6 +270,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="ContextMenuStrip.cpp" />
     <ClCompile Include="ListViewComboBoxEditEventArgs.cpp" />
     <ClCompile Include="TextBoxTimer.cpp" />
     <ClCompile Include="ToolStrip.cpp" />
@@ -315,6 +316,7 @@
     <None Include="UtFileDialog.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ContextMenuStrip.h" />
     <ClInclude Include="ListViewComboBoxEditEventArgs.h" />
     <ClInclude Include="TextBoxTimer.h" />
     <ClInclude Include="ToolStrip.h" />

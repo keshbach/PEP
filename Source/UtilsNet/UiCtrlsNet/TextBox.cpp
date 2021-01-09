@@ -3,7 +3,11 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "ContextMenuStrip.h"
 #include "TextBox.h" 
+
+#define CContextMenuFullGroupName "Full"
+#define CContextMenuReadOnlyGroupName "ReadOnly"
 
 Common::Forms::TextBox::TextBox()
 {
@@ -25,8 +29,10 @@ void Common::Forms::TextBox::WndProc(
     {
         case WM_CREATE:
             CreateContextMenu();
+            CreateToolStripGroups();
             break;
         case WM_DESTROY:
+            DestroyToolStripGroups();
             DestroyContextMenu();
             break;
     }
@@ -36,7 +42,7 @@ void Common::Forms::TextBox::WndProc(
 
 void Common::Forms::TextBox::CreateContextMenu()
 {
-    m_ContextMenuStrip = gcnew System::Windows::Forms::ContextMenuStrip();
+    m_ContextMenuStrip = gcnew Common::Forms::ContextMenuStrip();
 
     m_ContextMenuStrip->ImageList = Common::Forms::ImageManager::ToolbarSmallImageList;
 
@@ -168,6 +174,32 @@ void Common::Forms::TextBox::DestroyContextMenu()
     m_ContextMenuStrip = nullptr;
 }
 
+void Common::Forms::TextBox::CreateToolStripGroups()
+{
+    array<System::Windows::Forms::ToolStripItem^>^ FullGroupItems = {
+        m_ToolStripMenuItemUndo,
+        m_ToolStripSeparator1,
+        m_ToolStripMenuItemCut,
+        m_ToolStripMenuItemCopy,
+        m_ToolStripMenuItemPaste,
+        m_ToolStripMenuItemDelete,
+        m_ToolStripSeparator2,
+        m_ToolStripMenuItemSelectAll};
+    array<System::Windows::Forms::ToolStripItem^>^ ReadOnlyGroupItems = {
+        m_ToolStripMenuItemCopy,
+        m_ToolStripSeparator2,
+        m_ToolStripMenuItemSelectAll };
+
+    m_ContextMenuStrip->CreateGroup(CContextMenuFullGroupName, FullGroupItems);
+    m_ContextMenuStrip->CreateGroup(CContextMenuReadOnlyGroupName, ReadOnlyGroupItems);
+}
+
+void Common::Forms::TextBox::DestroyToolStripGroups()
+{
+    m_ContextMenuStrip->DestroyGroup(CContextMenuFullGroupName);
+    m_ContextMenuStrip->DestroyGroup(CContextMenuReadOnlyGroupName);
+}
+
 #pragma region "Context Menu Event Handlers"
 
 void Common::Forms::TextBox::toolStripMenuItemUndo_Click(
@@ -241,6 +273,8 @@ void Common::Forms::TextBox::contextMenuStrip_Opening(
     {
         this->Focus();
     }
+
+    m_ContextMenuStrip->ActiveGroup = this->ReadOnly ? CContextMenuReadOnlyGroupName : CContextMenuFullGroupName;
 
     m_ToolStripMenuItemUndo->Enabled = this->CanUndo;
     m_ToolStripMenuItemCut->Enabled = this->SelectionLength > 0;
