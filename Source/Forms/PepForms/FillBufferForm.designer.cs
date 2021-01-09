@@ -33,7 +33,7 @@
                 this.buttonCancel = new System.Windows.Forms.Button();
                 this.buttonOK = new System.Windows.Forms.Button();
                 this.labelValue = new System.Windows.Forms.Label();
-                this.maskedTextBoxValue = new System.Windows.Forms.MaskedTextBox();
+                this.maskedTextBoxValue = new Common.Forms.MaskedTextBox();
                 this.labelInstructions = new System.Windows.Forms.Label();
                 this.SuspendLayout();
                 // 
@@ -120,7 +120,7 @@
             private System.Windows.Forms.Button buttonCancel;
             private System.Windows.Forms.Button buttonOK;
             private System.Windows.Forms.Label labelValue;
-            private System.Windows.Forms.MaskedTextBox maskedTextBoxValue;
+            private Common.Forms.MaskedTextBox maskedTextBoxValue;
             private System.Windows.Forms.Label labelInstructions;
         }
     }

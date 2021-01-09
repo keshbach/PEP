@@ -272,6 +272,7 @@
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ContextMenuStrip.cpp" />
     <ClCompile Include="ListViewComboBoxEditEventArgs.cpp" />
+    <ClCompile Include="MaskedTextBox.cpp" />
     <ClCompile Include="TextBoxTimer.cpp" />
     <ClCompile Include="ToolStrip.cpp" />
     <ClCompile Include="TreeNodeAscendingSorter.cpp" />
@@ -318,6 +319,7 @@
   <ItemGroup>
     <ClInclude Include="ContextMenuStrip.h" />
     <ClInclude Include="ListViewComboBoxEditEventArgs.h" />
+    <ClInclude Include="MaskedTextBox.h" />
     <ClInclude Include="TextBoxTimer.h" />
     <ClInclude Include="ToolStrip.h" />
     <ClInclude Include="TreeNodeAscendingSorter.h" />
