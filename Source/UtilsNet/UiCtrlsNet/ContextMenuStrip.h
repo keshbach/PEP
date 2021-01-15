@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "ToolStripItemGroupImpl.h"
+
 namespace Common
 {
     namespace Forms
@@ -11,44 +13,11 @@ namespace Common
         /// <summary>
         /// Summary description for ContextMenuStrip.
         /// </summary>
-
-        public ref class ContextMenuStrip : System::Windows::Forms::ContextMenuStrip
+        
+        public ref class ContextMenuStrip : public ToolStripItemGroupImpl<System::Windows::Forms::ContextMenuStrip>
         {
         public:
-            /// <summary>
-            /// Indicates the group of ToolStripItem's that are active.
-            /// </summary>
-
-            [System::ComponentModel::Browsable(false),
-                System::ComponentModel::EditorBrowsableAttribute(System::ComponentModel::EditorBrowsableState::Advanced)]
-            property System::String^ ActiveGroup
-            {
-                System::String^ get()
-                {
-                    return m_sActiveGroupName;
-                }
-
-                void set(System::String^ value)
-                {
-                    ShowGroup(value);
-                }
-            }
-
-        public:
             ContextMenuStrip();
-
-            /// <summary>
-            /// Creates a new group and associates them with an array of ToolStripItems.
-            /// </summary>
-
-            void CreateGroup(System::String^ sGroupName,
-                             array<System::Windows::Forms::ToolStripItem^>^ ItemsArray);
-
-            /// <summary>
-            /// Destroys a group associated with any array of ToolStripItems.
-            /// </summary>
-
-            void DestroyGroup(System::String^ sGroupName);
 
         protected:
             /// <summary>
@@ -69,20 +38,6 @@ namespace Common
             void InitializeComponent(void)
             {
             }
-
-            void ShowGroup(System::String^ sGroupName);
-
-        private:
-            ref struct TGroupToolStripItems
-            {
-                System::String^ sGroupName;
-                array<System::Windows::Forms::ToolStripItem^>^ ItemsArray;
-            };
-
-            TGroupToolStripItems^ FindGroup(System::String^ sGroupName);
-
-            System::Collections::Generic::List<TGroupToolStripItems^>^ m_GroupToolStripItemsList;
-            System::String^ m_sActiveGroupName;
         };
     }
 }

@@ -1,8 +1,10 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2009-2014 Kevin Eshbach
+//  Copyright (C) 2009-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
+
+#include "ToolStripItemGroupImpl.h"
 
 namespace Common
 {
@@ -12,43 +14,10 @@ namespace Common
         /// Summary description for StatusStrip.
         /// </summary>
 
-        public ref class StatusStrip : System::Windows::Forms::StatusStrip
+        public ref class StatusStrip : public ToolStripItemGroupImpl<System::Windows::Forms::StatusStrip>
         {
         public:
-            /// <summary>
-            /// Indicates the group of ToolStripItem's that are active.
-            /// </summary>
-
-            [System::ComponentModel::Browsable(false),
-                System::ComponentModel::EditorBrowsableAttribute(System::ComponentModel::EditorBrowsableState::Advanced)]
-            property System::String^ ActiveGroup
-            {
-                System::String^ get()
-                {
-                    return m_sActiveGroupName;
-                }
-
-                void set(System::String^ value)
-                {
-                    ShowGroup(value);
-                }
-            }
-
-        public:
             StatusStrip();
-
-            /// <summary>
-            /// Creates a new group and associates them with an array of ToolStripItems.
-            /// </summary>
-
-            void CreateGroup(System::String^ sGroupName,
-                             array<System::Windows::Forms::ToolStripItem^>^ ItemsArray);
-
-            /// <summary>
-            /// Destroys a group associated with any array of ToolStripItems.
-            /// </summary>
-
-            void DestroyGroup(System::String^ sGroupName);
 
         protected:
             /// <summary>
@@ -69,24 +38,10 @@ namespace Common
             void InitializeComponent(void)
             {
             }
-
-            void ShowGroup(System::String^ sGroupName);
-
-        private:
-            ref struct TGroupToolStripItems
-            {
-                System::String^ sGroupName;
-                array<System::Windows::Forms::ToolStripItem^>^ ItemsArray;
-            };
-
-            TGroupToolStripItems^ FindGroup(System::String^ sGroupName);
-
-            System::Collections::Generic::List<TGroupToolStripItems^>^ m_GroupToolStripItemsList;
-            System::String^ m_sActiveGroupName;
         };
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2009-2014 Kevin Eshbach
+//  Copyright (C) 2009-2020 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

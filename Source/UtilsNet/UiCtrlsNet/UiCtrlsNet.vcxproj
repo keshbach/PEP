@@ -271,6 +271,7 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ContextMenuStrip.cpp" />
+    <ClCompile Include="TemplateInstantiator.cpp" />
     <ClCompile Include="ListViewComboBoxEditEventArgs.cpp" />
     <ClCompile Include="MaskedTextBox.cpp" />
     <ClCompile Include="TextBoxTimer.cpp" />
@@ -318,6 +319,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ContextMenuStrip.h" />
+    <ClInclude Include="ToolStripItemGroupImpl.h" />
     <ClInclude Include="ListViewComboBoxEditEventArgs.h" />
     <ClInclude Include="MaskedTextBox.h" />
     <ClInclude Include="TextBoxTimer.h" />
