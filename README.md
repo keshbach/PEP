@@ -2,7 +2,7 @@
 
 Unofficial Windows application for the EPROM+ System from Andromeda Research Labs
 
-Copyright (C) 2006-2020 Kevin Eshbach  
+Copyright (C) 2006-2021 Kevin Eshbach  
 
 ## Requirements
 
