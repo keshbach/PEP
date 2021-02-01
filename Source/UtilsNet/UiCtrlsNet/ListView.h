@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -12,7 +12,8 @@ namespace Common
         /// Summary description for ListView.
         /// </summary>
 
-        public ref class ListView : System::Windows::Forms::ListView
+        public ref class ListView : System::Windows::Forms::ListView,
+                                    Common::Forms::ITextBoxKeyPress
         {
         // List View Events
         public:
@@ -399,6 +400,10 @@ namespace Common
 
             EDragDropScrollHitTest DragDropScrollHitTest(System::Drawing::Point point);
 
+        // Common::Forms::ITextBoxKeyPress
+        public:
+            virtual System::Boolean OnTextBoxKeyPress(wchar_t KeyChar);
+
         protected:
             /// <summary>
             /// Clean up any resources being used.
@@ -427,7 +432,6 @@ namespace Common
             void HandleRButtonDown(System::Windows::Forms::Message% Message);
             void HandleNotify(System::Windows::Forms::Message% Message);
             void HandleParentNotify(System::Windows::Forms::Message% Message);
-            void HandleLabelEditChar(System::Windows::Forms::Message% Message);
 
             void BeginListViewComboBoxEdit(System::Int32 nRow, System::Int32 nColumn);
             void EndListViewComboBoxEdit(void);
@@ -454,10 +458,11 @@ namespace Common
             System::Int32 m_nColumn;
             System::Boolean m_bApplyListViewComboBoxChanges;
             System::Boolean m_bIgnoreEndListViewComboBoxEdit;
+            NativeEdit^ m_NativeEdit;
         };
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

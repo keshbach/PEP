@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2014 Kevin Eshbach
+//  Copyright (C) 2014-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -7,89 +7,36 @@
 #include "TreeNodeAscendingSorter.h"
 #include "TreeNodeDescendingSorter.h"
 
+#include "ContextMenuStrip.h"
+#include "EditContextMenuStrip.h"
+#include "ITextBoxKeyPress.h"
+
+#include "NativeEdit.h"
+
 #include "TreeView.h"
 #include "UtContextMenuStrip.h"
+#include "UtControlsHelper.h"
 
-#define CEditWndProcPropName L"KE_EditWndProc"
-
-#define TVM_LABELEDITCHAR (TV_FIRST - 1)
+#pragma region "Constants"
 
 #define CDragDropScrollHeight 8
 
+#pragma endregion
+
 private struct _TREEITEM {}; // fix for linker warning LNK4248
 
-#pragma unmanaged
-
-static LRESULT CALLBACK lUnmanagedEditWindowProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
-
-static BOOL lUnmanagedIsEditControl(
-  HWND hWnd)
-{
-    WCHAR cClassName[10];
-
-    ::GetClassNameW(hWnd, cClassName, sizeof(cClassName) / sizeof(cClassName[0]));
-
-    return (::lstrcmpiW(cClassName, L"edit") == 0) ? TRUE : FALSE;
-}
-
-static VOID lUnmanagedSubclassEditControl(
-  HWND hWnd)
-{
-    WNDPROC pWndProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_WNDPROC);
-
-    ::SetPropW(hWnd, CEditWndProcPropName, pWndProc);
-
-    ::SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)lUnmanagedEditWindowProc);
-}
-
-static VOID lUnmanagedUnsubclassEditControl(
-  HWND hWnd)
-{
-    WNDPROC pPrevWndProc = (WNDPROC)::GetPropW(hWnd, CEditWndProcPropName);
-
-    ::RemovePropW(hWnd, CEditWndProcPropName);
-
-    ::SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)pPrevWndProc);
-}
-
-static BOOL lUnmanagedEditProcessCharMsg(
-  HWND hWnd,
-  INT nKeyCode)
-{
-    return (BOOL)::SendMessage(::GetParent(hWnd), TVM_LABELEDITCHAR, nKeyCode, 0);
-}
-
-static LRESULT CALLBACK lUnmanagedEditWindowProc(
-  HWND hWnd,
-  UINT nMsg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-    WNDPROC pPrevWndProc = (WNDPROC)::GetPropW(hWnd, CEditWndProcPropName);
-
-    switch (nMsg)
-    {
-        case WM_CHAR:
-            if (lUnmanagedEditProcessCharMsg(hWnd, (INT)wParam))
-            {
-                return 0;
-            }
-            break;
-        case WM_DESTROY:
-            lUnmanagedUnsubclassEditControl(hWnd);
-            break;
-    }
-
-    return ::CallWindowProc(pPrevWndProc, hWnd, nMsg, wParam, lParam);
-}
-
-#pragma managed
+#pragma region "Constructor"
 
 Common::Forms::TreeView::TreeView() :
-  m_SortOrder(Common::Forms::TreeView::ESortOrder::None)
+  m_SortOrder(Common::Forms::TreeView::ESortOrder::None),
+  m_NativeEdit(nullptr)
 {
 	InitializeComponent();
 }
+
+#pragma endregion
+
+#pragma region "Destructor"
 
 Common::Forms::TreeView::~TreeView()
 {
@@ -98,6 +45,8 @@ Common::Forms::TreeView::~TreeView()
 		delete components;
 	}
 }
+
+#pragma endregion
 
 void Common::Forms::TreeView::Sort(void)
 {
@@ -148,7 +97,6 @@ void Common::Forms::TreeView::ChangeLabelEditSelection(
     {
         throw gcnew System::Exception(L"Label edit control has not been created.");
     }
-
 }
 
 void Common::Forms::TreeView::ScrollUp(void)
@@ -250,6 +198,22 @@ System::Boolean Common::Forms::TreeView::IsTreeNodeChild(
     return false;
 }
 
+#pragma region "Common::Forms::ITextBoxKeyPress"
+
+System::Boolean Common::Forms::TreeView::OnTextBoxKeyPress(
+  wchar_t KeyChar)
+{
+    System::Windows::Forms::KeyPressEventArgs^ EventArgs;
+
+    EventArgs = gcnew System::Windows::Forms::KeyPressEventArgs(KeyChar);
+
+    OnKeyPressLabelEdit(EventArgs);
+
+    return EventArgs->Handled;
+}
+
+#pragma endregion
+
 void Common::Forms::TreeView::WndProc(
   System::Windows::Forms::Message% Message)
 {
@@ -262,9 +226,6 @@ void Common::Forms::TreeView::WndProc(
             break;
         case WM_PARENTNOTIFY:
             HandleParentNotify(Message);
-            break;
-        case TVM_LABELEDITCHAR:
-            HandleLabelEditChar(Message);
             break;
         default:
             System::Windows::Forms::TreeView::WndProc(Message);
@@ -295,7 +256,7 @@ void Common::Forms::TreeView::HandleParentNotify(
 {
     if (WM_CREATE == LOWORD(Message.WParam.ToPointer()))
     {
-        if (lUnmanagedIsEditControl((HWND)Message.LParam.ToPointer()))
+        if (UtControlsHelperIsEditControl((HWND)Message.LParam.ToPointer()))
         {
             if (ContextMenuStrip != nullptr)
             {
@@ -303,33 +264,25 @@ void Common::Forms::TreeView::HandleParentNotify(
                 Common::Forms::UtContextMenuStrip::ClearShortcutKeys();
             }
 
-            lUnmanagedSubclassEditControl((HWND)Message.LParam.ToPointer());
+            m_NativeEdit = gcnew NativeEdit((HWND)Message.LParam.ToPointer(), this);
         }
     }
     else if (WM_DESTROY == LOWORD(Message.WParam.ToPointer()))
     {
-        if (lUnmanagedIsEditControl((HWND)Message.LParam.ToPointer()))
+        if (UtControlsHelperIsEditControl((HWND)Message.LParam.ToPointer()))
         {
             if (ContextMenuStrip != nullptr)
             {
                 Common::Forms::UtContextMenuStrip::RestoreShortcutKeys();
             }
+
+            delete m_NativeEdit;
+
+            m_NativeEdit = nullptr;
         }
     }
 
     System::Windows::Forms::TreeView::WndProc(Message);
-}
-
-void Common::Forms::TreeView::HandleLabelEditChar(
-  System::Windows::Forms::Message% Message)
-{
-    System::Windows::Forms::KeyPressEventArgs^ EventArgs;
-
-    EventArgs = gcnew System::Windows::Forms::KeyPressEventArgs((WCHAR)(WPARAM)Message.WParam.ToPointer());
-
-    OnKeyPressLabelEdit(EventArgs);
-
-    Message.Result = EventArgs->Handled ? (System::IntPtr)TRUE : (System::IntPtr)FALSE;
 }
 
 void Common::Forms::TreeView::OnKeyPressLabelEdit(
@@ -339,5 +292,5 @@ void Common::Forms::TreeView::OnKeyPressLabelEdit(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2014 Kevin Eshbach
+//  Copyright (C) 2014-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

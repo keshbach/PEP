@@ -271,6 +271,8 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ContextMenuStrip.cpp" />
+    <ClCompile Include="EditContextMenuStrip.cpp" />
+    <ClCompile Include="NativeEdit.cpp" />
     <ClCompile Include="TemplateInstantiator.cpp" />
     <ClCompile Include="ListViewComboBoxEditEventArgs.cpp" />
     <ClCompile Include="MaskedTextBox.cpp" />
@@ -311,6 +313,7 @@
     <ClCompile Include="ToolStripProgressBar.cpp" />
     <ClCompile Include="ToolTip.cpp" />
     <ClCompile Include="TreeView.cpp" />
+    <ClCompile Include="UtControlsHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UiCtrlsNet.def" />
@@ -319,6 +322,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ContextMenuStrip.h" />
+    <ClInclude Include="EditContextMenuStrip.h" />
+    <ClInclude Include="ITextBoxKeyPress.h" />
+    <ClInclude Include="NativeEdit.h" />
     <ClInclude Include="ToolStripItemGroupImpl.h" />
     <ClInclude Include="ListViewComboBoxEditEventArgs.h" />
     <ClInclude Include="MaskedTextBox.h" />
@@ -345,6 +351,7 @@
     <ClInclude Include="ToolStripProgressBar.h" />
     <ClInclude Include="ToolTip.h" />
     <ClInclude Include="TreeView.h" />
+    <ClInclude Include="UtControlsHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc" />

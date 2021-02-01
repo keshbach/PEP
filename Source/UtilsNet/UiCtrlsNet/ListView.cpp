@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -14,81 +14,23 @@
 
 #include "ListViewComboBox.h"
 
+#include "ContextMenuStrip.h"
+#include "EditContextMenuStrip.h"
+#include "ITextBoxKeyPress.h"
+
+#include "NativeEdit.h"
+
 #include "ListView.h"
 #include "UtContextMenuStrip.h"
+#include "UtControlsHelper.h"
 
-#define CEditWndProcPropName L"KE_EditWndProc"
-
-#define LVM_LABELEDITCHAR (LVM_FIRST - 1)
+#pragma region "Constants"
 
 #define CDragDropScrollHeight 8
 
-#pragma unmanaged
+#pragma endregion
 
-static LRESULT CALLBACK lUnmanagedEditWindowProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
-
-static BOOL lUnmanagedIsEditControl(
-  HWND hWnd)
-{
-    WCHAR cClassName[10];
-
-    ::GetClassNameW(hWnd, cClassName, sizeof(cClassName) / sizeof(cClassName[0]));
-
-    return (::lstrcmpiW(cClassName, L"edit") == 0) ? TRUE : FALSE;
-}
-
-static VOID lUnmanagedSubclassEditControl(
-  HWND hWnd)
-{
-    WNDPROC pWndProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_WNDPROC);
-
-    ::SetPropW(hWnd, CEditWndProcPropName, pWndProc);
-
-    ::SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)lUnmanagedEditWindowProc);
-}
-
-static VOID lUnmanagedUnsubclassEditControl(
-  HWND hWnd)
-{
-    WNDPROC pPrevWndProc = (WNDPROC)::GetPropW(hWnd, CEditWndProcPropName);
-
-    ::RemovePropW(hWnd, CEditWndProcPropName);
-
-    ::SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)pPrevWndProc);
-}
-
-static BOOL lUnmanagedEditProcessCharMsg(
-  HWND hWnd,
-  INT nKeyCode)
-{
-    return (BOOL)::SendMessage(::GetParent(hWnd), LVM_LABELEDITCHAR, nKeyCode, 0);
-}
-
-static LRESULT CALLBACK lUnmanagedEditWindowProc(
-  HWND hWnd,
-  UINT nMsg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-    WNDPROC pPrevWndProc = (WNDPROC)::GetPropW(hWnd, CEditWndProcPropName);
-
-    switch (nMsg)
-    {
-        case WM_CHAR:
-            if (lUnmanagedEditProcessCharMsg(hWnd, (INT)wParam))
-            {
-                return 0;
-            }
-            break;
-        case WM_DESTROY:
-            lUnmanagedUnsubclassEditControl(hWnd);
-            break;
-    }
-
-    return ::CallWindowProc(pPrevWndProc, hWnd, nMsg, wParam, lParam);
-}
-
-#pragma managed
+#pragma region "Constructor"
 
 Common::Forms::ListView::ListView() :
   m_SortOrder(Common::Forms::ListView::ESortOrder::None),
@@ -98,7 +40,8 @@ Common::Forms::ListView::ListView() :
   m_nRow(0),
   m_nColumn(0),
   m_bApplyListViewComboBoxChanges(true),
-  m_bIgnoreEndListViewComboBoxEdit(false)
+  m_bIgnoreEndListViewComboBoxEdit(false),
+  m_NativeEdit(nullptr)
 {
 	InitializeComponent();
 
@@ -113,6 +56,10 @@ Common::Forms::ListView::ListView() :
     m_ListViewComboBox->ListViewComboBoxKillFocus += gcnew Common::Forms::ListViewComboBox::ListViewComboBoxKillFocusHandler(this, &Common::Forms::ListView::ListViewComboBox_KillFocus);
     m_ListViewComboBox->ListViewComboBoxKeydown += gcnew Common::Forms::ListViewComboBox::ListViewComboBoxKeydownHandler(this, &Common::Forms::ListView::ListViewComboBox_Keydown);
 }
+
+#pragma endregion
+
+#pragma region "Destructor"
 
 Common::Forms::ListView::~ListView()
 {
@@ -132,6 +79,8 @@ Common::Forms::ListView::~ListView()
 
     m_ComboBoxItems = nullptr;
 }
+
+#pragma endregion
 
 System::Windows::Forms::ListViewHitTestInfo^ Common::Forms::ListView::HitTest(
   System::Drawing::Point point)
@@ -275,7 +224,6 @@ void Common::Forms::ListView::ChangeLabelEditSelection(
     {
         throw gcnew System::Exception(L"Label edit control has not been created.");
     }
-
 }
 
 void Common::Forms::ListView::ScrollUp(void)
@@ -363,6 +311,22 @@ Common::Forms::ListView::EDragDropScrollHitTest Common::Forms::ListView::DragDro
     return EDragDropScrollHitTest::None;
 }
 
+#pragma region "Common::Forms::ITextBoxKeyPress"
+
+System::Boolean Common::Forms::ListView::OnTextBoxKeyPress(
+  wchar_t KeyChar)
+{
+    System::Windows::Forms::KeyPressEventArgs^ EventArgs;
+
+    EventArgs = gcnew System::Windows::Forms::KeyPressEventArgs(KeyChar);
+
+    OnKeyPressLabelEdit(EventArgs);
+
+    return EventArgs->Handled;
+}
+
+#pragma endregion
+
 void Common::Forms::ListView::WndProc(
   System::Windows::Forms::Message% Message)
 {
@@ -388,9 +352,6 @@ void Common::Forms::ListView::WndProc(
         case WM_PARENTNOTIFY:
             HandleParentNotify(Message);
             break;
-        case LVM_LABELEDITCHAR:
-            HandleLabelEditChar(Message);
-            break;
         default:
             System::Windows::Forms::ListView::WndProc(Message);
             break;
@@ -398,7 +359,7 @@ void Common::Forms::ListView::WndProc(
 }
 
 void Common::Forms::ListView::HandleCreate(
-    System::Windows::Forms::Message% Message)
+  System::Windows::Forms::Message% Message)
 {
     System::Windows::Forms::ListView::WndProc(Message);
 
@@ -526,7 +487,7 @@ void Common::Forms::ListView::HandleParentNotify(
 {
     if (WM_CREATE == LOWORD(Message.WParam.ToPointer()))
     {
-        if (lUnmanagedIsEditControl((HWND)Message.LParam.ToPointer()))
+        if (UtControlsHelperIsEditControl((HWND)Message.LParam.ToPointer()))
         {
             if (ContextMenuStrip != nullptr)
             {
@@ -534,33 +495,25 @@ void Common::Forms::ListView::HandleParentNotify(
                 Common::Forms::UtContextMenuStrip::ClearShortcutKeys();
             }
 
-            lUnmanagedSubclassEditControl((HWND)Message.LParam.ToPointer());
+            m_NativeEdit = gcnew NativeEdit((HWND)Message.LParam.ToPointer(), this);
         }
     }
     else if (WM_DESTROY == LOWORD(Message.WParam.ToPointer()))
     {
-        if (lUnmanagedIsEditControl((HWND)Message.LParam.ToPointer()))
+        if (UtControlsHelperIsEditControl((HWND)Message.LParam.ToPointer()))
         {
             if (ContextMenuStrip != nullptr)
             {
                 Common::Forms::UtContextMenuStrip::RestoreShortcutKeys();
             }
+
+            delete m_NativeEdit;
+
+            m_NativeEdit = nullptr;
         }
     }
 
     System::Windows::Forms::ListView::WndProc(Message);
-}
-
-void Common::Forms::ListView::HandleLabelEditChar(
-  System::Windows::Forms::Message% Message)
-{
-    System::Windows::Forms::KeyPressEventArgs^ EventArgs;
-
-    EventArgs = gcnew System::Windows::Forms::KeyPressEventArgs((WCHAR)(WPARAM)Message.WParam.ToPointer());
-
-    OnKeyPressLabelEdit(EventArgs);
-
-    Message.Result = EventArgs->Handled ? (System::IntPtr)TRUE : (System::IntPtr)FALSE;
 }
 
 void Common::Forms::ListView::BeginListViewComboBoxEdit(
@@ -788,5 +741,5 @@ void Common::Forms::ListView::OnKeyPressLabelEdit(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

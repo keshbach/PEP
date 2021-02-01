@@ -1,0 +1,26 @@
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2006-2021 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+namespace Common
+{
+	namespace Forms
+	{
+		private interface class ITextBoxKeyPress
+		{
+		public:
+			/// <summary>
+			/// 
+			/// </summary>
+			/// <param name="KeyChar"></param>
+			/// <returns>true - iF the key press has been handled, false - text box should handle the key press</returns>
+			virtual System::Boolean OnTextBoxKeyPress(wchar_t KeyChar);
+		};
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2006-2021 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////

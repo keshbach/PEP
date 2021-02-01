@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2014 Kevin Eshbach
+//  Copyright (C) 2014-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -12,7 +12,8 @@ namespace Common
         /// Summary description for TreeView.
         /// </summary>
 
-        public ref class TreeView : System::Windows::Forms::TreeView
+        public ref class TreeView : System::Windows::Forms::TreeView,
+                                    Common::Forms::ITextBoxKeyPress
         {
         // List View Events
         public:
@@ -252,6 +253,10 @@ namespace Common
             static System::Boolean IsTreeNodeChild(System::Windows::Forms::TreeNode^ RootNode,
                                                    System::Windows::Forms::TreeNode^ Node);
 
+        // Common::Forms::ITextBoxKeyPress
+        public:
+            virtual System::Boolean OnTextBoxKeyPress(wchar_t KeyChar);
+
         protected:
             /// <summary>
             /// Clean up any resources being used.
@@ -276,17 +281,17 @@ namespace Common
 
             void HandleRButtonDown(System::Windows::Forms::Message% Message);
             void HandleParentNotify(System::Windows::Forms::Message% Message);
-            void HandleLabelEditChar(System::Windows::Forms::Message% Message);
 
         protected:
             void OnKeyPressLabelEdit(System::Windows::Forms::KeyPressEventArgs^ e);
 
         private:
             ESortOrder m_SortOrder;
+            NativeEdit^ m_NativeEdit;
         };
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2014 Kevin Eshbach
+//  Copyright (C) 2014-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
