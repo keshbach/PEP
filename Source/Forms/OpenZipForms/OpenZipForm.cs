@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-/*  Copyright (C) 2014-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -908,69 +908,6 @@ namespace OpenZip
                 return true;
             }
 
-            private System.Boolean DoesFileExist(
-                System.String sFile)
-            {
-                System.String[] sPaths;
-                System.Collections.Generic.List<TZipFileData> ZipFileDataList;
-                System.Windows.Forms.TreeNode TreeNode;
-                System.Windows.Forms.TreeNodeCollection TreeNodes;
-                System.String sTmpPathSepPathSep;
-
-                sTmpPathSepPathSep = System.IO.Path.DirectorySeparatorChar.ToString();
-                sTmpPathSepPathSep += System.IO.Path.DirectorySeparatorChar.ToString();
-
-                if (sFile.IndexOf(sTmpPathSepPathSep) != -1)
-                {
-                    return false;
-                }
-
-                if (sFile.Length > 0 && sFile[0] == System.IO.Path.DirectorySeparatorChar)
-                {
-                    sFile = sFile.Remove(0, 1);
-                }
-
-                if (sFile.Length == 0)
-                {
-                    return false;
-                }
-
-                sPaths = sFile.Split(System.IO.Path.DirectorySeparatorChar);
-
-                ZipFileDataList = (System.Collections.Generic.List<TZipFileData>)treeViewFolder.Nodes[0].Tag;
-                TreeNode = null;
-
-                TreeNodes = treeViewFolder.Nodes[0].Nodes;
-
-                for (System.Int32 nIndex = 0; nIndex < sPaths.Length; ++nIndex)
-                {
-                    TreeNode = FindTreeNode(sPaths[nIndex], TreeNodes);
-
-                    if (TreeNode != null)
-                    {
-                        TreeNodes = TreeNode.Nodes;
-                        ZipFileDataList = (System.Collections.Generic.List<TZipFileData>)TreeNode.Tag;
-                    }
-                    else
-                    {
-                        foreach (TZipFileData ZipFileData in ZipFileDataList)
-                        {
-                            if (System.String.Compare(sPaths[nIndex], ZipFileData.sFileName, true) == 0)
-                            {
-                                if (nIndex + 1 == sPaths.Length)
-                                {
-                                    return true;
-                                }
-                            }
-                        }
-
-                        return false;
-                    }
-                }
-
-                return false;
-            }
-
             private static TZipFileData CreateZipFileData(
                 Common.Zip.Item ZipItem)
             {
@@ -1132,73 +1069,65 @@ namespace OpenZip
 
             private void VerifyFileName()
             {
-                System.Boolean bIsValid = false;
-                System.String sRootPath, sNewPath;
+                System.String sFileName = textBoxFileName.Text;
 
+                switch (m_OpenMode)
+                {
+                    case EOpenMode.Open:
+                        VerifyOpenFileName(sFileName);
+                        break;
+                    case EOpenMode.SaveAs:
+                        VerifySaveAsFileName(sFileName);
+                        break;
+                    default:
+                        System.Diagnostics.Debug.Assert(false, "Unknown open mode.");
+                        break;
+                }
+            }
+
+            private void VerifyOpenFileName(
+                System.String sFileName)
+            {
                 AcceptButton = null;
                 buttonOK.Enabled = false;
 
                 foreach (System.Windows.Forms.ListViewItem Item in listViewFolderFile.Items)
                 {
-                    if (0 == System.String.Compare(textBoxFileName.Text, Item.Text, true))
+                    if (IsFolder(Item) == false && 
+                        0 == System.String.Compare(sFileName, Item.Text, true))
                     {
-                        if (Item.Tag == null)
+                        AcceptButton = buttonOK;
+                        buttonOK.Enabled = true;
+
+                        return;
+                    }
+                }
+            }
+
+            private void VerifySaveAsFileName(
+                System.String sFileName)
+            {
+                AcceptButton = null;
+                buttonOK.Enabled = false;
+
+                foreach (System.Windows.Forms.ListViewItem Item in listViewFolderFile.Items)
+                {
+                    if (0 == System.String.Compare(sFileName, Item.Text, true))
+                    {
+                        if (m_bAllowOverwrite && IsFolder(Item) == false)
                         {
-                            return;
+                            AcceptButton = buttonOK;
+                            buttonOK.Enabled = true;
                         }
 
-                        bIsValid = true;
-
-                        break;
+                        return;
                     }
                 }
 
-                if (bIsValid == false && textBoxFileName.Text.Length > 0)
+                if (sFileName.Length > 0)
                 {
-                    sRootPath = GetNodeFilePath(treeViewFolder.SelectedNode);
-                    sNewPath = Common.IO.Path.Canonicalize(sRootPath,
-                                                           textBoxFileName.Text);
-
-                    if (DoesFileExist(sNewPath))
-                    {
-                        bIsValid = true;
-                    }
-                }
-
-                if (bIsValid)
-                {
-                    switch (m_OpenMode)
-                    {
-                        case EOpenMode.Open:
-                            AcceptButton = buttonOK;
-                            buttonOK.Enabled = true;
-                            break;
-                        case EOpenMode.SaveAs:
-                            if (m_bAllowOverwrite)
-                            {
-                                AcceptButton = buttonOK;
-                                buttonOK.Enabled = true;
-                            }
-                            break;
-                        default:
-                            System.Diagnostics.Debug.Assert(false, "Unknown open mode.");
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (m_OpenMode)
-                    {
-                        case EOpenMode.Open:
-                            break;
-                        case EOpenMode.SaveAs:
-                            AcceptButton = buttonOK;
-                            buttonOK.Enabled = true;
-                            break;
-                        default:
-                            System.Diagnostics.Debug.Assert(false, "Unknown open mode.");
-                            break;
-                    }
+                    AcceptButton = buttonOK;
+                    buttonOK.Enabled = true;
                 }
             }
 
@@ -2133,6 +2062,43 @@ namespace OpenZip
                 }
             }
 
+            private void UpdateListViewSelectedItem(
+                System.Windows.Forms.ListViewItem Item)
+            {
+                AcceptButton = null;
+                buttonOK.Enabled = false;
+                textBoxFileName.Text = "";
+
+                if (IsFolder(Item) == false)
+                {
+                    switch (m_OpenMode)
+                    {
+                        case EOpenMode.Open:
+                            AcceptButton = buttonOK;
+                            buttonOK.Enabled = true;
+                            break;
+                        case EOpenMode.SaveAs:
+                            if (m_bAllowOverwrite)
+                            {
+                                AcceptButton = buttonOK;
+                                buttonOK.Enabled = true;
+                            }
+                            break;
+                        default:
+                            System.Diagnostics.Debug.Assert(false, "Unknown open mode.");
+                            break;
+                    }
+
+                    textBoxFileName.Text = Item.Text;
+
+                    listViewFolderFile.ContextMenuStrip = contextMenuStripFile;
+                }
+                else
+                {
+                    listViewFolderFile.ContextMenuStrip = contextMenuStripFolder;
+                }
+            }
+
             private void UpdateActiveItem(
                 bool treeViewFolderFocused,
                 bool listViewFolderFileFocused)
@@ -2763,6 +2729,11 @@ namespace OpenZip
 
             private void treeViewFolder_Enter(object sender, EventArgs e)
             {
+                if (listViewFolderFile.SelectedItems.Count > 0)
+                {
+                    UpdateListViewSelectedItem(listViewFolderFile.SelectedItems[0]);
+                }
+
                 UpdateActiveItem(true, false);
                 UpdateMenuAndToolStrips();
             }
@@ -2928,34 +2899,7 @@ namespace OpenZip
 
                 if (e.IsSelected)
                 {
-                    if (IsFolder(e.Item) == false)
-                    {
-                        switch (m_OpenMode)
-                        {
-                            case EOpenMode.Open:
-                                AcceptButton = buttonOK;
-                                buttonOK.Enabled = true;
-                                break;
-                            case EOpenMode.SaveAs:
-                                if (m_bAllowOverwrite)
-                                {
-                                    AcceptButton = buttonOK;
-                                    buttonOK.Enabled = true;
-                                }
-                                break;
-                            default:
-                                System.Diagnostics.Debug.Assert(false, "Unknown open mode.");
-                                break;
-                        }
-
-                        textBoxFileName.Text = e.Item.Text;
-
-                        listViewFolderFile.ContextMenuStrip = contextMenuStripFile;
-                    }
-                    else
-                    {
-                        listViewFolderFile.ContextMenuStrip = contextMenuStripFolder;
-                    }
+                    UpdateListViewSelectedItem(e.Item);
                 }
                 else
                 {
@@ -3218,6 +3162,11 @@ namespace OpenZip
 
             private void listViewFolderFile_Enter(object sender, EventArgs e)
             {
+                if (listViewFolderFile.SelectedItems.Count > 0)
+                {
+                    UpdateListViewSelectedItem(listViewFolderFile.SelectedItems[0]);
+                }
+
                 UpdateActiveItem(false, true);
                 UpdateMenuAndToolStrips();
             }
@@ -3339,5 +3288,5 @@ namespace OpenZip
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2014-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2021 Kevin Eshbach                                  */
 /***************************************************************************/
