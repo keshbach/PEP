@@ -126,7 +126,18 @@ Common::Forms::EditContextMenuStrip::EditContextMenuStrip()
 Common::Forms::EditContextMenuStrip::EditContextMenuStrip(
   System::Windows::Forms::TextBox^ TextBox) :
   m_TextBox(TextBox),
+  m_MaskedTextBox(nullptr),
   m_hEdit(NULL)
+{
+    CreateContextMenu();
+    CreateToolStripGroups();
+}
+
+Common::Forms::EditContextMenuStrip::EditContextMenuStrip(
+    System::Windows::Forms::MaskedTextBox^ MaskedTextBox) :
+    m_TextBox(nullptr),
+    m_MaskedTextBox(MaskedTextBox),
+    m_hEdit(NULL)
 {
     CreateContextMenu();
     CreateToolStripGroups();
@@ -135,6 +146,7 @@ Common::Forms::EditContextMenuStrip::EditContextMenuStrip(
 Common::Forms::EditContextMenuStrip::EditContextMenuStrip(
   HWND hEdit) :
   m_TextBox(nullptr),
+  m_MaskedTextBox(nullptr),
   m_hEdit(hEdit)
 {
     CreateContextMenu();
@@ -151,6 +163,7 @@ Common::Forms::EditContextMenuStrip::~EditContextMenuStrip()
     DestroyContextMenu();
 
     m_TextBox = nullptr;
+    m_MaskedTextBox = nullptr;
 }
 
 #pragma endregion
@@ -324,6 +337,11 @@ void Common::Forms::EditContextMenuStrip::CreateContextMenu()
     {
         m_TextBox->ContextMenuStrip = m_ContextMenuStrip;
     }
+
+    if (m_MaskedTextBox != nullptr)
+    {
+        m_MaskedTextBox->ContextMenuStrip = m_ContextMenuStrip;
+    }
 }
 
 void Common::Forms::EditContextMenuStrip::DestroyContextMenu()
@@ -331,6 +349,11 @@ void Common::Forms::EditContextMenuStrip::DestroyContextMenu()
     if (m_TextBox != nullptr)
     {
         m_TextBox->ContextMenuStrip = nullptr;
+    }
+
+    if (m_MaskedTextBox != nullptr)
+    {
+        m_MaskedTextBox->ContextMenuStrip = nullptr;
     }
 
     m_ContextMenuStrip->Items->Clear();
@@ -397,6 +420,10 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemUndo_Click(
     {
         m_TextBox->Undo();
     }
+    else if (m_MaskedTextBox != nullptr)
+    {
+        m_MaskedTextBox->Undo();
+    }
     else if (m_hEdit)
     {
         ::SendMessage(m_hEdit, EM_UNDO, 0, 0);
@@ -413,6 +440,10 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemCut_Click(
     if (m_TextBox != nullptr)
     {
         m_TextBox->Cut();
+    }
+    else if (m_MaskedTextBox != nullptr)
+    {
+        m_MaskedTextBox->Cut();
     }
     else if (m_hEdit)
     {
@@ -431,6 +462,10 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemCopy_Click(
     {
         m_TextBox->Copy();
     }
+    else if (m_MaskedTextBox != nullptr)
+    {
+        m_MaskedTextBox->Copy();
+    }
     else if (m_hEdit)
     {
         ::SendMessage(m_hEdit, WM_COPY, 0, 0);
@@ -447,6 +482,10 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemPaste_Click(
     if (m_TextBox != nullptr)
     {
         m_TextBox->Paste();
+    }
+    else if (m_MaskedTextBox != nullptr)
+    {
+        m_MaskedTextBox->Paste();
     }
     else if (m_hEdit)
     {
@@ -465,6 +504,10 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemDelete_Click(
     {
         m_TextBox->Text = m_TextBox->Text->Remove(m_TextBox->SelectionStart, m_TextBox->SelectionLength);
     }
+    else if (m_MaskedTextBox != nullptr)
+    {
+        m_MaskedTextBox->Text = m_MaskedTextBox->Text->Remove(m_MaskedTextBox->SelectionStart, m_MaskedTextBox->SelectionLength);
+    }
     else if (m_hEdit)
     {
         ::SendMessage(m_hEdit, WM_CLEAR, 0, 0);
@@ -481,6 +524,10 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemSelectAll_Click(
     if (m_TextBox != nullptr)
     {
         m_TextBox->SelectAll();
+    }
+    else if (m_MaskedTextBox != nullptr)
+    {
+        m_MaskedTextBox->SelectAll();
     }
     else if (m_hEdit)
     {
@@ -511,6 +558,21 @@ void Common::Forms::EditContextMenuStrip::contextMenuStrip_Opening(
         m_ToolStripMenuItemCopy->Enabled = m_TextBox->SelectionLength > 0;
         m_ToolStripMenuItemDelete->Enabled = m_TextBox->SelectionLength > 0;
         m_ToolStripMenuItemSelectAll->Enabled = m_TextBox->TextLength > 0 && m_TextBox->SelectionLength != m_TextBox->TextLength;
+    }
+    else if (m_MaskedTextBox != nullptr)
+    {
+        if (m_MaskedTextBox->Focused == false)
+        {
+            m_MaskedTextBox->Focus();
+        }
+
+        m_ContextMenuStrip->ActiveGroup = m_MaskedTextBox->ReadOnly ? CContextMenuReadOnlyGroupName : CContextMenuFullGroupName;
+
+        m_ToolStripMenuItemUndo->Enabled = m_MaskedTextBox->CanUndo;
+        m_ToolStripMenuItemCut->Enabled = m_MaskedTextBox->SelectionLength > 0;
+        m_ToolStripMenuItemCopy->Enabled = m_MaskedTextBox->SelectionLength > 0;
+        m_ToolStripMenuItemDelete->Enabled = m_MaskedTextBox->SelectionLength > 0;
+        m_ToolStripMenuItemSelectAll->Enabled = m_MaskedTextBox->TextLength > 0 && m_MaskedTextBox->SelectionLength != m_MaskedTextBox->TextLength;
     }
     else if (m_hEdit)
     {

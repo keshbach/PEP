@@ -15,6 +15,7 @@ namespace Common
 
         internal:
             EditContextMenuStrip(System::Windows::Forms::TextBox^ TextBox);
+            EditContextMenuStrip(System::Windows::Forms::MaskedTextBox^ MaskedTextBox);
             EditContextMenuStrip(HWND hEdit);
 
             void DisplayContextMenuStrip(LPPOINT pPoint);
@@ -48,6 +49,7 @@ namespace Common
 
         private:
             System::Windows::Forms::TextBox^ m_TextBox;
+            System::Windows::Forms::MaskedTextBox^ m_MaskedTextBox;
 
             HWND m_hEdit;
 

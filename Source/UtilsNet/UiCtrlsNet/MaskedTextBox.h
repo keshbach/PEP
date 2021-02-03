@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -8,10 +8,6 @@ namespace Common
 {
     namespace Forms
     {
-        /// <summary>
-        /// TextBox with a timer delay after a key has been pressed.
-        /// </summary>
-
         public ref class MaskedTextBox : System::Windows::Forms::MaskedTextBox
         {
         public:
@@ -41,37 +37,11 @@ namespace Common
             virtual void WndProc(System::Windows::Forms::Message% Message) override;
 
         private:
-            void CreateContextMenu();
-            void DestroyContextMenu();
-
-            void CreateToolStripGroups();
-            void DestroyToolStripGroups();
-
-        // Context menu event handlers
-        private:
-            void toolStripMenuItemUndo_Click(System::Object^ Object, System::EventArgs^ EventArgs);
-            void toolStripMenuItemCut_Click(System::Object^ Object, System::EventArgs^ EventArgs);
-            void toolStripMenuItemCopy_Click(System::Object^ Object, System::EventArgs^ EventArgs);
-            void toolStripMenuItemPaste_Click(System::Object^ Object, System::EventArgs^ EventArgs);
-            void toolStripMenuItemDelete_Click(System::Object^ Object, System::EventArgs^ EventArgs);
-            void toolStripMenuItemSelectAll_Click(System::Object^ Object, System::EventArgs^ EventArgs);
-            void contextMenuStrip_Opening(System::Object^ Object, System::ComponentModel::CancelEventArgs^ EventArgs);
-
-        private:
-            Common::Forms::ContextMenuStrip^ m_ContextMenuStrip;
-
-            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemUndo;
-            System::Windows::Forms::ToolStripSeparator^ m_ToolStripSeparator1;
-            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemCut;
-            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemCopy;
-            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemPaste;
-            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemDelete;
-            System::Windows::Forms::ToolStripSeparator^ m_ToolStripSeparator2;
-            System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemSelectAll;
+            Common::Forms::EditContextMenuStrip^ m_EditContextMenuStrip;
         };
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
