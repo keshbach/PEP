@@ -2300,8 +2300,8 @@ namespace OpenZip
                         break;
                 }
 
-                treeViewFolder.ImageList = Common.Forms.ImageManager.FileSmallImageList;
-                listViewFolderFile.SmallImageList = Common.Forms.ImageManager.FileSmallImageList;
+                treeViewFolder.ImageList = Common.Forms.ImageManager.CreateFileSmallBorderImageList(0, 1, 0, 1);
+                listViewFolderFile.SmallImageList = Common.Forms.ImageManager.CreateFileSmallBorderImageList(0, 1, 0, 0);
                 toolStripForm.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
                 contextMenuStripFile.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
                 contextMenuStripFolder.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
@@ -2335,6 +2335,16 @@ namespace OpenZip
                 object sender,
                 System.Windows.Forms.FormClosedEventArgs e)
             {
+                Common.Forms.ImageManager.DestroyFileSmallBorderImageList(treeViewFolder.ImageList);
+                Common.Forms.ImageManager.DestroyFileSmallBorderImageList(listViewFolderFile.SmallImageList);
+
+                treeViewFolder.ImageList = null;
+                listViewFolderFile.SmallImageList = null;
+                toolStripForm.ImageList = null;
+                contextMenuStripFile.ImageList = null;
+                contextMenuStripFolder.ImageList = null;
+                contextMenuStripZipFile.ImageList = null;
+
                 DestroyToolStripGroups();
 
                 try

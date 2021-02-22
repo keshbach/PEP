@@ -123,12 +123,13 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ptrustmd.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>msvcmrtd.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiUtilNet.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <FixedBaseAddress />
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
@@ -154,12 +155,13 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ptrustmd.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>msvcmrtd.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiUtilNet64.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <FixedBaseAddress />
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
@@ -190,13 +192,14 @@
       <OptimizeReferences>
       </OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ptrustm.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcmrt.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiUtilNet.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <FixedBaseAddress />
       <LinkTimeCodeGeneration />
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
@@ -227,13 +230,14 @@
       <OptimizeReferences>
       </OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ptrustm.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcmrt.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiUtilNet64.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <FixedBaseAddress />
       <LinkTimeCodeGeneration />
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>../..</AdditionalIncludeDirectories>
@@ -293,6 +297,7 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
+    <ClCompile Include="UtIcon.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="WaitCursor.cpp" />
   </ItemGroup>
@@ -316,6 +321,7 @@
     <ClInclude Include="FormTimer.h" />
     <ClInclude Include="ToolbarImageKey.h" />
     <ClInclude Include="ToolStripMenuItem.h" />
+    <ClInclude Include="UtIcon.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="WaitCursor.h" />
   </ItemGroup>
