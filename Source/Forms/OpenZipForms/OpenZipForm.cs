@@ -567,7 +567,10 @@ namespace OpenZip
 
                 if (sFileExtension.Length > 0)
                 {
-                    Common.Forms.ImageManager.AddFileExtensionSmallImage(sFileExtension, sFileExtension);
+                    if (false == Common.Forms.ImageManager.AddFileExtensionSmallImage(sFileExtension, sFileExtension))
+                    {
+                        sFileExtension = Common.Forms.ImageManager.UnknownFileImageName;
+                    }
                 }
                 else
                 {
@@ -2816,7 +2819,10 @@ namespace OpenZip
 
                                 if (sFileExtension.Length > 0)
                                 {
-                                    Common.Forms.ImageManager.AddFileExtensionSmallImage(sFileExtension, sFileExtension);
+                                    if (false == Common.Forms.ImageManager.AddFileExtensionSmallImage(sFileExtension, sFileExtension))
+                                    {
+                                        sFileExtension = Common.Forms.ImageManager.UnknownFileImageName;
+                                    }
                                 }
                                 else
                                 {

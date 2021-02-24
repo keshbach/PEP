@@ -25,6 +25,22 @@
 
 #pragma unmanaged
 
+static BOOL lDoesFileSmallIconExist(
+  LPCWSTR pszFileExtension)
+{
+    BOOL bExist = FALSE;
+    HKEY hKey;
+
+    if (ERROR_SUCCESS == ::RegOpenKeyExW(HKEY_CLASSES_ROOT, pszFileExtension, 0, KEY_READ, &hKey))
+    {
+        ::RegCloseKey(hKey);
+
+        bExist = TRUE;
+    }
+
+    return bExist;
+}
+
 static HICON lCreateFileSmallIcon(
   LPCWSTR pszFile,
   BOOL bUseOpen)
@@ -203,7 +219,7 @@ System::Boolean Common::Forms::ImageManager::AddFileSmallImage(
 
     s_FileSmallImageList->Images->Add(sImageName, Icon);
 
-    for each (System::Windows::Forms::ImageList ^ ImageList in s_FileSmallBorderImageListDataDict->Keys)
+    for each (System::Windows::Forms::ImageList^ ImageList in s_FileSmallBorderImageListDataDict->Keys)
     {
         AddFileSmallBorderImage(hFileIcon, sImageName, ImageList,
                                 s_FileSmallBorderImageListDataDict[ImageList]);
@@ -217,6 +233,7 @@ System::Boolean Common::Forms::ImageManager::AddFileExtensionSmallImage(
   System::String^ sImageName)
 {
     System::Boolean bResult = false;
+    pin_ptr<const wchar_t> pszFileExtension = PtrToStringChars(sFileExtension);
     System::String^ sTempFile;
     System::IO::FileStream^ fs;
 
@@ -230,6 +247,13 @@ System::Boolean Common::Forms::ImageManager::AddFileExtensionSmallImage(
     if (-1 != s_FileSmallImageList->Images->IndexOfKey(sImageName))
     {
         return true;
+    }
+
+    if (sFileExtension->Length > 0 && FALSE == lDoesFileSmallIconExist(pszFileExtension))
+    {
+        // No icon associated with this file extension 
+
+        return false;
     }
 
     try
