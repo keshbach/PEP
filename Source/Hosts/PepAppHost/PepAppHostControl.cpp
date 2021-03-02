@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2020 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -9,7 +9,9 @@
 #include <new>
 
 #include "PepAppHostMemoryManager.h"
+#if defined(ENABLE_HOSTTASKMANAGER)
 #include "PepAppHostTaskManager.h"
+#endif
 #include "PepAppHostThreadpoolManager.h"
 #include "PepAppHostIOCompletionManager.h"
 #include "PepAppHostSyncManager.h"
@@ -90,6 +92,7 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
     }
     else if (riid == IID_IHostTaskManager)
     {
+#if defined(ENABLE_HOSTTASKMANAGER)
         PepAppHostTaskManager* pHostTaskManager = new (std::nothrow) PepAppHostTaskManager();
 
         if (pHostTaskManager)
@@ -102,6 +105,7 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::GetHostManager(
         }
 
 		return E_FAIL;
+#endif
     }
     else if (riid == IID_IHostThreadpoolManager)
     {
@@ -225,5 +229,5 @@ HRESULT STDMETHODCALLTYPE PepAppHostControl::SetAppDomainManager(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2020 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
