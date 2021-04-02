@@ -158,16 +158,19 @@ void Pep::Forms::BufferViewer::OnPaint(
 {
 	System::Windows::Forms::Control::OnPaint(e);
 
-	e->Graphics->FillRectangle(System::Drawing::SystemBrushes::WindowFrame,
-                               0, 0, ClientSize.Width, ClientSize.Height);
+	if (this->DesignMode)
+	{
+		e->Graphics->FillRectangle(System::Drawing::SystemBrushes::WindowFrame,
+                                   0, 0, ClientSize.Width, ClientSize.Height);
 
-	e->Graphics->FillRectangle(System::Drawing::SystemBrushes::Window,
-                               CBorderWidth, CBorderHeight,
-                               ClientSize.Width - (CBorderWidth * 2),
-                               ClientSize.Height - (CBorderHeight * 2));
+		e->Graphics->FillRectangle(System::Drawing::SystemBrushes::Window,
+                                   CBorderWidth, CBorderHeight,
+                                   ClientSize.Width - (CBorderWidth * 2),
+                                   ClientSize.Height - (CBorderHeight * 2));
 
-	e->Graphics->DrawString(Name, Font, System::Drawing::SystemBrushes::WindowText,
-                            CBorderWidth * 2, CBorderHeight * 2);
+		e->Graphics->DrawString(Name, Font, System::Drawing::SystemBrushes::WindowText,
+                                CBorderWidth * 2, CBorderHeight * 2);
+	}
 }
 
 void Pep::Forms::BufferViewer::OnResize(

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2020-2020 Kevin Eshbach
+//  Copyright (C) 2020-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "StdAfx.h"
@@ -361,16 +361,19 @@ void Pep::Forms::CheckedListBox::OnPaint(
 {
 	System::Windows::Forms::Control::OnPaint(e);
 
-	e->Graphics->FillRectangle(System::Drawing::SystemBrushes::WindowFrame,
-		                       0, 0, ClientSize.Width, ClientSize.Height);
+	if (this->DesignMode)
+	{
+		e->Graphics->FillRectangle(System::Drawing::SystemBrushes::WindowFrame,
+                                   0, 0, ClientSize.Width, ClientSize.Height);
 
-	e->Graphics->FillRectangle(System::Drawing::SystemBrushes::Window,
-                               CBorderWidth, CBorderHeight,
-		                       ClientSize.Width - (CBorderWidth * 2),
-		                       ClientSize.Height - (CBorderHeight * 2));
+		e->Graphics->FillRectangle(System::Drawing::SystemBrushes::Window,
+                                   CBorderWidth, CBorderHeight,
+                                   ClientSize.Width - (CBorderWidth * 2),
+                                   ClientSize.Height - (CBorderHeight * 2));
 
-	e->Graphics->DrawString(Name, Font, System::Drawing::SystemBrushes::WindowText,
-		                    CBorderWidth * 2, CBorderHeight * 2);
+		e->Graphics->DrawString(Name, Font, System::Drawing::SystemBrushes::WindowText,
+                                CBorderWidth * 2, CBorderHeight * 2);
+	}
 }
 
 void Pep::Forms::CheckedListBox::OnResize(
@@ -501,5 +504,5 @@ System::Int32 Pep::Forms::CheckedListBox::GetMinWidth()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2020-2020 Kevin Eshbach
+//  Copyright (C) 2020-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
