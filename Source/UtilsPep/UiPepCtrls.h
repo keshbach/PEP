@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2010-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UiPepCtrls_H)
@@ -11,6 +11,7 @@
 
 #define CUiBufferViewerCtrlClass L"BufferViewerCtrl"
 #define CUiCheckedListBoxCtrlClass L"CheckedListBoxCtrl"
+#define CUiDeviceInfoCtrlClass L"DeviceInfoCtrl"
 
 #pragma endregion
 
@@ -57,6 +58,32 @@
 #define CLBM_GETCHECKSTATE      (WM_USER + 0x0107)
 
 #define CLBM_GETMINWIDTH        (WM_USER + 0x0108)
+
+#define DIM_SETNAME             (WM_USER + 0x0100)
+#define DIM_GETNAME             (WM_USER + 0x0101)
+
+#define DIM_SETADAPTER          (WM_USER + 0x0102)
+#define DIM_GETADAPTER          (WM_USER + 0x0103)
+
+#define DIM_SETDIPSWITCHES      (WM_USER + 0x0104)
+#define DIM_GETDIPSWITCHES      (WM_USER + 0x0105)
+
+#define DIM_SETSIZE             (WM_USER + 0x0106)
+#define DIM_GETSIZE             (WM_USER + 0x0107)
+
+#define DIM_SETVPP              (WM_USER + 0x0108)
+#define DIM_GETVPP              (WM_USER + 0x0109)
+
+#define DIM_SETBITS             (WM_USER + 0x010A)
+#define DIM_GETBITS             (WM_USER + 0x010B)
+
+#define DIM_SETCHIPENABLE       (WM_USER + 0x010C)
+#define DIM_GETCHIPENABLE       (WM_USER + 0x010D)
+
+#define DIM_SETOUTPUTENABLE     (WM_USER + 0x010E)
+#define DIM_GETOUTPUTENABLE     (WM_USER + 0x010F)
+
+#define DIM_GETMINRECT          (WM_USER + 0x0110)
 
 /* Notification Messages */
 
@@ -118,5 +145,5 @@ VOID UIPEPCTRLSAPI UiPepCtrlsUninitialize(VOID);
 #endif
 
 /***************************************************************************/
-/*  Copyright (C) 2010-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2021 Kevin Eshbach                                  */
 /***************************************************************************/

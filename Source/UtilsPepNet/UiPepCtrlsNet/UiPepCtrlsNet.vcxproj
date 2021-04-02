@@ -292,6 +292,7 @@
     <ClCompile Include="CheckedListBoxItemCollectionEditor.cpp" />
     <ClCompile Include="CheckedListBoxItemListEnumerator.cpp" />
     <ClCompile Include="CheckStateChangeEventArgs.cpp" />
+    <ClCompile Include="DeviceInfo.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -328,6 +329,7 @@
     <ClInclude Include="CheckedListBoxItemCollectionEditor.h" />
     <ClInclude Include="CheckedListBoxItemListEnumerator.h" />
     <ClInclude Include="CheckStateChangeEventArgs.h" />
+    <ClInclude Include="DeviceInfo.h" />
     <ClInclude Include="ICheckedListBoxItemChange.h" />
     <ClInclude Include="ICheckedListBoxList.h" />
     <ClInclude Include="resource.h" />
@@ -344,10 +346,14 @@
     <EmbeddedResource Include="CheckedListBox.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="DeviceInfo.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Image Include="BufferViewer.bmp" />
     <Image Include="CheckedListBox.bmp" />
+    <Image Include="DeviceInfo.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

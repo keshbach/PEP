@@ -248,6 +248,7 @@
   <ItemGroup>
     <ClCompile Include="UiBufferViewerCtrl.cpp" />
     <ClCompile Include="UiCheckedListBoxCtrl.cpp" />
+    <ClCompile Include="UiDeviceInfoCtrl.cpp" />
     <ClCompile Include="UiListBoxCtrl.cpp" />
     <ClCompile Include="UiPepCtrls.cpp" />
     <ClCompile Include="UiPepCtrlsDllMain.cpp" />
@@ -264,6 +265,7 @@
     <ClInclude Include="..\UiPepCtrls.h" />
     <ClInclude Include="UiBufferViewerCtrl.h" />
     <ClInclude Include="UiCheckedListBoxCtrl.h" />
+    <ClInclude Include="UiDeviceInfoCtrl.h" />
     <ClInclude Include="UiListBoxCtrl.h" />
     <ClInclude Include="UiPepCtrlsUtil.h" />
   </ItemGroup>

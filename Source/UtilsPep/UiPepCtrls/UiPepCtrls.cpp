@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2010-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -11,6 +11,7 @@
 #include "UiBufferViewerCtrl.h"
 #include "UiCheckedListBoxCtrl.h"
 #include "UiListBoxCtrl.h"
+#include "UiDeviceInfoCtrl.h"
 
 extern "C"
 {
@@ -22,6 +23,7 @@ VOID UIPEPCTRLSAPI UiPepCtrlsInitialize(VOID)
     UiBufferViewerCtrlRegister();
 	UiListBoxCtrlRegister();
 	UiCheckedListBoxCtrlRegister();
+	UiDeviceInfoCtrlRegister();
 }
 
 VOID UIPEPCTRLSAPI UiPepCtrlsUninitialize(VOID)
@@ -29,6 +31,7 @@ VOID UIPEPCTRLSAPI UiPepCtrlsUninitialize(VOID)
     UiBufferViewerCtrlUnregister();
 	UiListBoxCtrlUnregister();
 	UiCheckedListBoxCtrlUnregister();
+	UiDeviceInfoCtrlUnregister();
 
     UtUninitHeap();
 }
@@ -36,5 +39,5 @@ VOID UIPEPCTRLSAPI UiPepCtrlsUninitialize(VOID)
 };
 
 /***************************************************************************/
-/*  Copyright (C) 2010-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2021 Kevin Eshbach                                  */
 /***************************************************************************/
