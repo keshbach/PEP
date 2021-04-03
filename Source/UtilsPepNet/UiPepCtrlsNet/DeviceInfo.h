@@ -173,9 +173,9 @@ namespace Pep
 
 			[System::ComponentModel::Browsable(false),
 				System::ComponentModel::EditorBrowsableAttribute(System::ComponentModel::EditorBrowsableState::Always)]
-			property System::Drawing::Rectangle^ MinRect
+			property System::Drawing::Rectangle MinRect
 			{
-				System::Drawing::Rectangle^ get()
+				System::Drawing::Rectangle get()
 				{
 					return GetMinRectValue();
 				}
@@ -255,7 +255,7 @@ namespace Pep
 			void SetOutputEnableValue(System::String^ sOutputEnable);
 			System::String^ GetOutputEnableValue();
 
-			System::Drawing::Rectangle^ GetMinRectValue();
+			System::Drawing::Rectangle GetMinRectValue();
 
 			void UpdateFont(System::Boolean bRedraw);
 

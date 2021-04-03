@@ -350,11 +350,9 @@ System::String^ Pep::Forms::DeviceInfo::GetAdapterValue()
 void Pep::Forms::DeviceInfo::SetDipSwitchesValue(
   array<System::Boolean>^ DipSwitches)
 {
-	UINT8 nDipSwitches = 0;
-
 	if (DipSwitches == nullptr)
 	{
-		throw gcnew System::Exception(L"Null dip switches");
+		DipSwitches = gcnew array<System::Boolean>(CTotalDipSwitches);
 	}
 
 	if (DipSwitches->Length != CTotalDipSwitches)
@@ -497,7 +495,7 @@ System::String^ Pep::Forms::DeviceInfo::GetOutputEnableValue()
 	return lGetNameValue(m_hDeviceInfoCtrl, DIM_GETOUTPUTENABLE);
 }
 
-System::Drawing::Rectangle^ Pep::Forms::DeviceInfo::GetMinRectValue()
+System::Drawing::Rectangle Pep::Forms::DeviceInfo::GetMinRectValue()
 {
 	RECT Rect;
 
@@ -506,9 +504,9 @@ System::Drawing::Rectangle^ Pep::Forms::DeviceInfo::GetMinRectValue()
 		throw gcnew System::Exception(L"Unable to get the minimum rectangle");
 	}
 
-	return gcnew System::Drawing::Rectangle(Rect.left, Rect.top,
-		                                    Rect.right - Rect.left,
-		                                    Rect.bottom - Rect.top);
+	return System::Drawing::Rectangle(Rect.left, Rect.top,
+		                              Rect.right - Rect.left,
+		                              Rect.bottom - Rect.top);
 }
 
 void Pep::Forms::DeviceInfo::UpdateFont(
