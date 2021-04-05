@@ -1213,12 +1213,36 @@ static LRESULT lOnGetMinRect(
 static LRESULT lOnPaintMsg(
   _In_ HWND hWnd)
 {
-    HDC hDC;
+    HDC hDC, hMemDC;
     PAINTSTRUCT PaintStruct;
+    HBITMAP hBitmap;
+    RECT Rect;
+    INT nBitmapWidth, nBitmapHeight;
+
+    ::GetClientRect(hWnd, &Rect);
+
+    nBitmapWidth = MRectWidth(Rect);
+    nBitmapHeight = MRectHeight(Rect);
 
     hDC = ::BeginPaint(hWnd, &PaintStruct);
 
-    lDrawWindow(hWnd, hDC);
+    hMemDC = ::CreateCompatibleDC(hDC);
+
+    hBitmap = ::CreateCompatibleBitmap(hDC, nBitmapWidth, nBitmapHeight);
+
+    ::SaveDC(hMemDC);
+
+    ::SelectObject(hMemDC, hBitmap);
+
+    lDrawWindow(hWnd, hMemDC);
+
+    ::BitBlt(hDC, 0, 0, nBitmapWidth, nBitmapHeight, hMemDC, 0, 0, SRCCOPY);
+
+    ::RestoreDC(hMemDC, -1);
+
+    ::DeleteObject(hBitmap);
+
+    ::DeleteDC(hMemDC);
 
     ::EndPaint(hWnd, &PaintStruct);
 
