@@ -101,10 +101,13 @@ typedef struct tagTDeviceInfoCtrlData
     LPWSTR pszLabels[8];
     UINT8 nDipSwitches;
     RECT ColumnRects[6];
+    SIZE MinSize;
+    SIZE LastSize;
     HFONT hFont;
     HFONT hDipSwitchFont;
     COLORREF Colors[4];
     BOOL bRedraw;
+    BOOL bIgnoreSizeChange;
 } TDeviceInfoCtrlData;
 
 #pragma endregion
@@ -174,6 +177,251 @@ static HFONT lCreateDipSwitchFont(
     ::ReleaseDC(hWnd, hDC);
 
     return ::CreateFontIndirectW(&LogFont);
+}
+
+static VOID lGetVisibleScrollBars(
+  _In_ HWND hWnd,
+  LPBOOL pbShowHorzScrollBar,
+  LPBOOL pbShowVertScrollBar)
+{
+    DWORD dwStyle = GetWindowStyle(hWnd);
+
+    *pbShowHorzScrollBar = (dwStyle & WS_HSCROLL) ? TRUE : FALSE;
+    *pbShowVertScrollBar = (dwStyle & WS_VSCROLL) ? TRUE : FALSE;
+}
+
+static VOID lGetScrollBarPos(
+  _In_ HWND hWnd,
+  LPLONG nXPos,
+  LPLONG nYPos)
+{
+    BOOL bShowHorzScrollBar, bShowVertScrollBar;
+    SCROLLINFO ScrollInfo;
+
+    lGetVisibleScrollBars(hWnd, &bShowHorzScrollBar, &bShowVertScrollBar);
+
+    if (bShowHorzScrollBar == FALSE)
+    {
+        *nXPos = 0;
+    }
+    else
+    {
+        ScrollInfo.cbSize = sizeof(SCROLLINFO);
+        ScrollInfo.fMask = SIF_POS;
+
+        ::GetScrollInfo(hWnd, SB_HORZ, &ScrollInfo);
+
+        *nXPos = ScrollInfo.nPos;
+    }
+
+    if (bShowVertScrollBar == FALSE)
+    {
+        *nYPos = 0;
+    }
+    else
+    {
+        ScrollInfo.cbSize = sizeof(SCROLLINFO);
+        ScrollInfo.fMask = SIF_POS;
+
+        ::GetScrollInfo(hWnd, SB_VERT, &ScrollInfo);
+
+        *nYPos = ScrollInfo.nPos;
+    }
+}
+
+static VOID lUpdateScrollBars(
+  _In_ HWND hWnd,
+  _In_ INT nNewWidth,
+  _In_ INT nNewHeight)
+{
+    TDeviceInfoCtrlData* pData = (TDeviceInfoCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    BOOL bShowHorzScrollBar, bShowVertScrollBar;
+    BOOL bOriginalShowHorzScrollBar, bOriginalShowVertScrollBar;
+    INT nHorzScrollBarHeight, nVertScrollBarWidth;
+    SCROLLINFO ScrollInfo;
+
+    pData->bIgnoreSizeChange = TRUE;
+
+    lGetVisibleScrollBars(hWnd, &bShowHorzScrollBar, &bShowVertScrollBar);
+
+    bOriginalShowHorzScrollBar = bShowHorzScrollBar;
+    bOriginalShowVertScrollBar = bShowVertScrollBar;
+
+    nHorzScrollBarHeight = ::GetSystemMetrics(SM_CYHSCROLL);
+    nVertScrollBarWidth = ::GetSystemMetrics(SM_CXVSCROLL);
+
+    if (bShowHorzScrollBar == FALSE && bShowVertScrollBar == FALSE)
+    {
+        if (nNewWidth < pData->MinSize.cx)
+        {
+            bShowHorzScrollBar = TRUE;
+
+            nNewHeight -= nHorzScrollBarHeight;
+        }
+
+        if (nNewHeight < pData->MinSize.cy)
+        {
+            bShowVertScrollBar = TRUE;
+
+            nNewWidth -= nVertScrollBarWidth;
+
+            if (bShowHorzScrollBar == FALSE && nNewWidth < pData->MinSize.cx)
+            {
+                bShowHorzScrollBar = TRUE;
+
+                nNewHeight -= nHorzScrollBarHeight;
+            }
+        }
+    }
+    else if (bShowHorzScrollBar == TRUE && bShowVertScrollBar == FALSE)
+    {
+        if (nNewWidth >= pData->MinSize.cx)
+        {
+            bShowHorzScrollBar = FALSE;
+
+            nNewHeight += nHorzScrollBarHeight;
+        }
+
+        if (nNewHeight < pData->MinSize.cy)
+        {
+            bShowVertScrollBar = TRUE;
+        }
+    }
+    else if (bShowHorzScrollBar == FALSE && bShowVertScrollBar == TRUE)
+    {
+        if (nNewHeight >= pData->MinSize.cy)
+        {
+            bShowVertScrollBar = FALSE;
+
+            nNewWidth += nVertScrollBarWidth;
+        }
+
+        if (nNewWidth < pData->MinSize.cx)
+        {
+            bShowHorzScrollBar = TRUE;
+        }
+    }
+    else
+    {
+        if (nNewWidth + nVertScrollBarWidth >= pData->MinSize.cx &&
+            nNewHeight + nHorzScrollBarHeight >= pData->MinSize.cy)
+        {
+            bShowHorzScrollBar = FALSE;
+            bShowVertScrollBar = FALSE;
+
+            nNewWidth += nVertScrollBarWidth;
+            nNewHeight += nHorzScrollBarHeight;
+        }
+        else if (nNewWidth >= pData->MinSize.cx &&
+                 nNewHeight < pData->MinSize.cy)
+        {
+            bShowHorzScrollBar = FALSE;
+
+            nNewHeight += nHorzScrollBarHeight;
+        }
+
+        else if (nNewWidth < pData->MinSize.cx &&
+                 nNewHeight >= pData->MinSize.cy)
+        {
+            bShowVertScrollBar = FALSE;
+
+            nNewWidth += nVertScrollBarWidth;
+        }
+    }
+
+    if (bShowHorzScrollBar)
+    {
+        if (bOriginalShowHorzScrollBar)
+        {
+            ScrollInfo.cbSize = sizeof(SCROLLINFO);
+            ScrollInfo.fMask = SIF_ALL;
+
+            ::GetScrollInfo(hWnd, SB_HORZ, &ScrollInfo);
+
+            ScrollInfo.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
+            ScrollInfo.nPage = nNewWidth;
+
+            if (ScrollInfo.nPos + (INT)ScrollInfo.nPage >= pData->MinSize.cx)
+            {
+                ScrollInfo.nPos = (pData->MinSize.cx - ScrollInfo.nPage);
+            }
+        }
+        else
+        {
+            ScrollInfo.cbSize = sizeof(SCROLLINFO);
+            ScrollInfo.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
+            ScrollInfo.nMin = 0;
+            ScrollInfo.nMax = pData->MinSize.cx - 1;
+            ScrollInfo.nPage = nNewWidth;
+        }
+
+        ::SetScrollInfo(hWnd, SB_HORZ, &ScrollInfo, TRUE);
+    }
+
+    if (bShowVertScrollBar)
+    {
+        if (bOriginalShowVertScrollBar)
+        {
+            ScrollInfo.cbSize = sizeof(SCROLLINFO);
+            ScrollInfo.fMask = SIF_ALL;
+
+            ::GetScrollInfo(hWnd, SB_VERT, &ScrollInfo);
+
+            ScrollInfo.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
+            ScrollInfo.nPage = nNewHeight;
+
+            if (ScrollInfo.nPos + (INT)ScrollInfo.nPage >= pData->MinSize.cy)
+            {
+                ScrollInfo.nPos = (pData->MinSize.cy - ScrollInfo.nPage);
+            }
+        }
+        else
+        {
+            ScrollInfo.cbSize = sizeof(SCROLLINFO);
+            ScrollInfo.fMask = SIF_PAGE | SIF_POS | SIF_RANGE;
+            ScrollInfo.nMin = 0;
+            ScrollInfo.nMax = pData->MinSize.cy - 1;
+            ScrollInfo.nPage = nNewHeight;
+        }
+
+        ::SetScrollInfo(hWnd, SB_VERT, &ScrollInfo, TRUE);
+    }
+
+    pData->LastSize.cx = nNewWidth;
+    pData->LastSize.cy = nNewHeight;
+
+    ::ShowScrollBar(hWnd, SB_HORZ, bShowHorzScrollBar);
+    ::ShowScrollBar(hWnd, SB_VERT, bShowVertScrollBar);
+
+    pData->bIgnoreSizeChange = FALSE;
+}
+
+static VOID lCalcMinSize(
+  _In_ HDC hDC,
+  TDeviceInfoCtrlData* pData)
+{
+    POINT Point;
+
+    pData->MinSize.cx = 0;
+    pData->MinSize.cy = 0;
+
+    for (INT nIndex = 0; nIndex < MArrayLen(pData->ColumnRects); ++nIndex)
+    {
+        Point.x = pData->ColumnRects[nIndex].right;
+        Point.y = pData->ColumnRects[nIndex].bottom;
+
+        ::LPtoDP(hDC, &Point, 1);
+
+        if (Point.x > pData->MinSize.cx)
+        {
+            pData->MinSize.cx = Point.x;
+        }
+
+        if (Point.y > pData->MinSize.cy)
+        {
+            pData->MinSize.cy = Point.y;
+        }
+    }
 }
 
 static VOID lLayoutColumn1TextPoints(
@@ -621,6 +869,7 @@ static VOID lLayoutTextPoints(
     TDeviceInfoCtrlData* pData = (TDeviceInfoCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
     HDC hDC = ::GetDC(hWnd);
     POINT BorderMarginPoint, TextMarginPoint, GroupMarginPoint;
+    RECT Rect;
 
     BorderMarginPoint.x = CStartBorderMarginWidthPixels;
     BorderMarginPoint.y = CStartBorderMarginHeightPixels;
@@ -674,9 +923,18 @@ static VOID lLayoutTextPoints(
     lLayoutColumn6TextPoints(hDC, pData, &BorderMarginPoint, &TextMarginPoint,
                              &pData->ColumnRects[5]);
 
+    lCalcMinSize(hDC, pData);
+
     ::RestoreDC(hDC, -1);
 
     ::ReleaseDC(hWnd, hDC);
+
+    if (pData->bRedraw)
+    {
+        ::GetClientRect(hWnd, &Rect);
+
+        lUpdateScrollBars(hWnd, MRectWidth(Rect), MRectHeight(Rect));
+    }
 }
 
 static VOID lDrawColumn1(
@@ -901,6 +1159,9 @@ static VOID lDrawWindow(
     TDeviceInfoCtrlData* pData = (TDeviceInfoCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
     COLORREF Color = ::GetSysColor(COLOR_BTNFACE);
     RECT ClientRect;
+    POINT Point;
+
+    lGetScrollBarPos(hWnd, &Point.x, &Point.y);
 
     ::GetClientRect(hWnd, &ClientRect);
 
@@ -919,6 +1180,10 @@ static VOID lDrawWindow(
     // Draw the text
 
     UiPepCtrlSelectTwipsMode(hDC);
+
+    ::DPtoLP(hDC, &Point, 1);
+
+    ::SetWindowOrgEx(hDC, Point.x, Point.y, NULL);
 
     ::SelectObject(hDC, pData->hFont);
 
@@ -941,8 +1206,6 @@ static VOID lRedrawWindow(
 
     if (pData->bRedraw)
     {
-        //lUpdateScrollBars(hWnd);
-
         ::InvalidateRect(hWnd, NULL, TRUE);
         ::UpdateWindow(hWnd);
     }
@@ -1171,41 +1434,11 @@ static LRESULT lOnGetMinRect(
   LPRECT pRect)
 {
     TDeviceInfoCtrlData* pData = (TDeviceInfoCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
-    HDC hDC = ::GetDC(hWnd);
-    POINT Point;
 
     pRect->left = 0;
     pRect->top = 0;
-    pRect->right = 0;
-    pRect->bottom = 0;
-
-    ::SaveDC(hDC);
-
-    UiPepCtrlSelectTwipsMode(hDC);
-
-    ::SelectObject(hDC, pData->hFont);
-
-    for (INT nIndex = 0; nIndex < MArrayLen(pData->ColumnRects); ++nIndex)
-    {
-        Point.x = pData->ColumnRects[nIndex].right;
-        Point.y = pData->ColumnRects[nIndex].bottom;
-
-        ::LPtoDP(hDC, &Point, 1);
-
-        if (Point.x > pRect->right)
-        {
-            pRect->right = Point.x;
-        }
-
-        if (Point.y > pRect->bottom)
-        {
-            pRect->bottom = Point.y;
-        }
-    }
-
-    ::RestoreDC(hDC, -1);
-
-    ::ReleaseDC(hWnd, hDC);
+    pRect->right = pData->MinSize.cx;
+    pRect->bottom = pData->MinSize.cy;
 
     return TRUE;
 }
@@ -1278,14 +1511,85 @@ static LRESULT lOnSizeMsg(
   _In_ INT nNewWidth,
   _In_ INT nNewHeight)
 {
-    nNewWidth;
-    nNewHeight;
+    TDeviceInfoCtrlData* pData = (TDeviceInfoCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
-    lLayoutTextPoints(hWnd);
+    if (FALSE == pData->bIgnoreSizeChange && TRUE == pData->bRedraw)
+    {
+        lUpdateScrollBars(hWnd, nNewWidth, nNewHeight);
+    }
 
-    lRedrawWindow(hWnd);
+    return 0;
+}
 
-    //lUpdateScrollBars(hWnd);
+static LRESULT lOnHScrollMsg(
+  _In_ HWND hWnd,
+  _In_ INT nType,
+  _In_ INT nPos)
+{
+    TDeviceInfoCtrlData* pData = (TDeviceInfoCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    BOOL bUpdate = FALSE;
+    SCROLLINFO ScrollInfo;
+
+    nPos;
+
+    ScrollInfo.cbSize = sizeof(SCROLLINFO);
+    ScrollInfo.fMask = SIF_ALL;
+
+    ::GetScrollInfo(hWnd, SB_HORZ, &ScrollInfo);
+
+    switch (nType)
+    {
+        case SB_LINELEFT:
+            if (ScrollInfo.nPos > 0)
+            {
+                --ScrollInfo.nPos;
+
+                bUpdate = TRUE;
+            }
+            break;
+        case SB_LINERIGHT:
+            if (ScrollInfo.nPos + (INT)ScrollInfo.nPage < pData->MinSize.cx)
+            {
+                ++ScrollInfo.nPos;
+
+                bUpdate = TRUE;
+            }
+            break;
+        case SB_PAGELEFT:
+            ScrollInfo.nPos -= (INT)ScrollInfo.nPage;
+
+            if (ScrollInfo.nPos < 0)
+            {
+                ScrollInfo.nPos = 0;
+            }
+
+            bUpdate = TRUE;
+            break;
+        case SB_PAGERIGHT:
+            ScrollInfo.nPos += ScrollInfo.nPage;
+
+            if (ScrollInfo.nPos + (INT)ScrollInfo.nPage >= pData->MinSize.cx)
+            {
+                ScrollInfo.nPos = (pData->MinSize.cx - ScrollInfo.nPage);
+            }
+
+            bUpdate = TRUE;
+            break;
+        case SB_THUMBTRACK:
+            ScrollInfo.nPos = ScrollInfo.nTrackPos;
+
+            bUpdate = TRUE;
+            break;
+    }
+
+    if (bUpdate)
+    {
+        ScrollInfo.fMask = SIF_POS;
+
+        ::SetScrollInfo(hWnd, SB_HORZ, &ScrollInfo, TRUE);
+
+        lRedrawWindow(hWnd);
+    }
 
     return 0;
 }
@@ -1295,10 +1599,70 @@ static LRESULT lOnVScrollMsg(
   _In_ INT nType,
   _In_ INT nPos)
 {
-    nType;
-	nPos;
+    TDeviceInfoCtrlData* pData = (TDeviceInfoCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    BOOL bUpdate = FALSE;
+    SCROLLINFO ScrollInfo;
 
-    lRedrawWindow(hWnd);
+    nPos;
+
+    ScrollInfo.cbSize = sizeof(SCROLLINFO);
+    ScrollInfo.fMask = SIF_ALL;
+
+    ::GetScrollInfo(hWnd, SB_VERT, &ScrollInfo);
+
+    switch (nType)
+    {
+        case SB_LINEUP:
+            if (ScrollInfo.nPos > 0)
+            {
+                --ScrollInfo.nPos;
+
+                bUpdate = TRUE;
+            }
+            break;
+        case SB_LINEDOWN:
+            if (ScrollInfo.nPos + (INT)ScrollInfo.nPage < pData->MinSize.cy)
+            {
+                ++ScrollInfo.nPos;
+
+                bUpdate = TRUE;
+            }
+            break;
+        case SB_PAGEUP:
+            ScrollInfo.nPos -= (INT)ScrollInfo.nPage;
+
+            if (ScrollInfo.nPos < 0)
+            {
+                ScrollInfo.nPos = 0;
+            }
+
+            bUpdate = TRUE;
+            break;
+        case SB_PAGEDOWN:
+            ScrollInfo.nPos += ScrollInfo.nPage;
+
+            if (ScrollInfo.nPos + (INT)ScrollInfo.nPage >= pData->MinSize.cy)
+            {
+                ScrollInfo.nPos = (pData->MinSize.cy - ScrollInfo.nPage);
+            }
+
+            bUpdate = TRUE;
+            break;
+        case SB_THUMBTRACK:
+            ScrollInfo.nPos = ScrollInfo.nTrackPos;
+
+            bUpdate = TRUE;
+            break;
+    }
+
+    if (bUpdate)
+    {
+        ScrollInfo.fMask = SIF_POS;
+
+        ::SetScrollInfo(hWnd, SB_VERT, &ScrollInfo, TRUE);
+
+        lRedrawWindow(hWnd);
+    }
 
     return 0;
 }
@@ -1308,8 +1672,16 @@ static LRESULT lOnSetRedrawMsg(
   _In_ BOOL bRedraw)
 {
     TDeviceInfoCtrlData* pData = (TDeviceInfoCtrlData*)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    RECT Rect;
 
     pData->bRedraw = bRedraw;
+
+    if (bRedraw)
+    {
+        ::GetClientRect(hWnd, &Rect);
+
+        lUpdateScrollBars(hWnd, MRectWidth(Rect), MRectHeight(Rect));
+    }
 
     lRedrawWindow(hWnd);
 
@@ -1388,10 +1760,10 @@ static LRESULT lOnCreateMsg(
     lUpdateColors(pData);
 
     pData->bRedraw = TRUE;
+    pData->bIgnoreSizeChange = FALSE;
 
-    //::ShowScrollBar(hWnd, SB_VERT, TRUE);
-
-    //lUpdateScrollBars(hWnd);
+    pData->LastSize.cx = pCreateStruct->cx;
+    pData->LastSize.cy = pCreateStruct->cy;
 
     lLayoutTextPoints(hWnd);
 
@@ -1468,6 +1840,8 @@ static LRESULT CALLBACK lDeviceInfoCtrlWndProc(
             return lOnPrintClientMsg(hWnd, (HDC)wParam, (DWORD)lParam);
         case WM_SIZE:
             return lOnSizeMsg(hWnd, LOWORD(lParam), HIWORD(lParam));
+        case WM_HSCROLL:
+            return lOnHScrollMsg(hWnd, LOWORD(wParam), HIWORD(wParam));
         case WM_VSCROLL:
             return lOnVScrollMsg(hWnd, LOWORD(wParam), HIWORD(wParam));
         case WM_SETREDRAW:
