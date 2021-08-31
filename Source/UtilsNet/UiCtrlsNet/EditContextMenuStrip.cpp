@@ -14,18 +14,25 @@
 #define CContextMenuFullGroupName "Full"
 #define CContextMenuReadOnlyGroupName "ReadOnly"
 
+#define CUndoMenuItemName "toolStripMenuItemUndo"
+#define CCutMenuItemName "toolStripMenuItemCut"
+#define CCopyMenuItemName "toolStripMenuItemCopy"
+#define CPasteMenuItemName "toolStripMenuItemPaste"
+#define CDeleteMenuItemName "toolStripMenuItemDelete"
+#define CSelectAllMenuItemName "toolStripMenuItemSelectAll"
+
 #pragma endregion
 
 #pragma region "Local Functions"
 
 static BOOL lIsKeyDown(
-  INT nKeyCode)
+  _In_ INT nKeyCode)
 {
     return (::GetKeyState(nKeyCode) & 0x8000) ? TRUE : FALSE;
 }
 
 static BOOL lIsContextMenuKeyDown(
-  INT nKeyCode)
+  _In_ INT nKeyCode)
 {
     if ((nKeyCode == VK_F10 && lIsKeyDown(VK_SHIFT)) ||
         nKeyCode == VK_APPS)
@@ -37,7 +44,7 @@ static BOOL lIsContextMenuKeyDown(
 }
 
 static BOOL lKeyCodeMatchesToolStripMenuItem(
-  INT nKeyCode,
+  _In_ INT nKeyCode,
   System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem)
 {
     BOOL bShiftPressed, bControlPressed, bAltPressed;
@@ -99,8 +106,30 @@ static BOOL lKeyCodeMatchesToolStripMenuItem(
     return TRUE;
 }
 
+static System::Windows::Forms::ToolStripMenuItem^ lFindToolStripMenuItem(
+  _In_ INT nKeyCode,
+  System::Windows::Forms::ToolStripItemCollection^ ToolStripItemCollection)
+{
+    System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem;
+
+    for each (System::Windows::Forms::ToolStripItem ^ ToolStripItem in ToolStripItemCollection)
+    {
+        if (IsInstance<System::Windows::Forms::ToolStripMenuItem^>(ToolStripItem))
+        {
+            ToolStripMenuItem = (System::Windows::Forms::ToolStripMenuItem^)ToolStripItem;
+
+            if (lKeyCodeMatchesToolStripMenuItem(nKeyCode, ToolStripMenuItem))
+            {
+                return ToolStripMenuItem;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 static VOID lGenerateContextMenuMsg(
-  HWND hEdit)
+  _In_ HWND hEdit)
 {
     RECT Rect;
     INT nXPos, nYPos;
@@ -120,6 +149,7 @@ static VOID lGenerateContextMenuMsg(
 Common::Forms::EditContextMenuStrip::EditContextMenuStrip()
 {
     m_TextBox = nullptr;
+    m_MaskedTextBox = nullptr;
     m_hEdit = NULL;
 }
 
@@ -169,19 +199,35 @@ Common::Forms::EditContextMenuStrip::~EditContextMenuStrip()
 #pragma endregion
 
 void Common::Forms::EditContextMenuStrip::DisplayContextMenuStrip(
-  LPPOINT pPoint)
+  _In_ LPPOINT pPoint)
 {
     m_ContextMenuStrip->Show(pPoint->x, pPoint->y);
 }
 
 BOOL Common::Forms::EditContextMenuStrip::ProcessKeyDown(
-  INT nKeyCode)
+  _In_ INT nKeyCode)
 {
-    return lIsContextMenuKeyDown(nKeyCode);
+    System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem;
+
+    if (lIsContextMenuKeyDown(nKeyCode))
+    {
+        return TRUE;
+    }
+
+    ToolStripMenuItem = lFindToolStripMenuItem(nKeyCode, m_ContextMenuStrip->Items);
+
+    if (ToolStripMenuItem != nullptr)
+    {
+        ToolStripMenuItem->PerformClick();
+
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 BOOL Common::Forms::EditContextMenuStrip::ProcessKeyUp(
-  INT nKeyCode)
+  _In_ INT nKeyCode)
 {
     System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem;
 
@@ -192,43 +238,14 @@ BOOL Common::Forms::EditContextMenuStrip::ProcessKeyUp(
         return TRUE;
     }
 
-    for each (System::Windows::Forms::ToolStripItem ^ ToolStripItem in m_ContextMenuStrip->Items)
-    {
-        if (IsInstance<System::Windows::Forms::ToolStripMenuItem^>(ToolStripItem))
-        {
-            ToolStripMenuItem = (System::Windows::Forms::ToolStripMenuItem^)ToolStripItem;
+    ToolStripMenuItem = lFindToolStripMenuItem(nKeyCode, m_ContextMenuStrip->Items);
 
-            if (lKeyCodeMatchesToolStripMenuItem(nKeyCode, ToolStripMenuItem))
-            {
-                ToolStripMenuItem->PerformClick();
-                
-                return TRUE;
-            }
-        }
+    if (ToolStripMenuItem != nullptr)
+    {
+        return TRUE;
     }
 
     return FALSE;
-}
-
-BOOL Common::Forms::EditContextMenuStrip::ProcessChar(
-  INT nKeyCode)
-{
-    switch (nKeyCode)
-    {
-        case VK_ESCAPE:
-        case VK_BACK:
-        case VK_TAB:
-        case VK_SPACE:
-        case VK_DELETE:
-            return FALSE;
-    }
-
-    if (nKeyCode >= TEXT('0'))
-    {
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 void Common::Forms::EditContextMenuStrip::CreateContextMenu()
@@ -245,7 +262,7 @@ void Common::Forms::EditContextMenuStrip::CreateContextMenu()
 
     m_ToolStripMenuItemUndo = gcnew System::Windows::Forms::ToolStripMenuItem();
 
-    m_ToolStripMenuItemUndo->Name = "toolStripMenuItemUndo";
+    m_ToolStripMenuItemUndo->Name = CUndoMenuItemName;
     m_ToolStripMenuItemUndo->ShortcutKeys = System::Windows::Forms::Keys::Control | System::Windows::Forms::Keys::Z;
     m_ToolStripMenuItemUndo->Size = System::Drawing::Size(136, 22);
     m_ToolStripMenuItemUndo->Text = "&Undo";
@@ -264,7 +281,7 @@ void Common::Forms::EditContextMenuStrip::CreateContextMenu()
 
     m_ToolStripMenuItemCut = gcnew System::Windows::Forms::ToolStripMenuItem();
 
-    m_ToolStripMenuItemCut->Name = "toolStripMenuItemCut";
+    m_ToolStripMenuItemCut->Name = CCutMenuItemName;
     m_ToolStripMenuItemCut->ShortcutKeys = System::Windows::Forms::Keys::Control | System::Windows::Forms::Keys::X;
     m_ToolStripMenuItemCut->Size = System::Drawing::Size(136, 22);
     m_ToolStripMenuItemCut->Text = "Cu&t";
@@ -277,7 +294,7 @@ void Common::Forms::EditContextMenuStrip::CreateContextMenu()
 
     m_ToolStripMenuItemCopy = gcnew System::Windows::Forms::ToolStripMenuItem();
 
-    m_ToolStripMenuItemCopy->Name = "toolStripMenuItemCopy";
+    m_ToolStripMenuItemCopy->Name = CCopyMenuItemName;
     m_ToolStripMenuItemCopy->ShortcutKeys = System::Windows::Forms::Keys::Control | System::Windows::Forms::Keys::C;
     m_ToolStripMenuItemCopy->Size = System::Drawing::Size(136, 22);
     m_ToolStripMenuItemCopy->Text = "&Copy";
@@ -290,7 +307,7 @@ void Common::Forms::EditContextMenuStrip::CreateContextMenu()
 
     m_ToolStripMenuItemPaste = gcnew System::Windows::Forms::ToolStripMenuItem();
 
-    m_ToolStripMenuItemPaste->Name = "toolStripMenuItemPaste";
+    m_ToolStripMenuItemPaste->Name = CPasteMenuItemName;
     m_ToolStripMenuItemPaste->ShortcutKeys = System::Windows::Forms::Keys::Control | System::Windows::Forms::Keys::V;
     m_ToolStripMenuItemPaste->Size = System::Drawing::Size(136, 22);
     m_ToolStripMenuItemPaste->Text = "&Paste";
@@ -303,7 +320,7 @@ void Common::Forms::EditContextMenuStrip::CreateContextMenu()
 
     m_ToolStripMenuItemDelete = gcnew System::Windows::Forms::ToolStripMenuItem();
 
-    m_ToolStripMenuItemDelete->Name = "toolStripMenuItemDelete";
+    m_ToolStripMenuItemDelete->Name = CDeleteMenuItemName;
     m_ToolStripMenuItemDelete->ShortcutKeys = System::Windows::Forms::Keys::None;
     m_ToolStripMenuItemDelete->Size = System::Drawing::Size(136, 22);
     m_ToolStripMenuItemDelete->Text = "&Delete";
@@ -322,7 +339,7 @@ void Common::Forms::EditContextMenuStrip::CreateContextMenu()
 
     m_ToolStripMenuItemSelectAll = gcnew System::Windows::Forms::ToolStripMenuItem();
 
-    m_ToolStripMenuItemSelectAll->Name = "toolStripMenuItemSelectAll";
+    m_ToolStripMenuItemSelectAll->Name = CSelectAllMenuItemName;
     m_ToolStripMenuItemSelectAll->ShortcutKeys = System::Windows::Forms::Keys::Control | System::Windows::Forms::Keys::A;
     m_ToolStripMenuItemSelectAll->Size = System::Drawing::Size(136, 22);
     m_ToolStripMenuItemSelectAll->Text = "Select &All";
@@ -337,8 +354,7 @@ void Common::Forms::EditContextMenuStrip::CreateContextMenu()
     {
         m_TextBox->ContextMenuStrip = m_ContextMenuStrip;
     }
-
-    if (m_MaskedTextBox != nullptr)
+    else if (m_MaskedTextBox != nullptr)
     {
         m_MaskedTextBox->ContextMenuStrip = m_ContextMenuStrip;
     }
@@ -350,8 +366,7 @@ void Common::Forms::EditContextMenuStrip::DestroyContextMenu()
     {
         m_TextBox->ContextMenuStrip = nullptr;
     }
-
-    if (m_MaskedTextBox != nullptr)
+    else if (m_MaskedTextBox != nullptr)
     {
         m_MaskedTextBox->ContextMenuStrip = nullptr;
     }

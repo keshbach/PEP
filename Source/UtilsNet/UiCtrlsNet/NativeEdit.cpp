@@ -15,12 +15,12 @@
 
 #pragma endregion
 
-static LRESULT CALLBACK lEditWindowProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK lEditWindowProc(_In_ HWND hWnd, _In_ UINT nMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 #pragma region "Local Functions"
 
 static VOID lSubclassEditControl(
-  HWND hWnd)
+  _In_ HWND hWnd)
 {
     WNDPROC pWndProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_WNDPROC);
 
@@ -30,7 +30,7 @@ static VOID lSubclassEditControl(
 }
 
 static VOID lUnsubclassEditControl(
-  HWND hWnd)
+  _In_ HWND hWnd)
 {
     WNDPROC pPrevWndProc = (WNDPROC)::GetPropW(hWnd, CEditWndProcPropName);
     Common::Forms::NativeEdit^ NativeEdit = Common::Forms::NativeEdit::s_IntPtrNativeEditDict[System::IntPtr(hWnd)];
@@ -48,8 +48,8 @@ static VOID lUnsubclassEditControl(
 }
 
 static BOOL lEditProcessKeyDownMsg(
-  HWND hWnd,
-  INT nKeyCode)
+  _In_ HWND hWnd,
+  _In_ INT nKeyCode)
 {
     Common::Forms::NativeEdit^ NativeEdit = Common::Forms::NativeEdit::s_IntPtrNativeEditDict[System::IntPtr(hWnd)];
 
@@ -57,8 +57,8 @@ static BOOL lEditProcessKeyDownMsg(
 }
 
 static BOOL lEditProcessKeyUpMsg(
-  HWND hWnd,
-  INT nKeyCode)
+  _In_ HWND hWnd,
+  _In_ INT nKeyCode)
 {
     Common::Forms::NativeEdit^ NativeEdit = Common::Forms::NativeEdit::s_IntPtrNativeEditDict[System::IntPtr(hWnd)];
 
@@ -66,23 +66,18 @@ static BOOL lEditProcessKeyUpMsg(
 }
 
 static BOOL lEditProcessCharMsg(
-  HWND hWnd,
-  INT nKeyCode)
+  _In_ HWND hWnd,
+  _In_ INT nKeyCode)
 {
     Common::Forms::NativeEdit^ NativeEdit = Common::Forms::NativeEdit::s_IntPtrNativeEditDict[System::IntPtr(hWnd)];
-
-    if (NativeEdit->m_EditContextMenuStrip->ProcessChar(nKeyCode))
-    {
-        return TRUE;
-    }
 
     return NativeEdit->m_TextBoxKeyPress->OnTextBoxKeyPress((wchar_t)nKeyCode) ? TRUE : FALSE;
 }
 
 static VOID lEditProcessContextMenuMsg(
-  HWND hWnd,
-  INT nXPos,
-  INT nYPos)
+  _In_ HWND hWnd,
+  _In_ INT nXPos,
+  _In_ INT nYPos)
 {
     Common::Forms::NativeEdit^ NativeEdit = Common::Forms::NativeEdit::s_IntPtrNativeEditDict[System::IntPtr(hWnd)];
     POINT Point;
@@ -94,10 +89,10 @@ static VOID lEditProcessContextMenuMsg(
 }
 
 static LRESULT CALLBACK lEditWindowProc(
-  HWND hWnd,
-  UINT nMsg,
-  WPARAM wParam,
-  LPARAM lParam)
+  _In_ HWND hWnd,
+  _In_ UINT nMsg,
+  _In_ WPARAM wParam,
+  _In_ LPARAM lParam)
 {
     WNDPROC pPrevWndProc = (WNDPROC)::GetPropW(hWnd, CEditWndProcPropName);
 
@@ -141,7 +136,7 @@ static LRESULT CALLBACK lEditWindowProc(
 #pragma region "Constructor"
 
 Common::Forms::NativeEdit::NativeEdit(
-  HWND hWnd,
+  _In_ HWND hWnd,
   Common::Forms::ITextBoxKeyPress^ TextBoxKeyPress) :
   m_TextBoxKeyPress(TextBoxKeyPress)
 {

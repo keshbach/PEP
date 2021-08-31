@@ -22,7 +22,6 @@ namespace Common
 
             BOOL ProcessKeyDown(INT nKeyCode);
             BOOL ProcessKeyUp(INT nKeyCode);
-            BOOL ProcessChar(INT nKeyCode);
 
         protected:
             /// <summary>
