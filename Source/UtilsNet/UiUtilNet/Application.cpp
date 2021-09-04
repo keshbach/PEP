@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -11,6 +11,8 @@
 #include "MyThreadContext.h"
 
 #include "IProcessMessage.h"
+
+#include "Utility.h"
 
 #include "Includes/UtTemplates.h"
 
@@ -44,6 +46,7 @@ System::Boolean Common::Forms::Application::Run(Common::Forms::MainForm^ MainFor
 	System::Windows::Forms::Control^ Control;
 	System::Windows::Forms::Message^ Message;
 	System::Windows::Forms::IMessageFilter^ MessageFilter;
+	System::Windows::Forms::ToolStripMenuItem^ toolStripMenuItem;
 
 	if (!Initialize(MainForm))
     {
@@ -72,6 +75,17 @@ System::Boolean Common::Forms::Application::Run(Common::Forms::MainForm^ MainFor
 
 				if (MessageFilter->PreFilterMessage(*Message))
 				{
+					continue;
+				}
+			}
+			else if (Msg.message == WM_SYSKEYDOWN)
+			{
+				toolStripMenuItem = Common::Forms::Utility::FindToolStripMenuItemByHotKey((INT)Msg.wParam, MainForm->MainMenuStrip->Items);
+
+				if (toolStripMenuItem != nullptr)
+				{
+					toolStripMenuItem->ShowDropDown();
+
 					continue;
 				}
 			}
@@ -140,5 +154,5 @@ System::Boolean Common::Forms::Application::Uninitialize()
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

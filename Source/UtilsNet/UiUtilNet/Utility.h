@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -27,10 +27,16 @@ namespace Common
 
             static System::Drawing::Size^ CalcStringSize(System::String^ sText,
                                                          System::Drawing::Font^ TextFont);
+
+            static System::Windows::Forms::ToolStripMenuItem^ FindToolStripMenuItemByShortcutKeys(System::Int32 nKeyCode,
+                                                                                                  System::Windows::Forms::ToolStripItemCollection^ ToolStripItemCollection);
+
+            static System::Windows::Forms::ToolStripMenuItem^ FindToolStripMenuItemByHotKey(System::Int32 nKeyCode,
+                                                                                            System::Windows::Forms::ToolStripItemCollection^ ToolStripItemCollection);
         };
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

@@ -7,7 +7,7 @@
 #include "ContextMenuStrip.h"
 #include "EditContextMenuStrip.h" 
 
-#include "Includes/UtTemplates.h"
+#include "Includes/UtKeyboard.inl"
 
 #pragma region "Constants"
 
@@ -25,107 +25,16 @@
 
 #pragma region "Local Functions"
 
-static BOOL lIsKeyDown(
-  _In_ INT nKeyCode)
-{
-    return (::GetKeyState(nKeyCode) & 0x8000) ? TRUE : FALSE;
-}
-
 static BOOL lIsContextMenuKeyDown(
   _In_ INT nKeyCode)
 {
-    if ((nKeyCode == VK_F10 && lIsKeyDown(VK_SHIFT)) ||
+    if ((nKeyCode == VK_F10 && UtIsKeyDown(VK_SHIFT)) ||
         nKeyCode == VK_APPS)
     {
         return TRUE;
     }
 
     return FALSE;
-}
-
-static BOOL lKeyCodeMatchesToolStripMenuItem(
-  _In_ INT nKeyCode,
-  System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem)
-{
-    BOOL bShiftPressed, bControlPressed, bAltPressed;
-
-    if (nKeyCode != (((INT)ToolStripMenuItem->ShortcutKeys) & 0xFF))
-    {
-        return FALSE;
-    }
-
-    bShiftPressed = lIsKeyDown(VK_SHIFT);
-    bControlPressed = lIsKeyDown(VK_CONTROL);
-    bAltPressed = lIsKeyDown(VK_MENU);
-
-    if (((INT)ToolStripMenuItem->ShortcutKeys & (INT)System::Windows::Forms::Keys::Shift) != 0)
-    {
-        if (!bShiftPressed)
-        {
-            return FALSE;
-        }
-    }
-    else
-    {
-        if (bShiftPressed)
-        {
-            return FALSE;
-        }
-    }
-
-    if (((INT)ToolStripMenuItem->ShortcutKeys & (INT)System::Windows::Forms::Keys::Control) != 0)
-    {
-        if (!bControlPressed)
-        {
-            return FALSE;
-        }
-    }
-    else
-    {
-        if (bControlPressed)
-        {
-            return FALSE;
-        }
-    }
-
-    if (((INT)ToolStripMenuItem->ShortcutKeys & (INT)System::Windows::Forms::Keys::Alt) != 0)
-    {
-        if (!bAltPressed)
-        {
-            return FALSE;
-        }
-    }
-    else
-    {
-        if (bAltPressed)
-        {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
-}
-
-static System::Windows::Forms::ToolStripMenuItem^ lFindToolStripMenuItem(
-  _In_ INT nKeyCode,
-  System::Windows::Forms::ToolStripItemCollection^ ToolStripItemCollection)
-{
-    System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem;
-
-    for each (System::Windows::Forms::ToolStripItem ^ ToolStripItem in ToolStripItemCollection)
-    {
-        if (IsInstance<System::Windows::Forms::ToolStripMenuItem^>(ToolStripItem))
-        {
-            ToolStripMenuItem = (System::Windows::Forms::ToolStripMenuItem^)ToolStripItem;
-
-            if (lKeyCodeMatchesToolStripMenuItem(nKeyCode, ToolStripMenuItem))
-            {
-                return ToolStripMenuItem;
-            }
-        }
-    }
-
-    return nullptr;
 }
 
 static VOID lGenerateContextMenuMsg(
@@ -214,7 +123,7 @@ BOOL Common::Forms::EditContextMenuStrip::ProcessKeyDown(
         return TRUE;
     }
 
-    ToolStripMenuItem = lFindToolStripMenuItem(nKeyCode, m_ContextMenuStrip->Items);
+    ToolStripMenuItem = Common::Forms::Utility::FindToolStripMenuItemByShortcutKeys(nKeyCode, m_ContextMenuStrip->Items);
 
     if (ToolStripMenuItem != nullptr)
     {
@@ -238,7 +147,7 @@ BOOL Common::Forms::EditContextMenuStrip::ProcessKeyUp(
         return TRUE;
     }
 
-    ToolStripMenuItem = lFindToolStripMenuItem(nKeyCode, m_ContextMenuStrip->Items);
+    ToolStripMenuItem = Common::Forms::Utility::FindToolStripMenuItemByShortcutKeys(nKeyCode, m_ContextMenuStrip->Items);
 
     if (ToolStripMenuItem != nullptr)
     {
