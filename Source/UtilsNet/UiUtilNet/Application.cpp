@@ -63,15 +63,15 @@ System::Boolean Common::Forms::Application::Run(Common::Forms::MainForm^ MainFor
 
 		if (bResult == TRUE)
 		{
+			Message = System::Windows::Forms::Message::Create(System::IntPtr::IntPtr((void*)Msg.hwnd),
+                                                              Msg.message,
+                                                              System::IntPtr::IntPtr((void*)Msg.wParam),
+                                                              System::IntPtr::IntPtr((void*)Msg.lParam));
+
 			if (Msg.message == WM_KEYDOWN &&
 				IsInstance<System::Windows::Forms::IMessageFilter^>(MainForm))
 			{
 				MessageFilter = (System::Windows::Forms::IMessageFilter^)MainForm;
-
-				Message = System::Windows::Forms::Message::Create(System::IntPtr::IntPtr((void*)Msg.hwnd),
-			                                       		          Msg.message,
-					                                              System::IntPtr::IntPtr((void*)Msg.wParam),
-					                                              System::IntPtr::IntPtr((void*)Msg.lParam));
 
 				if (MessageFilter->PreFilterMessage(*Message))
 				{
@@ -96,12 +96,14 @@ System::Boolean Common::Forms::Application::Run(Common::Forms::MainForm^ MainFor
 
 			if (Control != nullptr)
 			{
-				Message = System::Windows::Forms::Message::Create(System::IntPtr::IntPtr((void*)Msg.hwnd),
-					                                              Msg.message,
-					                                              System::IntPtr::IntPtr((void*)Msg.wParam),
-					                                              System::IntPtr::IntPtr((void*)Msg.lParam));
-
 				if (Control->PreProcessMessage(*Message))
+				{
+					continue;
+				}
+			}
+			else
+			{
+				if (MainForm->PreProcessMessage(*Message))
 				{
 					continue;
 				}
