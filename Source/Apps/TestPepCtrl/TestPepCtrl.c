@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -11,6 +11,8 @@
 
 #include <Utils/UtHeapProcess.h>
 #include <Utils/UtConsole.h>
+
+#include <Apps/Includes/UtCommandLineParser.inl>
 
 #define CMaxDecimalNumberDigits 10
 #define CMaxHexNumberDigits 8
@@ -760,11 +762,23 @@ static int lRunTest(
   TTestFunc TestFunc,
   int nAddress)
 {
+    EUtPepCtrlDeviceType DeviceType = eUtPepCtrlUsbDeviceType;
     int nResult = 0;
+
+    if (UtCommandLineParserGetUseParallelPortConfiguration())
+    {
+        wprintf(L"TestPepCtrl: Using the parallel port device.\n");
+
+        DeviceType = eUtPepCtrlParallelPortDeviceType;
+    }
+    else
+    {
+        wprintf(L"TestPepCtrl: Using the USB device.\n");
+    }
 
     wprintf(L"TestPepCtrl: Initializing the Pep Control dll.\n");
 
-    if (!UtPepCtrlInitialize(&lDeviceChangeFunc))
+    if (!UtPepCtrlInitialize(DeviceType, &lDeviceChangeFunc))
     {
         wprintf(L"TestPepCtrl: Could not initialize the Pep Control dll.\n");
 
@@ -807,6 +821,7 @@ static int lDisplayHelp(void)
     wprintf(L"            [/test devicechange]\n");
 	wprintf(L"            [/test cedelay \"Nanosecs\"]\n");
 	wprintf(L"            [/test oedelay \"Nanosecs\"]\n");
+    wprintf(L"            [/parallelport]\n");
 	wprintf(L"\n");
     wprintf(L"    Programmer Tests\n");
     wprintf(L"    /test\n");
@@ -845,6 +860,9 @@ static int lDisplayHelp(void)
 	wprintf(L"        \"Nanosecs\"   - Delay in nanoseconds\n");
 	wprintf(L"                       (Enter 0x1f for hexadecimal or 39 for decimal)\n");
 	wprintf(L"\n");
+    wprintf(L"    Configuration\n");
+    wprintf(L"    /parallelport    - Use the parallel port instead of USB\n");
+    wprintf(L"\n");
 
     return -1;
 }
@@ -854,15 +872,21 @@ int _cdecl wmain(int argc, WCHAR* argv[])
     int nValue = 0;
     TTestWithValueFunc TestWithValueFunc;
     TTestFunc TestFunc;
-    int nResult;
+    int nResult, nTotalNewArgs;
+    LPCWSTR* ppszNewArgs;
 
     HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 
     SetConsoleCtrlHandler(lHandlerRoutine, TRUE);
 
-    if (lstrcmpi(argv[1], L"/test") == 0 && (argc == 3 || argc == 4))
+    UtCommandLineParserInitialize(argc, argv);
+
+    nTotalNewArgs = UtCommandLineParserGetTotalArguments();
+    ppszNewArgs = UtCommandLineParserGetArguments();
+
+    if ((nTotalNewArgs == 3 || nTotalNewArgs == 4) && lstrcmpiW(ppszNewArgs[1], L"/test") == 0)
     {
-        if (!lFindTestRun(argv[2], &TestWithValueFunc, &TestFunc))
+        if (!lFindTestRun(ppszNewArgs[2], &TestWithValueFunc, &TestFunc))
         {
             wprintf(L"TestPepCtrl: Unrecognized test command.\n");
 
@@ -873,7 +897,7 @@ int _cdecl wmain(int argc, WCHAR* argv[])
 
         if (TestWithValueFunc)
         {
-            if (argc != 4)
+            if (nTotalNewArgs != 4)
             {
                 wprintf(L"TestPepCtrl: Value argument missing.\n");
 
@@ -882,7 +906,7 @@ int _cdecl wmain(int argc, WCHAR* argv[])
                 goto End;
             }
 
-			if (!lParseNumber(argv[3], &nValue))
+			if (!lParseNumber(ppszNewArgs[3], &nValue))
 			{
                 wprintf(L"TestPepCtrl: Invalid number provided.\n");
 
@@ -900,11 +924,13 @@ int _cdecl wmain(int argc, WCHAR* argv[])
     }
 
 End:
+    UtCommandLineParserUninitialize();
+
     SetConsoleCtrlHandler(lHandlerRoutine, FALSE);
 
     return nResult;
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepLogic_H)
@@ -10,7 +10,7 @@
 #include <UtilsPep/UtPepLogicDefs.h>
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-MExternC PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext();
+MExternC PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext(VOID);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 MExternC VOID TUTPEPLOGICAPI UtPepLogicFreeLogicContext(_In_ PVOID pvLogicContext);
@@ -67,5 +67,5 @@ MExternC BOOLEAN TUTPEPLOGICAPI UtPepLogicSetDelays(_In_ TUtPepLogicData* pLogic
 #endif /* !defined(UtPepLogic_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/

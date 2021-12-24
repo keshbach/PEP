@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -8,6 +8,7 @@
 #include <setupapi.h>
 
 #include <ntddpar.h>
+#include <hidsdi.h>
 
 #include "UsbPrintGuid.h"
 
@@ -15,8 +16,13 @@
 
 #include <Utils/UtHeap.h>
 
+#include <Firmware/PepFirmwareDefs.h>
+
 #define CDeviceParallelPortPrefix L"\\Device\\ParallelPort"
 #define CDeviceParallelPortPrefixLen 20
+
+#define CDeviceUsbPortLocation L"PEP to EPROM+ Adapter #"
+#define CDeviceUsbPortLocationLen 23
 
 typedef struct tagTDeviceInfo
 {
@@ -30,11 +36,14 @@ static INT l_nLptPortDeviceInfoCount = 0;
 static TDeviceInfo* l_pUsbPrintPortDeviceInfo = NULL;
 static INT l_nUsbPrintPortDeviceInfoCount = 0;
 
+static TDeviceInfo* l_pUsbPortDeviceInfo = NULL;
+static INT l_nUsbPortDeviceInfoCount = 0;
+
 static BOOL lGetPortData(
   _In_ TDeviceInfo* pDeviceInfo,
   _In_ INT nPortData,
-  _Out_ LPWSTR pszData,
-  _Out_ LPINT pnDataLen)
+  _Out_writes_z_(*pnDataLen) LPWSTR pszData,
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen)
 {
     LPCWSTR pszPortData;
     INT nPortDataLen;
@@ -115,6 +124,15 @@ BOOL lReadDeviceRegPropString(
                                           &dwDataType, NULL, 0, &dwBufferLen) &&
         GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
+        if (GetLastError() == ERROR_INVALID_DATA)
+        {
+            *ppszValue = (LPWSTR)UtAllocMem(1);
+
+            **ppszValue = 0;
+
+            return TRUE;
+        }
+
         return FALSE;
     }
 
@@ -140,7 +158,7 @@ BOOL lReadDeviceRegPropString(
 static BOOL lEnumDeviceInterface(
   _In_ LPGUID pInterfaceGuid,
   _Out_ TDeviceInfo** ppDeviceInfo,
-  _Out_ LPINT pnDeviceInfoCount)
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnDeviceInfoCount)
 {
     HDEVINFO hDevInfo;
     DWORD dwDevCount, dwBufferLen;
@@ -152,7 +170,7 @@ static BOOL lEnumDeviceInterface(
     *ppDeviceInfo = NULL;
     *pnDeviceInfoCount = 0;
 
-    hDevInfo = SetupDiGetClassDevs(pInterfaceGuid, 0, 0,
+    hDevInfo = SetupDiGetClassDevs(pInterfaceGuid, NULL, NULL,
                                    DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 
     if (hDevInfo == INVALID_HANDLE_VALUE)
@@ -222,9 +240,9 @@ static BOOL lEnumDeviceInterface(
              FALSE == lReadDeviceRegPropString(hDevInfo, &DevInfoData,
                                                SPDRP_LOCATION_INFORMATION,
                                                &pDeviceInfo->pszLocation)) ||
-            FALSE == lReadDeviceRegPropString(hDevInfo, &DevInfoData,
-                                              SPDRP_PHYSICAL_DEVICE_OBJECT_NAME,
-                                              &pDeviceInfo->pszPhysicalDeviceObjectName))
+             FALSE == lReadDeviceRegPropString(hDevInfo, &DevInfoData,
+                                               SPDRP_PHYSICAL_DEVICE_OBJECT_NAME,
+                                               &pDeviceInfo->pszPhysicalDeviceObjectName))
         {
             if (pDeviceInfo->pszLocation)
             {
@@ -240,6 +258,136 @@ static BOOL lEnumDeviceInterface(
 
             *pnDeviceInfoCount -= 1;
         }
+
+        ++dwDevCount;
+    }
+
+    SetupDiDestroyDeviceInfoList(hDevInfo);
+
+    return TRUE;
+}
+
+static BOOL lIsUsbDevice(
+  _In_z_ LPCWSTR pszDevicePath)
+{
+    HANDLE hDevice;
+    HIDD_ATTRIBUTES Attributes;
+    BOOL bResult;
+
+    hDevice = CreateFile(pszDevicePath, 0, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                         NULL, OPEN_EXISTING, 0, NULL);
+
+    if (hDevice == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    bResult = FALSE;
+
+    Attributes.Size = sizeof(Attributes);
+
+    if (HidD_GetAttributes(hDevice, &Attributes))
+    {
+        if (Attributes.VendorID == CPepFirmwareVendorID &&
+            Attributes.ProductID == CPepFirmwareProductID)
+        {
+            bResult = TRUE;
+        }
+    }
+
+    CloseHandle(hDevice);
+
+    return bResult;
+}
+
+static BOOL lEnumUsbDeviceInterface(
+  _In_ LPGUID pInterfaceGuid,
+  _Out_ TDeviceInfo** ppDeviceInfo,
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnDeviceInfoCount)
+{
+    HDEVINFO hDevInfo;
+    DWORD dwDevCount, dwBufferLen, dwRequiredLen;
+    SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
+    PSP_DEVICE_INTERFACE_DETAIL_DATA pDeviceInterfaceDetailData;
+    TDeviceInfo* pDeviceInfo;
+
+    *ppDeviceInfo = NULL;
+    *pnDeviceInfoCount = 0;
+
+    hDevInfo = SetupDiGetClassDevs(pInterfaceGuid, NULL, NULL,
+                                   DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+
+    if (hDevInfo == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    dwDevCount = 0;
+
+    DeviceInterfaceData.cbSize = sizeof(DeviceInterfaceData);
+
+    while (SetupDiEnumDeviceInterfaces(hDevInfo, 0, pInterfaceGuid,
+                                       dwDevCount, &DeviceInterfaceData))
+    {
+        dwBufferLen = 0;
+
+        SetupDiGetDeviceInterfaceDetail(hDevInfo, &DeviceInterfaceData, 0, 0,
+                                        &dwBufferLen, 0);
+
+        pDeviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA)UtAllocMem(dwBufferLen);
+
+        pDeviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+        if (!SetupDiGetDeviceInterfaceDetail(hDevInfo, &DeviceInterfaceData,
+                                             pDeviceInterfaceDetailData,
+                                             dwBufferLen, &dwRequiredLen, NULL))
+        {
+            UtFreeMem(pDeviceInterfaceDetailData);
+
+            SetupDiDestroyDeviceInfoList(hDevInfo);
+
+            lFreeDeviceInfos(*ppDeviceInfo, *pnDeviceInfoCount);
+
+            *ppDeviceInfo = NULL;
+            *pnDeviceInfoCount = 0;
+
+            return FALSE;
+        }
+
+        if (lIsUsbDevice(pDeviceInterfaceDetailData->DevicePath))
+        {
+            if (*pnDeviceInfoCount > 0)
+            {
+                *ppDeviceInfo = (TDeviceInfo*)UtReAllocMem(*ppDeviceInfo,
+                                                           (*pnDeviceInfoCount + 1) * sizeof(TDeviceInfo));
+            }
+            else
+            {
+                *ppDeviceInfo = (TDeviceInfo*)UtAllocMem(sizeof(TDeviceInfo));
+            }
+
+            pDeviceInfo = *ppDeviceInfo + *pnDeviceInfoCount;
+
+            ZeroMemory(pDeviceInfo, sizeof(TDeviceInfo));
+
+            *pnDeviceInfoCount += 1;
+
+            dwBufferLen = (lstrlenW(pDeviceInterfaceDetailData->DevicePath) + 1) * sizeof(WCHAR);
+
+            pDeviceInfo->pszPhysicalDeviceObjectName = (LPWSTR)UtAllocMem(dwBufferLen);
+
+            StringCbCopyW(pDeviceInfo->pszPhysicalDeviceObjectName, dwBufferLen,
+                          pDeviceInterfaceDetailData->DevicePath);
+
+            dwBufferLen = (CDeviceUsbPortLocationLen + 5) * sizeof(WCHAR);
+
+            pDeviceInfo->pszLocation = (LPWSTR)UtAllocMem(dwBufferLen);
+
+            StringCbPrintf(pDeviceInfo->pszLocation, dwBufferLen, L"%s%d",
+                           CDeviceUsbPortLocation, *pnDeviceInfoCount);
+        }
+
+        UtFreeMem(pDeviceInterfaceDetailData);
 
         ++dwDevCount;
     }
@@ -280,7 +428,7 @@ BOOL UTLISTPORTSAPI UtListPortsInitialize(VOID)
 {
     GUID InterfaceGuid;
 
-    if (l_pLptPortDeviceInfo || l_pUsbPrintPortDeviceInfo)
+    if (l_pLptPortDeviceInfo || l_pUsbPrintPortDeviceInfo || l_pUsbPortDeviceInfo)
     {
         return TRUE;
     }
@@ -312,6 +460,16 @@ BOOL UTLISTPORTSAPI UtListPortsInitialize(VOID)
         return FALSE;
     }
 
+    HidD_GetHidGuid(&InterfaceGuid);
+
+    if (!lEnumUsbDeviceInterface(&InterfaceGuid, &l_pUsbPortDeviceInfo,
+                                 &l_nUsbPortDeviceInfoCount))
+    {
+        UtListPortsUninitialize();
+
+        return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -333,6 +491,14 @@ BOOL UTLISTPORTSAPI UtListPortsUninitialize(VOID)
         l_nUsbPrintPortDeviceInfoCount = 0;
     }
 
+    if (l_pUsbPortDeviceInfo)
+    {
+        lFreeDeviceInfos(l_pUsbPortDeviceInfo, l_nUsbPortDeviceInfoCount);
+
+        l_pUsbPortDeviceInfo = NULL;
+        l_nUsbPortDeviceInfoCount = 0;
+    }
+
     if (UtUninitHeap() == FALSE)
     {
         return FALSE;
@@ -342,7 +508,7 @@ BOOL UTLISTPORTSAPI UtListPortsUninitialize(VOID)
 }
 
 BOOL UTLISTPORTSAPI UtListPortsGetLptPortCount(
-  _Out_ LPINT pnCount)
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnCount)
 {
     *pnCount = l_nLptPortDeviceInfoCount;
 
@@ -352,8 +518,8 @@ BOOL UTLISTPORTSAPI UtListPortsGetLptPortCount(
 BOOL UTLISTPORTSAPI UtListPortsGetLptPortData(
   _In_ INT nIndex,
   _In_ INT nPortData,
-  _Out_ LPWSTR pszData,
-  _Out_ LPINT pnDataLen)
+  _Out_writes_z_(*pnDataLen) LPWSTR pszData,
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen)
 {
     TDeviceInfo* pDeviceInfo;
 
@@ -368,7 +534,7 @@ BOOL UTLISTPORTSAPI UtListPortsGetLptPortData(
 }
 
 BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortCount(
-  _Out_ LPINT pnCount)
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnCount)
 {
     *pnCount = l_nUsbPrintPortDeviceInfoCount;
 
@@ -378,8 +544,8 @@ BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortCount(
 BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(
   _In_ INT nIndex,
   _In_ INT nPortData,
-  _Out_ LPWSTR pszData,
-  _Out_ LPINT pnDataLen)
+  _Out_writes_z_(*pnDataLen) LPWSTR pszData,
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen)
 {
     TDeviceInfo* pDeviceInfo;
 
@@ -393,6 +559,32 @@ BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(
     return lGetPortData(pDeviceInfo, nPortData, pszData, pnDataLen);
 }
 
+BOOL UTLISTPORTSAPI UtListPortsGetUsbPortCount(
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnCount)
+{
+    *pnCount = l_nUsbPortDeviceInfoCount;
+
+    return TRUE;
+}
+
+BOOL UTLISTPORTSAPI UtListPortsGetUsbPortData(
+  _In_ INT nIndex,
+  _In_ INT nPortData,
+  _Out_writes_z_(*pnDataLen) LPWSTR pszData,
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen)
+{
+    TDeviceInfo* pDeviceInfo;
+
+    if (nIndex >= l_nUsbPortDeviceInfoCount)
+    {
+        return FALSE;
+    }
+
+    pDeviceInfo = &l_pUsbPortDeviceInfo[nIndex];
+
+    return lGetPortData(pDeviceInfo, nPortData, pszData, pnDataLen);
+}
+
 /***************************************************************************/
-/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2021 Kevin Eshbach                                  */
 /***************************************************************************/

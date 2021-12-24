@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepCtrl_H)
@@ -21,12 +21,12 @@
 
 #pragma region "Enumerations"
 
-typedef enum tagEUtPepCtrlPortType
+typedef enum tagEUtPepCtrlDeviceType
 {
-    eUtPepCtrlNonePortType,
-    eUtPepCtrlParallelPortType,
-    eUtPepCtrlUsbPrintPortType
-} EUtPepCtrlPortType;
+    eUtPepCtrlParallelPortDeviceType,
+    eUtPepCtrlUsbPrintDeviceType,
+    eUtPepCtrlUsbDeviceType
+} EUtPepCtrlDeviceType;
 
 typedef enum tagEUtPepCtrlProgrammerMode
 {
@@ -100,23 +100,41 @@ typedef struct tagTUtPepCtrlProgramUserData
 
 #pragma endregion
 
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlInitialize(_In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc);
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlInitialize(_In_ EUtPepCtrlDeviceType DeviceType, _In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc);
+
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlUninitialize(VOID);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetPortSettings(_In_ EUtPepCtrlPortType PortType, _In_ LPCWSTR pszPortDeviceName);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlGetPortType(_Out_ EUtPepCtrlPortType* pPortType);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlGetPortDeviceName(_Out_ LPWSTR pszPortDeviceName, _Out_ LPINT pnPortDeviceNameLen);
+
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlGetDeviceName(_Out_ LPWSTR pszDeviceName, _Out_ LPINT pnDeviceNameLen);
+
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetDeviceName(_Const_ _In_ LPCWSTR pszDeviceName);
+
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetDelaySettings(_In_ UINT32 nChipEnableNanoSeconds, _In_ UINT32 nOutputEnableNanoSeconds);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(_Out_ LPBOOL pbPresent);
+
+_Success_(return)
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(_Out_writes_(sizeof(BOOL)) LPBOOL pbPresent);
+
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlReset(VOID);
+
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(_In_ EUtPepCtrlProgrammerMode ProgrammerMode);
+
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetVccMode(_In_ EUtPepCtrlVccMode VccMode);
+
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetPinPulseMode(_In_ EUtPepCtrlPinPulseMode PinPulseMode);
+
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlSetVppMode(_In_ EUtPepCtrlVppMode VppMode);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadData(_In_ UINT32 nAddress, _Out_ LPBYTE pbyData, _Out_ UINT32 nDataLen);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(_In_ const TUtPepCtrlReadUserData* pReadUserData, _In_ UINT32 nReadUserDataLen, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadUserDataWithDelay(_In_ const TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay, _In_ UINT32 nReadUserDataWithDelayLen, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramData(_In_ UINT nAddress, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
-MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(_In_ const TUtPepCtrlProgramUserData* pProgramUserData, _In_ UINT32 nProgramUserDataLen, _Out_ LPBYTE pbyData, _In_ UINT32 nDataLen);
+
+_Success_(return)
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadData(_In_ UINT32 nAddress, _Out_writes_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
+
+_Success_(return)
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(_Const_ _In_reads_(nReadUserDataLen) const TUtPepCtrlReadUserData* pReadUserData, _In_ UINT32 nReadUserDataLen, _Out_writes_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
+
+_Success_(return)
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlReadUserDataWithDelay(_Const_ _In_reads_(nReadUserDataWithDelayLen) const TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay, _In_ UINT32 nReadUserDataWithDelayLen, _Out_writes_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
+
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramData(_In_ UINT nAddress, _Const_ _In_reads_(nDataLen) const LPBYTE pbyData, _In_ UINT32 nDataLen);
+
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(_Const_ _In_reads_(nProgramUserDataLen) const TUtPepCtrlProgramUserData* pProgramUserData, _In_ UINT32 nProgramUserDataLen, _Const_ _In_reads_(nDataLen) const LPBYTE pbyData, _In_ UINT32 nDataLen);
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
@@ -127,5 +145,5 @@ MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(_In_ const TUtPepCtrlProgram
 #endif /* UtPepCtrl_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/

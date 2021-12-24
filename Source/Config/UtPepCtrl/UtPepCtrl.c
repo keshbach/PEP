@@ -1,516 +1,235 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/
+
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
 #include <windows.h>
 
-#include <strsafe.h>
-
-#include <winioctl.h>
-
-#include <assert.h>
-
-#include <Drivers/PepCtrlDefs.h>
-#include <Drivers/PepCtrlIOCTL.h>
+#include <Config/UtPepCtrl.h>
 
 #include <UtilsPep/UtPepLogicDefs.h>
 
-#include <Config/UtPepCtrl.h>
-
-#include <Includes/UtMacros.h>
-
 #include <Utils/UtHeap.h>
+
+#include "ParallelPortPepCtrl.h"
+#include "UsbPepCtrl.h"
+
+#pragma region "Type Definitions"
+
+typedef BOOL (*TInitializeFunc)(_In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc);
+typedef BOOL (*TUninitializeFunc)(VOID);
+typedef BOOL (*TGetDeviceNameFunc)(_Out_ LPWSTR pszDeviceName, _Out_ LPINT pnDeviceNameLen);
+typedef BOOL (*TSetDeviceNameFunc)(_Const_ _In_ LPCWSTR pszDeviceName);
+typedef BOOL (*TSetDelaySettingsFunc)(_In_ UINT32 nChipEnableNanoSeconds, _In_ UINT32 nOutputEnableNanoSeconds);
+typedef BOOL (*TIsDevicePresentFunc)(_Out_writes_(sizeof(BOOL)) LPBOOL pbPresent);
+typedef BOOL (*TReset)(VOID);
+typedef BOOL (*TSetProgrammerModeFunc)(_In_ UINT32 nProgrammerMode);
+typedef BOOL (*TSetVccModeFunc)(_In_ UINT32 nVccMode);
+typedef BOOL (*TSetPinPulseModeFunc)(_In_ UINT32 nPinPulseMode);
+typedef BOOL (*TSetVppModeFunc)(_In_ UINT32 nVppMode);
+typedef BOOL (*TReadDataFunc)(_In_ UINT32 nAddress, _Out_writes_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
+typedef BOOL (*TReadUserDataFunc)(_Const_ _In_reads_(nReadUserDataLen) const TUtPepCtrlReadUserData* pReadUserData, _In_ UINT32 nReadUserDataLen, _Out_writes_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
+typedef BOOL (*TReadUserDataWithDelayFunc)(_Const_ _In_reads_(nReadUserDataWithDelayLen) const TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay, _In_ UINT32 nReadUserDataWithDelayLen, _Out_writes_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
+typedef BOOL (*TProgramDataFunc)(_In_ UINT nAddress, _Const_ _In_reads_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
+typedef BOOL (*TProgramUserDataFunc)(_Const_ _In_reads_(nProgramUserDataLen) const TUtPepCtrlProgramUserData* pProgramUserData, _In_ UINT32 nProgramUserDataLen, _Const_ _In_reads_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
+
+#pragma endregion
 
 #pragma region "Structures"
 
-typedef struct tagTDeviceData
+typedef struct tagTDeviceFuncs
 {
-    HANDLE hPepCtrl;
-    HANDLE hDeviceChangeThread;
-    DWORD dwDeviceChangeThreadId;
-} TDeviceData;
-
-typedef struct tagTDeviceChangeData
-{
-    HANDLE hPepCtrl;
-    HANDLE hEndThreadEvent;
-    TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc;
-} TDeviceChangedData;
+    TInitializeFunc pInitializeFunc;
+    TUninitializeFunc pUninitializeFunc;
+    TGetDeviceNameFunc pGetDeviceNameFunc;
+    TSetDeviceNameFunc pSetDeviceNameFunc;
+    TSetDelaySettingsFunc pSetDelaySettingsFunc;
+    TIsDevicePresentFunc pIsDevicePresentFunc;
+    TReset pResetFunc;
+    TSetProgrammerModeFunc pSetProgrammerModeFunc;
+    TSetVccModeFunc pSetVccModeFunc;
+    TSetPinPulseModeFunc pSetPinPulseModeFunc;
+    TSetVppModeFunc pSetVppModeFunc;
+    TReadDataFunc pReadDataFunc;
+    TReadUserDataFunc pReadUserDataFunc;
+    TReadUserDataWithDelayFunc pReadUserDataWithDelayFunc;
+    TProgramDataFunc pProgramDataFunc;
+    TProgramUserDataFunc pProgramUserDataFunc;
+} TDeviceFuncs;
 
 #pragma endregion
 
 #pragma region "Local Variables"
 
 static BOOL l_bInitialized = FALSE;
-static TDeviceData l_DeviceData = {INVALID_HANDLE_VALUE, NULL, 0};
-static TDeviceChangedData l_DeviceChangeData = {NULL, NULL, NULL};
-static UINT32 l_nEnableOutputEnable = TRUE;
-static UINT32 l_nDisableOutputEnable = FALSE;
-
-#if !defined(NDEBUG)
-static DWORD l_dwCurrentThreadId = 0;
-#endif
-
-#pragma endregion
-
-#pragma region "Local Functions"
-
-static DWORD WINAPI lDeviceChangeThreadFunc(
-  _In_ LPVOID pvParameter)
-{
-    TDeviceChangedData* pDeviceChangeData = (TDeviceChangedData*)pvParameter;
-    BOOL bQuit = FALSE;
-    OVERLAPPED Overlapped;
-    HANDLE hEvents[2];
-    UINT32 nDeviceChange;
-    DWORD dwBytesReturned, dwResult;
-
-    ZeroMemory(&Overlapped, sizeof(Overlapped));
-
-    Overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-
-    if (Overlapped.hEvent == NULL)
-    {
-        return 0;
-    }
-
-    hEvents[0] = Overlapped.hEvent;
-    hEvents[1] = pDeviceChangeData->hEndThreadEvent;
-
-    while (bQuit == FALSE)
-    {
-        nDeviceChange = 0;
-        dwBytesReturned = 0;
-
-        if (FALSE == DeviceIoControl(pDeviceChangeData->hPepCtrl,
-                                     IOCTL_PEPCTRL_DEVICE_NOTIFICATION,
-                                     NULL, 0,
-                                     &nDeviceChange, sizeof(nDeviceChange),
-                                     &dwBytesReturned,
-                                     &Overlapped) &&
-            GetLastError() == ERROR_IO_PENDING)
-        {
-            dwResult = WaitForMultipleObjects(MArrayLen(hEvents),
-                                              hEvents, FALSE, INFINITE);
-
-            switch (dwResult)
-            {
-                case WAIT_OBJECT_0:
-                    if (pDeviceChangeData->pDeviceChangeFunc)
-                    {
-                        switch (nDeviceChange)
-                        {
-                            case CPepCtrlDeviceArrived:
-                                pDeviceChangeData->pDeviceChangeFunc(eUtPepCtrlDeviceArrived);
-                                break;
-                            case CPepCtrlDeviceRemoved:
-                                pDeviceChangeData->pDeviceChangeFunc(eUtPepCtrlDeviceRemoved);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-
-                    ResetEvent(Overlapped.hEvent);
-                    break;
-                case WAIT_OBJECT_0 + 1:
-                    CancelIo(pDeviceChangeData->hPepCtrl);
-
-                    bQuit = TRUE;
-                    break;
-                default:
-                    break;
-            }
-        }
-        else
-        {
-            bQuit = TRUE;
-        }
-    }
-
-    CloseHandle(Overlapped.hEvent);
-
-    return 1;
-}
-
-static TPepCtrlPortSettings* lAllocPortSettings(VOID)
-{
-    int nPortSettingsLen = sizeof(TPepCtrlPortSettings) + 50;
-    BOOL bResult;
-    DWORD dwBytesReturned;
-    TPepCtrlPortSettings* pPortSettings;
-
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
-    {
-        return FALSE;
-    }
-
-    while (nPortSettingsLen < 32768)
-    {
-        pPortSettings = (TPepCtrlPortSettings*)UtAllocMem(nPortSettingsLen);
-
-        if (pPortSettings == NULL)
-        {
-            return NULL;
-        }
-
-        bResult = DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_GET_PORT_SETTINGS,
-                                  NULL, 0,
-                                  pPortSettings, nPortSettingsLen,
-                                  &dwBytesReturned, NULL);
-
-        if (bResult && dwBytesReturned >= sizeof(TPepCtrlPortSettings))
-        {
-            return pPortSettings;
-        }
-
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-        {
-            UtFreeMem(pPortSettings);
-
-            return NULL;
-        }
-
-        nPortSettingsLen += 50;
-
-        UtFreeMem(pPortSettings);
-    }
-
-    return NULL;
-}
-
-static VOID lFreePortSettings(TPepCtrlPortSettings* pPortSettings)
-{
-    UtFreeMem(pPortSettings);
-}
+static TDeviceFuncs l_DeviceFuncs = {NULL};
 
 #pragma endregion
 
 BOOL UTPEPCTRLAPI UtPepCtrlInitialize(
+  _In_ EUtPepCtrlDeviceType DeviceType,
   _In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc)
 {
-    if (l_bInitialized == FALSE)
+    if (l_bInitialized)
     {
-        if (UtInitHeap() == FALSE)
-        {
-            return FALSE;
-        }
-
-        l_DeviceChangeData.pDeviceChangeFunc = pDeviceChangeFunc;
-
-        l_DeviceData.hPepCtrl = CreateFile(CPepCtrlDeviceName, GENERIC_READ,
-                                           0, NULL, OPEN_EXISTING,
-                                           FILE_FLAG_OVERLAPPED, NULL);
-
-        if (l_DeviceData.hPepCtrl != INVALID_HANDLE_VALUE)
-        {
-            l_DeviceChangeData.hPepCtrl = l_DeviceData.hPepCtrl;
-            l_DeviceChangeData.hEndThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-
-            if (l_DeviceChangeData.hEndThreadEvent == NULL)
-            {
-                CloseHandle(l_DeviceData.hPepCtrl);
-
-                UtUninitHeap();
-
-                return FALSE;
-            }
-
-            l_DeviceData.hDeviceChangeThread = CreateThread(NULL, 0, &lDeviceChangeThreadFunc,
-                                                            &l_DeviceChangeData, 0,
-                                                            &l_DeviceData.dwDeviceChangeThreadId);
-
-            if (l_DeviceData.hDeviceChangeThread == NULL)
-            {
-                CloseHandle(l_DeviceChangeData.hEndThreadEvent);
-                CloseHandle(l_DeviceData.hPepCtrl);
-
-                UtUninitHeap();
-
-                return FALSE;
-            }
-
-            l_bInitialized = TRUE;
-
-#if !defined(NDEBUG)
-            l_dwCurrentThreadId = GetCurrentThreadId();
-#endif
-
-            return TRUE;
-        }
+        return TRUE;
+    }
+    
+    if (UtInitHeap() == FALSE)
+    {
+        return FALSE;
     }
 
-    UtUninitHeap();
+    switch (DeviceType)
+    {
+        case eUtPepCtrlParallelPortDeviceType:
+            l_DeviceFuncs.pInitializeFunc = &ParallelPortPepCtrlInitialize;
+            l_DeviceFuncs.pUninitializeFunc = &ParallelPortPepCtrlUninitialize;
+            l_DeviceFuncs.pGetDeviceNameFunc = &ParallelPortPepCtrlGetDeviceName;
+            l_DeviceFuncs.pSetDeviceNameFunc = &ParallelPortPepCtrlSetDeviceName;
+            l_DeviceFuncs.pSetDelaySettingsFunc = &ParallelPortPepCtrlSetDelaySettings;
+            l_DeviceFuncs.pIsDevicePresentFunc = &ParallelPortPepCtrlIsDevicePresent;
+            l_DeviceFuncs.pResetFunc = &ParallelPortPepCtrlReset;
+            l_DeviceFuncs.pSetProgrammerModeFunc = &ParallelPortPepCtrlSetProgrammerMode;
+            l_DeviceFuncs.pSetVccModeFunc = &ParallelPortPepCtrlSetVccMode;
+            l_DeviceFuncs.pSetPinPulseModeFunc = &ParallelPortPepCtrlSetPinPulseMode;
+            l_DeviceFuncs.pSetVppModeFunc = &ParallelPortPepCtrlSetVppMode;
+            l_DeviceFuncs.pReadDataFunc = &ParallelPortPepCtrlReadData;
+            l_DeviceFuncs.pReadUserDataFunc = &ParallelPortPepCtrlReadUserData;
+            l_DeviceFuncs.pReadUserDataWithDelayFunc = &ParallelPortPepCtrlReadUserDataWithDelay;
+            l_DeviceFuncs.pProgramDataFunc = &ParallelPortPepCtrlProgramData;
+            l_DeviceFuncs.pProgramUserDataFunc = &ParallelPortPepCtrlProgramUserData;
+            break;
+        case eUtPepCtrlUsbDeviceType:
+            l_DeviceFuncs.pInitializeFunc = &UsbPepCtrlInitialize;
+            l_DeviceFuncs.pUninitializeFunc = &UsbPepCtrlUninitialize;
+            l_DeviceFuncs.pGetDeviceNameFunc = &UsbPepCtrlGetDeviceName;
+            l_DeviceFuncs.pSetDeviceNameFunc = &UsbPepCtrlSetDeviceName;
+            l_DeviceFuncs.pSetDelaySettingsFunc = &UsbPepCtrlSetDelaySettings;
+            l_DeviceFuncs.pIsDevicePresentFunc = &UsbPepCtrlIsDevicePresent;
+            l_DeviceFuncs.pResetFunc = &UsbPepCtrlReset;
+            l_DeviceFuncs.pSetProgrammerModeFunc = &UsbPepCtrlSetProgrammerMode;
+            l_DeviceFuncs.pSetVccModeFunc = &UsbPepCtrlSetVccMode;
+            l_DeviceFuncs.pSetPinPulseModeFunc = &UsbPepCtrlSetPinPulseMode;
+            l_DeviceFuncs.pSetVppModeFunc = &UsbPepCtrlSetVppMode;
+            l_DeviceFuncs.pReadDataFunc = &UsbPepCtrlReadData;
+            l_DeviceFuncs.pReadUserDataFunc = &UsbPepCtrlReadUserData;
+            l_DeviceFuncs.pReadUserDataWithDelayFunc = &UsbPepCtrlReadUserDataWithDelay;
+            l_DeviceFuncs.pProgramDataFunc = &UsbPepCtrlProgramData;
+            l_DeviceFuncs.pProgramUserDataFunc = &UsbPepCtrlProgramUserData;
+            break;
+        default:
+            UtUninitHeap();
 
-    return FALSE;
+            return FALSE;
+    }
+
+    if (!l_DeviceFuncs.pInitializeFunc(pDeviceChangeFunc))
+    {
+        UtUninitHeap();
+
+        return FALSE;
+    }
+
+    l_bInitialized = TRUE;
+
+    return TRUE;
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlUninitialize(VOID)
+{
+    BOOL bResult;
+
+    if (!l_bInitialized)
+    {
+        return FALSE;
+    }
+
+    bResult = l_DeviceFuncs.pUninitializeFunc();
+
+    UtUninitHeap();
+
+    l_bInitialized = FALSE;
+
+    return bResult;
+}
+
+BOOL UTPEPCTRLAPI UtPepCtrlGetDeviceName(
+    _Out_ LPWSTR pszDeviceName,
+    _Out_ LPINT pnDeviceNameLen)
+{
+    if (pszDeviceName)
+    {
+        *pszDeviceName = 0;
+    }
+
+    if (pnDeviceNameLen)
+    {
+        *pnDeviceNameLen = 0;
+    }
+
+    if (!l_bInitialized)
+    {
+        return FALSE;
+    }
+
+    return l_DeviceFuncs.pGetDeviceNameFunc(pszDeviceName, pnDeviceNameLen);
+}
+
+BOOL UTPEPCTRLAPI UtPepCtrlSetDeviceName(
+  _Const_ _In_ LPCWSTR pszDeviceName)
 {
     BOOL bResult = FALSE;
 
     if (l_bInitialized == TRUE)
     {
-        assert(l_dwCurrentThreadId == GetCurrentThreadId());
-
-        SetEvent(l_DeviceChangeData.hEndThreadEvent);
-
-        WaitForSingleObject(l_DeviceData.hDeviceChangeThread, INFINITE);
-
-        CloseHandle(l_DeviceData.hDeviceChangeThread);
-
-        CloseHandle(l_DeviceChangeData.hEndThreadEvent);
-
-        CloseHandle(l_DeviceData.hPepCtrl);
-
-        bResult = UtUninitHeap();
-
-        l_bInitialized = FALSE;
-
-#if !defined(NDEBUG)
-        l_dwCurrentThreadId = 0;
-#endif
+        bResult = l_DeviceFuncs.pSetDeviceNameFunc(pszDeviceName);
     }
 
     return bResult;
-}
-
-BOOL UTPEPCTRLAPI UtPepCtrlSetPortSettings(
-  _In_ EUtPepCtrlPortType PortType,
-  _In_ LPCWSTR pszPortDeviceName)
-{
-    BOOL bResult;
-    DWORD dwBytesReturned;
-    int nPortDeviceNameLen, nPortSettingsLen;
-    TPepCtrlPortSettings* pPortSettings;
-
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
-    {
-        return FALSE;
-    }
-
-    if (PortType != eUtPepCtrlNonePortType &&
-        PortType != eUtPepCtrlParallelPortType &&
-        PortType != eUtPepCtrlUsbPrintPortType)
-    {
-        return FALSE;
-    }
-
-    if (PortType != eUtPepCtrlNonePortType)
-    {
-        if (pszPortDeviceName == NULL)
-        {
-            return FALSE;
-        }
-
-        nPortDeviceNameLen = lstrlenW(pszPortDeviceName);
-
-        if (nPortDeviceNameLen == 0)
-        {
-            return FALSE;
-        }
-    }
-    else
-    {
-        pszPortDeviceName = L"";
-        nPortDeviceNameLen = 0;
-    }
-
-    nPortSettingsLen = sizeof(TPepCtrlPortSettings) + (nPortDeviceNameLen * sizeof(WCHAR));
-    pPortSettings = (TPepCtrlPortSettings*)UtAllocMem(nPortSettingsLen);
-
-    if (pPortSettings == NULL)
-    {
-        return FALSE;
-    }
-
-    ZeroMemory(pPortSettings, nPortSettingsLen);
-
-    switch (PortType)
-    {
-        case eUtPepCtrlNonePortType:
-            pPortSettings->nPortType = CPepCtrlNoPortType;
-            break;
-        case eUtPepCtrlParallelPortType:
-            pPortSettings->nPortType = CPepCtrlParallelPortType;
-            break;
-        case eUtPepCtrlUsbPrintPortType:
-            pPortSettings->nPortType = CPepCtrlUsbPrintPortType;
-            break;
-    }
-
-    StringCchCopyW(pPortSettings->cPortDeviceName, nPortDeviceNameLen + 1, pszPortDeviceName);
-
-    bResult = DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_PORT_SETTINGS,
-                              pPortSettings, nPortSettingsLen,
-                              NULL, 0, &dwBytesReturned,
-                              NULL);
-
-    UtFreeMem(pPortSettings);
-
-    return bResult;
-}
-
-BOOL UTPEPCTRLAPI UtPepCtrlGetPortType(
-  _Out_ EUtPepCtrlPortType* pPortType)
-{
-    TPepCtrlPortSettings* pPortSettings;
-
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
-    {
-        return FALSE;
-    }
-
-    if (pPortType == NULL)
-    {
-        return FALSE;
-    }
-
-    pPortSettings = lAllocPortSettings();
-
-    if (pPortSettings == NULL)
-    {
-        return FALSE;
-    }
-
-    *pPortType = pPortSettings->nPortType;
-
-    lFreePortSettings(pPortSettings);
-
-    return TRUE;
-}
-
-BOOL UTPEPCTRLAPI UtPepCtrlGetPortDeviceName(
-  _Out_ LPWSTR pszPortDeviceName,
-  _Out_ LPINT pnPortDeviceNameLen)
-{
-    TPepCtrlPortSettings* pPortSettings;
-
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
-    {
-        return FALSE;
-    }
-
-    if (pnPortDeviceNameLen == NULL)
-    {
-        return FALSE;
-    }
-
-    pPortSettings = lAllocPortSettings();
-
-    if (pPortSettings == NULL)
-    {
-        return FALSE;
-    }
-
-    if (pszPortDeviceName == NULL)
-    {
-        *pnPortDeviceNameLen = lstrlenW(pPortSettings->cPortDeviceName) + 1;
-
-        lFreePortSettings(pPortSettings);
-
-        return TRUE;
-    }
-
-    if (*pnPortDeviceNameLen < lstrlenW(pPortSettings->cPortDeviceName) + 1)
-    {
-        lFreePortSettings(pPortSettings);
-
-        return FALSE;
-    }
-
-    StringCchCopyW(pszPortDeviceName, *pnPortDeviceNameLen, pPortSettings->cPortDeviceName);
-
-    lFreePortSettings(pPortSettings);
-
-    return TRUE;
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlSetDelaySettings(
   _In_ UINT32 nChipEnableNanoSeconds,
   _In_ UINT32 nOutputEnableNanoSeconds)
 {
-	DWORD dwBytesReturned;
-	TPepCtrlDelaySettings DelaySettings;
+    if (!l_bInitialized)
+    {
+        return FALSE;
+    }
 
-	if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
-	{
-		return FALSE;
-	}
-
-	DelaySettings.nChipEnableNanoseconds = nChipEnableNanoSeconds;
-	DelaySettings.nOutputEnableNanoseconds = nOutputEnableNanoSeconds;
-
-	if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_DELAY_SETTINGS,
-						 &DelaySettings, sizeof(DelaySettings), NULL, 0,
-						 &dwBytesReturned, NULL))
-	{
-		return FALSE;
-	}
-
-	return TRUE;
+    return l_DeviceFuncs.pSetDelaySettingsFunc(nChipEnableNanoSeconds, nOutputEnableNanoSeconds);
 }
 
+_Success_(return)
 BOOL UTPEPCTRLAPI UtPepCtrlIsDevicePresent(
-  _Out_ LPBOOL pbPresent)
+  _Out_writes_(sizeof(BOOL)) LPBOOL pbPresent)
 {
-    DWORD dwBytesReturned;
-    UINT32 nDeviceStatus;
-
-    *pbPresent = FALSE;
-
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
 
-    if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_GET_DEVICE_STATUS,
-                         NULL, 0, &nDeviceStatus, sizeof(nDeviceStatus),
-                         &dwBytesReturned,  NULL))
-    {
-        return FALSE;
-    }
-
-    if (nDeviceStatus == CPepCtrlDevicePresent)
-    {
-        *pbPresent = TRUE;
-    }
-
-    return TRUE;
+    return l_DeviceFuncs.pIsDevicePresentFunc(pbPresent);
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlReset(VOID)
 {
-    UINT32 nAddress = 0;
-    DWORD dwBytesReturned;
-
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
 
-    if (!UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode))
-    {
-        return FALSE;
-    }
-
-    if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_ADDRESS,
-                         &nAddress, sizeof(nAddress), NULL, 0,
-                         &dwBytesReturned, NULL))
-    {
-        return FALSE;
-    }
-
-    return TRUE;
+    return l_DeviceFuncs.pResetFunc();
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(
   _In_ EUtPepCtrlProgrammerMode ProgrammerMode)
 {
-    DWORD dwBytesReturned;
     UINT32 nProgrammerMode;
 
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
@@ -530,24 +249,15 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetProgrammerMode(
             return FALSE;
     }
 
-    if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_PROGRAMMER_MODE,
-                         &nProgrammerMode, sizeof(nProgrammerMode),
-                         NULL, 0, &dwBytesReturned,
-                         NULL))
-    {
-        return FALSE;
-    }
-
-    return TRUE;
+    return l_DeviceFuncs.pSetProgrammerModeFunc(nProgrammerMode);
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlSetVccMode(
   _In_ EUtPepCtrlVccMode VccMode)
 {
-    DWORD dwBytesReturned;
     UINT32 nVccMode;
 
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
@@ -564,23 +274,15 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetVccMode(
             return FALSE;
     }
 
-    if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_VCC_MODE,
-                         &nVccMode, sizeof(nVccMode), NULL, 0,
-                         &dwBytesReturned, NULL))
-    {
-        return FALSE;
-    }
-
-    return TRUE;
+    return l_DeviceFuncs.pSetVccModeFunc(nVccMode);
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlSetPinPulseMode(
   _In_ EUtPepCtrlPinPulseMode PinPulseMode)
 {
-    DWORD dwBytesReturned;
     UINT32 nPinPulseMode;
 
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
@@ -603,24 +305,15 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetPinPulseMode(
             return FALSE;
     }
 
-    if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_PIN_PULSE_MODE,
-                         &nPinPulseMode, sizeof(nPinPulseMode),
-                         NULL, 0, &dwBytesReturned,
-                         NULL))
-    {
-        return FALSE;
-    }
-
-    return TRUE;
+    return l_DeviceFuncs.pSetPinPulseModeFunc(nPinPulseMode);
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlSetVppMode(
   _In_ EUtPepCtrlVppMode VppMode)
 {
-    DWORD dwBytesReturned;
     UINT32 nVppMode;
 
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
@@ -640,260 +333,128 @@ BOOL UTPEPCTRLAPI UtPepCtrlSetVppMode(
             return FALSE;
     }
 
-    if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_VPP_MODE,
-                         &nVppMode, sizeof(nVppMode),
-                         NULL, 0, &dwBytesReturned,
-                         NULL))
-    {
-        return FALSE;
-    }
-
-    return TRUE;
+    return l_DeviceFuncs.pSetVppModeFunc(nVppMode);
 }
 
+_Success_(return)
 BOOL UTPEPCTRLAPI UtPepCtrlReadData(
   _In_ UINT32 nAddress,
-  _Out_ LPBYTE pbyData,
+  _Out_writes_(nDataLen) LPBYTE pbyData,
   _In_ UINT32 nDataLen)
 {
-    UINT32 nIndex;
-    DWORD dwBytesReturned;
-
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
 
-    for (nIndex = 0; nIndex < nDataLen; ++nIndex)
-    {
-        if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_OUTPUT_ENABLE,
-                             &l_nDisableOutputEnable, sizeof(l_nDisableOutputEnable),
-                             NULL, 0, &dwBytesReturned, NULL) ||
-            !DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_ADDRESS,
-                             &nAddress, sizeof(nAddress), NULL, 0,
-                             &dwBytesReturned, NULL) ||
-            !DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_OUTPUT_ENABLE,
-                             &l_nEnableOutputEnable, sizeof(l_nEnableOutputEnable),
-                             NULL, 0, &dwBytesReturned, NULL) ||
-            !DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_GET_DATA,
-                             NULL, 0, pbyData, sizeof(*pbyData),
-                             &dwBytesReturned, NULL))
-        {
-            return FALSE;
-        }
-
-        ++nAddress;
-        ++pbyData;
-    }
-
-    return TRUE;
+    return l_DeviceFuncs.pReadDataFunc(nAddress, pbyData, nDataLen);
 }
 
+_Success_(return)
 BOOL UTPEPCTRLAPI UtPepCtrlReadUserData(
-  _In_ const TUtPepCtrlReadUserData* pReadUserData,
+  _Const_ _In_reads_(nReadUserDataLen) const TUtPepCtrlReadUserData* pReadUserData,
   _In_ UINT32 nReadUserDataLen,
-  _Out_ LPBYTE pbyData,
+  _Out_writes_(nDataLen) LPBYTE pbyData,
   _In_ UINT32 nDataLen)
 {
-    DWORD dwBytesReturned;
-    UINT32 nReadUserDataIndex, nDataIndex;
+    UINT32 nTotalReadUserData = 0;
+    UINT32 nIndex;
 
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
 
-    nDataIndex = 0;
-
-    for (nReadUserDataIndex = 0; nReadUserDataIndex < nReadUserDataLen;
-         ++nReadUserDataIndex)
+    for (nIndex = 0; nIndex < nReadUserDataLen; ++nIndex)
     {
-        if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_ADDRESS,
-                             (LPVOID)&pReadUserData[nReadUserDataIndex].nAddress,
-                             sizeof(pReadUserData[nReadUserDataIndex].nAddress), NULL, 0,
-                             &dwBytesReturned, NULL))
+        if (pReadUserData[nIndex].bPerformRead)
         {
-            return FALSE;
-        }
-
-        switch (pReadUserData[nReadUserDataIndex].OutputEnableMode)
-        {
-            case eUtPepCtrlEnableOE:
-                if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_OUTPUT_ENABLE,
-                                     &l_nEnableOutputEnable, sizeof(l_nEnableOutputEnable),
-                                     NULL, 0, &dwBytesReturned, NULL))
-                {
-                    return FALSE;
-                }
-                break;
-            case eUtPepCtrlDisableOE:
-                if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_OUTPUT_ENABLE,
-                                     &l_nDisableOutputEnable, sizeof(l_nDisableOutputEnable),
-                                     NULL, 0, &dwBytesReturned, NULL))
-                {
-                    return FALSE;
-                }
-                break;
-        }
-
-        if (pReadUserData[nReadUserDataIndex].bPerformRead &&
-            nDataIndex < nDataLen)
-        {
-            if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_GET_DATA,
-                                 NULL, 0, pbyData, sizeof(*pbyData),
-                                 &dwBytesReturned, NULL))
-            {
-                return FALSE;
-            }
-
-            ++nDataIndex;
-            ++pbyData;
+            ++nTotalReadUserData;
         }
     }
 
-    return TRUE;
+    if (nTotalReadUserData != nDataLen)
+    {
+        return FALSE;
+    }
+
+    return l_DeviceFuncs.pReadUserDataFunc(pReadUserData, nReadUserDataLen, pbyData, nDataLen);
 }
 
+_Success_(return)
 BOOL UTPEPCTRLAPI UtPepCtrlReadUserDataWithDelay(
-  _In_ const TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay,
+  _Const_ _In_reads_(nReadUserDataWithDelayLen) const TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay,
   _In_ UINT32 nReadUserDataWithDelayLen,
-  _Out_ LPBYTE pbyData,
+  _Out_writes_(nDataLen) LPBYTE pbyData,
   _In_ UINT32 nDataLen)
 {
-	DWORD dwBytesReturned;
-	UINT32 nReadUserDataWithDelayIndex, nDataIndex;
-	TPepCtrlAddressWithDelay AddressWithDelay;
+    UINT32 nTotalReadUserDataWithDelay = 0;
+    UINT32 nIndex;
 
-	if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
-	{
-		return FALSE;
-	}
+    if (!l_bInitialized)
+    {
+        return FALSE;
+    }
 
-	nDataIndex = 0;
+    for (nIndex = 0; nIndex < nReadUserDataWithDelayLen; ++nIndex)
+    {
+        if (pReadUserDataWithDelay[nIndex].bPerformRead)
+        {
+            ++nTotalReadUserDataWithDelay;
+        }
+    }
 
-	for (nReadUserDataWithDelayIndex = 0; nReadUserDataWithDelayIndex < nReadUserDataWithDelayLen;
-		 ++nReadUserDataWithDelayIndex)
-	{
-		AddressWithDelay.nAddress = pReadUserDataWithDelay[nReadUserDataWithDelayIndex].nAddress;
-		AddressWithDelay.nDelayNanoseconds = pReadUserDataWithDelay[nReadUserDataWithDelayIndex].nDelayNanoSeconds;
+    if (nTotalReadUserDataWithDelay != nDataLen)
+    {
+        return FALSE;
+    }
 
-		if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_ADDRESS_WITH_DELAY,
-			                 (LPVOID)&AddressWithDelay,
-			                 sizeof(AddressWithDelay), NULL, 0,
-			                 &dwBytesReturned, NULL))
-		{
-			return FALSE;
-		}
-
-		if (pReadUserDataWithDelay[nReadUserDataWithDelayIndex].bPerformRead &&
-			nDataIndex < nDataLen)
-		{
-			if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_GET_DATA,
-				                 NULL, 0, pbyData, sizeof(*pbyData),
-				                 &dwBytesReturned, NULL))
-			{
-				return FALSE;
-			}
-
-			++nDataIndex;
-			++pbyData;
-		}
-	}
-
-	return TRUE;
+    return l_DeviceFuncs.pReadUserDataWithDelayFunc(pReadUserDataWithDelay, nReadUserDataWithDelayLen, pbyData, nDataLen);
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlProgramData(
   _In_ UINT nAddress,
-  _Out_ LPBYTE pbyData,
+  _Const_ _In_reads_(nDataLen) const LPBYTE pbyData,
   _In_ UINT32 nDataLen)
 {
-    UINT32 nIndex;
-    DWORD dwBytesReturned;
-    UINT32 nProgramSuccess;
-
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
 
-    for (nIndex = 0; nIndex < nDataLen; ++nIndex)
-    {
-        nProgramSuccess = 0;
-
-        if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_ADDRESS,
-                             &nAddress, sizeof(nAddress), NULL, 0,
-                             &dwBytesReturned, NULL) ||
-            !DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_DATA,
-                             pbyData, sizeof(*pbyData), NULL, 0,
-                             &dwBytesReturned, NULL) ||
-            !DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_TRIGGER_PROGRAM,
-                             NULL, 0, &nProgramSuccess, sizeof(nProgramSuccess),
-                             &dwBytesReturned, NULL) ||
-            !nProgramSuccess)
-        {
-            return FALSE;
-        }
-
-        ++nAddress;
-        ++pbyData;
-    }
-
-    return TRUE;
+    return l_DeviceFuncs.pProgramDataFunc(nAddress, pbyData, nDataLen);
 }
 
 BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(
-  _In_ const TUtPepCtrlProgramUserData* pProgramUserData,
+  _Const_ _In_reads_(nProgramUserDataLen) const TUtPepCtrlProgramUserData* pProgramUserData,
   _In_ UINT32 nProgramUserDataLen,
-  _Out_ LPBYTE pbyData,
+  _Const_ _In_reads_(nDataLen) const LPBYTE pbyData,
   _In_ UINT32 nDataLen)
 {
-    DWORD dwBytesReturned;
-    UINT32 nProgramUserDataIndex, nDataIndex;
-    UINT32 nProgramSuccess;
+    UINT32 nTotalProgramData = 0;
+    UINT32 nIndex;
 
-    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    if (!l_bInitialized)
     {
         return FALSE;
     }
 
-    nDataIndex = 0;
-
-    for (nProgramUserDataIndex = 0; nProgramUserDataIndex < nProgramUserDataLen;
-         ++nProgramUserDataIndex)
+    for (nIndex = 0; nIndex < nProgramUserDataLen; ++nIndex)
     {
-        if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_ADDRESS,
-                             (LPVOID)&pProgramUserData[nProgramUserDataIndex].nAddress,
-                             sizeof(pProgramUserData[nProgramUserDataIndex].nAddress), NULL, 0,
-                             &dwBytesReturned, NULL))
+        if (pProgramUserData[nIndex].bPerformProgram)
         {
-            return FALSE;
-        }
-
-        if (pProgramUserData[nProgramUserDataIndex].bPerformProgram &&
-            nDataIndex < nDataLen)
-        {
-            nProgramSuccess = 0;
-
-            if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_DATA,
-                                 pbyData, sizeof(*pbyData), NULL, 0,
-                                 &dwBytesReturned, NULL) ||
-                !DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_TRIGGER_PROGRAM,
-                                 NULL, 0, &nProgramSuccess, sizeof(nProgramSuccess),
-                                 &dwBytesReturned, NULL) ||
-                !nProgramSuccess)
-            {
-                return FALSE;
-            }
-
-            ++nDataIndex;
-            ++pbyData;
+            ++nTotalProgramData;
         }
     }
 
-    return TRUE;
+    if (nTotalProgramData != nDataLen)
+    {
+        return FALSE;
+    }
+
+    return l_DeviceFuncs.pProgramUserDataFunc(pProgramUserData, nProgramUserDataLen, pbyData, nDataLen);
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/

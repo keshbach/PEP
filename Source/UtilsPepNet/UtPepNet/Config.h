@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -11,14 +11,21 @@ namespace Pep
         public ref class Config abstract sealed
 		{
         public:
-            enum class EPortType
+            enum class EDeviceType
             {
-                None,
-                Parallel,
-                USBPrint
+                ParallelPort,
+                USB
             };
         
         public:
+			static property EDeviceType DeviceType
+			{
+				EDeviceType get()
+				{
+					return s_DeviceType;
+				}
+			}
+
 			/// <summary>
 			/// Determines if the PEP device is present.
 			/// </summary>
@@ -31,6 +38,9 @@ namespace Pep
 				}
 			}
 
+			/// <summary>
+			/// Has the PEP device been initialized.
+			/// </summary>
 			static property System::Boolean Initialized
 			{
 				System::Boolean get()
@@ -39,12 +49,31 @@ namespace Pep
 				}
 			}
 
+			/// <summary>
+			/// Enable/disable the device change notification.
+			/// </summary>
+
+			static property System::Boolean DeviceChangeNotification
+			{
+				System::Boolean get()
+				{
+					return s_bDeviceChangeNotification;
+				}
+
+				void set(System::Boolean value)
+				{
+					s_bDeviceChangeNotification = value;
+				}
+			}
+
 		public:
 			/// <summary>
 			/// Initializes the PEP device driver.
 			/// </summary>
+			/// <param name="DeviceType">The device type.</param>
+			/// <param name="DeviceChange"></param>
 
-			static void Initialize(Pep::Programmer::IDeviceChange^ pDeviceChange);
+			static void Initialize(EDeviceType DeviceType, Pep::Programmer::IDeviceChange^ DeviceChange);
 
 			/// <summary>
 			/// Uninitializes the PEP device driver.
@@ -59,36 +88,42 @@ namespace Pep
 			static System::Boolean Reset();
 
             /// <summary>
-            /// Retrieves the current port configuration.
+            /// Retrieves the current device name.
             /// </summary>
-            /// <param name="PortType">The type of port.</param>
-            /// <param name="sPortDeviceName">The name of the port device.</param>
+            /// <param name="sDeviceName">The name of the device.</param>
             /// <returns>Returns true if successful.</returns>
 
-            static System::Boolean GetPortConfig([System::Runtime::InteropServices::Out] EPortType% PortType, [System::Runtime::InteropServices::Out] System::String^% sPortDeviceName);
+            static System::Boolean GetDeviceName([System::Runtime::InteropServices::Out] System::String^% sDeviceName);
 
             /// <summary>
-            /// Changes the current port configuration.
+            /// Changes the current device name.
             /// </summary>
-            /// <param name="PortType">The type of port.</param>
-            /// <param name="sPortDeviceName">The name of the port device.</param>
+            /// <param name="sDeviceName">The name of the port device.</param>
             /// <returns>Returns true if successful.</returns>
 
-            static System::Boolean SetPortConfig(EPortType PortType, System::String^ sPortDeviceName);
+            static System::Boolean SetDeviceName(System::String^ sDeviceName);
 
 		internal:
-			static Pep::Programmer::IDeviceChange^ GetDeviceChange();
+			static property Pep::Programmer::IDeviceChange^ DeviceChange
+			{
+				Pep::Programmer::IDeviceChange^ get()
+				{
+					return s_pDeviceChange;
+				}
+			}
 
 		private:
 			static System::Boolean GetDevicePresent();
 
 		private:
+			static EDeviceType s_DeviceType = EDeviceType::USB;
 			static Pep::Programmer::IDeviceChange^ s_pDeviceChange = nullptr;
 			static System::Boolean s_bInitialized = false;
+			static System::Boolean s_bDeviceChangeNotification = false;
 		};
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

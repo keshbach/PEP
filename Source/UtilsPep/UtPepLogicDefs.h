@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepLogicDefs_H)
@@ -37,16 +37,24 @@
 #define CUtPepLogic21VDCVppMode 0x0002 /* +21 VDC */
 #define CUtPepLogic25VDCVppMode 0x0004 /* +25 VDC */
 
+#if defined(_MSC_VER)
 #define TUTPEPLOGICAPI __stdcall
+#elif defined(__XC8) || defined(__18CXX)
+#define TUTPEPLOGICAPI
+#else
+#error Need to define calling convention
+#endif
 
 typedef BOOLEAN (TUTPEPLOGICAPI *TUtPepLogicReadBitPortFunc)(_In_ PVOID pvContext,
-                                                             OUT PBOOLEAN pbValue);
+                                                             _Out_ PBOOLEAN pbValue);
 typedef BOOLEAN (TUTPEPLOGICAPI *TUtPepLogicWritePortFunc)(_In_ PVOID pvContext,
                                                            _In_ PUCHAR pucData,
                                                            _In_ ULONG ulDataLen,
 	                                                       _In_ ULONG nWaitNanoSeconds);
 
+#if defined(ENABLE_LOGGING) 
 typedef VOID (__cdecl *TUtPepLogicLogFunc)(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
+#endif
 
 #if defined(_MSC_VER)
 #if defined(_X86_)
@@ -56,6 +64,7 @@ typedef VOID (__cdecl *TUtPepLogicLogFunc)(_In_z_ _Printf_format_string_ PCSTR p
 #else
 #error Need to specify cpu architecture to configure structure padding
 #endif
+#elif defined(__XC8) || defined(__18CXX)
 #else
 #error Need to specify how to enable byte aligned structure padding
 #endif
@@ -65,12 +74,15 @@ typedef struct tagTUtPepLogicData
     PVOID pvDeviceContext;
     TUtPepLogicReadBitPortFunc pReadBitPortFunc;
     TUtPepLogicWritePortFunc pWritePortFunc;
+#if defined(ENABLE_LOGGING) 
     TUtPepLogicLogFunc pLogFunc;
+#endif
     PVOID pvLogicContext;
 } TUtPepLogicData;
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
+#elif defined(__XC8) || defined(__18CXX)
 #else
 #error Need to specify how to restore original structure padding
 #endif
@@ -78,5 +90,5 @@ typedef struct tagTUtPepLogicData
 #endif /* !defined(UtPepLogicDefs_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/

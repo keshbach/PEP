@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2019-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2019-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepAppHost_H)
@@ -13,10 +13,10 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostInitialize(VOID);
 
 MExternC BOOL PEPAPPHOSTAPI PepAppHostUninitialize(VOID);
 
-MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(_Out_ LPDWORD pdwExitCode);
+MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(_In_ BOOL bUseParallelPort, _Out_ LPDWORD pdwExitCode);
 
 #endif /* end of PepAppHost_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2019-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2019-2021 Kevin Eshbach                                  */
 /***************************************************************************/

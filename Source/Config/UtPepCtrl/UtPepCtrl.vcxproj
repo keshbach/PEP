@@ -22,8 +22,11 @@
     <ResourceCompile Include="UtPepCtrl.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ParallelPortPepCtrl.c" />
+    <ClCompile Include="UsbPepCtrl.c" />
     <ClCompile Include="UtPepCtrl.c" />
     <ClCompile Include="UtPepCtrlMain.c" />
+    <ClCompile Include="UtPepCtrlUtil.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UtPepCtrl.def" />
@@ -31,6 +34,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\UtPepCtrl.h" />
+    <ClInclude Include="ParallelPortPepCtrl.h" />
+    <ClInclude Include="UsbPepCtrl.h" />
+    <ClInclude Include="UtPepCtrlUtil.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -131,7 +137,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;Winusb.lib;hid.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>UtPepCtrl.def</ModuleDefinitionFile>
       <EntryPointSymbol>
@@ -157,7 +163,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;Winusb.lib;hid.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>UtPepCtrl64.def</ModuleDefinitionFile>
       <EntryPointSymbol>
@@ -187,7 +193,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;Winusb.lib;hid.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>UtPepCtrl.def</ModuleDefinitionFile>
       <EntryPointSymbol>
@@ -217,7 +223,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;Winusb.lib;hid.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>UtPepCtrl64.def</ModuleDefinitionFile>
       <EntryPointSymbol>

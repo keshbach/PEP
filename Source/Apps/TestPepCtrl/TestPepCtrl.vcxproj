@@ -129,7 +129,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ManifestFile>
       </ManifestFile>
-      <AdditionalDependencies>UtPepCtrl.lib;UtConsole.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeapProcess.lib;UtPepCtrl.lib;UtConsole.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
     </Link>
     <ResourceCompile>
@@ -161,7 +161,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ManifestFile>
       </ManifestFile>
-      <AdditionalDependencies>UtPepCtrl.lib;UtConsole.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeapProcess.lib;UtPepCtrl.lib;UtConsole.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
     </Link>
     <ResourceCompile>
@@ -197,7 +197,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ManifestFile>
       </ManifestFile>
-      <AdditionalDependencies>UtPepCtrl.lib;UtConsole.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeapProcess.lib;UtPepCtrl.lib;UtConsole.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
     </Link>
     <ResourceCompile>
@@ -233,7 +233,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ManifestFile>
       </ManifestFile>
-      <AdditionalDependencies>UtPepCtrl.lib;UtConsole.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeapProcess.lib;UtPepCtrl.lib;UtConsole.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
     </Link>
     <ResourceCompile>

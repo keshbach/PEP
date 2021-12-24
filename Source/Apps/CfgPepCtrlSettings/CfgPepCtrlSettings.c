@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2019-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2019-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -106,39 +106,13 @@ static int lReadDriverSettings(
     int nResult = 0;
     LPWSTR pszPortDeviceName;
     INT nPortDeviceNameLen;
-    EUtPepCtrlPortType PortType;
 
     pszArg1;
     pszArg2;
 
-    wprintf(L"CfgPepCtrlSettings: Attempting to retrieve the driver port settings.\n");
+    wprintf(L"CfgPepCtrlSettings: Port Type - Parallel Port");
 
-    if (!UtPepCtrlGetPortType(&PortType))
-    {
-        wprintf(L"CfgPepCtrlSettings: Could not retrieve the port type.\n");
-
-        return -1;
-    }
-
-    wprintf(L"CfgPepCtrlSettings: Port Type - ");
-
-    switch (PortType)
-    {
-        case eUtPepCtrlNonePortType:
-            wprintf(L"None\n");
-            break;
-        case eUtPepCtrlParallelPortType:
-            wprintf(L"Parallel\n");
-            break;
-        case eUtPepCtrlUsbPrintPortType:
-            wprintf(L"USB Print\n");
-            break;
-        default:
-            wprintf(L"Unknown\n");
-            break;
-    }
-
-    if (!UtPepCtrlGetPortDeviceName(NULL, &nPortDeviceNameLen))
+    if (!UtPepCtrlGetDeviceName(NULL, &nPortDeviceNameLen))
     {
         wprintf(L"CfgPepCtrlSettings: Could not retrieve the buffer size required for the port device name.\n");
 
@@ -147,7 +121,7 @@ static int lReadDriverSettings(
 
     pszPortDeviceName = (LPWSTR)UtAllocMem(nPortDeviceNameLen * sizeof(WCHAR));
 
-    if (!UtPepCtrlGetPortDeviceName(pszPortDeviceName, &nPortDeviceNameLen))
+    if (!UtPepCtrlGetDeviceName(pszPortDeviceName, &nPortDeviceNameLen))
     {
         wprintf(L"CfgPepCtrlSettings: Could not retrieve the port device name.\n");
 
@@ -168,17 +142,13 @@ static int lWriteDriverSettings(
   LPCWSTR pszPortType,
   LPCWSTR pszPortDeviceName)
 {
-    EUtPepCtrlPortType PortType;
+    EUtPepCtrlDeviceType DeviceType;
 
     wprintf(L"CfgPepCtrlSettings: Attempting to change the driver port settings.\n");
 
     if (lstrcmpi(pszPortType, L"lpt") == 0)
     {
-        PortType = eUtPepCtrlParallelPortType;
-    }
-    else if (lstrcmpi(pszPortType, L"usb") == 0)
-    {
-        PortType = eUtPepCtrlUsbPrintPortType;
+        DeviceType = eUtPepCtrlParallelPortDeviceType;
     }
     else
     {
@@ -187,9 +157,9 @@ static int lWriteDriverSettings(
         return -1;
     }
 
-    if (!UtPepCtrlSetPortSettings(PortType, pszPortDeviceName))
+    if (!UtPepCtrlSetDeviceName(pszPortDeviceName))
     {
-        wprintf(L"CfgPepCtrlSettings: Could not change the driver's port settings.\n");
+        wprintf(L"CfgPepCtrlName: Could not change the driver's port settings.\n");
 
         return -1;
     }
@@ -208,7 +178,7 @@ static int lClearDriverSettings(
 
     wprintf(L"CfgPepCtrlSettings: Attempting to remove the existing driver port settings.\n");
 
-    if (!UtPepCtrlSetPortSettings(eUtPepCtrlNonePortType, L""))
+    if (!UtPepCtrlSetDeviceName(L""))
     {
         wprintf(L"CfgPepCtrlSettings: Could not remove the existing driver's port settings.\n");
 
@@ -253,7 +223,7 @@ static int lDisplayHelp(void)
     wprintf(L"        read          - Show the port settings\n");
     wprintf(L"    /config\n");
     wprintf(L"        write         - Change the port settings\n");
-    wprintf(L"        \"Port Type\"   - \"lpt\" or \"usb\"\n");
+    wprintf(L"        \"Port Type\"   - \"lpt\"\n");
     wprintf(L"        \"Device Name\" - Name of the device\n");
     wprintf(L"    /config\n");
     wprintf(L"        clear         - Remove the existing port settings\n");
@@ -305,7 +275,7 @@ int _cdecl wmain(int argc, WCHAR* argv[])
 
             wprintf(L"CfgPepCtrlSettings: Initializing the Pep Control dll.\n");
 
-            if (UtPepCtrlInitialize(lDeviceChangeFunc))
+            if (UtPepCtrlInitialize(eUtPepCtrlParallelPortDeviceType, lDeviceChangeFunc))
             {
                 nResult = pTestData->TestFunc(pszArg1, pszArg2);
 
@@ -339,5 +309,5 @@ int _cdecl wmain(int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2019-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2019-2021 Kevin Eshbach                                  */
 /***************************************************************************/

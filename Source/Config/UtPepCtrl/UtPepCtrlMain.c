@@ -1,8 +1,10 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
+
+#include "UtPepCtrlUtil.h"
 
 BOOL APIENTRY DllMain(
   _In_ HINSTANCE hInstance,
@@ -15,6 +17,8 @@ BOOL APIENTRY DllMain(
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hInstance);
+
+            UtPepCtrlSetInstance(hInstance);
             break;
         case DLL_THREAD_ATTACH:
         case DLL_THREAD_DETACH:
@@ -26,5 +30,5 @@ BOOL APIENTRY DllMain(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/

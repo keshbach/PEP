@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "StdAfx.h"
@@ -17,15 +17,28 @@
 #pragma region "Local Functions"
 
 static VOID UTPEPCTRLAPI lPepCtrlDeviceChange(
-  EUtPepCtrlDeviceChange DeviceChange)
+  _In_ EUtPepCtrlDeviceChange DeviceChange)
 {
+    if (Pep::Programmer::Config::DeviceChangeNotification == false)
+    {
+        return;
+    }
+
+    while (Pep::Programmer::Config::Initialized == false)
+    {
+        // Wait until Pep::Programmer::Config::Initialize finishes in case
+        // a device notification arrives early
+
+        System::Threading::Thread::Sleep(50);
+    }
+
     switch (DeviceChange)
     {
         case eUtPepCtrlDeviceArrived:
-			Pep::Programmer::Config::GetDeviceChange()->DeviceChange(Pep::Programmer::IDeviceChange::ENotification::Arrived);
+			Pep::Programmer::Config::DeviceChange->DeviceChange(Pep::Programmer::IDeviceChange::ENotification::Arrived);
 			break;
         case eUtPepCtrlDeviceRemoved:
-			Pep::Programmer::Config::GetDeviceChange()->DeviceChange(Pep::Programmer::IDeviceChange::ENotification::Removed);
+			Pep::Programmer::Config::DeviceChange->DeviceChange(Pep::Programmer::IDeviceChange::ENotification::Removed);
 			break;
         default:
 			System::Diagnostics::Debug::Assert(false, "Unknown device change");
@@ -36,9 +49,27 @@ static VOID UTPEPCTRLAPI lPepCtrlDeviceChange(
 #pragma endregion
 
 void Pep::Programmer::Config::Initialize(
+  EDeviceType DeviceType,
   Pep::Programmer::IDeviceChange^ pDeviceChange)
 {
-	if (UtPepCtrlInitialize(&lPepCtrlDeviceChange))
+    EUtPepCtrlDeviceType PepCtrlDeviceType;
+
+    s_DeviceType = DeviceType;
+
+    switch (DeviceType)
+    {
+        case EDeviceType::ParallelPort:
+            PepCtrlDeviceType = eUtPepCtrlParallelPortDeviceType;
+            break;
+        case EDeviceType::USB:
+            PepCtrlDeviceType = eUtPepCtrlUsbDeviceType;
+            break;
+        default:
+            System::Diagnostics::Debug::Assert(false);
+            return;
+    }
+
+	if (UtPepCtrlInitialize(PepCtrlDeviceType, &lPepCtrlDeviceChange))
     {
 		s_pDeviceChange = pDeviceChange;
 		s_bInitialized = true;
@@ -49,10 +80,10 @@ void Pep::Programmer::Config::Uninitialize()
 {
 	if (s_bInitialized)
 	{
-		s_pDeviceChange = nullptr;
+        UtPepCtrlUninitialize();
+ 
+        s_pDeviceChange = nullptr;
 		s_bInitialized = false;
-
-		UtPepCtrlUninitialize();
 	}
 }
 
@@ -66,96 +97,57 @@ System::Boolean Pep::Programmer::Config::Reset()
 	return false;
 }
 
-System::Boolean Pep::Programmer::Config::GetPortConfig(
-  [System::Runtime::InteropServices::Out] EPortType% PortType,
-  [System::Runtime::InteropServices::Out] System::String^% sPortDeviceName)
+System::Boolean Pep::Programmer::Config::GetDeviceName(
+  [System::Runtime::InteropServices::Out] System::String^% sDeviceName)
 {
-    EUtPepCtrlPortType PepCtrlPortType;
-    LPWSTR pszPortDeviceName;
-    INT nPortDeviceNameLen;
+    LPWSTR pszDeviceName;
+    INT nDeviceNameLen;
 
-    PortType = Config::EPortType::None;
-    sPortDeviceName = L"";
+    sDeviceName = L"";
 
 	if (!s_bInitialized)
 	{
 		return false;
 	}
 
-    if (!UtPepCtrlGetPortType(&PepCtrlPortType) ||
-        !UtPepCtrlGetPortDeviceName(NULL, &nPortDeviceNameLen) ||
+    if (!UtPepCtrlGetDeviceName(NULL, &nDeviceNameLen) ||
 		!UtInitHeap())
     {
         return false;
     }
 
-    pszPortDeviceName = (LPWSTR)UtAllocMem(nPortDeviceNameLen * sizeof(WCHAR));
+    pszDeviceName = (LPWSTR)UtAllocMem(nDeviceNameLen * sizeof(WCHAR));
 
-    if (pszPortDeviceName == NULL)
+    if (pszDeviceName == NULL)
     {
 		UtUninitHeap();
 		
 		return false;
     }
 
-    if (UtPepCtrlGetPortDeviceName(pszPortDeviceName, &nPortDeviceNameLen))
+    if (UtPepCtrlGetDeviceName(pszDeviceName, &nDeviceNameLen))
     {
-        sPortDeviceName = gcnew System::String(pszPortDeviceName);
+        sDeviceName = gcnew System::String(pszDeviceName);
     }
 
-    UtFreeMem(pszPortDeviceName);
+    UtFreeMem(pszDeviceName);
 
 	UtUninitHeap();
-
-    switch (PepCtrlPortType)
-    {
-        case eUtPepCtrlNonePortType:
-            PortType = Config::EPortType::None;
-            break;
-        case eUtPepCtrlParallelPortType:
-            PortType = Config::EPortType::Parallel;
-            break;
-        case eUtPepCtrlUsbPrintPortType:
-            PortType = Config::EPortType::USBPrint;
-            break;
-     }
 
     return true;
 }
 
-System::Boolean Pep::Programmer::Config::SetPortConfig(
-  EPortType PortType,
-  System::String^ sPortDeviceName)
+System::Boolean Pep::Programmer::Config::SetDeviceName(
+  System::String^ sDeviceName)
 {
-    pin_ptr<const wchar_t> pszPortDeviceName = PtrToStringChars(sPortDeviceName);
-    EUtPepCtrlPortType PepCtrlPortType;
+    pin_ptr<const wchar_t> pszDeviceName = PtrToStringChars(sDeviceName);
 
 	if (!s_bInitialized)
 	{
 		return false;
 	}
 
-    switch (PortType)
-    {
-        case Config::EPortType::None:
-            PepCtrlPortType = eUtPepCtrlNonePortType;
-            break;
-        case Config::EPortType::Parallel:
-            PepCtrlPortType = eUtPepCtrlParallelPortType;
-            break;
-        case Config::EPortType::USBPrint:
-            PepCtrlPortType = eUtPepCtrlUsbPrintPortType;
-            break;
-        default:
-            return false;
-    }
-
-    return UtPepCtrlSetPortSettings(PepCtrlPortType, pszPortDeviceName) ? true : false;
-}
-
-Pep::Programmer::IDeviceChange^ Pep::Programmer::Config::GetDeviceChange()
-{
-    return s_pDeviceChange;
+    return UtPepCtrlSetDeviceName(pszDeviceName) ? true : false;
 }
 
 System::Boolean Pep::Programmer::Config::GetDevicePresent()
@@ -175,5 +167,5 @@ System::Boolean Pep::Programmer::Config::GetDevicePresent()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2007-2019 Kevin Eshbach
+//  Copyright (C) 2007-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

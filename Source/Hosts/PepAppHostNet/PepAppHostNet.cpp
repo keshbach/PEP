@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -9,11 +9,11 @@
 #include "PepAppNet.h"
 
 static VOID lExecutePepApp(
-  TPepAppHostData* pPepAppHostData)
+  _In_ TPepAppHostData* pPepAppHostData)
 {
     Pep::Application::Startup^ Startup = gcnew Pep::Application::Startup();
 
-    pPepAppHostData->dwExitCode = Startup->Execute();
+    pPepAppHostData->dwExitCode = Startup->Execute(pPepAppHostData->bUseParallelPort);
 }
 
 extern "C"
@@ -22,7 +22,7 @@ extern "C"
 #pragma unmanaged
 
 HRESULT __stdcall PepAppHostNetExecuteInAppDomain(
-  void* cookie)
+  _In_ void* cookie)
 {
     TPepAppHostData* pPepAppHostData = (TPepAppHostData*)cookie;
 
@@ -36,5 +36,5 @@ HRESULT __stdcall PepAppHostNetExecuteInAppDomain(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2019 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

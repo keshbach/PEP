@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2020 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -25,10 +25,17 @@ Pep::Application::Startup::Startup()
 {
 }
 
-System::UInt32 Pep::Application::Startup::Execute()
+System::UInt32 Pep::Application::Startup::Execute(
+  System::Boolean bUseParallelPort)
 {
 	System::String^ sFormLocationsRegistryKey = System::String::Format(L"{0}\\{1}", CRegistryKey, CFormLocationsName);
-	Pep::Forms::MainForm^ AppForm;
+    Pep::Programmer::Config::EDeviceType DeviceType = Pep::Programmer::Config::EDeviceType::USB;
+    Pep::Forms::MainForm^ AppForm;
+
+    if (bUseParallelPort)
+    {
+        DeviceType = Pep::Programmer::Config::EDeviceType::ParallelPort;
+    }
 
 	if (!Common::IO::TempFileManager::Initialize())
 	{
@@ -43,7 +50,7 @@ System::UInt32 Pep::Application::Startup::Execute()
 
 		gcnew Common::Forms::FormLocation(AppForm, sFormLocationsRegistryKey);
 
-		Pep::Programmer::Config::Initialize(AppForm);
+		Pep::Programmer::Config::Initialize(DeviceType, AppForm);
 
         Common::Forms::Application::Run(AppForm);
 
@@ -70,5 +77,5 @@ System::UInt32 Pep::Application::Startup::Execute()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2020 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

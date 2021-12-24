@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -16,6 +16,8 @@
 
 #include <Utils/UtHeapProcess.h>
 #include <Utils/UtConsole.h>
+
+#include <Apps/Includes/UtCommandLineParser.inl>
 
 static BOOL l_bQuitDeviceOperation = FALSE;
 static BOOL l_bErrorOccurred = FALSE;
@@ -206,6 +208,7 @@ static int lWriteDevice(
 {
     int nResult = -1;
     LPBYTE pbyData = NULL;
+    EUtPepCtrlDeviceType DeviceType = eUtPepCtrlUsbDeviceType;
     WCHAR cPath[MAX_PATH];
     TDevice Device;
     TDeviceIOFuncs DeviceIOFuncs;
@@ -271,9 +274,20 @@ static int lWriteDevice(
 
     _getch();
 
+    if (UtCommandLineParserGetUseParallelPortConfiguration())
+    {
+        wprintf(L"Using the parallel port device.\n");
+
+        DeviceType = eUtPepCtrlParallelPortDeviceType;
+    }
+    else
+    {
+        wprintf(L"Using the USB device.\n");
+    }
+
     wprintf(L"Calling UtPepCtrlInitialize\n");
 
-    if (FALSE == UtPepCtrlInitialize(&lDeviceChangeFunc))
+    if (FALSE == UtPepCtrlInitialize(DeviceType, &lDeviceChangeFunc))
     {
         wprintf(L"Call to UtPepCtrlInitialize has failed.\n");
 
@@ -398,6 +412,7 @@ static int lVerifyDevice(
   LPCWSTR pszFilename)
 {
     int nResult = -1;
+    EUtPepCtrlDeviceType DeviceType = eUtPepCtrlUsbDeviceType;
     LPBYTE pbyData = NULL;
     WCHAR cPath[MAX_PATH];
     TDevice Device;
@@ -464,9 +479,20 @@ static int lVerifyDevice(
 
     _getch();
 
+    if (UtCommandLineParserGetUseParallelPortConfiguration())
+    {
+        wprintf(L"Using the parallel port device.\n");
+
+        DeviceType = eUtPepCtrlParallelPortDeviceType;
+    }
+    else
+    {
+        wprintf(L"Using the USB device.\n");
+    }
+
     wprintf(L"Calling UtPepCtrlInitialize\n");
 
-    if (FALSE == UtPepCtrlInitialize(&lDeviceChangeFunc))
+    if (FALSE == UtPepCtrlInitialize(DeviceType, &lDeviceChangeFunc))
     {
         wprintf(L"Call to UtPepCtrlInitialize has failed.\n");
 
@@ -589,27 +615,36 @@ static int lDisplayHelp(void)
     wprintf(L"        \"Device\"     - Name of the device\n");
     wprintf(L"        \"Input File\" - Name of the file to read the data from\n");
     wprintf(L"\n");
+    wprintf(L"    Configuration\n");
+    wprintf(L"    /parallelport    - Use the parallel port instead of USB\n");
+    wprintf(L"\n");
 
     return -1;
 }
 
 int __cdecl wmain (int argc, WCHAR* argv[])
 {
-    int nResult;
+    int nResult, nTotalNewArgs;
+    LPCWSTR* ppszNewArgs;
 
     HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 
     SetConsoleCtrlHandler(lHandlerRoutine, TRUE);
 
-    if (argc == 4)
+    UtCommandLineParserInitialize(argc, argv);
+
+    nTotalNewArgs = UtCommandLineParserGetTotalArguments();
+    ppszNewArgs = UtCommandLineParserGetArguments();
+
+    if (nTotalNewArgs == 4)
     {
-        if (lstrcmpi(argv[1], L"/write") == 0)
+        if (lstrcmpi(ppszNewArgs[1], L"/write") == 0)
         {
-            nResult = lWriteDevice(argv[2], argv[3]);
+            nResult = lWriteDevice(ppszNewArgs[2], ppszNewArgs[3]);
         }
-        else if (lstrcmpi(argv[1], L"/verify") == 0)
+        else if (lstrcmpi(ppszNewArgs[1], L"/verify") == 0)
         {
-            nResult = lVerifyDevice(argv[2], argv[3]);
+            nResult = lVerifyDevice(ppszNewArgs[2], ppszNewArgs[3]);
         }
         else
         {
@@ -621,11 +656,13 @@ int __cdecl wmain (int argc, WCHAR* argv[])
         nResult = lDisplayHelp();
     }
 
+    UtCommandLineParserUninitialize();
+
     SetConsoleCtrlHandler(lHandlerRoutine, FALSE);
 
     return nResult;
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/

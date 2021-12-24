@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2020 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -349,6 +349,7 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostUninitialize(VOID)
 }
 
 MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
+  _In_ BOOL bUseParallelPort,
   _Out_ LPDWORD pdwExitCode)
 {
     DWORD dwAppDomainId = 0;
@@ -359,6 +360,8 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 	{
 		return FALSE;
 	}
+
+    l_PepAppHostData.bUseParallelPort = bUseParallelPort;
 
     l_PepAppHostRuntimeData.pCLRRuntimeHost->GetCurrentAppDomainId(&dwAppDomainId);
 
@@ -374,5 +377,5 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2020 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

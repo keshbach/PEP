@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2020 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -32,6 +32,7 @@
 
 #define CPluginsArgument L"/plugins"
 #define CDisableDPIArgument L"/disabledpi"
+#define CParallelPortArgument L"/parallelport"
 
 #pragma endregion
 
@@ -45,7 +46,7 @@ typedef BOOL (WINAPI* TSetProcessDpiAwarenessContext)(DPI_AWARENESS_CONTEXT valu
 
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostInitializeFunc)(VOID);
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostUninitializeFunc)(VOID);
-typedef BOOL (PEPAPPHOSTAPI* TPepAppHostExecuteFunc)(_Out_ LPDWORD pdwExitCode);
+typedef BOOL (PEPAPPHOSTAPI* TPepAppHostExecuteFunc)(_In_ BOOL bUseParallelPort, _Out_ LPDWORD pdwExitCode);
 
 typedef VOID (STDAPICALLTYPE *TPathRemoveExtensionWFunc)(_Inout_ LPWSTR pszPath);
 typedef BOOL (STDAPICALLTYPE *TPathRemoveFileSpecWFunc)(_Inout_ LPWSTR pszPath);
@@ -176,51 +177,60 @@ static VOID lEnableDPIAwareness(VOID)
 
     hModule = ::LoadLibraryW(L"user32.dll");
 
-	pSetProcessDpiAwarenessContext = (TSetProcessDpiAwarenessContext)::GetProcAddress(hModule, "SetProcessDpiAwarenessContext");
-
-	if (pSetProcessDpiAwarenessContext)
+	if (hModule)
 	{
-		if (!pSetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+		pSetProcessDpiAwarenessContext = (TSetProcessDpiAwarenessContext)::GetProcAddress(hModule, "SetProcessDpiAwarenessContext");
+
+		if (pSetProcessDpiAwarenessContext)
 		{
-			pSetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+			if (!pSetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+			{
+				pSetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+			}
+
+			::FreeLibrary(hModule);
+
+			return;
 		}
-	
-        ::FreeLibrary(hModule);
 
-        return;
-    }
-
-    ::FreeLibrary(hModule);
+		::FreeLibrary(hModule);
+	}
 
 	// Check for Windows 8.1
 
 	hModule = ::LoadLibraryW(L"shcore.dll");
 
-	pSetProcessDpiAwareness = (TSetProcessDpiAwareness)::GetProcAddress(hModule, "SetProcessDpiAwareness");
-
-	if (pSetProcessDpiAwareness)
+	if (hModule)
 	{
-        pSetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+		pSetProcessDpiAwareness = (TSetProcessDpiAwareness)::GetProcAddress(hModule, "SetProcessDpiAwareness");
+
+		if (pSetProcessDpiAwareness)
+		{
+			pSetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+
+			::FreeLibrary(hModule);
+
+			return;
+		}
 
 		::FreeLibrary(hModule);
-
-		return;
 	}
-
-	::FreeLibrary(hModule);
 
 	// Check for Vista
 
 	hModule = ::LoadLibraryW(L"user32.dll");
 
-	pSetProcessDPIAware = (TSetProcessDPIAware)::GetProcAddress(hModule, "SetProcessDPIAware");
-
-	if (pSetProcessDPIAware)
+	if (hModule)
 	{
-		pSetProcessDPIAware();
-	}
+		pSetProcessDPIAware = (TSetProcessDPIAware)::GetProcAddress(hModule, "SetProcessDPIAware");
 
-	::FreeLibrary(hModule);
+		if (pSetProcessDPIAware)
+		{
+			pSetProcessDPIAware();
+		}
+
+		::FreeLibrary(hModule);
+	}
 }
 
 static BOOL lInitialize(
@@ -614,7 +624,7 @@ INT PepAppExecute(
 	HANDLE hThread;
 	DWORD dwThreadId, dwExitCode;
 	INT nArgIndex;
-	BOOL bDisableDPI, bDisplayHelp;
+	BOOL bDisableDPI, bUseParallelPort, bDisplayHelp;
 
 	if (!IsWindows7OrGreater())
 	{
@@ -629,6 +639,7 @@ INT PepAppExecute(
 
 	nArgIndex = 1;
 	bDisableDPI = FALSE;
+	bUseParallelPort = FALSE;
 	bDisplayHelp = FALSE;
 
 	while (nArgIndex < nTotalArgs && bDisplayHelp == FALSE)
@@ -651,6 +662,12 @@ INT PepAppExecute(
 		else if (::lstrcmpi(ppszArgs[nArgIndex], CDisableDPIArgument) == 0)
 		{
 			bDisableDPI = TRUE;
+
+			++nArgIndex;
+		}
+		else if (::lstrcmpi(ppszArgs[nArgIndex], CParallelPortArgument) == 0)
+		{
+			bUseParallelPort = TRUE;
 
 			++nArgIndex;
 		}
@@ -717,7 +734,7 @@ INT PepAppExecute(
 		return 1;
     }
 
-    pPepAppData->AppHostModuleData.pExecute(&dwExitCode);
+    pPepAppData->AppHostModuleData.pExecute(bUseParallelPort, &dwExitCode);
 
 	pPepAppData->CtrlsModuleData.pUninitialize();
 	pPepAppData->DeviceModuleData.pUninitialize();
@@ -738,5 +755,5 @@ INT PepAppExecute(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2020 Kevin Eshbach
+//  Copyright (C) 2019-2021 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -28,13 +28,15 @@ typedef struct tagTTestData
 
 static int lRunAllTest(void);
 static int lRunLptTest(void);
+static int lRunUsbPrintTest(void);
 static int lRunUsbTest(void);
 
 static TTestData l_TestData[] = {
-    {L"all", lRunAllTest},
-    {L"lpt", lRunLptTest},
-    {L"usb", lRunUsbTest},
-    {NULL,   NULL} };
+    {L"all",      lRunAllTest},
+    {L"lpt",      lRunLptTest},
+    {L"usbprint", lRunUsbPrintTest},
+    {L"usb",      lRunUsbTest},
+    {NULL,        NULL} };
 
 static TPortData l_PortData[] = {
     {epdLocation,                 L"    Location:               %s\n"},
@@ -59,7 +61,7 @@ static BOOL WINAPI lHandlerRoutine(
 }
 
 BOOL lFindTestRun(
-  LPCWSTR pszTestCommand,
+  _In_z_ LPCWSTR pszTestCommand,
   TTestFunc* pTestFunc)
 {
     int nIndex = 0;
@@ -86,6 +88,11 @@ static int lRunAllTest(void)
     int nResult;
 
     nResult = lRunLptTest();
+
+    if (nResult)
+    {
+        nResult = lRunUsbPrintTest();
+    }
 
     if (nResult)
     {
@@ -157,7 +164,7 @@ static int lRunLptTest(void)
     return 1;
 }
 
-static int lRunUsbTest(void)
+static int lRunUsbPrintTest(void)
 {
     BOOL bQuit;
     INT nCount, nIndex, nDataIndex, nDataLen;
@@ -167,7 +174,7 @@ static int lRunUsbTest(void)
 
     if (!UtListPortsGetUsbPrintPortCount(&nCount))
     {
-        wprintf(L"TestListPorts: Could not retrieve the use print port count.\n");
+        wprintf(L"TestListPorts: Could not retrieve the usb print port count.\n");
 
         return 0;
     }
@@ -219,6 +226,68 @@ static int lRunUsbTest(void)
     return 1;
 }
 
+static int lRunUsbTest(void)
+{
+    BOOL bQuit;
+    INT nCount, nIndex, nDataIndex, nDataLen;
+    LPWSTR pszData;
+
+    wprintf(L"TestListPorts: Running the list usb port test.\n");
+
+    if (!UtListPortsGetUsbPortCount(&nCount))
+    {
+        wprintf(L"TestListPorts: Could not retrieve the usb port count.\n");
+
+        return 0;
+    }
+
+    wprintf(L"\n");
+
+    for (nIndex = 0; nIndex < nCount; ++nIndex)
+    {
+        bQuit = FALSE;
+        nDataIndex = 0;
+
+        while (bQuit == FALSE)
+        {
+            pszData = NULL;
+
+            if (!UtListPortsGetUsbPortData(nIndex, l_PortData[nDataIndex].nPortData,
+                                           NULL, &nDataLen))
+            {
+                wprintf(L"TestListPorts: Could not retrieve the required buffer size.\n");
+
+                return 0;
+            }
+
+            pszData = (LPWSTR)UtAllocMem(nDataLen);
+
+            if (!UtListPortsGetUsbPortData(nIndex, l_PortData[nDataIndex].nPortData,
+                                           pszData, &nDataLen))
+            {
+                wprintf(L"TestListPorts: Could not retrieve the data.\n");
+
+                return 0;
+            }
+
+            wprintf(l_PortData[nDataIndex].pszPortDataString, pszData);
+
+            UtFreeMem(pszData);
+
+            ++nDataIndex;
+
+            if (l_PortData[nDataIndex].pszPortDataString == NULL)
+            {
+                bQuit = TRUE;
+            }
+        }
+
+        wprintf(L"\n");
+    }
+
+    return 1;
+}
+
 static int lDisplayHelp(void)
 {
     wprintf(L"\n");
@@ -226,12 +295,13 @@ static int lDisplayHelp(void)
     UtConsolePrintAppVersion();
 
     wprintf(L"\n");
-    wprintf(L"TestListPorts [/list (all | lpt | usb)]\n");
+    wprintf(L"TestListPorts [/list (all | lpt | usbprint | usb)]\n");
     wprintf(L"\n");
     wprintf(L"    /list\n");
-    wprintf(L"        all - List all lpt and usb printer ports\n");
-    wprintf(L"        lpt - List lpt printer ports\n");
-    wprintf(L"        usb - List USB printer ports\n");
+    wprintf(L"        all      - List all lpt and usb printer ports\n");
+    wprintf(L"        lpt      - List lpt printer ports\n");
+    wprintf(L"        usbprint - List USB printer ports\n");
+    wprintf(L"        usb      - List USB ports\n");
     wprintf(L"\n");
 
     return -1;
@@ -282,5 +352,5 @@ int _cdecl wmain(int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
 /***************************************************************************/

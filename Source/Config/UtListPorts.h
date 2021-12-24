@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtListPorts_H)
@@ -23,10 +23,12 @@ typedef enum EPortData
 
 MExternC BOOL UTLISTPORTSAPI UtListPortsInitialize(VOID);
 MExternC BOOL UTLISTPORTSAPI UtListPortsUninitialize(VOID);
-MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortCount(_Out_ LPINT pnCount);
-MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_ LPWSTR pszData, _Out_ LPINT pnDataLen);
-MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortCount(_Out_ LPINT pnCount);
-MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_ LPWSTR pszData, _Out_ LPINT pnDataLen);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortCount(_Out_writes_bytes_(sizeof(INT)) LPINT pnCount);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_writes_z_(*pnDataLen) LPWSTR pszData, _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortCount(_Out_writes_bytes_(sizeof(INT)) LPINT pnCount);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_writes_z_(*pnDataLen) LPWSTR pszData, _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPortCount(_Out_writes_bytes_(sizeof(INT)) LPINT pnCount);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_writes_z_(*pnDataLen) LPWSTR pszData, _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen);
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
@@ -37,5 +39,5 @@ MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(_In_ INT nIndex, _In
 #endif /* UtListPorts_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2007-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2007-2021 Kevin Eshbach                                  */
 /***************************************************************************/

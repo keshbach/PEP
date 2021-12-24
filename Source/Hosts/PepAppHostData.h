@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2019-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2019-2021 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepAppHostData_H)
@@ -19,6 +19,7 @@
 
 typedef struct tagTPepAppHostData
 {
+    BOOL bUseParallelPort;
     DWORD dwExitCode;
 } TPepAppHostData;
 
@@ -31,5 +32,5 @@ typedef struct tagTPepAppHostData
 #endif /* end of PepAppHostData_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2019-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2019-2021 Kevin Eshbach                                  */
 /***************************************************************************/
