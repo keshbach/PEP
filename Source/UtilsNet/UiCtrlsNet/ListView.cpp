@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -309,6 +309,26 @@ Common::Forms::ListView::EDragDropScrollHitTest Common::Forms::ListView::DragDro
     }
 
     return EDragDropScrollHitTest::None;
+}
+
+System::Boolean Common::Forms::ListView::ChangeColumnDisplayOrder(
+  array<System::Int32>^ nColumns)
+{
+    System::IntPtr ColumnData = System::Runtime::InteropServices::Marshal::AllocHGlobal(nColumns->Length * sizeof(INT));
+    LPINT pnColumnOrder = (LPINT)ColumnData.ToPointer();
+    HWND hWnd = (HWND)Handle.ToPointer();
+    BOOL bResult;
+
+    for (System::Int32 nIndex = 0; nIndex < nColumns->Length; ++nIndex)
+    {
+        pnColumnOrder[nIndex] = nColumns[nIndex];
+    }
+
+    bResult = ListView_SetColumnOrderArray(hWnd, pnColumnOrder, nColumns->Length);
+
+    System::Runtime::InteropServices::Marshal::FreeHGlobal(ColumnData);
+
+    return bResult ? true : false;
 }
 
 #pragma region "Common::Forms::ITextBoxKeyPress"
@@ -741,5 +761,5 @@ void Common::Forms::ListView::OnKeyPressLabelEdit(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

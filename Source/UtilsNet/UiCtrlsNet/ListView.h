@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -400,6 +400,16 @@ namespace Common
 
             EDragDropScrollHitTest DragDropScrollHitTest(System::Drawing::Point point);
 
+            /// <summary>
+            /// Changes the display order of the columns.
+            /// </summary>
+            /// <param name="nColumns">
+            /// Indexes of the columns  (Indexes start at zero.)
+            /// </param>
+            /// <returns>true if successful, false if failed</returns>
+ 
+            System::Boolean ChangeColumnDisplayOrder(array<System::Int32>^ nColumns);
+
         // Common::Forms::ITextBoxKeyPress
         public:
             virtual System::Boolean OnTextBoxKeyPress(wchar_t KeyChar);
@@ -464,5 +474,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
