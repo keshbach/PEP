@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -48,6 +48,14 @@ void Common::Forms::TextBoxTimer::CancelKeyPressTimer()
     m_Timer->Stop();
 
 	m_bTimerStarted = false;
+}
+
+void Common::Forms::TextBoxTimer::StartKeyPressTimer()
+{
+    m_Timer->Stop();
+    m_Timer->Start();
+
+    m_bTimerStarted = true;
 }
 
 void Common::Forms::TextBoxTimer::WndProc(
@@ -127,5 +135,5 @@ void Common::Forms::TextBoxTimer::OnKeyPressTimerExpired(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

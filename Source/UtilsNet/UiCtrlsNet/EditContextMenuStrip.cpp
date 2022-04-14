@@ -1,11 +1,16 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
 #include "ContextMenuStrip.h"
 #include "EditContextMenuStrip.h" 
+
+#include "TextBox.h"
+#include "TextBoxTimer.h"
+
+#include "Includes/UtTemplates.h"
 
 #include "Includes/UtKeyboard.inl"
 
@@ -343,6 +348,11 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemUndo_Click(
     if (m_TextBox != nullptr)
     {
         m_TextBox->Undo();
+
+        if (IsInstance<Common::Forms::TextBoxTimer^>(m_TextBox))
+        {
+            ((Common::Forms::TextBoxTimer^)m_TextBox)->StartKeyPressTimer();
+        }
     }
     else if (m_MaskedTextBox != nullptr)
     {
@@ -364,6 +374,11 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemCut_Click(
     if (m_TextBox != nullptr)
     {
         m_TextBox->Cut();
+
+        if (IsInstance<Common::Forms::TextBoxTimer^>(m_TextBox))
+        {
+            ((Common::Forms::TextBoxTimer^)m_TextBox)->StartKeyPressTimer();
+        }
     }
     else if (m_MaskedTextBox != nullptr)
     {
@@ -406,6 +421,11 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemPaste_Click(
     if (m_TextBox != nullptr)
     {
         m_TextBox->Paste();
+
+        if (IsInstance<Common::Forms::TextBoxTimer^>(m_TextBox))
+        {
+            ((Common::Forms::TextBoxTimer^)m_TextBox)->StartKeyPressTimer();
+        }
     }
     else if (m_MaskedTextBox != nullptr)
     {
@@ -427,6 +447,11 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemDelete_Click(
     if (m_TextBox != nullptr)
     {
         m_TextBox->Text = m_TextBox->Text->Remove(m_TextBox->SelectionStart, m_TextBox->SelectionLength);
+
+        if (IsInstance<Common::Forms::TextBoxTimer^>(m_TextBox))
+        {
+            ((Common::Forms::TextBoxTimer^)m_TextBox)->StartKeyPressTimer();
+        }
     }
     else if (m_MaskedTextBox != nullptr)
     {
@@ -525,5 +550,5 @@ void Common::Forms::EditContextMenuStrip::contextMenuStrip_Opening(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
