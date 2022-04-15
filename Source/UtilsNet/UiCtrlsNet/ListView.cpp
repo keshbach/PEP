@@ -324,7 +324,7 @@ System::Boolean Common::Forms::ListView::ChangeColumnDisplayOrder(
         pnColumnOrder[nIndex] = nColumns[nIndex];
     }
 
-    bResult = ListView_SetColumnOrderArray(hWnd, pnColumnOrder, nColumns->Length);
+    bResult = ListView_SetColumnOrderArray(hWnd, nColumns->Length, pnColumnOrder);
 
     System::Runtime::InteropServices::Marshal::FreeHGlobal(ColumnData);
 
