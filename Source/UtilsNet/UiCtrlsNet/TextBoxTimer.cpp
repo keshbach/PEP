@@ -3,6 +3,8 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+
+#include "ITextBoxClipboard.h"
 #include "ContextMenuStrip.h"
 #include "EditContextMenuStrip.h"
 #include "TextBox.h"

@@ -9,12 +9,14 @@
 #include "ListViewItemGroupSequentialSorter.h"
 
 #include "ListViewComboBoxEditEventArgs.h"
+#include "ListViewLabelEditPasteEventArgs.h"
 
 #include "ComboBox.h"
 
 #include "ListViewComboBox.h"
 
 #include "ContextMenuStrip.h"
+#include "ITextBoxClipboard.h"
 #include "EditContextMenuStrip.h"
 #include "ITextBoxKeyPress.h"
 
@@ -194,22 +196,6 @@ void Common::Forms::ListView::AutosizeColumn(
     Columns[nColumn]->Width = nWidth;
 }
 
-void Common::Forms::ListView::ChangeLabelEditText(
-  System::String^ sText)
-{
-    HWND hText = ListView_GetEditControl((HWND)Handle.ToPointer());
-    pin_ptr<const wchar_t> pszText = PtrToStringChars(sText);
-
-    if (hText)
-    {
-        ::SetWindowTextW(hText, pszText);
-    }
-    else
-    {
-        throw gcnew System::Exception(L"Label edit control has not been created.");
-    }
-}
-
 void Common::Forms::ListView::ChangeLabelEditSelection(
   System::Int32 nStart,
   System::Int32 nEnd)
@@ -343,6 +329,21 @@ System::Boolean Common::Forms::ListView::OnTextBoxKeyPress(
     OnKeyPressLabelEdit(EventArgs);
 
     return EventArgs->Handled;
+}
+
+#pragma endregion
+
+#pragma region "Common::Forms::ITextBoxClipboard"
+
+System::String^ Common::Forms::ListView::OnTextBoxPaste()
+{
+    Common::Forms::ListViewLabelEditPasteEventArgs^ ListViewLabelEditPasteEventArgs = gcnew Common::Forms::ListViewLabelEditPasteEventArgs();
+
+    ListViewLabelEditPasteEventArgs->TextPaste = System::Windows::Forms::Clipboard::GetText();
+
+    OnPasteLabelEdit(ListViewLabelEditPasteEventArgs);
+
+    return ListViewLabelEditPasteEventArgs->TextPaste;
 }
 
 #pragma endregion
@@ -515,7 +516,7 @@ void Common::Forms::ListView::HandleParentNotify(
                 Common::Forms::UtContextMenuStrip::ClearShortcutKeys();
             }
 
-            m_NativeEdit = gcnew NativeEdit((HWND)Message.LParam.ToPointer(), this);
+            m_NativeEdit = gcnew NativeEdit((HWND)Message.LParam.ToPointer(), this, this);
         }
     }
     else if (WM_DESTROY == LOWORD(Message.WParam.ToPointer()))
@@ -758,6 +759,12 @@ void Common::Forms::ListView::OnKeyPressLabelEdit(
   System::Windows::Forms::KeyPressEventArgs^ e)
 {
     KeyPressLabelEdit(this, e);
+}
+
+void Common::Forms::ListView::OnPasteLabelEdit(
+  Common::Forms::ListViewLabelEditPasteEventArgs^ e)
+{
+    PasteLabelEdit(this, e);
 }
 
 /////////////////////////////////////////////////////////////////////////////

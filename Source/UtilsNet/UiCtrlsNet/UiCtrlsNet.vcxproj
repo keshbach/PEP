@@ -272,6 +272,7 @@
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ContextMenuStrip.cpp" />
     <ClCompile Include="EditContextMenuStrip.cpp" />
+    <ClCompile Include="ListViewLabelEditPasteEventArgs.cpp" />
     <ClCompile Include="NativeEdit.cpp" />
     <ClCompile Include="TemplateInstantiator.cpp" />
     <ClCompile Include="ListViewComboBoxEditEventArgs.cpp" />
@@ -280,6 +281,7 @@
     <ClCompile Include="ToolStrip.cpp" />
     <ClCompile Include="TreeNodeAscendingSorter.cpp" />
     <ClCompile Include="TreeNodeDescendingSorter.cpp" />
+    <ClCompile Include="TreeViewLabelEditPasteEventArgs.cpp" />
     <ClCompile Include="UiCtrlsNetDllMain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -323,7 +325,9 @@
   <ItemGroup>
     <ClInclude Include="ContextMenuStrip.h" />
     <ClInclude Include="EditContextMenuStrip.h" />
+    <ClInclude Include="ITextBoxClipboard.h" />
     <ClInclude Include="ITextBoxKeyPress.h" />
+    <ClInclude Include="ListViewLabelEditPasteEventArgs.h" />
     <ClInclude Include="NativeEdit.h" />
     <ClInclude Include="ToolStripItemGroupImpl.h" />
     <ClInclude Include="ListViewComboBoxEditEventArgs.h" />
@@ -332,6 +336,7 @@
     <ClInclude Include="ToolStrip.h" />
     <ClInclude Include="TreeNodeAscendingSorter.h" />
     <ClInclude Include="TreeNodeDescendingSorter.h" />
+    <ClInclude Include="TreeViewLabelEditPasteEventArgs.h" />
     <ClInclude Include="UtContextMenuStrip.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />

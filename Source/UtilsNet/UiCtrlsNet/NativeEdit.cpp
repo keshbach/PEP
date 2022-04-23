@@ -1,9 +1,10 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
+#include "ITextBoxClipboard.h"
 #include "ContextMenuStrip.h"
 #include "EditContextMenuStrip.h"
 #include "ITextBoxKeyPress.h"
@@ -12,6 +13,7 @@
 #pragma region "Constants"
 
 #define CEditWndProcPropName L"KE_EditWndProc"
+#define CEditLastKeyCodePropName L"KE_EditLastKeyCode"
 
 #pragma endregion
 
@@ -53,6 +55,8 @@ static BOOL lEditProcessKeyDownMsg(
 {
     Common::Forms::NativeEdit^ NativeEdit = Common::Forms::NativeEdit::s_IntPtrNativeEditDict[System::IntPtr(hWnd)];
 
+    ::SetPropW(hWnd, CEditLastKeyCodePropName, IntToPtr(nKeyCode));
+
     return NativeEdit->m_EditContextMenuStrip->ProcessKeyDown(nKeyCode);
 }
 
@@ -62,6 +66,8 @@ static BOOL lEditProcessKeyUpMsg(
 {
     Common::Forms::NativeEdit^ NativeEdit = Common::Forms::NativeEdit::s_IntPtrNativeEditDict[System::IntPtr(hWnd)];
 
+    ::RemovePropW(hWnd, CEditLastKeyCodePropName);
+
     return NativeEdit->m_EditContextMenuStrip->ProcessKeyUp(nKeyCode);
 }
 
@@ -70,6 +76,17 @@ static BOOL lEditProcessCharMsg(
   _In_ INT nKeyCode)
 {
     Common::Forms::NativeEdit^ NativeEdit = Common::Forms::NativeEdit::s_IntPtrNativeEditDict[System::IntPtr(hWnd)];
+    INT nLastKeyCode = PtrToInt(::GetPropW(hWnd, CEditLastKeyCodePropName));
+
+    if ((wchar_t)nKeyCode == VK_BACK)
+    {
+        return FALSE;
+    }
+
+    if (NativeEdit->m_EditContextMenuStrip->IsHandledByContextMenuStrip(nLastKeyCode))
+    {
+        return TRUE;
+    }
 
     return NativeEdit->m_TextBoxKeyPress->OnTextBoxKeyPress((wchar_t)nKeyCode) ? TRUE : FALSE;
 }
@@ -137,10 +154,11 @@ static LRESULT CALLBACK lEditWindowProc(
 
 Common::Forms::NativeEdit::NativeEdit(
   _In_ HWND hWnd,
-  Common::Forms::ITextBoxKeyPress^ TextBoxKeyPress) :
+  Common::Forms::ITextBoxKeyPress^ TextBoxKeyPress,
+  Common::Forms::ITextBoxClipboard^ TextBoxClipboard) :
   m_TextBoxKeyPress(TextBoxKeyPress)
 {
-    m_EditContextMenuStrip = gcnew Common::Forms::EditContextMenuStrip(hWnd);
+    m_EditContextMenuStrip = gcnew Common::Forms::EditContextMenuStrip(hWnd, TextBoxClipboard);
 
     s_IntPtrNativeEditDict->Add(System::IntPtr(hWnd), this);
 
@@ -158,5 +176,5 @@ Common::Forms::NativeEdit::~NativeEdit()
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

@@ -155,6 +155,7 @@ namespace OpenZip
             this.treeViewFolder.Sorted = true;
             this.treeViewFolder.Sorting = Common.Forms.TreeView.ESortOrder.Ascending;
             this.treeViewFolder.TabIndex = 0;
+            this.treeViewFolder.PasteLabelEdit += new Common.Forms.TreeView.PasteLabelEditHandler(this.treeViewFolder_PasteLabelEdit);
             this.treeViewFolder.KeyPressLabelEdit += new Common.Forms.TreeView.KeyPressLabelEditHandler(this.treeViewFolder_KeyPressLabelEdit);
             this.treeViewFolder.BeforeLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.treeViewFolder_BeforeLabelEdit);
             this.treeViewFolder.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.treeViewFolder_AfterLabelEdit);
@@ -234,6 +235,7 @@ namespace OpenZip
             this.listViewFolderFile.TabIndex = 0;
             this.listViewFolderFile.UseCompatibleStateImageBehavior = false;
             this.listViewFolderFile.View = System.Windows.Forms.View.Details;
+            this.listViewFolderFile.PasteLabelEdit += new Common.Forms.ListView.PasteLabelEditHandler(this.listViewFolderFile_PasteLabelEdit);
             this.listViewFolderFile.KeyPressLabelEdit += new Common.Forms.ListView.KeyPressLabelEditHandler(this.listViewFolderFile_KeyPressLabelEdit);
             this.listViewFolderFile.AfterLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.listViewFolderFile_AfterLabelEdit);
             this.listViewFolderFile.BeforeLabelEdit += new System.Windows.Forms.LabelEditEventHandler(this.listViewFolderFile_BeforeLabelEdit);
@@ -276,13 +278,13 @@ namespace OpenZip
             this.toolStripSeparatorFile1,
             this.toolStripMenuItemFileProperties});
             this.contextMenuStripFile.Name = "contextMenuStripListView";
-            this.contextMenuStripFile.Size = new System.Drawing.Size(181, 98);
+            this.contextMenuStripFile.Size = new System.Drawing.Size(137, 76);
             // 
             // toolStripMenuItemFileDelete
             // 
             this.toolStripMenuItemFileDelete.Name = "toolStripMenuItemFileDelete";
             this.toolStripMenuItemFileDelete.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-            this.toolStripMenuItemFileDelete.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemFileDelete.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemFileDelete.Text = "&Delete";
             this.toolStripMenuItemFileDelete.Click += new System.EventHandler(this.toolStripMenuItemFileDelete_Click);
             // 
@@ -290,19 +292,19 @@ namespace OpenZip
             // 
             this.toolStripMenuItemFileRename.Name = "toolStripMenuItemFileRename";
             this.toolStripMenuItemFileRename.ShortcutKeys = System.Windows.Forms.Keys.F2;
-            this.toolStripMenuItemFileRename.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemFileRename.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemFileRename.Text = "&Rename";
             this.toolStripMenuItemFileRename.Click += new System.EventHandler(this.toolStripMenuItemFileRename_Click);
             // 
             // toolStripSeparatorFile1
             // 
             this.toolStripSeparatorFile1.Name = "toolStripSeparatorFile1";
-            this.toolStripSeparatorFile1.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparatorFile1.Size = new System.Drawing.Size(133, 6);
             // 
             // toolStripMenuItemFileProperties
             // 
             this.toolStripMenuItemFileProperties.Name = "toolStripMenuItemFileProperties";
-            this.toolStripMenuItemFileProperties.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemFileProperties.Size = new System.Drawing.Size(136, 22);
             this.toolStripMenuItemFileProperties.Text = "&Properties";
             this.toolStripMenuItemFileProperties.Click += new System.EventHandler(this.toolStripMenuItemFileProperties_Click);
             // 

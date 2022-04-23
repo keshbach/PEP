@@ -1,12 +1,15 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2021 Kevin Eshbach
+//  Copyright (C) 2014-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
+#include "TreeViewLabelEditPasteEventArgs.h"
+
 #include "TreeNodeAscendingSorter.h"
 #include "TreeNodeDescendingSorter.h"
 
+#include "ITextBoxClipboard.h"
 #include "ContextMenuStrip.h"
 #include "EditContextMenuStrip.h"
 #include "ITextBoxKeyPress.h"
@@ -64,22 +67,6 @@ void Common::Forms::TreeView::Sort(void)
         {
             Node->EnsureVisible();
         }
-    }
-}
-
-void Common::Forms::TreeView::ChangeLabelEditText(
-  System::String^ sText)
-{
-    HWND hText = TreeView_GetEditControl((HWND)Handle.ToPointer());
-    pin_ptr<const wchar_t> pszText = PtrToStringChars(sText);
-
-    if (hText)
-    {
-        ::SetWindowTextW(hText, pszText);
-    }
-    else
-    {
-        throw gcnew System::Exception(L"Label edit control has not been created.");
     }
 }
 
@@ -214,6 +201,22 @@ System::Boolean Common::Forms::TreeView::OnTextBoxKeyPress(
 
 #pragma endregion
 
+#pragma region "Common::Forms::ITextBoxClipboard"
+
+System::String^ Common::Forms::TreeView::OnTextBoxPaste()
+{
+    Common::Forms::TreeViewLabelEditPasteEventArgs^ TreeViewLabelEditPasteEventArgs = gcnew Common::Forms::TreeViewLabelEditPasteEventArgs();
+
+    TreeViewLabelEditPasteEventArgs->TextPaste = System::Windows::Forms::Clipboard::GetText();
+
+    OnPasteLabelEdit(TreeViewLabelEditPasteEventArgs);
+
+    return TreeViewLabelEditPasteEventArgs->TextPaste;
+}
+
+#pragma endregion
+
+
 void Common::Forms::TreeView::WndProc(
   System::Windows::Forms::Message% Message)
 {
@@ -264,7 +267,7 @@ void Common::Forms::TreeView::HandleParentNotify(
                 Common::Forms::UtContextMenuStrip::ClearShortcutKeys();
             }
 
-            m_NativeEdit = gcnew NativeEdit((HWND)Message.LParam.ToPointer(), this);
+            m_NativeEdit = gcnew NativeEdit((HWND)Message.LParam.ToPointer(), this, this);
         }
     }
     else if (WM_DESTROY == LOWORD(Message.WParam.ToPointer()))
@@ -291,6 +294,12 @@ void Common::Forms::TreeView::OnKeyPressLabelEdit(
     KeyPressLabelEdit(this, e);
 }
 
+void Common::Forms::TreeView::OnPasteLabelEdit(
+  Common::Forms::TreeViewLabelEditPasteEventArgs^ e)
+{
+    PasteLabelEdit(this, e);
+}
+
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2021 Kevin Eshbach
+//  Copyright (C) 2014-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

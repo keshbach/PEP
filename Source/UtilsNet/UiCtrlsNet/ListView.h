@@ -13,7 +13,8 @@ namespace Common
         /// </summary>
 
         public ref class ListView : System::Windows::Forms::ListView,
-                                    Common::Forms::ITextBoxKeyPress
+                                    Common::Forms::ITextBoxKeyPress,
+                                    Common::Forms::ITextBoxClipboard
         {
         // List View Events
         public:
@@ -31,6 +32,11 @@ namespace Common
             [System::ComponentModel::Description("Occurs when a key is pressed while focus is on the label edit control."),
                 System::ComponentModel::Category("Label Edit Key")]
             event KeyPressLabelEditHandler^ KeyPressLabelEdit;
+
+            delegate void PasteLabelEditHandler(System::Object^ sender, Common::Forms::ListViewLabelEditPasteEventArgs^ e);
+            [System::ComponentModel::Description("Occurs when a paste is about to occur in the label edit control."),
+                System::ComponentModel::Category("Behavior")]
+            event PasteLabelEditHandler^ PasteLabelEdit;
 
         public:
             enum class ESortOrder
@@ -359,15 +365,6 @@ namespace Common
             void AutosizeColumn(System::Int32 nColumn);
 
             /// <summary>
-            /// Changes the label edit's text.
-            /// <param name="sText">
-            /// New text for the label edit.
-            /// </param>
-            /// </summary>
-
-            void ChangeLabelEditText(System::String^ sText);
-
-            /// <summary>
             /// Selects a range of characters in the label edit's text.
             /// <param name="nStart">
             /// Starting character position of the selection.  (Set to -1 to clear any selection.)
@@ -414,6 +411,10 @@ namespace Common
         public:
             virtual System::Boolean OnTextBoxKeyPress(wchar_t KeyChar);
 
+        // Common::Forms::ITextBoxClipboard
+        public:
+            virtual System::String^ OnTextBoxPaste();
+
         protected:
             /// <summary>
             /// Clean up any resources being used.
@@ -457,6 +458,7 @@ namespace Common
             void OnBeforeComboBoxEdit(Common::Forms::ListViewComboBoxEditEventArgs^ e);
             void OnAfterComboBoxEdit(Common::Forms::ListViewComboBoxEditEventArgs^ e);
             void OnKeyPressLabelEdit(System::Windows::Forms::KeyPressEventArgs^ e);
+            void OnPasteLabelEdit(Common::Forms::ListViewLabelEditPasteEventArgs^ e);
 
         private:
             ESortOrder m_SortOrder;

@@ -78,9 +78,7 @@ namespace OpenZip
             private const System.String CSizeFormat = "###,###,##0";
             private const System.String CCrcFormat = "x8";
 
-            private const System.Int32 CBackspaceKeyCode = 0x0008;
             private const System.Int32 CControlKeyCode = 0x0009;
-            private const System.Int32 CPasteKeyCode = 0x0016;
 
             // Timer delays (in milliseconds)
 
@@ -735,9 +733,8 @@ namespace OpenZip
                 return true;
             }
 
-            private static System.String GetValidClipboardText()
+            private static System.String SanitizeText(System.String sText)
             {
-                System.String sText = System.Windows.Forms.Clipboard.GetText();
                 System.Int32 nIndex = 0;
 
                 while (nIndex < sText.Length)
@@ -2480,6 +2477,11 @@ namespace OpenZip
                 }
             }
 
+            private void treeViewFolder_PasteLabelEdit(object sender, Common.Forms.TreeViewLabelEditPasteEventArgs e)
+            {
+                e.TextPaste = SanitizeText(e.TextPaste);
+            }
+
             private void treeViewFolder_AfterLabelEdit(
                 object sender,
                 System.Windows.Forms.NodeLabelEditEventArgs e)
@@ -2587,21 +2589,9 @@ namespace OpenZip
                 object sender,
                 System.Windows.Forms.KeyPressEventArgs e)
             {
-                if (e.KeyChar == CBackspaceKeyCode)
+                if (!IsValidKeyChar(e.KeyChar))
                 {
-                }
-                else if (e.KeyChar == CPasteKeyCode)
-                {
-                    treeViewFolder.ChangeLabelEditText(GetValidClipboardText());
-
                     e.Handled = true;
-                }
-                else
-                {
-                    if (!IsValidKeyChar(e.KeyChar))
-                    {
-                        e.Handled = true;
-                    }
                 }
             }
 
@@ -2928,6 +2918,11 @@ namespace OpenZip
                 UpdateMenuAndToolStrips();
             }
 
+            private void listViewFolderFile_PasteLabelEdit(object sender, Common.Forms.ListViewLabelEditPasteEventArgs e)
+            {
+                e.TextPaste = SanitizeText(e.TextPaste);
+            }
+
             private void listViewFolderFile_KeyDown(
                 object sender,
                 System.Windows.Forms.KeyEventArgs e)
@@ -2978,21 +2973,9 @@ namespace OpenZip
                 object sender,
                 System.Windows.Forms.KeyPressEventArgs e)
             {
-                if (e.KeyChar == CBackspaceKeyCode)
+                if (!IsValidKeyChar(e.KeyChar))
                 {
-                }
-                else if (e.KeyChar == CPasteKeyCode)
-                {
-                    listViewFolderFile.ChangeLabelEditText(GetValidClipboardText());
-
                     e.Handled = true;
-                }
-                else
-                {
-                    if (!IsValidKeyChar(e.KeyChar))
-                    {
-                        e.Handled = true;
-                    }
                 }
             }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -16,12 +16,28 @@ namespace Common
         internal:
             EditContextMenuStrip(System::Windows::Forms::TextBox^ TextBox);
             EditContextMenuStrip(System::Windows::Forms::MaskedTextBox^ MaskedTextBox);
-            EditContextMenuStrip(HWND hEdit);
+            EditContextMenuStrip(HWND hEdit, Common::Forms::ITextBoxClipboard^ TextBoxClipboard);
 
             void DisplayContextMenuStrip(LPPOINT pPoint);
 
             BOOL ProcessKeyDown(INT nKeyCode);
             BOOL ProcessKeyUp(INT nKeyCode);
+
+            BOOL IsHandledByContextMenuStrip(INT nKeyCode);
+
+        internal:
+            property ITextBoxClipboard^ TextBoxClipboard
+            {
+                ITextBoxClipboard^ get()
+                {
+                    return m_TextBoxClipboard;
+                }
+
+                void set(ITextBoxClipboard^ value)
+                {
+                    m_TextBoxClipboard = value;
+                }
+            }
 
         protected:
             /// <summary>
@@ -52,6 +68,8 @@ namespace Common
 
             HWND m_hEdit;
 
+            ITextBoxClipboard^ m_TextBoxClipboard;
+
             Common::Forms::ContextMenuStrip^ m_ContextMenuStrip;
 
             System::Windows::Forms::ToolStripMenuItem^ m_ToolStripMenuItemUndo;
@@ -67,5 +85,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

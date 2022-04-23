@@ -15,7 +15,9 @@ namespace Common
         private ref class NativeEdit
         {
         internal:
-            NativeEdit(HWND hWnd, Common::Forms::ITextBoxKeyPress^ TextBoxKeyPress);
+            NativeEdit(HWND hWnd,
+                       Common::Forms::ITextBoxKeyPress^ TextBoxKeyPress,
+                       Common::Forms::ITextBoxClipboard^ TextBoxClipboard);
 
         protected:
             /// <summary>

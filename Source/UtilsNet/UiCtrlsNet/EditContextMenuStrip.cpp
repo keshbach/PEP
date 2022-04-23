@@ -5,6 +5,7 @@
 #include "stdafx.h"
 
 #include "ContextMenuStrip.h"
+#include "ITextBoxClipboard.h"
 #include "EditContextMenuStrip.h" 
 
 #include "TextBox.h"
@@ -65,33 +66,38 @@ Common::Forms::EditContextMenuStrip::EditContextMenuStrip()
     m_TextBox = nullptr;
     m_MaskedTextBox = nullptr;
     m_hEdit = NULL;
+    m_TextBoxClipboard = nullptr;
 }
 
 Common::Forms::EditContextMenuStrip::EditContextMenuStrip(
   System::Windows::Forms::TextBox^ TextBox) :
   m_TextBox(TextBox),
   m_MaskedTextBox(nullptr),
-  m_hEdit(NULL)
+  m_hEdit(NULL),
+  m_TextBoxClipboard(nullptr)
 {
     CreateContextMenu();
     CreateToolStripGroups();
 }
 
 Common::Forms::EditContextMenuStrip::EditContextMenuStrip(
-    System::Windows::Forms::MaskedTextBox^ MaskedTextBox) :
-    m_TextBox(nullptr),
-    m_MaskedTextBox(MaskedTextBox),
-    m_hEdit(NULL)
+  System::Windows::Forms::MaskedTextBox^ MaskedTextBox) :
+  m_TextBox(nullptr),
+  m_MaskedTextBox(MaskedTextBox),
+  m_hEdit(NULL),
+  m_TextBoxClipboard(nullptr)
 {
     CreateContextMenu();
     CreateToolStripGroups();
 }
 
 Common::Forms::EditContextMenuStrip::EditContextMenuStrip(
-  HWND hEdit) :
+  HWND hEdit,
+  Common::Forms::ITextBoxClipboard^ TextBoxClipboard) :
   m_TextBox(nullptr),
   m_MaskedTextBox(nullptr),
-  m_hEdit(hEdit)
+  m_hEdit(hEdit),
+  m_TextBoxClipboard(TextBoxClipboard)
 {
     CreateContextMenu();
     CreateToolStripGroups();
@@ -108,6 +114,7 @@ Common::Forms::EditContextMenuStrip::~EditContextMenuStrip()
 
     m_TextBox = nullptr;
     m_MaskedTextBox = nullptr;
+    m_TextBoxClipboard = nullptr;
 }
 
 #pragma endregion
@@ -151,6 +158,21 @@ BOOL Common::Forms::EditContextMenuStrip::ProcessKeyUp(
 
         return TRUE;
     }
+
+    ToolStripMenuItem = Common::Forms::Utility::FindToolStripMenuItemByShortcutKeys(nKeyCode, m_ContextMenuStrip->Items);
+
+    if (ToolStripMenuItem != nullptr)
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOL Common::Forms::EditContextMenuStrip::IsHandledByContextMenuStrip(
+  INT nKeyCode)
+{
+    System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem;
 
     ToolStripMenuItem = Common::Forms::Utility::FindToolStripMenuItemByShortcutKeys(nKeyCode, m_ContextMenuStrip->Items);
 
@@ -415,8 +437,17 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemPaste_Click(
   System::Object^ Object,
   System::EventArgs^ EventArgs)
 {
+    System::String^ sOriginalClipboardText;
+
     Object;
     EventArgs;
+
+    if (m_TextBoxClipboard != nullptr)
+    {
+        sOriginalClipboardText = System::Windows::Forms::Clipboard::GetText();
+
+        System::Windows::Forms::Clipboard::SetText(m_TextBoxClipboard->OnTextBoxPaste());
+    }
 
     if (m_TextBox != nullptr)
     {
@@ -434,6 +465,11 @@ void Common::Forms::EditContextMenuStrip::toolStripMenuItemPaste_Click(
     else if (m_hEdit)
     {
         ::SendMessage(m_hEdit, WM_PASTE, 0, 0);
+    }
+
+    if (m_TextBoxClipboard != nullptr)
+    {
+        System::Windows::Forms::Clipboard::SetText(sOriginalClipboardText);
     }
 }
 
