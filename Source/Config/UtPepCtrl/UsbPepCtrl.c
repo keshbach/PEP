@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2022 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -1380,18 +1380,18 @@ BOOL UsbPepCtrlReadUserData(
     {
         nTotal = nReadUserDataLen - nReadUserDataIndex;
 
-        if (nTotal > MArrayLen(CommandData.Data.ReadUserData))
+        if (nTotal > MArrayLen(CommandData.Data.ReadUserData.Data))
         {
-            nTotal = MArrayLen(CommandData.Data.ReadUserData);
+            nTotal = MArrayLen(CommandData.Data.ReadUserData.Data);
         }
 
-        CommandData.Data.nReadUserDataLen = (UINT8)nTotal;
+        CommandData.Data.ReadUserData.nDataLen = (UINT8)nTotal;
 
-        for (nIndex = 0; nIndex < CommandData.Data.nReadUserDataLen; ++nIndex)
+        for (nIndex = 0; nIndex < CommandData.Data.ReadUserData.nDataLen; ++nIndex)
         {
-            CommandData.Data.ReadUserData[nIndex].nAddress = pReadUserData[nReadUserDataIndex + nIndex].nAddress;
-            CommandData.Data.ReadUserData[nIndex].nEnableOutputEnable = pReadUserData[nReadUserDataIndex + nIndex].OutputEnableMode == eUtPepCtrlEnableOE;
-            CommandData.Data.ReadUserData[nIndex].nPerformRead = (UINT8)pReadUserData[nReadUserDataIndex + nIndex].bPerformRead;
+            CommandData.Data.ReadUserData.Data[nIndex].nAddress = pReadUserData[nReadUserDataIndex + nIndex].nAddress;
+            CommandData.Data.ReadUserData.Data[nIndex].nEnableOutputEnable = pReadUserData[nReadUserDataIndex + nIndex].OutputEnableMode == eUtPepCtrlEnableOE;
+            CommandData.Data.ReadUserData.Data[nIndex].nPerformRead = (UINT8)pReadUserData[nReadUserDataIndex + nIndex].bPerformRead;
         }
 
         if (lSendDeviceCommand(l_DeviceData.UsbDeviceData.hDevice, CDefSendTimeoutMs, &CommandData) &&
@@ -1399,9 +1399,9 @@ BOOL UsbPepCtrlReadUserData(
         {
             if (ResponseData.ErrorCode == CPepErrorSuccess)
             {
-                for (nIndex = 0; nIndex < CommandData.Data.nReadUserDataLen; ++nIndex)
+                for (nIndex = 0; nIndex < CommandData.Data.ReadUserData.nDataLen; ++nIndex)
                 {
-                    if (CommandData.Data.ReadUserData[nIndex].nPerformRead)
+                    if (CommandData.Data.ReadUserData.Data[nIndex].nPerformRead)
                     {
                         *(pbyData + nDataIndex) = ResponseData.Data.nData[nIndex];
 
@@ -1451,18 +1451,18 @@ BOOL UsbPepCtrlReadUserDataWithDelay(
     {
         nTotal = nReadUserDataWithDelayLen - nReadUserDataWithDelayIndex;
 
-        if (nTotal > MArrayLen(CommandData.Data.ReadUserDataWithDelay))
+        if (nTotal > MArrayLen(CommandData.Data.ReadUserDataWithDelay.Data))
         {
-            nTotal = MArrayLen(CommandData.Data.ReadUserDataWithDelay);
+            nTotal = MArrayLen(CommandData.Data.ReadUserDataWithDelay.Data);
         }
 
-        CommandData.Data.nReadUserDataWithDelayLen = (UINT8)nTotal;
+        CommandData.Data.ReadUserDataWithDelay.nDataLen = (UINT8)nTotal;
 
-        for (nIndex = 0; nIndex < CommandData.Data.nReadUserDataWithDelayLen; ++nIndex)
+        for (nIndex = 0; nIndex < CommandData.Data.ReadUserDataWithDelay.nDataLen; ++nIndex)
         {
-            CommandData.Data.ReadUserDataWithDelay[nIndex].nAddress = pReadUserDataWithDelay[nReadUserDataWithDelayIndex + nIndex].nAddress;
-            CommandData.Data.ReadUserDataWithDelay[nIndex].nDelayNanoSeconds = pReadUserDataWithDelay[nReadUserDataWithDelayIndex + nIndex].nDelayNanoSeconds;
-            CommandData.Data.ReadUserDataWithDelay[nIndex].nPerformRead = (UINT8)pReadUserDataWithDelay[nReadUserDataWithDelayIndex + nIndex].bPerformRead;
+            CommandData.Data.ReadUserDataWithDelay.Data[nIndex].nAddress = pReadUserDataWithDelay[nReadUserDataWithDelayIndex + nIndex].nAddress;
+            CommandData.Data.ReadUserDataWithDelay.Data[nIndex].nDelayNanoSeconds = pReadUserDataWithDelay[nReadUserDataWithDelayIndex + nIndex].nDelayNanoSeconds;
+            CommandData.Data.ReadUserDataWithDelay.Data[nIndex].nPerformRead = (UINT8)pReadUserDataWithDelay[nReadUserDataWithDelayIndex + nIndex].bPerformRead;
         }
 
         if (lSendDeviceCommand(l_DeviceData.UsbDeviceData.hDevice, CDefSendTimeoutMs, &CommandData) &&
@@ -1470,9 +1470,9 @@ BOOL UsbPepCtrlReadUserDataWithDelay(
         {
             if (ResponseData.ErrorCode == CPepErrorSuccess)
             {
-                for (nIndex = 0; nIndex < CommandData.Data.nReadUserDataWithDelayLen; ++nIndex)
+                for (nIndex = 0; nIndex < CommandData.Data.ReadUserDataWithDelay.nDataLen; ++nIndex)
                 {
-                    if (CommandData.Data.ReadUserDataWithDelay[nIndex].nPerformRead)
+                    if (CommandData.Data.ReadUserDataWithDelay.Data[nIndex].nPerformRead)
                     {
                         *(pbyData + nDataIndex) = ResponseData.Data.nData[nIndex];
 
@@ -1575,21 +1575,21 @@ BOOL UsbPepCtrlProgramUserData(
     {
         nTotal = nProgramUserDataLen - nProgramUserDataIndex;
 
-        if (nTotal > MArrayLen(CommandData.Data.ProgramUserData))
+        if (nTotal > MArrayLen(CommandData.Data.ProgramUserData.Data))
         {
-            nTotal = MArrayLen(CommandData.Data.ProgramUserData);
+            nTotal = MArrayLen(CommandData.Data.ProgramUserData.Data);
         }
 
-        CommandData.Data.nProgramUserDataLen = (UINT8)nTotal;
+        CommandData.Data.ProgramUserData.nDataLen = (UINT8)nTotal;
 
-        for (nIndex = 0; nIndex < CommandData.Data.nProgramUserDataLen; ++nIndex)
+        for (nIndex = 0; nIndex < CommandData.Data.ProgramUserData.nDataLen; ++nIndex)
         {
-            CommandData.Data.ProgramUserData[nIndex].nAddress = pProgramUserData[nProgramUserDataIndex + nIndex].nAddress;
-            CommandData.Data.ProgramUserData[nIndex].nPerformProgram = (UINT8)pProgramUserData[nProgramUserDataIndex + nIndex].bPerformProgram;
+            CommandData.Data.ProgramUserData.Data[nIndex].nAddress = pProgramUserData[nProgramUserDataIndex + nIndex].nAddress;
+            CommandData.Data.ProgramUserData.Data[nIndex].nPerformProgram = (UINT8)pProgramUserData[nProgramUserDataIndex + nIndex].bPerformProgram;
 
-            if (CommandData.Data.ProgramUserData[nIndex].nPerformProgram)
+            if (CommandData.Data.ProgramUserData.Data[nIndex].nPerformProgram)
             {
-                CommandData.Data.ProgramUserData[nIndex].nData = *(pbyData + nDataIndex);
+                CommandData.Data.ProgramUserData.Data[nIndex].nData = *(pbyData + nDataIndex);
 
                 ++nDataIndex;
             }
@@ -1600,7 +1600,7 @@ BOOL UsbPepCtrlProgramUserData(
         {
             if (ResponseData.ErrorCode == CPepErrorSuccess)
             {
-                nProgramUserDataIndex += CommandData.Data.nProgramUserDataLen;
+                nProgramUserDataIndex += CommandData.Data.ProgramUserData.nDataLen;
             }
             else
             {
@@ -1619,5 +1619,5 @@ BOOL UsbPepCtrlProgramUserData(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2022 Kevin Eshbach                                  */
 /***************************************************************************/

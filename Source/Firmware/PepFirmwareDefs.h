@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2022 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepFirmwareDefs_H)
@@ -47,6 +47,27 @@
 //
 // All data is little endian
 
+typedef struct tagTUtReadUserData
+{
+    UINT32 nAddress;
+    UINT8 nEnableOutputEnable;
+    UINT8 nPerformRead;
+} TUtReadUserData;
+
+typedef struct tagTUtReadUserDataWithDelay
+{
+    UINT32 nAddress;
+    UINT32 nDelayNanoSeconds; // Delay execute after set address and before performing a read
+    UINT8 nPerformRead;
+} TUtReadUserDataWithDelay;
+
+typedef struct tagTUtProgramUserData
+{
+    UINT32 nAddress;
+    UINT8 nPerformProgram;
+    UINT8 nData;
+} TUtProgramUserData;
+
 typedef struct tagTUtPepCommandData
 {
     UINT8 Command;
@@ -66,21 +87,15 @@ typedef struct tagTUtPepCommandData
 
         struct tagReadUserData
         {
-            UINT32 nAddress;
-            UINT8 nEnableOutputEnable;
-            UINT8 nPerformRead;
-        } ReadUserData[10];
-
-        UINT8 nReadUserDataLen; // 0 - 10
+            TUtReadUserData Data[10];
+            UINT8 nDataLen; // 0 - 10
+        } ReadUserData;
 
         struct tagReadUserDataWithDelay
         {
-            UINT32 nAddress;
-            UINT32 nDelayNanoSeconds; // Delay execute after set address and before performing a read
-            UINT8 nPerformRead;
-        } ReadUserDataWithDelay[6];
-
-        UINT8 nReadUserDataWithDelayLen; // 0 - 6
+            TUtReadUserDataWithDelay Data[6];
+            UINT8 nDataLen; // 0 - 6
+        } ReadUserDataWithDelay;
 
         struct tagProgramData
         {
@@ -91,12 +106,9 @@ typedef struct tagTUtPepCommandData
 
         struct tagProgramUserData
         {
-            UINT32 nAddress;
-            UINT8 nPerformProgram;
-            UINT8 nData;
-        } ProgramUserData[10];
-
-        UINT8 nProgramUserDataLen; // 0 - 10
+            TUtProgramUserData Data[10];
+            UINT8 nDataLen; // 0 - 10
+        } ProgramUserData;
 
         struct tagDelays
         {
@@ -130,5 +142,5 @@ typedef struct tagTUtPepResponseData
 #endif // PepFirmwareDefs_H
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2022 Kevin Eshbach                                  */
 /***************************************************************************/

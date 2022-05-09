@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2021-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2021-2022 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <p18cxxx.h>
@@ -147,26 +147,26 @@ static void lProcessReadUserDataCommand(void)
 {
     UINT8 nIndex;
 
-    if (l_CommandData.Data.nReadUserDataLen > MArrayLen(l_CommandData.Data.ReadUserData))
+    if (l_CommandData.Data.ReadUserData.nDataLen > MArrayLen(l_CommandData.Data.ReadUserData.Data))
     {
         l_ResponseData.ErrorCode = CPepErrorInvalidLength;
         
         return;
     }
 
-    for (nIndex = 0; nIndex < l_CommandData.Data.nReadUserDataLen; ++nIndex)
+    for (nIndex = 0; nIndex < l_CommandData.Data.ReadUserData.nDataLen; ++nIndex)
     {
         if (!UtPepLogicSetAddress(&l_PepLogicData,
-                                  l_CommandData.Data.ReadUserData[nIndex].nAddress) ||
+                                  l_CommandData.Data.ReadUserData.Data[nIndex].nAddress) ||
             !UtPepLogicSetOutputEnable(&l_PepLogicData,
-                                       l_CommandData.Data.ReadUserData[nIndex].nEnableOutputEnable))
+                                       l_CommandData.Data.ReadUserData.Data[nIndex].nEnableOutputEnable))
         {
             l_ResponseData.ErrorCode = CPepErrorFailed;
         
             return;
         }
         
-        if (l_CommandData.Data.ReadUserData[nIndex].nPerformRead)
+        if (l_CommandData.Data.ReadUserData.Data[nIndex].nPerformRead)
         {
             if (!UtPepLogicGetData(&l_PepLogicData,
                                    &l_ResponseData.Data.nData[nIndex]))
@@ -185,25 +185,25 @@ static void lProcessReadUserDataWithDelayCommand(void)
 {
     UINT8 nIndex;
 
-    if (l_CommandData.Data.nReadUserDataWithDelayLen > MArrayLen(l_CommandData.Data.ReadUserDataWithDelay))
+    if (l_CommandData.Data.ReadUserDataWithDelay.nDataLen > MArrayLen(l_CommandData.Data.ReadUserDataWithDelay.Data))
     {
         l_ResponseData.ErrorCode = CPepErrorInvalidLength;
         
         return;
     }
 
-    for (nIndex = 0; nIndex < l_CommandData.Data.nReadUserDataWithDelayLen; ++nIndex)
+    for (nIndex = 0; nIndex < l_CommandData.Data.ReadUserDataWithDelay.nDataLen; ++nIndex)
     {
         if (!UtPepLogicSetAddressWithDelay(&l_PepLogicData,
-                                           l_CommandData.Data.ReadUserDataWithDelay[nIndex].nAddress,
-                                           l_CommandData.Data.ReadUserDataWithDelay[nIndex].nDelayNanoSeconds))
+                                           l_CommandData.Data.ReadUserDataWithDelay.Data[nIndex].nAddress,
+                                           l_CommandData.Data.ReadUserDataWithDelay.Data[nIndex].nDelayNanoSeconds))
         {
             l_ResponseData.ErrorCode = CPepErrorFailed;
         
             return;
         }
 
-        if (l_CommandData.Data.ReadUserDataWithDelay[nIndex].nPerformRead)
+        if (l_CommandData.Data.ReadUserDataWithDelay.Data[nIndex].nPerformRead)
         {
             if (!UtPepLogicGetData(&l_PepLogicData,
                                    &l_ResponseData.Data.nData[nIndex]))
@@ -254,27 +254,27 @@ static void lProcessProgramUserDataCommand(void)
     UINT8 nIndex;
     BOOLEAN bSuccess;
 
-    if (l_CommandData.Data.nProgramUserDataLen > MArrayLen(l_CommandData.Data.ProgramUserData))
+    if (l_CommandData.Data.ProgramUserData.nDataLen > MArrayLen(l_CommandData.Data.ProgramUserData.Data))
     {
         l_ResponseData.ErrorCode = CPepErrorInvalidLength;
         
         return;
     }
     
-    for (nIndex = 0; nIndex < l_CommandData.Data.nProgramUserDataLen; ++nIndex)
+    for (nIndex = 0; nIndex < l_CommandData.Data.ProgramUserData.nDataLen; ++nIndex)
     {
         if (!UtPepLogicSetAddress(&l_PepLogicData,
-                                  l_CommandData.Data.ProgramUserData[nIndex].nAddress))
+                                  l_CommandData.Data.ProgramUserData.Data[nIndex].nAddress))
         {
             l_ResponseData.ErrorCode = CPepErrorFailed;
         
             return;
         }
 
-        if (l_CommandData.Data.ProgramUserData[nIndex].nPerformProgram)
+        if (l_CommandData.Data.ProgramUserData.Data[nIndex].nPerformProgram)
         {
             if (!UtPepLogicSetData(&l_PepLogicData,
-                                   l_CommandData.Data.ProgramUserData[nIndex].nData) ||
+                                   l_CommandData.Data.ProgramUserData.Data[nIndex].nData) ||
                 !UtPepLogicTriggerProgram(&l_PepLogicData,
                                           &bSuccess) ||
                 !bSuccess)
@@ -386,5 +386,5 @@ void ProcessCommand(void)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2021-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2021-2022 Kevin Eshbach                                  */
 /***************************************************************************/
