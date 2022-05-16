@@ -272,6 +272,7 @@
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ContextMenuStrip.cpp" />
     <ClCompile Include="EditContextMenuStrip.cpp" />
+    <ClCompile Include="Form.cpp" />
     <ClCompile Include="ListViewLabelEditPasteEventArgs.cpp" />
     <ClCompile Include="NativeEdit.cpp" />
     <ClCompile Include="TemplateInstantiator.cpp" />
@@ -325,6 +326,7 @@
   <ItemGroup>
     <ClInclude Include="ContextMenuStrip.h" />
     <ClInclude Include="EditContextMenuStrip.h" />
+    <ClInclude Include="Form.h" />
     <ClInclude Include="ITextBoxClipboard.h" />
     <ClInclude Include="ITextBoxKeyPress.h" />
     <ClInclude Include="ListViewLabelEditPasteEventArgs.h" />

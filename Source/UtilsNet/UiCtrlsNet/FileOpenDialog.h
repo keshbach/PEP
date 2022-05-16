@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2019 Kevin Eshbach
+//  Copyright (C) 2013-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -15,6 +15,22 @@ namespace Common
         public ref class FileOpenDialog
         {
         public:
+            /// <summary>
+            /// Title for the open dialog.
+            /// </summary>
+            property System::String^ Title
+            {
+                System::String^ get()
+                {
+                    return m_sTitle;
+                }
+
+                void set(System::String^ value)
+                {
+                    m_sTitle = value;
+                }
+            }
+
             /// <summary>
             /// Pick folders instead of files.
             /// </summary>
@@ -224,6 +240,7 @@ namespace Common
             ~FileOpenDialog();
 
         protected:
+            System::String^ m_sTitle;
             System::Boolean m_bPickFolders;
             System::Boolean m_bSelectMultipleItems;
             System::Boolean m_bAllowReadOnly;
@@ -241,5 +258,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2019 Kevin Eshbach
+//  Copyright (C) 2013-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

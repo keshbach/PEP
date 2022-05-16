@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2019 Kevin Eshbach
+//  Copyright (C) 2013-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -8,6 +8,8 @@
 #include "FileSaveDialog.h"
 
 #include "UtFileDialog.inl"
+
+#pragma region "Local Functions"
 
 #pragma unmanaged
 
@@ -55,7 +57,10 @@ static System::String^ lGetFileSysName(
     return sResult;
 }
 
+#pragma endregion
+
 Common::Forms::FileSaveDialog::FileSaveDialog() :
+  m_sTitle(nullptr),
   m_bOverwritePrompt(false),
   m_bStrictFileType(false),
   m_bCreatePrompt(false),
@@ -81,7 +86,7 @@ System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialog(
     IFileSaveDialog* pFileSaveDialog;
     FILEOPENDIALOGOPTIONS FileOpenDialogOptions;
     COMDLG_FILTERSPEC* pFilterSpecs;
-    pin_ptr<const wchar_t> pszFileName, pszDefaultExtension;
+    pin_ptr<const wchar_t> pszTitle, pszFileName, pszDefaultExtension;
 	GUID Guid;
 
     if (!lCreateFileSaveDialog(&pFileSaveDialog))
@@ -155,6 +160,13 @@ System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialog(
         pFileSaveDialog->SetOptions(FileOpenDialogOptions);
     }
 
+    if (m_sTitle != nullptr)
+    {
+        pszTitle = PtrToStringChars(m_sTitle);
+
+        pFileSaveDialog->SetTitle(pszTitle);
+    }
+
     if (m_sFileName != nullptr)
     {
         pszFileName = PtrToStringChars(m_sFileName);
@@ -212,5 +224,5 @@ System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialog(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2019 Kevin Eshbach
+//  Copyright (C) 2013-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

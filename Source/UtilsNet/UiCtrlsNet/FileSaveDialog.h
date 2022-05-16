@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2019 Kevin Eshbach
+//  Copyright (C) 2013-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -15,6 +15,22 @@ namespace Common
         public ref class FileSaveDialog
         {
         public:
+            /// <summary>
+            /// Title for the save dialog.
+            /// </summary>
+            property System::String^ Title
+            {
+                System::String^ get()
+                {
+                    return m_sTitle;
+                }
+
+                void set(System::String^ value)
+                {
+                    m_sTitle = value;
+                }
+            }
+
             /// <summary>
             /// Prompt before overwriting an existing file.
             /// </summary>
@@ -217,6 +233,7 @@ namespace Common
             ~FileSaveDialog();
 
         protected:
+            System::String^ m_sTitle;
             System::Boolean m_bOverwritePrompt;
             System::Boolean m_bStrictFileType;
             System::Boolean m_bCreatePrompt;
@@ -233,5 +250,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2019 Kevin Eshbach
+//  Copyright (C) 2013-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

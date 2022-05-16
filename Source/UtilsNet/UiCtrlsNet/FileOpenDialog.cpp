@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2019 Kevin Eshbach
+//  Copyright (C) 2013-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -8,6 +8,8 @@
 #include "FileOpenDialog.h"
 
 #include "UtFileDialog.inl"
+
+#pragma region "Local Functions"
 
 #pragma unmanaged
 
@@ -88,7 +90,10 @@ static System::Collections::Specialized::StringCollection^ lGetMultipleFileSysNa
     return Result;
 }
 
+#pragma endregion
+
 Common::Forms::FileOpenDialog::FileOpenDialog() :
+  m_sTitle(nullptr),
   m_bPickFolders(false),
   m_bSelectMultipleItems(false),
   m_bAllowReadOnly(true),
@@ -116,8 +121,7 @@ System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialog(
     IShellItem* pShellItem;
     FILEOPENDIALOGOPTIONS FileOpenDialogOptions;
     COMDLG_FILTERSPEC* pFilterSpecs;
-    pin_ptr<const wchar_t> pszFileName;
-    pin_ptr<const wchar_t> pszFolder;
+    pin_ptr<const wchar_t> pszTitle, pszFileName, pszFolder;
 	GUID Guid;
 
     if (!lCreateFileOpenDialog(&pFileOpenDialog))
@@ -179,6 +183,13 @@ System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialog(
         FileOpenDialogOptions &= ~FOS_FORCEPREVIEWPANEON;
 
         pFileOpenDialog->SetOptions(FileOpenDialogOptions);
+    }
+
+    if (m_sTitle != nullptr)
+    {
+        pszTitle = PtrToStringChars(m_sTitle);
+
+        pFileOpenDialog->SetTitle(pszTitle);
     }
 
     if (m_sFileName != nullptr)
@@ -267,5 +278,5 @@ System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialog(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2013-2019 Kevin Eshbach
+//  Copyright (C) 2013-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
