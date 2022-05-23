@@ -70,6 +70,13 @@ static System::String^ lFormatCheckBoxCheckedRegistryValueName(
 {
 	return System::String::Format(L"{0}Checked", CheckBox->Name);
 }
+
+static System::String^ lFormatSplitContainerPositionRegistryValueName(
+  System::Windows::Forms::SplitContainer^ SplitContainer)
+{
+	return System::String::Format(L"{0}Position", SplitContainer->Name);
+}
+
 #pragma endregion
 
 #pragma region "Constructor"
@@ -118,6 +125,10 @@ void Common::Forms::Form::OnFormLocationSaved(
 			{
 				WriteFormLocationSettings(RegKey, (System::Windows::Forms::CheckBox^)SaveControl);
 			}
+			else if (SaveControl->GetType() == System::Windows::Forms::SplitContainer::typeid)
+			{
+				WriteFormLocationSettings(RegKey, (System::Windows::Forms::SplitContainer^)SaveControl);
+			}
 			else
 			{
 				System::Diagnostics::Debug::Assert(false, L"Unknown control type to save");
@@ -156,6 +167,10 @@ void Common::Forms::Form::OnFormLocationRestored(
 			else if (RestoreControl->GetType() == System::Windows::Forms::CheckBox::typeid)
 			{
 				ReadFormLocationSettings(RegKey, (System::Windows::Forms::CheckBox^)RestoreControl);
+			}
+			else if (RestoreControl->GetType() == System::Windows::Forms::SplitContainer::typeid)
+			{
+				ReadFormLocationSettings(RegKey, (System::Windows::Forms::SplitContainer^)RestoreControl);
 			}
 			else
 			{
@@ -291,6 +306,18 @@ void Common::Forms::Form::ReadFormLocationSettings(
 	CheckBox->Checked = bChecked;
 }
 
+void Common::Forms::Form::ReadFormLocationSettings(
+  Microsoft::Win32::RegistryKey^ RegKey,
+  System::Windows::Forms::SplitContainer^ SplitContainer)
+{
+	System::Object^ oSplitterPosition = RegKey->GetValue(lFormatSplitContainerPositionRegistryValueName(SplitContainer));
+
+	if (oSplitterPosition != nullptr && oSplitterPosition->GetType() == System::Int32::typeid)
+	{
+		SplitContainer->SplitterDistance = (System::Int32)oSplitterPosition;
+	}
+}
+
 void Common::Forms::Form::WriteFormLocationSettings(
   Microsoft::Win32::RegistryKey^ RegKey, 
   Common::Forms::ListView^ ListView)
@@ -333,6 +360,14 @@ void Common::Forms::Form::WriteFormLocationSettings(
   System::Windows::Forms::CheckBox^ CheckBox)
 {
 	RegKey->SetValue(lFormatCheckBoxCheckedRegistryValueName(CheckBox), CheckBox->Checked);
+}
+
+void Common::Forms::Form::WriteFormLocationSettings(
+  Microsoft::Win32::RegistryKey^ RegKey,
+  System::Windows::Forms::SplitContainer^ SplitContainer)
+{
+	RegKey->SetValue(lFormatSplitContainerPositionRegistryValueName(SplitContainer),
+                     SplitContainer->SplitterDistance);
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -74,11 +74,13 @@ namespace Common
             void ReadFormLocationSettings(Microsoft::Win32::RegistryKey^ RegKey, System::Windows::Forms::ComboBox^ ComboBox);
             void ReadFormLocationSettings(Microsoft::Win32::RegistryKey^ RegKey, array<System::Windows::Forms::RadioButton^>^ RadioButtons);
             void ReadFormLocationSettings(Microsoft::Win32::RegistryKey^ RegKey, System::Windows::Forms::CheckBox^ CheckBox);
+            void ReadFormLocationSettings(Microsoft::Win32::RegistryKey^ RegKey, System::Windows::Forms::SplitContainer^ SplitContainer);
 
             void WriteFormLocationSettings(Microsoft::Win32::RegistryKey^ RegKey, Common::Forms::ListView^ ListView);
             void WriteFormLocationSettings(Microsoft::Win32::RegistryKey^ RegKey, System::Windows::Forms::ComboBox^ ComboBox);
             void WriteFormLocationSettings(Microsoft::Win32::RegistryKey^ RegKey, array<System::Windows::Forms::RadioButton^>^ RadioButtons);
             void WriteFormLocationSettings(Microsoft::Win32::RegistryKey^ RegKey, System::Windows::Forms::CheckBox^ CheckBox);
+            void WriteFormLocationSettings(Microsoft::Win32::RegistryKey^ RegKey, System::Windows::Forms::SplitContainer^ SplitContainer);
         };
     }
 }
