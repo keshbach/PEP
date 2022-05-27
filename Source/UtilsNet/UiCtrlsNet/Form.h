@@ -35,6 +35,16 @@ namespace Common
                 }
             }
 
+            [System::ComponentModel::Browsable(false),
+                System::ComponentModel::EditorBrowsableAttribute(System::ComponentModel::EditorBrowsableState::Advanced)]
+            virtual property array<System::Windows::Forms::Control^>^ ControlClearSelection
+            {
+                array<System::Windows::Forms::Control^>^ get()
+                {
+                    return nullptr;
+                }
+            }
+
         // Common::Forms::IFormLocation
         public:
             virtual void OnFormLocationSaved(Microsoft::Win32::RegistryKey^ RegKey);
@@ -48,6 +58,9 @@ namespace Common
             virtual System::Int32 GetRadioButtonDefaultSelectedIndexSetting(array<System::Windows::Forms::RadioButton^>^ RadioButtons);
 
             virtual System::Boolean GetCheckBoxDefaultCheckedSetting(System::Windows::Forms::CheckBox^ CheckBox);
+        
+        protected:
+            virtual void OnShown(System::EventArgs^ e) override;
 
         protected:
             /// <summary>

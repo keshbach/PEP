@@ -20,6 +20,8 @@
 #include "EditContextMenuStrip.h"
 #include "ITextBoxKeyPress.h"
 
+#include "TextBox.h"
+#include "TextBoxTimer.h"
 #include "NativeEdit.h"
 
 #include "ListView.h"
@@ -75,6 +77,20 @@ static System::String^ lFormatSplitContainerPositionRegistryValueName(
   System::Windows::Forms::SplitContainer^ SplitContainer)
 {
 	return System::String::Format(L"{0}Position", SplitContainer->Name);
+}
+
+static void lClearComboBoxSelection(
+  System::Windows::Forms::ComboBox^ ComboBox)
+{
+	ComboBox->Select(0, 0);
+}
+
+static void lClearTextBoxSelection(
+  Common::Forms::TextBox^ TextBox)
+{
+	TextBox->SelectAll();
+
+	TextBox->SelectionLength = 0;
 }
 
 #pragma endregion
@@ -222,6 +238,36 @@ System::Boolean Common::Forms::Form::GetCheckBoxDefaultCheckedSetting(
 	return false;
 }
 
+void Common::Forms::Form::OnShown(System::EventArgs^ e)
+{
+	array<System::Windows::Forms::Control^>^ ClearSelectionControls = ControlClearSelection;
+
+	System::Windows::Forms::Form::OnShown(e);
+
+	// Hack to prevent certain controls from showing highlighted text initially
+
+	if (ClearSelectionControls != nullptr)
+	{
+		for each (System::Windows::Forms::Control^ ClearSelectionControl in ClearSelectionControls)
+		{
+			if (ClearSelectionControl->GetType() == Common::Forms::ComboBox::typeid ||
+				ClearSelectionControl->GetType() == System::Windows::Forms::ComboBox::typeid)
+			{
+				lClearComboBoxSelection((System::Windows::Forms::ComboBox^)ClearSelectionControl);
+			}
+			else if (ClearSelectionControl->GetType() == Common::Forms::TextBox::typeid ||
+				     ClearSelectionControl->GetType() == Common::Forms::TextBoxTimer::typeid)
+			{
+				lClearTextBoxSelection((Common::Forms::TextBox^)ClearSelectionControl);
+			}
+			else
+			{
+				System::Diagnostics::Debug::Assert(false, L"Unknown control type to clear selection off");
+			}
+		}
+	}
+}
+
 void Common::Forms::Form::ReadFormLocationSettings(
 	Microsoft::Win32::RegistryKey^ RegKey,
 	Common::Forms::ListView^ ListView)
@@ -270,7 +316,10 @@ void Common::Forms::Form::ReadFormLocationSettings(
 		nSelectedIndex = (System::Int32)oSelectedIndex;
 	}
 
-	ComboBox->SelectedIndex = nSelectedIndex;
+	if (nSelectedIndex >= 0 && nSelectedIndex < ComboBox->Items->Count)
+	{
+		ComboBox->SelectedIndex = nSelectedIndex;
+	}
 }
 
 void Common::Forms::Form::ReadFormLocationSettings(
