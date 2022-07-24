@@ -2,10 +2,10 @@
 
 rem
 rem Build zlib Script File
-rem Copyright (C) 2014-2019 Kevin Eshbach
+rem Copyright (C) 2014-2022 Kevin Eshbach
 rem
 
-set ZlibDirectory=zlib-1.2.11
+set ZlibDirectory=zlib-1.2.12
 
 echo Cleaning the zlib project
 
