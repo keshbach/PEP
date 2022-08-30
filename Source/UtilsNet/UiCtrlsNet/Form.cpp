@@ -238,6 +238,18 @@ System::Boolean Common::Forms::Form::GetCheckBoxDefaultCheckedSetting(
 	return false;
 }
 
+void Common::Forms::Form::RunOnUIThreadWait(
+  System::Action^ Action)
+{
+	this->Invoke(Action);
+}
+
+void Common::Forms::Form::RunOnUIThreadNoWait(
+  System::Action^ Action)
+{
+	this->BeginInvoke(Action);
+}
+
 void Common::Forms::Form::OnShown(System::EventArgs^ e)
 {
 	array<System::Windows::Forms::Control^>^ ClearSelectionControls = ControlClearSelection;

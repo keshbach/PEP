@@ -58,7 +58,11 @@ namespace Common
             virtual System::Int32 GetRadioButtonDefaultSelectedIndexSetting(array<System::Windows::Forms::RadioButton^>^ RadioButtons);
 
             virtual System::Boolean GetCheckBoxDefaultCheckedSetting(System::Windows::Forms::CheckBox^ CheckBox);
-        
+     
+        protected:
+            void RunOnUIThreadWait(System::Action^ Action);
+            void RunOnUIThreadNoWait(System::Action^ Action);
+
         protected:
             virtual void OnShown(System::EventArgs^ e) override;
 

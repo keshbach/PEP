@@ -256,6 +256,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="Debug.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="Path.cpp" />
     <ClCompile Include="Process.cpp" />
@@ -267,6 +268,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Collections.cpp" />
+    <ClCompile Include="Thread.cpp" />
     <ClCompile Include="UtilNetDllMain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -284,12 +286,14 @@
     <None Include="UtilNet64.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Debug.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="Path.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Registry.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="Thread.h" />
     <ClInclude Include="UtDll.h" />
     <ClInclude Include="Collections.h" />
     <ClInclude Include="TempFileManager.h" />
