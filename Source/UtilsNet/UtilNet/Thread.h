@@ -11,12 +11,12 @@ namespace Common
         public ref class Thread sealed
         {
         public:
-            static void RunWorkerThread(System::Threading::ThreadStart^ ThreadStart,
-                                        System::String^ sThreadName);
+            static System::Threading::Thread^ RunWorkerThread(System::Threading::ThreadStart^ ThreadStart,
+                                                              System::String^ sThreadName);
         };
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

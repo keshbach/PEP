@@ -6,7 +6,7 @@
 
 #include "Thread.h"
 
-void Common::Threading::Thread::RunWorkerThread(
+System::Threading::Thread^ Common::Threading::Thread::RunWorkerThread(
   System::Threading::ThreadStart^ ThreadStart,
   System::String^ sThreadName)
 {
@@ -15,6 +15,8 @@ void Common::Threading::Thread::RunWorkerThread(
 	Thread->Name = sThreadName;
 
 	Thread->Start();
+
+	return Thread;
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -209,6 +209,18 @@ void Common::Forms::MainForm::RefreshMenuHelp()
 			}
 		}
 	}
+}
+
+void Common::Forms::MainForm::RunOnUIThreadWait(
+	System::Action^ Action)
+{
+	this->Invoke(Action);
+}
+
+void Common::Forms::MainForm::RunOnUIThreadNoWait(
+	System::Action^ Action)
+{
+	this->BeginInvoke(Action);
 }
 
 #pragma region "IProcessMessage"
@@ -616,5 +628,5 @@ void Common::Forms::MainForm::TimerTick(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

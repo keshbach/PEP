@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -59,6 +59,10 @@ namespace Common
 
 			void RefreshMenuHelp();
 
+        protected:
+            void RunOnUIThreadWait(System::Action^ Action);
+            void RunOnUIThreadNoWait(System::Action^ Action);
+
         public:
             // IProcessMessage overrides
             virtual void ProcessKeyDown(System::Windows::Forms::Control^ control, System::Int32 nVirtKey, System::Int32 nData);
@@ -117,5 +121,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
