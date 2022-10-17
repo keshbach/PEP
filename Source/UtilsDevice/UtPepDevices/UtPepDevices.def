@@ -2,7 +2,7 @@
 ;  Copyright (C) 2006-2013 Kevin Eshbach
 ;
 
-LIBRARY UtPepDevices BASE=0x202d0000
+LIBRARY UtPepDevices BASE=0x20380000
 EXPORTS
     UtPepDevicesInitialize @ 1
     UtPepDevicesUninitialize @ 2

@@ -2,7 +2,7 @@
 ;  Copyright (C) 2007-2014 Kevin Eshbach
 ;
 
-LIBRARY UtPepNet BASE=0x202e0000
+LIBRARY UtPepNet BASE=0x20390000
 VERSION 1.0
 
 ;

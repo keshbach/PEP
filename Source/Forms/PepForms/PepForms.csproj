@@ -23,7 +23,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <BaseAddress>536936448</BaseAddress>
+    <BaseAddress>537133056</BaseAddress>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>$(SolutionDir)..\bin\$(Configuration)\$(Platform)\</OutputPath>
@@ -33,7 +33,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <BaseAddress>536936448</BaseAddress>
+    <BaseAddress>537133056</BaseAddress>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -44,7 +44,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <BaseAddress>17179934720</BaseAddress>
+    <BaseAddress>17180262400</BaseAddress>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>$(SolutionDir)..\bin\$(Configuration)\$(Platform)\</OutputPath>
@@ -54,7 +54,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <BaseAddress>17179934720</BaseAddress>
+    <BaseAddress>17180262400</BaseAddress>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

@@ -2,7 +2,7 @@
 ;  Copyright (C) 2010-2014 Kevin Eshbach
 ;
 
-LIBRARY UiPepCtrlsNet BASE=0x20060000
+LIBRARY UiPepCtrlsNet BASE=0x200b0000
 VERSION 1.0
 
 ;
