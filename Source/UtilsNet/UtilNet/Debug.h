@@ -16,6 +16,9 @@ namespace Common
 
             [System::Diagnostics::Conditional("DEBUG")]
             static void IsUIThread();
+
+            [System::Diagnostics::Conditional("DEBUG")]
+            static void IsAnyThread();
         };
     }
 }
