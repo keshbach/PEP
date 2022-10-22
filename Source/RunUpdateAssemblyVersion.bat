@@ -2,7 +2,7 @@
 
 rem
 rem Update Microsoft Visual Studio C# Project Assembly files
-rem Copyright (C) 2019 Kevin Eshbach
+rem Copyright (C) 2019-2022 Kevin Eshbach
 rem
 
 set UpdateApp32=.\bin\Debug\x86\UpdateAssemblyVersionAppNet.exe
@@ -20,7 +20,7 @@ goto End
 
 :Update64
 
-if not exist %RebaserApp64% goto End
+if not exist %UpdateApp64% goto End
 
 echo "Updating C# Project Assembly Files with the 64-bit app"
 
