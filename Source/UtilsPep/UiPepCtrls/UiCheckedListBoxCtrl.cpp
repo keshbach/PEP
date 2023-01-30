@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2020-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2020-2022 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -11,6 +11,8 @@
 #include "UiListBoxCtrl.h"
 
 #include <Utils/UtHeap.h>
+
+#include <Utils/UiDrawing.h>
 
 #include <Includes/UtMacros.h>
 #include <Includes/UiMacros.h>
@@ -178,17 +180,17 @@ static VOID lNonThemedDrawItem(
 		crBackColor = ::GetSysColor(COLOR_HIGHLIGHT);
 	} // end of if...else statement
 
-	UiPepCtrlFillSolidRect(hMemDC, ::GetSysColor(COLOR_WINDOW),
-                           CheckBoxRect.left, CheckBoxRect.top,
-                           MRectWidth(CheckBoxRect),
-                           MRectHeight(CheckBoxRect));
+	UiDrawingFillSolidRectWithRGB(hMemDC, ::GetSysColor(COLOR_WINDOW),
+                                  CheckBoxRect.left, CheckBoxRect.top,
+                                  MRectWidth(CheckBoxRect),
+                                  MRectHeight(CheckBoxRect));
 
-	UiPepCtrlFillSolidRect(hMemDC, crBackColor,
-                           LabelRect.left, LabelRect.top,
-                           MRectWidth(LabelRect),
-                           MRectHeight(LabelRect));
+	UiDrawingFillSolidRectWithRGB(hMemDC, crBackColor,
+                                  LabelRect.left, LabelRect.top,
+                                  MRectWidth(LabelRect),
+                                  MRectHeight(LabelRect));
 
-	UiPepCtrlSelectTwipsMode(hMemDC);
+	UiDrawingSelectTwipsMode(hMemDC);
 
 	::SelectObject(hMemDC, pCheckedListBoxCtrlData->hFont);
 
@@ -208,7 +210,7 @@ static VOID lNonThemedDrawItem(
 
 	::TextOutW(hMemDC, Point.x, Point.y, pItemData->cText, ::lstrlenW(pItemData->cText));
 
-	UiPepCtrlSelectDevUnitsMode(hMemDC);
+	UiDrawingSelectDevUnitsMode(hMemDC);
 
 	switch (pItemData->dwState)
 	{
@@ -302,11 +304,11 @@ static VOID lThemedDrawItem(
 		crBackColor = ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_HIGHLIGHT);
 	} // end of if...else statement
 
-	UiPepCtrlFillSolidRect(hMemDC,
-                           ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_WINDOW),
-                           CheckBoxRect.left, CheckBoxRect.top,
-                           MRectWidth(CheckBoxRect),
-                           MRectHeight(CheckBoxRect));
+	UiDrawingFillSolidRectWithRGB(hMemDC,
+                                  ::GetThemeSysColor(pCheckedListBoxCtrlData->hListBoxTheme, COLOR_WINDOW),
+                                  CheckBoxRect.left, CheckBoxRect.top,
+                                  MRectWidth(CheckBoxRect),
+                                  MRectHeight(CheckBoxRect));
 
 	switch (pItemData->dwState)
 	{
@@ -348,12 +350,12 @@ static VOID lThemedDrawItem(
 	::DrawThemeBackground(pCheckedListBoxCtrlData->hButtonTheme, hMemDC,
                           BP_CHECKBOX, nStateId, &CheckBoxRect, NULL);
 
-	UiPepCtrlFillSolidRect(hMemDC, crBackColor,
-                           LabelRect.left, LabelRect.top,
-                           MRectWidth(LabelRect),
-                           MRectHeight(LabelRect));
+	UiDrawingFillSolidRectWithRGB(hMemDC, crBackColor,
+                                  LabelRect.left, LabelRect.top,
+                                  MRectWidth(LabelRect),
+                                  MRectHeight(LabelRect));
 
-	UiPepCtrlSelectTwipsMode(hMemDC);
+	UiDrawingSelectTwipsMode(hMemDC);
 
 	::SelectObject(hMemDC, pCheckedListBoxCtrlData->hFont);
 
@@ -373,7 +375,7 @@ static VOID lThemedDrawItem(
 
 	::TextOutW(hMemDC, Point.x, Point.y, pItemData->cText, ::lstrlenW(pItemData->cText));
 
-	UiPepCtrlSelectDevUnitsMode(hMemDC);
+	UiDrawingSelectDevUnitsMode(hMemDC);
 
 	// Draw the input focus around the item if applicable
 
@@ -651,7 +653,7 @@ static LRESULT lOnCheckedListBoxGetMinWidth(
 
 	::SaveDC(hDC);
 
-	UiPepCtrlSelectTwipsMode(hDC);
+	UiDrawingSelectTwipsMode(hDC);
 
 	::SelectObject(hDC, pData->hFont);
 
@@ -735,7 +737,7 @@ static LRESULT lOnMeasureItem(
 
 	::SaveDC(hDC);
 
-	UiPepCtrlSelectTwipsMode(hDC);
+	UiDrawingSelectTwipsMode(hDC);
 
 	::SelectObject(hDC, pData->hFont);
 
@@ -1085,5 +1087,5 @@ VOID UiCheckedListBoxCtrlUnregister(VOID)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2020-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2020-2022 Kevin Eshbach                                  */
 /***************************************************************************/

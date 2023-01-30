@@ -284,7 +284,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="FormTimer.cpp" />
     <ClCompile Include="ToolbarImageKey.cpp" />
     <ClCompile Include="ToolStripMenuItem.cpp" />
     <ClCompile Include="UiUtilNetDllMain.cpp">
@@ -297,7 +296,6 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</CompileAsManaged>
     </ClCompile>
-    <ClCompile Include="UtIcon.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="WaitCursor.cpp" />
   </ItemGroup>
@@ -318,10 +316,8 @@
     <ClInclude Include="Resource.Designer.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
-    <ClInclude Include="FormTimer.h" />
     <ClInclude Include="ToolbarImageKey.h" />
     <ClInclude Include="ToolStripMenuItem.h" />
-    <ClInclude Include="UtIcon.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="WaitCursor.h" />
   </ItemGroup>

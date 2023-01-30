@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-/*  Copyright (C) 2014-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2022 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -440,7 +440,7 @@ namespace OpenZip
                 return null;
             }
 
-            private static System.Windows.Forms.TreeNode CreateTreeNode(
+            private System.Windows.Forms.TreeNode CreateTreeNode(
                 System.String sName)
             {
                 System.Windows.Forms.TreeNode TreeNode;
@@ -1234,7 +1234,6 @@ namespace OpenZip
 
                 listViewFolderFile.SelectedItems.Clear();
 
-                treeViewFolder.BeforeSelect -= new System.Windows.Forms.TreeViewCancelEventHandler(treeViewFolder_BeforeSelect);
                 treeViewFolder.AfterSelect -= new System.Windows.Forms.TreeViewEventHandler(treeViewFolder_AfterSelect);
 
                 listViewFolderFile.ItemSelectionChanged -= new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(listViewFolderFile_ItemSelectionChanged);
@@ -1333,7 +1332,6 @@ namespace OpenZip
 
                 listViewFolderFile.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(listViewFolderFile_ItemSelectionChanged);
 
-                treeViewFolder.BeforeSelect += new System.Windows.Forms.TreeViewCancelEventHandler(treeViewFolder_BeforeSelect);
                 treeViewFolder.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(treeViewFolder_AfterSelect);
 
                 s_DragSelectedTreeNode = null;
@@ -2300,8 +2298,11 @@ namespace OpenZip
                         break;
                 }
 
-                treeViewFolder.ImageList = Common.Forms.ImageManager.CreateFileSmallBorderImageList(0, 1, 0, 1);
-                listViewFolderFile.SmallImageList = Common.Forms.ImageManager.CreateFileSmallBorderImageList(0, 1, 0, 0);
+                treeViewFolder.ItemHeight = Common.Forms.ImageManager.FileSmallImageHeight + 2;
+                listViewFolderFile.ItemHeight = Common.Forms.ImageManager.FileSmallImageHeight + 2;
+
+                treeViewFolder.ImageList = Common.Forms.ImageManager.FileSmallImageList;
+                listViewFolderFile.SmallImageList = Common.Forms.ImageManager.FileSmallImageList;
                 toolStripForm.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
                 contextMenuStripFile.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
                 contextMenuStripFolder.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
@@ -2335,9 +2336,6 @@ namespace OpenZip
                 object sender,
                 System.Windows.Forms.FormClosedEventArgs e)
             {
-                Common.Forms.ImageManager.DestroyFileSmallBorderImageList(treeViewFolder.ImageList);
-                Common.Forms.ImageManager.DestroyFileSmallBorderImageList(listViewFolderFile.SmallImageList);
-
                 treeViewFolder.ImageList = null;
                 listViewFolderFile.SmallImageList = null;
                 toolStripForm.ImageList = null;
@@ -2410,6 +2408,24 @@ namespace OpenZip
             #endregion
 
             #region "Tree View Event Handlers"
+            private void treeViewFolder_AfterCollapse(object sender, System.Windows.Forms.TreeViewEventArgs e)
+            {
+                if (IsFolder(e.Node))
+                {
+                    e.Node.ImageKey = Common.Forms.ImageManager.FolderImageName;
+                    e.Node.SelectedImageKey = Common.Forms.ImageManager.FolderImageName;
+                }
+            }
+
+            private void treeViewFolder_AfterExpand(object sender, System.Windows.Forms.TreeViewEventArgs e)
+            {
+                if (IsFolder(e.Node))
+                {
+                    e.Node.ImageKey = Common.Forms.ImageManager.OpenFolderImageName;
+                    e.Node.SelectedImageKey = Common.Forms.ImageManager.OpenFolderImageName;
+                }
+            }
+
             private void treeViewFolder_AfterSelect(
                 object sender,
                 System.Windows.Forms.TreeViewEventArgs e)
@@ -2422,9 +2438,6 @@ namespace OpenZip
 
                     if (IsFolder(e.Node))
                     {
-                        e.Node.ImageKey = Common.Forms.ImageManager.OpenFolderImageName;
-                        e.Node.SelectedImageKey = Common.Forms.ImageManager.OpenFolderImageName;
-
                         treeViewFolder.ContextMenuStrip = contextMenuStripFolder;
                     }
                     else
@@ -2464,17 +2477,6 @@ namespace OpenZip
 
                 UpdateActiveItem(treeViewFolder.Focused, listViewFolderFile.Focused);
                 UpdateMenuAndToolStrips();
-            }
-
-            private void treeViewFolder_BeforeSelect(
-                object sender,
-                System.Windows.Forms.TreeViewCancelEventArgs e)
-            {
-                if (treeViewFolder.SelectedNode != null && IsFolder(treeViewFolder.SelectedNode))
-                {
-                    treeViewFolder.SelectedNode.ImageKey = Common.Forms.ImageManager.FolderImageName;
-                    treeViewFolder.SelectedNode.SelectedImageKey = Common.Forms.ImageManager.FolderImageName;
-                }
             }
 
             private void treeViewFolder_PasteLabelEdit(object sender, Common.Forms.TreeViewLabelEditPasteEventArgs e)
@@ -3287,5 +3289,5 @@ namespace OpenZip
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2014-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2022 Kevin Eshbach                                  */
 /***************************************************************************/

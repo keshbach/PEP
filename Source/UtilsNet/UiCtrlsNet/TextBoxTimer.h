@@ -93,7 +93,7 @@ namespace Common
         private:
             System::Double m_dTimerDelay;
             System::Boolean m_bTimerStarted;
-            Common::Forms::FormTimer^ m_Timer;
+            System::Windows::Forms::Timer^ m_Timer;
         };
     }
 }

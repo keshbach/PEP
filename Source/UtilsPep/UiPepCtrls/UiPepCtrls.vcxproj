@@ -122,7 +122,7 @@
       <ModuleDefinitionFile>UiPepCtrls.def</ModuleDefinitionFile>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UtHeap.lib;vcruntimed.lib;ucrtd.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;UiDrawing.lib;vcruntimed.lib;ucrtd.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
     </Link>
     <ProjectReference>
@@ -154,7 +154,7 @@
       <ModuleDefinitionFile>UiPepCtrls64.def</ModuleDefinitionFile>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UtHeap.lib;vcruntimed.lib;ucrtd.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;UiDrawing.lib;vcruntimed.lib;ucrtd.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
     </Link>
     <ProjectReference>
@@ -191,7 +191,7 @@
       <ModuleDefinitionFile>UiPepCtrls.def</ModuleDefinitionFile>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UtHeap.lib;vcruntime.lib;ucrt.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;UiDrawing.lib;vcruntime.lib;ucrt.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>
       </LinkTimeCodeGeneration>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -230,7 +230,7 @@
       <ModuleDefinitionFile>UiPepCtrls64.def</ModuleDefinitionFile>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>UtHeap.lib;vcruntime.lib;ucrt.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;UiDrawing.lib;vcruntime.lib;ucrt.lib;uxtheme.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>
       </LinkTimeCodeGeneration>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>

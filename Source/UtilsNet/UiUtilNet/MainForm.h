@@ -6,8 +6,6 @@
 
 #include "IProcessMessage.h"
 
-#include "FormTimer.h"
-
 namespace Common
 {
     namespace Forms
@@ -113,7 +111,7 @@ namespace Common
 
 			System::Int32 m_nMenuOpenedCount;
 
-			Common::Forms::FormTimer^ m_Timer;
+			System::Windows::Forms::Timer^ m_Timer;
 
 			System::Drawing::Point^ m_LastMousePoint;
 		};

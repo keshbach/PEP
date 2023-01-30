@@ -91,6 +91,7 @@ System::Windows::Forms::ListViewHitTestInfo^ Common::Forms::ListView::HitTest(
     HWND hHeader;
     POINT Point;
     RECT Rect;
+    LV_HITTESTINFO HitTestInfo;
 
     if (View != System::Windows::Forms::View::Details ||
         HeaderStyle == System::Windows::Forms::ColumnHeaderStyle::None)
@@ -109,6 +110,17 @@ System::Windows::Forms::ListViewHitTestInfo^ Common::Forms::ListView::HitTest(
 
     if (::PtInRect(&Rect, Point) == FALSE)
     {
+        HitTestInfo.pt.x = point.X;
+        HitTestInfo.pt.y = point.Y;
+
+        ListView_SubItemHitTest(hWnd, &HitTestInfo);
+
+        if (HitTestInfo.iSubItem == -1)
+        {
+            return gcnew System::Windows::Forms::ListViewHitTestInfo(nullptr, nullptr,
+                                                                     System::Windows::Forms::ListViewHitTestLocations::None);
+        }
+
         return System::Windows::Forms::ListView::HitTest(point);
     }
 
@@ -385,6 +397,8 @@ void Common::Forms::ListView::HandleCreate(
     System::Windows::Forms::ListView::WndProc(Message);
 
     RefreshSortArrow();
+
+    UtControlsHelperSetExplorerTheme((HWND)Message.HWnd.ToPointer());
 }
 
 void Common::Forms::ListView::HandleLButtonDblClk(

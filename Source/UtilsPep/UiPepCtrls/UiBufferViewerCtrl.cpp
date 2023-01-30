@@ -10,6 +10,8 @@
 
 #include <Utils/UtHeap.h>
 
+#include <Utils/UiDrawing.h>
+
 #include <Includes/UtMacros.h>
 
 #include <Includes/UiMacros.h>
@@ -97,7 +99,7 @@ static VOID lGetCharSizes(
 
     ::SaveDC(hDC);
 
-    UiPepCtrlSelectTwipsMode(hDC);
+    UiDrawingSelectTwipsMode(hDC);
 
     ::SelectObject(hDC, hFont);
 
@@ -495,22 +497,22 @@ static VOID lDrawWindow(
 
     // Draw the margin
 
-    UiPepCtrlSelectDevUnitsMode(hDC);
+    UiDrawingSelectDevUnitsMode(hDC);
 
     if (pData->hTheme)
     {
-        UiPepCtrlFillSolidRect(hDC, ::GetThemeSysColorBrush(pData->hTheme, TMT_BTNFACE), 0, 0,
-                               CBufferMarginDevWidth, ClientRect.bottom);
+        UiDrawingFillSolidRectWithBrush(hDC, ::GetThemeSysColorBrush(pData->hTheme, TMT_BTNFACE), 0, 0,
+                                        CBufferMarginDevWidth, ClientRect.bottom);
     }
     else
     {
-        UiPepCtrlFillSolidRect(hDC, ::GetSysColor(COLOR_BTNFACE), 0, 0,
-                               CBufferMarginDevWidth, ClientRect.bottom);
+        UiDrawingFillSolidRectWithRGB(hDC, ::GetSysColor(COLOR_BTNFACE), 0, 0,
+                                      CBufferMarginDevWidth, ClientRect.bottom);
     }
 
     // Draw the buffer text
 
-    UiPepCtrlSelectTwipsMode(hDC);
+    UiDrawingSelectTwipsMode(hDC);
 
     ::SelectObject(hDC, hFont);
 
@@ -552,18 +554,18 @@ static VOID lDrawWindow(
         }
         else
         {
-            UiPepCtrlFillSolidRect(hDC, ::GetSysColor(COLOR_BTNFACE),  nXPos, nYPos,
-                                   pData->CharTwipsSize.cx * CAddressTotalChars,
-                                   pData->CharTwipsSize.cy);
+            UiDrawingFillSolidRectWithRGB(hDC, ::GetSysColor(COLOR_BTNFACE),  nXPos, nYPos,
+                                          pData->CharTwipsSize.cx * CAddressTotalChars,
+                                          pData->CharTwipsSize.cy);
         }
 
         nXPos += (pData->CharTwipsSize.cx * CAddressTotalChars);
 
         // Draw the area between the address and data
 
-        UiPepCtrlFillSolidRect(hDC, ::GetSysColor(COLOR_WINDOW),  nXPos, nYPos,
-                               pData->CharTwipsSize.cx * CAddressToDataTotalChars,
-                               pData->CharTwipsSize.cy);
+        UiDrawingFillSolidRectWithRGB(hDC, ::GetSysColor(COLOR_WINDOW),  nXPos, nYPos,
+                                      pData->CharTwipsSize.cx * CAddressToDataTotalChars,
+                                      pData->CharTwipsSize.cy);
 
         nXPos += (pData->CharTwipsSize.cx * CAddressToDataTotalChars);
 
@@ -605,8 +607,8 @@ static VOID lDrawWindow(
 
         // Draw the area after the data
 
-        UiPepCtrlFillSolidRect(hDC, ::GetSysColor(COLOR_WINDOW), nXPos, nYPos,
-                               Point[1].x - nXPos, pData->CharTwipsSize.cy);
+        UiDrawingFillSolidRectWithRGB(hDC, ::GetSysColor(COLOR_WINDOW), nXPos, nYPos,
+                                      Point[1].x - nXPos, pData->CharTwipsSize.cy);
 	
 		nYPos += pData->CharTwipsSize.cy;
 

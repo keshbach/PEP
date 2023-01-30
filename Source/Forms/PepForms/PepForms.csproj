@@ -183,6 +183,7 @@
     <EmbeddedResource Include="Resources\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SelectDeviceForm.resx">
       <DependentUpon>SelectDeviceForm.cs</DependentUpon>
@@ -199,12 +200,20 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="Resources\Cancel_16x.png" />
     <Content Include="Resources\CloseProject_16x.png" />
+    <Content Include="Resources\DevicePackageFolderClosed_16x.png" />
+    <Content Include="Resources\DevicePackageFolderOpened_16x.png" />
+    <Content Include="Resources\DeviceTypeFolderClosed_16x.png" />
+    <Content Include="Resources\DeviceTypeFolderOpened_16x.png" />
+    <Content Include="Resources\Device_16x.png" />
     <Content Include="Resources\NewProject_16x.png" />
     <Content Include="Resources\OpenFile_16x.png" />
     <Content Include="Resources\OpenProject_16x.png" />
     <Content Include="Resources\SaveAs_16x.png" />
     <Content Include="Resources\SaveLogAs_16x.png" />
+    <Content Include="Resources\Buffer_16x.png" />
+    <Content Include="Resources\Settings_16x.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2010-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2022 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <windows.h>
@@ -9,6 +9,8 @@
 #include "UiPepCtrlsUtil.h"
 
 #include <Utils/UtHeap.h>
+
+#include <Utils/UiDrawing.h>
 
 #include <Includes/UtMacros.h>
 
@@ -158,7 +160,7 @@ static HFONT lCreateDipSwitchFont(
 
     ::SaveDC(hDC);
 
-    UiPepCtrlSelectTwipsMode(hDC);
+    UiDrawingSelectTwipsMode(hDC);
 
     ::SelectObject(hDC, hFont);
 
@@ -882,7 +884,7 @@ static VOID lLayoutTextPoints(
 
     ::SaveDC(hDC);
 
-    UiPepCtrlSelectTwipsMode(hDC);
+    UiDrawingSelectTwipsMode(hDC);
 
     ::SelectObject(hDC, pData->hFont);
 
@@ -1169,17 +1171,17 @@ static VOID lDrawWindow(
 
     // Draw the background
 
-    UiPepCtrlSelectDevUnitsMode(hDC);
+    UiDrawingSelectDevUnitsMode(hDC);
 
 #if defined(DEBUG_SHOW_COLORIZED_COLUMNS)
     Color = RGB(128, 0, 128);
 #endif
 
-    UiPepCtrlFillSolidRect(hDC, Color, 0, 0, ClientRect.right, ClientRect.bottom);
+    UiDrawingFillSolidRectWithRGB(hDC, Color, 0, 0, ClientRect.right, ClientRect.bottom);
 
     // Draw the text
 
-    UiPepCtrlSelectTwipsMode(hDC);
+    UiDrawingSelectTwipsMode(hDC);
 
     ::DPtoLP(hDC, &Point, 1);
 
@@ -1887,5 +1889,5 @@ VOID UiDeviceInfoCtrlUnregister(VOID)
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2010-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2022 Kevin Eshbach                                  */
 /***************************************************************************/

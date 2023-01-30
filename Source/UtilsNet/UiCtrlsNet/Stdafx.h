@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2018 Kevin Eshbach
+//  Copyright (C) 2006-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 // stdafx.h : include file for standard system include files,
@@ -13,6 +13,7 @@
 #include <vcclr.h>
 
 #define STRICT
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
 #include <windows.h>
 #include <windowsx.h>
@@ -20,9 +21,10 @@
 #include <shobjidl.h>
 #include <shlobj.h>
 #include <strsafe.h>
+#include <versionhelpers.h>
 
 #using <System.Core.dll>
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2018 Kevin Eshbach
+//  Copyright (C) 2006-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

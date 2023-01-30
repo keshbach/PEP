@@ -1,25 +1,16 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
 #include "ImageManager.h"
 
-#include "UtIcon.h"
-
 #include "Resource.Designer.h"
 
 #include <Utils/UtHeap.h>
 
 #using "UtilNet.dll"
-
-#pragma region "Constants"
-
-#define CToolbarSmallImageWidth 16
-#define CToolbarSmallImageHeight 16
-
-#pragma endregion
 
 #pragma region "Local Functions"
 
@@ -77,8 +68,6 @@ System::Boolean Common::Forms::ImageManager::Initialize()
 
     // File Small
 
-    s_FileSmallBorderImageListDataDict = gcnew System::Collections::Generic::Dictionary<System::Windows::Forms::ImageList^, TFileSmallBorderImageListData^>();
-
     CreateFileSmallImageList();
 
     InitializeFileImageLists();
@@ -116,72 +105,12 @@ System::Boolean Common::Forms::ImageManager::Uninitialize()
     delete s_FileSmallImageList;
     delete s_ToolbarSmallImageList;
     delete s_ToolbarSmallImageIconList;
-    delete s_FileSmallBorderImageListDataDict;
 
     s_FileSmallImageList = nullptr;
     s_ToolbarSmallImageList = nullptr;
     s_ToolbarSmallImageIconList = nullptr;
-    s_FileSmallBorderImageListDataDict = nullptr;
 
     UtUninitHeap();
-
-    return true;
-}
-
-System::Windows::Forms::ImageList^ Common::Forms::ImageManager::CreateFileSmallBorderImageList(
-  System::UInt32 nLeftBorderWidth,
-  System::UInt32 nTopBorderHeight,
-  System::UInt32 nRightBorderWidth,
-  System::UInt32 nBottomBorderHeight)
-{
-    TFileSmallBorderImageListData^ FileSmallBorderImageListData = gcnew TFileSmallBorderImageListData();
-    System::Windows::Forms::ImageList^ ImageList;
-
-    FileSmallBorderImageListData->nLeftBorderWidth = nLeftBorderWidth;
-    FileSmallBorderImageListData->nTopBorderHeight = nTopBorderHeight;
-    FileSmallBorderImageListData->nRightBorderWidth = nRightBorderWidth;
-    FileSmallBorderImageListData->nBottomBorderHeight = nBottomBorderHeight;
-    FileSmallBorderImageListData->IconList = gcnew System::Collections::Generic::List<System::IntPtr>();
-
-    ImageList = gcnew System::Windows::Forms::ImageList();
-
-    ImageList->ColorDepth = System::Windows::Forms::ColorDepth::Depth32Bit;
-    ImageList->ImageSize = System::Drawing::Size(::GetSystemMetrics(SM_CXSMICON) + (nLeftBorderWidth + nRightBorderWidth),
-                                                 ::GetSystemMetrics(SM_CYSMICON) + (nTopBorderHeight + nBottomBorderHeight));
-
-    SyncFileSmallBorderImageList(ImageList, FileSmallBorderImageListData);
-
-    s_FileSmallBorderImageListDataDict->Add(ImageList, FileSmallBorderImageListData);
-
-    return ImageList;
-}
-
-System::Boolean Common::Forms::ImageManager::DestroyFileSmallBorderImageList(
-  System::Windows::Forms::ImageList^ ImageList)
-{
-    TFileSmallBorderImageListData^ FileSmallBorderImageListData;
-
-    if (false == s_FileSmallBorderImageListDataDict->TryGetValue(ImageList, FileSmallBorderImageListData))
-    {
-        return false;
-    }
-
-    for each (System::IntPtr Icon in FileSmallBorderImageListData->IconList)
-    {
-        if (FALSE == ::DestroyIcon((HICON)Icon.ToPointer()))
-        {
-#if !defined(NDEBUG)
-            ::OutputDebugStringW(L"*** Warning failed to destroy icon ***");
-#endif
-        }
-    }
-
-    FileSmallBorderImageListData->IconList->Clear();
-
-    delete ImageList;
-
-    delete FileSmallBorderImageListData->IconList;
-    delete FileSmallBorderImageListData;
 
     return true;
 }
@@ -218,12 +147,6 @@ System::Boolean Common::Forms::ImageManager::AddFileSmallImage(
     Icon = System::Drawing::Icon::FromHandle(System::IntPtr(hFileIcon));
 
     s_FileSmallImageList->Images->Add(sImageName, Icon);
-
-    for each (System::Windows::Forms::ImageList^ ImageList in s_FileSmallBorderImageListDataDict->Keys)
-    {
-        AddFileSmallBorderImage(hFileIcon, sImageName, ImageList,
-                                s_FileSmallBorderImageListDataDict[ImageList]);
-    }
 
     return true;
 }
@@ -319,8 +242,8 @@ System::Boolean Common::Forms::ImageManager::AddToolbarSmallImages(
                 ResourceObject = ResourceSet->GetObject(sImageName);
                 Bitmap = (System::Drawing::Bitmap^)ResourceObject;
 
-                if (Bitmap->Width == CToolbarSmallImageWidth &&
-                    Bitmap->Height == CToolbarSmallImageHeight)
+                if (Bitmap->Width == ToolbarImageWidth &&
+                    Bitmap->Height == ToolbarImageHeight)
                 {
                     IconPtr = Bitmap->GetHicon();
                     Icon = System::Drawing::Icon::FromHandle(IconPtr);
@@ -350,8 +273,8 @@ void Common::Forms::ImageManager::CreateFileSmallImageList()
     s_FileSmallImageList = gcnew System::Windows::Forms::ImageList();
 
     s_FileSmallImageList->ColorDepth = System::Windows::Forms::ColorDepth::Depth32Bit;
-    s_FileSmallImageList->ImageSize = System::Drawing::Size(::GetSystemMetrics(SM_CXSMICON),
-                                                            ::GetSystemMetrics(SM_CYSMICON));
+    s_FileSmallImageList->ImageSize = System::Drawing::Size(FileSmallImageWidth,
+                                                            FileSmallImageHeight);
 }
 
 void Common::Forms::ImageManager::CreateToolbarSmallImageList()
@@ -359,8 +282,8 @@ void Common::Forms::ImageManager::CreateToolbarSmallImageList()
     s_ToolbarSmallImageList = gcnew System::Windows::Forms::ImageList();
 
     s_ToolbarSmallImageList->ColorDepth = System::Windows::Forms::ColorDepth::Depth32Bit;
-    s_ToolbarSmallImageList->ImageSize = System::Drawing::Size(CToolbarSmallImageWidth,
-                                                               CToolbarSmallImageHeight);
+    s_ToolbarSmallImageList->ImageSize = System::Drawing::Size(ToolbarImageWidth,
+                                                               ToolbarImageHeight);
 
     s_ToolbarSmallImageIconList = gcnew System::Collections::Generic::List<System::IntPtr>();
 }
@@ -387,56 +310,6 @@ void Common::Forms::ImageManager::InitializeFileImageLists()
                                       System::Drawing::Icon::FromHandle(System::IntPtr(hFileIcon)));
 }
 
-void Common::Forms::ImageManager::SyncFileSmallBorderImageList(
-  System::Windows::Forms::ImageList^ ImageList,
-  Common::Forms::ImageManager::TFileSmallBorderImageListData^ FileSmallBorderImageListData)
-{
-    System::Drawing::Bitmap^ Bitmap;
-    HICON hIcon;
-
-    for each (System::String ^ sImageName in s_FileSmallImageList->Images->Keys)
-    {
-        if (false == ImageList->Images->ContainsKey(sImageName))
-        {
-            Bitmap = (System::Drawing::Bitmap^)s_FileSmallImageList->Images[sImageName];
-            hIcon = (HICON)Bitmap->GetHicon().ToPointer();
-
-            AddFileSmallBorderImage(hIcon, sImageName, ImageList, FileSmallBorderImageListData);
-
-            if (FALSE == ::DestroyIcon(hIcon))
-            {
-#if !defined(NDEBUG)
-                ::OutputDebugStringW(L"*** Warning failed to destroy icon ***");
-#endif
-            }
-        }
-    }
-}
-
-void Common::Forms::ImageManager::AddFileSmallBorderImage(
-  HICON hIcon,
-  System::String^ sImageName,
-  System::Windows::Forms::ImageList^ ImageList,
-  Common::Forms::ImageManager::TFileSmallBorderImageListData^ FileSmallBorderImageListData)
-{
-    System::Drawing::Icon^ Icon;
-    HICON hBorderIcon;
-
-    hBorderIcon = UtIconAddBorder(hIcon, FileSmallBorderImageListData->nLeftBorderWidth,
-                                  FileSmallBorderImageListData->nTopBorderHeight,
-                                  FileSmallBorderImageListData->nRightBorderWidth,
-                                  FileSmallBorderImageListData->nBottomBorderHeight);
-
-    if (hBorderIcon)
-    {
-        Icon = System::Drawing::Icon::FromHandle(System::IntPtr(hBorderIcon));
-
-        ImageList->Images->Add(sImageName, Icon);
-
-        FileSmallBorderImageListData->IconList->Add(System::IntPtr(hBorderIcon));
-    }
-}
-
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

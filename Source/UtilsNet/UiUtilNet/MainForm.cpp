@@ -94,9 +94,9 @@ Common::Forms::MainForm::MainForm()
 
 	m_LastMousePoint = gcnew System::Drawing::Point();
 
-	m_Timer = gcnew Common::Forms::FormTimer;
+	m_Timer = gcnew System::Windows::Forms::Timer;
 
-	m_Timer->FormObject = this;
+	m_Timer->Tag = this;
 	m_Timer->Interval = 200;
 
 	m_Timer->Tick += gcnew System::EventHandler(TimerTick);
@@ -117,7 +117,7 @@ Common::Forms::MainForm::~MainForm()
     m_StatusStrip = nullptr;
     m_SelectedControl = nullptr;
 
-	m_Timer->FormObject = nullptr;
+	m_Timer->Tag = nullptr;
 
 	m_Timer->Tick -= gcnew System::EventHandler(TimerTick);
 
@@ -594,8 +594,8 @@ void Common::Forms::MainForm::TimerTick(
   System::Object^ sender, 
   System::EventArgs^ e)
 {
-	Common::Forms::FormTimer^ formTimer = (Common::Forms::FormTimer^)sender;
-	MainForm^ mainForm = (MainForm^)formTimer->FormObject;
+	System::Windows::Forms::Timer^ timer = (System::Windows::Forms::Timer^)sender;
+	MainForm^ mainForm = (MainForm^)timer->Tag;
 	Control^ control;
 	POINT Point;
 	HWND hWnd;

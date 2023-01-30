@@ -123,7 +123,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustmd.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Uxtheme.lib;Comctl32.lib;ptrustmd.lib;UtHeap.lib;UiDrawing.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>msvcmrtd.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiCtrlsNet.def</ModuleDefinitionFile>
@@ -155,7 +155,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustmd.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Uxtheme.lib;Comctl32.lib;ptrustmd.lib;UtHeap.lib;UiDrawing.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>msvcmrtd.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiCtrlsNet64.def</ModuleDefinitionFile>
@@ -192,7 +192,7 @@
       <OptimizeReferences>
       </OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustm.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Uxtheme.lib;Comctl32.lib;ptrustm.lib;UtHeap.lib;UiDrawing.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcmrt.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiCtrlsNet.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -230,7 +230,7 @@
       <OptimizeReferences>
       </OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ptrustm.lib;UtHeap.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Uxtheme.lib;Comctl32.lib;ptrustm.lib;UtHeap.lib;UiDrawing.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcmrt.lib</IgnoreSpecificDefaultLibraries>
       <ModuleDefinitionFile>UiCtrlsNet64.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -269,6 +269,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AdjustableHeightListView.cpp" />
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ContextMenuStrip.cpp" />
     <ClCompile Include="EditContextMenuStrip.cpp" />
@@ -324,6 +325,7 @@
     <None Include="UtFileDialog.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AdjustableHeightListView.h" />
     <ClInclude Include="ContextMenuStrip.h" />
     <ClInclude Include="EditContextMenuStrip.h" />
     <ClInclude Include="Form.h" />

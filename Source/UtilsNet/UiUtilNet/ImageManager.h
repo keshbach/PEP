@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -18,6 +18,12 @@ namespace Common
             static System::String^ FolderImageName = L"Folder";
             static System::String^ OpenFolderImageName = L"OpenFolder";
             static System::String^ UnknownFileImageName = L"UnknownFile";
+
+            static System::Int32 FileSmallImageWidth = 16;
+            static System::Int32 FileSmallImageHeight = 16;
+
+            static System::Int32 ToolbarImageWidth = 16;
+            static System::Int32 ToolbarImageHeight = 16;
 
         public:
             /// <summary>
@@ -44,13 +50,6 @@ namespace Common
             static System::Boolean Uninitialize();
 
         public:
-            static System::Windows::Forms::ImageList^ CreateFileSmallBorderImageList(System::UInt32 nLeftBorderWidth,
-                                                                                     System::UInt32 nTopBorderHeight,
-                                                                                     System::UInt32 nRightBorderWidth,
-                                                                                     System::UInt32 nBottomBorderHeight);
-
-            static System::Boolean DestroyFileSmallBorderImageList(System::Windows::Forms::ImageList^ ImageList);
-
             /// <summary>
             /// Adds a file's small image to the small image list.
             /// </summary>
@@ -77,31 +76,13 @@ namespace Common
             static void InitializeFileImageLists();
 
         private:
-            ref struct TFileSmallBorderImageListData
-            {
-                System::UInt32 nLeftBorderWidth;
-                System::UInt32 nTopBorderHeight;
-                System::UInt32 nRightBorderWidth;
-                System::UInt32 nBottomBorderHeight;
-                System::Collections::Generic::List<System::IntPtr>^ IconList;
-            };
-
-        private:
-            static void SyncFileSmallBorderImageList(System::Windows::Forms::ImageList^ ImageList, Common::Forms::ImageManager::TFileSmallBorderImageListData^ FileSmallBorderImageListData);
-            static void AddFileSmallBorderImage(HICON hIcon,
-                                                System::String^ sImageName,
-                                                System::Windows::Forms::ImageList^ ImageList,
-                                                Common::Forms::ImageManager::TFileSmallBorderImageListData^ FileSmallBorderImageListData);
-
-        private:
             static System::Windows::Forms::ImageList^ s_FileSmallImageList = nullptr;
             static System::Windows::Forms::ImageList^ s_ToolbarSmallImageList = nullptr;
             static System::Collections::Generic::List<System::IntPtr>^ s_ToolbarSmallImageIconList = nullptr;
-            static System::Collections::Generic::Dictionary<System::Windows::Forms::ImageList^, TFileSmallBorderImageListData^>^ s_FileSmallBorderImageListDataDict = nullptr;
         };
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2021 Kevin Eshbach
+//  Copyright (C) 2006-2022 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

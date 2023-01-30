@@ -47,7 +47,7 @@ namespace OpenZip
             this.toolStripSeparatorFolder1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItemFolderDelete = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemFolderRename = new System.Windows.Forms.ToolStripMenuItem();
-            this.listViewFolderFile = new Common.Forms.ListView();
+            this.listViewFolderFile = new Common.Forms.AdjustableHeightListView();
             this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeaderCRC = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -148,6 +148,7 @@ namespace OpenZip
             this.treeViewFolder.ContextMenuStrip = this.contextMenuStripFolder;
             this.treeViewFolder.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeViewFolder.HideSelection = false;
+            this.treeViewFolder.HotTracking = true;
             this.treeViewFolder.LabelEdit = true;
             this.treeViewFolder.Location = new System.Drawing.Point(0, 0);
             this.treeViewFolder.Name = "treeViewFolder";
@@ -159,8 +160,9 @@ namespace OpenZip
             this.treeViewFolder.KeyPressLabelEdit += new Common.Forms.TreeView.KeyPressLabelEditHandler(this.treeViewFolder_KeyPressLabelEdit);
             this.treeViewFolder.BeforeLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.treeViewFolder_BeforeLabelEdit);
             this.treeViewFolder.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.treeViewFolder_AfterLabelEdit);
+            this.treeViewFolder.AfterCollapse += new System.Windows.Forms.TreeViewEventHandler(this.treeViewFolder_AfterCollapse);
+            this.treeViewFolder.AfterExpand += new System.Windows.Forms.TreeViewEventHandler(this.treeViewFolder_AfterExpand);
             this.treeViewFolder.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeViewFolder_ItemDrag);
-            this.treeViewFolder.BeforeSelect += new System.Windows.Forms.TreeViewCancelEventHandler(this.treeViewFolder_BeforeSelect);
             this.treeViewFolder.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewFolder_AfterSelect);
             this.treeViewFolder.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeViewFolder_DragDrop);
             this.treeViewFolder.DragOver += new System.Windows.Forms.DragEventHandler(this.treeViewFolder_DragOver);
@@ -209,6 +211,7 @@ namespace OpenZip
             // 
             // listViewFolderFile
             // 
+            this.listViewFolderFile.Activation = System.Windows.Forms.ItemActivation.OneClick;
             this.listViewFolderFile.AllowDrop = true;
             this.listViewFolderFile.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderName,
@@ -221,6 +224,7 @@ namespace OpenZip
             this.listViewFolderFile.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listViewFolderFile.FullRowSelect = true;
             this.listViewFolderFile.HideSelection = false;
+            this.listViewFolderFile.ItemHeight = 16;
             this.listViewFolderFile.LabelEdit = true;
             this.listViewFolderFile.LabelEditor = Common.Forms.ListView.ELabelEditor.Label;
             this.listViewFolderFile.LabelWrap = false;
@@ -437,7 +441,7 @@ namespace OpenZip
             private Common.Forms.TextBox textBoxFileName;
             private System.Windows.Forms.SplitContainer splitContainerFolderFile;
             private Common.Forms.TreeView treeViewFolder;
-            private Common.Forms.ListView listViewFolderFile;
+            private Common.Forms.AdjustableHeightListView listViewFolderFile;
             private System.Windows.Forms.ColumnHeader columnHeaderName;
             private System.Windows.Forms.ColumnHeader columnHeaderSize;
             private System.Windows.Forms.ColumnHeader columnHeaderCRC;

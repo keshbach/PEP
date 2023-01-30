@@ -280,6 +280,7 @@ namespace Common
             {
             }
 
+            void HandleCreate(System::Windows::Forms::Message% Message);
             void HandleRButtonDown(System::Windows::Forms::Message% Message);
             void HandleParentNotify(System::Windows::Forms::Message% Message);
 

@@ -14,9 +14,9 @@ Common::Forms::TextBoxTimer::TextBoxTimer() :
   m_dTimerDelay(1.0),
   m_bTimerStarted(false)
 {
-    m_Timer = gcnew Common::Forms::FormTimer;
+    m_Timer = gcnew System::Windows::Forms::Timer;
 
-    m_Timer->FormObject = this;
+    m_Timer->Tag = this;
     m_Timer->Interval = 1000;
 
     m_Timer->Tick += gcnew System::EventHandler(TimerEventProcessor);
@@ -31,6 +31,8 @@ Common::Forms::TextBoxTimer::~TextBoxTimer()
     if (m_Timer != nullptr)
     {
         m_Timer->Stop();
+
+        m_Timer->Tag = nullptr;
 
 		m_Timer->Tick -= gcnew System::EventHandler(TimerEventProcessor);
 
@@ -119,8 +121,8 @@ void Common::Forms::TextBoxTimer::TimerEventProcessor(
   System::Object^ Object,
   System::EventArgs^ EventArgs)
 {
-    Common::Forms::FormTimer^ FormTimer = (Common::Forms::FormTimer^)Object;
-    Common::Forms::TextBoxTimer^ TextBoxTimer = (Common::Forms::TextBoxTimer^)FormTimer->FormObject;
+    System::Windows::Forms::Timer^ Timer = (System::Windows::Forms::Timer^)Object;
+    Common::Forms::TextBoxTimer^ TextBoxTimer = (Common::Forms::TextBoxTimer^)Timer->Tag;
     System::EventArgs^ EventArg = gcnew System::EventArgs();
 
     EventArgs;

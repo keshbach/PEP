@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2021 Kevin Eshbach
+//  Copyright (C) 2019-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -21,6 +21,11 @@
 
 #define CNetFrameworkRuntimeVersion L"v4.0.30319"
 
+#define CUxThemeLibraryName L"UxTheme.dll"
+
+#define CBufferedPaintInitFuncName "BufferedPaintInit"
+#define CBufferedPaintUnInitFuncName "BufferedPaintUnInit"
+
 #define CPepAppHostNetLibraryName L"PepAppHostNet.dll"
 
 #define CPepAppHostNetExecuteInAppDomainFuncName "PepAppHostNetExecuteInAppDomain"
@@ -28,6 +33,9 @@
 #pragma endregion
 
 #pragma region "Type Defs"
+
+typedef HRESULT(STDAPICALLTYPE* TBufferedPaintInitFunc)(VOID);
+typedef HRESULT(STDAPICALLTYPE* TBufferedPaintUnInitFunc)(VOID);
 
 typedef HRESULT (__stdcall* TPepAppHostNetExecuteInAppDomainFunc)(void* cookie);
 
@@ -38,6 +46,7 @@ typedef HRESULT (__stdcall* TPepAppHostNetExecuteInAppDomainFunc)(void* cookie);
 typedef struct tagTPepAppHostRuntimeData
 {
     BOOL bCOMInitialized;
+    BOOL bBufferPaintInitialized;
 	BOOL bPepAppHostTasksInitialized;
     BOOL bRuntimeStarted;
     ICLRMetaHost* pCLRMetaHost;
@@ -49,6 +58,10 @@ typedef struct tagTPepAppHostRuntimeData
     ICLRHostProtectionManager* pCLRHostProtectionManager;
     PepAppHostControl* pPepAppHostControl;
     PepAppActionOnCLREvent* pPepAppActionOnCLREvent;
+
+    HMODULE hUxThemeLibrary;
+    TBufferedPaintInitFunc pBufferedPaintInit;
+    TBufferedPaintUnInitFunc pBufferedPaintUnInit;
 
     HMODULE hHostNetLibrary;
     TPepAppHostNetExecuteInAppDomainFunc pPepAppHostNetExecuteInAppDomain;
@@ -77,6 +90,35 @@ static BOOL lInitialize(
     }
 
     pPepAppHostRuntimeData->bCOMInitialized = TRUE;
+
+    if (::IsWindowsVistaOrGreater())
+    {
+        pPepAppHostRuntimeData->hUxThemeLibrary = ::LoadLibrary(CUxThemeLibraryName);
+
+        if (pPepAppHostRuntimeData->hUxThemeLibrary)
+        {
+            pPepAppHostRuntimeData->pBufferedPaintInit = (TBufferedPaintInitFunc)::GetProcAddress(pPepAppHostRuntimeData->hUxThemeLibrary, CBufferedPaintInitFuncName);
+            pPepAppHostRuntimeData->pBufferedPaintUnInit = (TBufferedPaintUnInitFunc)::GetProcAddress(pPepAppHostRuntimeData->hUxThemeLibrary, CBufferedPaintUnInitFuncName);
+        }
+
+        if (pPepAppHostRuntimeData->hUxThemeLibrary == NULL ||
+            pPepAppHostRuntimeData->pBufferedPaintInit == NULL ||
+            pPepAppHostRuntimeData->pBufferedPaintUnInit == NULL)
+        {
+            lUninitialize(pPepAppHostRuntimeData);
+
+            return FALSE;
+        }
+
+        if (S_OK != pPepAppHostRuntimeData->pBufferedPaintInit())
+        {
+            lUninitialize(pPepAppHostRuntimeData);
+
+            return FALSE;
+        }
+
+        pPepAppHostRuntimeData->bBufferPaintInitialized = TRUE;
+    }
 
 	if (FALSE == UtPepAppHostTasksInitialize())
 	{
@@ -123,11 +165,6 @@ static BOOL lInitialize(
     }
 
     pPepAppHostRuntimeData->pPepAppHostControl->AddRef();
-
-
-
-
-
 
 	if (S_OK != pPepAppHostRuntimeData->pCLRRuntimeHost->GetCLRControl(&pPepAppHostRuntimeData->pCLRControl))
 	{
@@ -321,6 +358,19 @@ static BOOL lUninitialize(
 		pPepAppHostRuntimeData->bPepAppHostTasksInitialized = FALSE;
 	}
 
+    if (pPepAppHostRuntimeData->bBufferPaintInitialized)
+    {
+        pPepAppHostRuntimeData->pBufferedPaintUnInit();
+
+        ::FreeLibrary(pPepAppHostRuntimeData->hUxThemeLibrary);
+
+        pPepAppHostRuntimeData->hUxThemeLibrary = NULL;
+        pPepAppHostRuntimeData->pBufferedPaintInit = NULL;
+        pPepAppHostRuntimeData->pBufferedPaintUnInit = NULL;
+
+        pPepAppHostRuntimeData->bBufferPaintInitialized = FALSE;
+    }
+
     if (pPepAppHostRuntimeData->bCOMInitialized)
     {
         ::CoUninitialize();
@@ -377,5 +427,5 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2019-2021 Kevin Eshbach
+//  Copyright (C) 2019-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

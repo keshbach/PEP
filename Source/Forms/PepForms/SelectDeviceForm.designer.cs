@@ -32,7 +32,7 @@
             {
             this.components = new System.ComponentModel.Container();
             this.splitContainerDevice = new System.Windows.Forms.SplitContainer();
-            this.treeViewDevice = new System.Windows.Forms.TreeView();
+            this.treeViewDevice = new Common.Forms.TreeView();
             this.labelDevice = new System.Windows.Forms.Label();
             this.textBoxPinDiagram = new Common.Forms.TextBox();
             this.labelPinDiagram = new System.Windows.Forms.Label();
@@ -76,10 +76,14 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.treeViewDevice.HideSelection = false;
+            this.treeViewDevice.HotTracking = true;
             this.treeViewDevice.Location = new System.Drawing.Point(0, 16);
             this.treeViewDevice.Name = "treeViewDevice";
             this.treeViewDevice.Size = new System.Drawing.Size(209, 289);
+            this.treeViewDevice.Sorting = Common.Forms.TreeView.ESortOrder.None;
             this.treeViewDevice.TabIndex = 1;
+            this.treeViewDevice.AfterCollapse += new System.Windows.Forms.TreeViewEventHandler(this.treeViewDevice_AfterCollapse);
+            this.treeViewDevice.AfterExpand += new System.Windows.Forms.TreeViewEventHandler(this.treeViewDevice_AfterExpand);
             this.treeViewDevice.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewDevice_AfterSelect);
             this.treeViewDevice.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeViewDevice_MouseDoubleClick);
             // 
@@ -220,7 +224,7 @@
             #endregion
             private System.Windows.Forms.SplitContainer splitContainerDevice;
             private System.Windows.Forms.Label labelDevice;
-            private System.Windows.Forms.TreeView treeViewDevice;
+            private Common.Forms.TreeView treeViewDevice;
             private System.Windows.Forms.Label labelPinDiagram;
             private Common.Forms.TextBox textBoxPinDiagram;
             private System.Windows.Forms.Label labelFilter;

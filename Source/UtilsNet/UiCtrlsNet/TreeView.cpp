@@ -222,6 +222,9 @@ void Common::Forms::TreeView::WndProc(
 {
     switch (Message.Msg)
     {
+        case WM_CREATE:
+            HandleCreate(Message);
+            break;
         case WM_RBUTTONDBLCLK: // Ignore message
             break;
         case WM_RBUTTONDOWN:
@@ -234,6 +237,14 @@ void Common::Forms::TreeView::WndProc(
             System::Windows::Forms::TreeView::WndProc(Message);
             break;
     }
+}
+
+void Common::Forms::TreeView::HandleCreate(
+    System::Windows::Forms::Message% Message)
+{
+    System::Windows::Forms::TreeView::WndProc(Message);
+
+    UtControlsHelperSetExplorerTheme((HWND)Message.HWnd.ToPointer());
 }
 
 void Common::Forms::TreeView::HandleRButtonDown(

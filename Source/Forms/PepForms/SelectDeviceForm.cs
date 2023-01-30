@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2022 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -80,6 +80,9 @@ namespace Pep
                 System.Collections.Generic.SortedSet<string> FilterSet = new System.Collections.Generic.SortedSet<string>();
                 Microsoft.Win32.RegistryKey RegKey;
 
+                treeViewDevice.ItemHeight = Common.Forms.ImageManager.ToolbarImageHeight + 2;
+                treeViewDevice.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
+
                 foreach (Pep.Programmer.Device Device in Pep.Programmer.Devices.DevicesList)
                 {
                     FilterSet.Add(Device.DeviceType);
@@ -147,6 +150,34 @@ namespace Pep
                 if (buttonOK.Enabled)
                 {
                     buttonOK.PerformClick();
+                }
+            }
+
+            private void treeViewDevice_AfterCollapse(object sender, System.Windows.Forms.TreeViewEventArgs e)
+            {
+                if (IsDeviceTypeTreeNode(e.Node))
+                {
+                    e.Node.ImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DeviceTypeFolderClosed_16x");
+                    e.Node.SelectedImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DeviceTypeFolderClosed_16x");
+                }
+                else if (IsPinCountTreeNode(e.Node))
+                {
+                    e.Node.ImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DevicePackageFolderClosed_16x");
+                    e.Node.SelectedImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DevicePackageFolderClosed_16x");
+                }
+            }
+
+            private void treeViewDevice_AfterExpand(object sender, System.Windows.Forms.TreeViewEventArgs e)
+            {
+                if (IsDeviceTypeTreeNode(e.Node))
+                {
+                    e.Node.ImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DeviceTypeFolderOpened_16x");
+                    e.Node.SelectedImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DeviceTypeFolderOpened_16x");
+                }
+                else  if (IsPinCountTreeNode(e.Node))
+                {
+                    e.Node.ImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DevicePackageFolderOpened_16x");
+                    e.Node.SelectedImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DevicePackageFolderOpened_16x");
                 }
             }
 
@@ -293,6 +324,9 @@ namespace Pep
                     if (DeviceTypeTreeNode == null)
                     {
                         DeviceTypeTreeNode = treeViewDevice.Nodes.Add(PepDevice.DeviceType);
+
+                        DeviceTypeTreeNode.ImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DeviceTypeFolderClosed_16x");
+                        DeviceTypeTreeNode.SelectedImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DeviceTypeFolderClosed_16x");
                     }
 
                     sPinCountName = FormatDevicePinCount(PepDevice.PinCount);
@@ -304,11 +338,16 @@ namespace Pep
                     if (PinCountTreeNode == null)
                     {
                         PinCountTreeNode = DeviceTypeTreeNode.Nodes.Add(sPinCountName);
+
+                        PinCountTreeNode.ImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DevicePackageFolderClosed_16x");
+                        PinCountTreeNode.SelectedImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "DevicePackageFolderClosed_16x");
                     }
 
                     NameTreeNode = PinCountTreeNode.Nodes.Add(PepDevice.Name);
 
                     NameTreeNode.Tag = PepDevice;
+                    NameTreeNode.ImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "Device_16x");
+                    NameTreeNode.SelectedImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "Device_16x");
                 }
 
                 if (!String.IsNullOrWhiteSpace(textBoxSearch.Text))
@@ -488,11 +527,23 @@ namespace Pep
 
                 return true;
             }
+
+            private static bool IsDeviceTypeTreeNode(
+                System.Windows.Forms.TreeNode TreeNode)
+            {
+                return TreeNode.Parent == null;
+            }
+
+            private static bool IsPinCountTreeNode(
+                System.Windows.Forms.TreeNode TreeNode)
+            {
+                return TreeNode.Parent != null && TreeNode.Tag == null;
+            }
             #endregion
         }
     }
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2022 Kevin Eshbach                                  */
 /***************************************************************************/
