@@ -82,6 +82,19 @@ Common::Forms::FileSaveDialog::~FileSaveDialog()
 System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialog(
   System::Windows::Forms::IWin32Window^ Owner)
 {
+    if (IsWindowsVistaOrGreater())
+    {
+        return ShowDialogVista(Owner);
+    }
+    else
+    {
+        return ShowDialogWindowsXP(Owner);
+    }
+}
+
+System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialogVista(
+  System::Windows::Forms::IWin32Window^ Owner)
+{
     System::Windows::Forms::DialogResult Result(System::Windows::Forms::DialogResult::Cancel);
     IFileSaveDialog* pFileSaveDialog;
     FILEOPENDIALOGOPTIONS FileOpenDialogOptions;
@@ -124,7 +137,7 @@ System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialog(
         }
 
         if (m_bAllowReadOnly)
-        {   
+        {
             FileOpenDialogOptions &= ~FOS_NOREADONLYRETURN;
         }
         else
@@ -221,6 +234,16 @@ System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialog(
     pFileSaveDialog->Release();
 
     return Result;
+}
+
+System::Windows::Forms::DialogResult Common::Forms::FileSaveDialog::ShowDialogWindowsXP(
+  System::Windows::Forms::IWin32Window^ Owner)
+{
+    Owner;
+
+    System::Diagnostics::Debug::Assert(false);
+
+    return System::Windows::Forms::DialogResult::Cancel;
 }
 
 /////////////////////////////////////////////////////////////////////////////

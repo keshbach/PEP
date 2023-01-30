@@ -116,6 +116,19 @@ Common::Forms::FileOpenDialog::~FileOpenDialog()
 System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialog(
   System::Windows::Forms::IWin32Window^ Owner)
 {
+    if (IsWindowsVistaOrGreater())
+    {
+        return ShowDialogVista(Owner);
+    }
+    else
+    {
+        return ShowDialogWindowsXP(Owner);
+    }
+}
+
+System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialogVista(
+  System::Windows::Forms::IWin32Window^ Owner)
+{
     System::Windows::Forms::DialogResult Result(System::Windows::Forms::DialogResult::Cancel);
     IFileOpenDialog* pFileOpenDialog;
     IShellItem* pShellItem;
@@ -275,6 +288,16 @@ System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialog(
     pFileOpenDialog->Release();
 
     return Result;
+}
+
+System::Windows::Forms::DialogResult Common::Forms::FileOpenDialog::ShowDialogWindowsXP(
+  System::Windows::Forms::IWin32Window^ Owner)
+{
+    Owner;
+
+    System::Diagnostics::Debug::Assert(false);
+
+    return System::Windows::Forms::DialogResult::Cancel;
 }
 
 /////////////////////////////////////////////////////////////////////////////

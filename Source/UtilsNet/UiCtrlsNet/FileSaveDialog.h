@@ -232,6 +232,10 @@ namespace Common
             /// </summary>
             ~FileSaveDialog();
 
+        private:
+            System::Windows::Forms::DialogResult ShowDialogVista(System::Windows::Forms::IWin32Window^ Owner);
+            System::Windows::Forms::DialogResult ShowDialogWindowsXP(System::Windows::Forms::IWin32Window^ Owner);
+
         protected:
             System::String^ m_sTitle;
             System::Boolean m_bOverwritePrompt;
