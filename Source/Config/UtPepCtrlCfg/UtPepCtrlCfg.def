@@ -2,7 +2,7 @@
 ;  Copyright (C) 2007-2019 Kevin Eshbach
 ;
 
-LIBRARY UtPepCtrlCfg BASE=0x20370000
+LIBRARY UtPepCtrlCfg BASE=0x20360000
 EXPORTS
     UtPepCtrlCfgInitialize @ 1
     UtPepCtrlCfgUninitialize @ 2

@@ -2,7 +2,7 @@
 ;  Copyright (C) 2014-2014 Kevin Eshbach
 ;
 
-LIBRARY ZipNet BASE=0x4004e0000
+LIBRARY ZipNet BASE=0x4004f0000
 
 ;
 ;  Copyright (C) 2014-2014 Kevin Eshbach

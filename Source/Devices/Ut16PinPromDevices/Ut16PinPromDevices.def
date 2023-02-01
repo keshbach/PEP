@@ -2,7 +2,7 @@
 ;  Copyright (C) 2007-2008 Kevin Eshbach
 ;
 
-LIBRARY Ut16PinPromDevices BASE=0x20100000
+LIBRARY Ut16PinPromDevices BASE=0x200f0000
 EXPORTS
     GetDeviceCount @ 1
     GetDevice @ 2

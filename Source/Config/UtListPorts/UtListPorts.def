@@ -2,7 +2,7 @@
 ;  Copyright (C) 2007-2021 Kevin Eshbach
 ;
 
-LIBRARY UtListPorts BASE=0x20220000
+LIBRARY UtListPorts BASE=0x20210000
 EXPORTS
     UtListPortsInitialize @ 1
     UtListPortsUninitialize @ 2

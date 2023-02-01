@@ -2,7 +2,7 @@
 ;  Copyright (C) 2010-2014 Kevin Eshbach
 ;
 
-LIBRARY UiPepCtrls BASE=0x4000b0000
+LIBRARY UiPepCtrls BASE=0x4000c0000
 EXPORTS
 	UiPepCtrlsInitialize @ 1
 	UiPepCtrlsUninitialize @ 2
