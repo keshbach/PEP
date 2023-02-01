@@ -1,4 +1,4 @@
-﻿/***************************************************************************/
+/***************************************************************************/
 /*  Copyright (C) 2014-2014 Kevin Eshbach                                  */
 /***************************************************************************/
 
@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Kevin Eshbach")]
 [assembly: AssemblyProduct("PepForms")]
-[assembly: AssemblyCopyright("Copyright © 2006-2016 Kevin Eshbach")]
+[assembly: AssemblyCopyright("Copyright � 2006-2023 Kevin Eshbach. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.1.0.0")]
-[assembly: AssemblyFileVersion("3.1.0.0")]
+[assembly: AssemblyVersion("3.2.0.0")]
+[assembly: AssemblyFileVersion("3.2.0.0")]
 
 /***************************************************************************/
 /*  Copyright (C) 2014-2014 Kevin Eshbach                                  */

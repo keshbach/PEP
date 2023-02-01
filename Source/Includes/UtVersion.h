@@ -1,19 +1,19 @@
 /***************************************************************************/
-/*  Copyright (C) 2013-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2013-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtVersion_H)
 #define UtVersion_H
 
 #define CUtMajorVersion 3
-#define CUtMinorVersion 1
+#define CUtMinorVersion 2
 
-#define CUtVersionString "3.10"
+#define CUtVersionString "3.20"
 
-#define CUtCopyrightString L"© 2006-2019 Kevin Eshbach. All rights reserved."
+#define CUtCopyrightString L"Copyright © 2006-2023 Kevin Eshbach. All rights reserved."
 
 #endif /* end of UtVersion_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2013-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2013-2023 Kevin Eshbach                                  */
 /***************************************************************************/

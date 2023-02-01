@@ -1,4 +1,4 @@
-﻿/***************************************************************************/
+/***************************************************************************/
 /*  Copyright (C) 2014-2014 Kevin Eshbach                                  */
 /***************************************************************************/
 
@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Kevin Eshbach")]
 [assembly: AssemblyProduct("OpenZipForms")]
-[assembly: AssemblyCopyright("Copyright © 2014-2016 Kevin Eshbach")]
+[assembly: AssemblyCopyright("Copyright � 2006-2023 Kevin Eshbach. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -33,8 +33,8 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.1.0.0")]
-[assembly: AssemblyFileVersion("3.1.0.0")]
+[assembly: AssemblyVersion("3.2.0.0")]
+[assembly: AssemblyFileVersion("3.2.0.0")]
 
 /***************************************************************************/
 /*  Copyright (C) 2014-2014 Kevin Eshbach                                  */
