@@ -2,11 +2,11 @@
 
 Unofficial Windows application for the EPROM+ System from Andromeda Research Labs
 
-Copyright (C) 2006-2022 Kevin Eshbach  
+Copyright (C) 2006-2023 Kevin Eshbach  
 
 ## Requirements
 
-Windows 7, Windows 8, Windows 8.1 and Windows 10
+Windows 7, Windows 8, Windows 8.1, Windows 10 or Windows 11
 
 The application currently only works with a real parallel port.  A USB to Parallel Port adapter is not currently supported.  For laptops the Quatech (now B&B Electronics) SPPXP-100 ExpressCard or SPP-100 PC card can be used.
 
