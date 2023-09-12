@@ -2,6 +2,8 @@
 /*  Copyright (C) 2007-2020 Kevin Eshbach                                  */
 /***************************************************************************/
 
+#include <Includes/UtCompiler.h>
+
 #include <windows.h>
 #include <strsafe.h>
 
@@ -1008,12 +1010,44 @@ static VOID UTPEPDEVICESAPI l2716ProgramDeviceWith25VDC(
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-	pDeviceIOFuncs;
+	BOOL bErrorOccurred = FALSE;
+	ULONG ulTmpBufferLen = ulDataLen / 32;
+	ULONG ulAddress;
+
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
-	pbyData;
 
 	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+		FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
+		FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse2Mode) ||
+		FALSE == UtPepCtrlSetVppMode(eUtPepCtrl25VDCVppMode) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerWriteMode))
+	{
+		bErrorOccurred = TRUE;
+
+		goto End;
+	}
+
+	for (ulAddress = 0; ulAddress < ulDataLen; ulAddress += ulTmpBufferLen)
+	{
+		if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
+			FALSE == UtPepCtrlProgramData(ulAddress, pbyData + ulAddress,
+                                          ulTmpBufferLen))
+		{
+			bErrorOccurred = TRUE;
+
+			goto End;
+		}
+
+		pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
+	}
+
+	pDeviceIOFuncs->pProgressDeviceIOFunc(ulDataLen);
+
+End:
+	UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
 
 	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
@@ -1025,12 +1059,44 @@ static VOID UTPEPDEVICESAPI l2716ProgramDeviceWith12VDC(
   const LPBYTE pbyData,
   ULONG ulDataLen)
 {
-	pDeviceIOFuncs;
+	BOOL bErrorOccurred = FALSE;
+	ULONG ulTmpBufferLen = ulDataLen / 32;
+	ULONG ulAddress;
+
 	nChipEnableNanoseconds;
 	nOutputEnableNanoseconds;
-	pbyData;
 
 	pDeviceIOFuncs->pBeginDeviceIOFunc(ulDataLen, edoProgram);
+
+	if (FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode) ||
+		FALSE == UtPepCtrlSetVccMode(eUtPepCtrl5VDCMode) ||
+		FALSE == UtPepCtrlSetPinPulseMode(eUtPepCtrlPinPulse2Mode) ||
+		FALSE == UtPepCtrlSetVppMode(eUtPepCtrl12VDCVppMode) ||
+		FALSE == UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerWriteMode))
+	{
+		bErrorOccurred = TRUE;
+
+		goto End;
+	}
+
+	for (ulAddress = 0; ulAddress < ulDataLen; ulAddress += ulTmpBufferLen)
+	{
+		if (FALSE == pDeviceIOFuncs->pContinueDeviceIOFunc() ||
+			FALSE == UtPepCtrlProgramData(ulAddress, pbyData + ulAddress,
+                                          ulTmpBufferLen))
+		{
+			bErrorOccurred = TRUE;
+
+			goto End;
+		}
+
+		pDeviceIOFuncs->pProgressDeviceIOFunc(ulAddress);
+	}
+
+	pDeviceIOFuncs->pProgressDeviceIOFunc(ulDataLen);
+
+End:
+	UtPepCtrlSetProgrammerMode(eUtPepCtrlProgrammerNoneMode);
 
 	pDeviceIOFuncs->pEndDeviceIOFunc(TRUE, edoProgram);
 }
