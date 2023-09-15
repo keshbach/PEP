@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtSleep_H)
@@ -9,10 +9,10 @@
 
 #define UTSLEEPAPI __stdcall
 
-MExternC BOOL UTSLEEPAPI UtSleep(_In_ PLARGE_INTEGER pIntervalNanoseconds);
+MExternC BOOL UTSLEEPAPI UtSleep(_In_ UINT32 nIntervalNanoseconds);
 
 #endif /* end of UtSleep_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/

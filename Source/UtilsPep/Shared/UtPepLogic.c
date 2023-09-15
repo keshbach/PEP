@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if defined(BUILD_USER_LIB)
@@ -220,20 +220,20 @@ typedef struct tagTPepInternalLogicData
 #pragma endregion
 
 #if defined(__XC8) || defined(__18CXX)
-#pragma udata
+#pragma udata PepLogicDataSectionName
 static TPepInternalLogicData l_InternalLogicData;
 #endif
 
 #pragma region "Local Function Declarations"
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-static BOOLEAN lWritePortData(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 ucData, _In_ UINT8 ucUnit);
+static BOOLEAN lWritePortData(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 nData, _In_ UINT8 nUnit);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-static BOOLEAN lReadByteFromProgrammer(_In_ TUtPepLogicData* pLogicData, _Out_ UINT8* pByte);
+static BOOLEAN lReadByteFromProgrammer(_In_ TUtPepLogicData* pLogicData, _Out_ UINT8* pnByte);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-static BOOLEAN lWriteByteToProgrammer(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 ucByte);
+static BOOLEAN lWriteByteToProgrammer(_In_ TUtPepLogicData* pLogicData, _In_ UINT8 nByte);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN lSetProgrammerAddress(_In_ TUtPepLogicData* pLogicData, _In_ UINT32 ulAddress);
@@ -339,8 +339,11 @@ static BOOLEAN lWritePortData(
     nTmpData[1] = MPortData(nData, nUnit, CUnitOn);
     nTmpData[2] = MPortData(nData, nUnit, CUnitOff);
 
-    bResult = pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, nTmpData,
-                                         MArrayLen(nTmpData), CWaitNanoSeconds);
+    bResult = pLogicData->pWritePortFunc(
+#if defined(ENABLE_DEVICE_CONTEXT)
+                  pLogicData->pvDeviceContext,
+#endif
+                  nTmpData, MArrayLen(nTmpData), CWaitNanoSeconds);
 
 #if defined(ENABLE_LOGGING) 
 #if defined(PEPLOGIC_ALL_MESSAGES)
@@ -377,8 +380,11 @@ static BOOLEAN lReadByteFromProgrammer(
     {
         nTmpData = MPortData(nBitPosition, CUnit_DontCare, CUnitOff);
 
-		if (!pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, &nTmpData,
-                                        sizeof(nTmpData), CWaitNanoSeconds))
+		if (!pLogicData->pWritePortFunc(
+#if defined(ENABLE_DEVICE_CONTEXT)
+                pLogicData->pvDeviceContext,
+#endif
+                &nTmpData, sizeof(nTmpData), CWaitNanoSeconds))
 		{
 #if defined(ENABLE_LOGGING) 
 			pLogicData->pLogFunc("lReadByteFromProgrammer leaving.  (Write port failed)  (Thread: 0x%p)\n",
@@ -388,7 +394,11 @@ static BOOLEAN lReadByteFromProgrammer(
 			return FALSE;
 		}
 
-		if (!pLogicData->pReadBitPortFunc(pLogicData->pvDeviceContext, &bValue))
+		if (!pLogicData->pReadBitPortFunc(
+#if defined(ENABLE_DEVICE_CONTEXT)
+                pLogicData->pvDeviceContext,
+#endif
+                &bValue))
         {
 #if defined(ENABLE_LOGGING) 
 			pLogicData->pLogFunc("lReadByteFromProgrammer leaving.  (Read bit from port failed)  (Thread: 0x%p)\n",
@@ -763,7 +773,6 @@ static BOOLEAN lEnableProgrammerReadMode(
   _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
-	LARGE_INTEGER IntervalNanoseconds;
 
 #if defined(ENABLE_LOGGING) 
 	pLogicData->pLogFunc("lEnableProgrammerReadMode entering.  (Thread: 0x%p)\n",
@@ -789,9 +798,7 @@ static BOOLEAN lEnableProgrammerReadMode(
 				                 MCurrentThreadId());
 #endif
 
-			IntervalNanoseconds.QuadPart = pData->DelaySettings.nChipEnableNanoSeconds;
-
-			if (!UtSleep(&IntervalNanoseconds))
+			if (!UtSleep(pData->DelaySettings.nChipEnableNanoSeconds))
 			{
 #if defined(ENABLE_LOGGING) 
 				pLogicData->pLogFunc("lEnableProgrammerReadMode - Sleep failed.  (Thread: 0x%p)\n",
@@ -821,7 +828,6 @@ static BOOLEAN lEnableProgrammerWriteMode(
   _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
-	LARGE_INTEGER IntervalNanoseconds;
 
 #if defined(ENABLE_LOGGING) 
 	pLogicData->pLogFunc("lEnableProgrammerWriteMode entering.  (Thread: 0x%p)\n",
@@ -849,9 +855,7 @@ static BOOLEAN lEnableProgrammerWriteMode(
 				                 MCurrentThreadId());
 #endif
 
-			IntervalNanoseconds.QuadPart = pData->DelaySettings.nChipEnableNanoSeconds;
-
-			if (!UtSleep(&IntervalNanoseconds))
+			if (!UtSleep(pData->DelaySettings.nChipEnableNanoSeconds))
 			{
 #if defined(ENABLE_LOGGING) 
 				pLogicData->pLogFunc("lEnableProgrammerWriteMode - Sleep failed.  (Thread: 0x%p)\n",
@@ -881,7 +885,7 @@ static BOOLEAN lWaitForProgramPulse(
   _In_ TUtPepLogicData* pLogicData)
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
-    LARGE_INTEGER IntervalNanoseconds;
+    UINT32 nIntervalNanoseconds;
     UINT8 nData;
     BOOLEAN bValue;
 
@@ -902,7 +906,7 @@ static BOOLEAN lWaitForProgramPulse(
                                  MCurrentThreadId());
 #endif
 
-			IntervalNanoseconds.QuadPart = (LONGLONG)MMilliToNanoseconds(1.1); /* 1.1 msec */
+			nIntervalNanoseconds = (UINT32)MMilliToNanoseconds(1.1); /* 1.1 msec */
 			break;
 		case CUtPepLogicPinPulse2Mode:
 		case CUtPepLogicPinPulse3Mode:
@@ -912,7 +916,7 @@ static BOOLEAN lWaitForProgramPulse(
                                  MCurrentThreadId());
 #endif
 
-			IntervalNanoseconds.QuadPart = (LONGLONG)MMicroToNanoseconds(250); /* 250 us */
+			nIntervalNanoseconds = (UINT32)MMicroToNanoseconds(250); /* 250 us */
 			break;
 		default:
 #if defined(ENABLE_LOGGING) 
@@ -928,7 +932,7 @@ static BOOLEAN lWaitForProgramPulse(
 		                 MCurrentThreadId());
 #endif
 
-	if (!UtSleep(&IntervalNanoseconds))
+	if (!UtSleep(nIntervalNanoseconds))
 	{
 #if defined(ENABLE_LOGGING) 
 		pLogicData->pLogFunc("lWaitForProgramPulse leaving.  (Sleep failed)  (Thread: 0x%p)\n",
@@ -972,9 +976,16 @@ static BOOLEAN lWaitForProgramPulse(
 		                 MCurrentThreadId());
 #endif
 
-    if (pLogicData->pWritePortFunc(pLogicData->pvDeviceContext, &nData,
-                                   sizeof(nData), CWaitNanoSeconds) &&
-        pLogicData->pReadBitPortFunc(pLogicData->pvDeviceContext, &bValue))
+    if (pLogicData->pWritePortFunc(
+#if defined(ENABLE_DEVICE_CONTEXT)
+            pLogicData->pvDeviceContext,
+#endif
+            &nData, sizeof(nData), CWaitNanoSeconds) &&
+        pLogicData->pReadBitPortFunc(
+#if defined(ENABLE_DEVICE_CONTEXT)
+            pLogicData->pvDeviceContext,
+#endif
+            &bValue))
     {
         if (!bValue)
         {
@@ -1442,7 +1453,6 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddressWithDelay(
   _In_ UINT32 nDelayNanoSeconds)
 {
 	BOOLEAN bResult;
-	LARGE_INTEGER IntervalNanoseconds;
 
 #if defined(ENABLE_LOGGING) 
 	pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay entering.  (Thread: 0x%p)\n",
@@ -1462,9 +1472,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetAddressWithDelay(
 			                 MCurrentThreadId());
 #endif
 
-		IntervalNanoseconds.QuadPart = nDelayNanoSeconds;
-
-		if (!UtSleep(&IntervalNanoseconds))
+		if (!UtSleep(nDelayNanoSeconds))
 		{
 #if defined(ENABLE_LOGGING) 
 			pLogicData->pLogFunc("UtPepLogicSetAddressWithDelay - Sleep failed.  (Thread: 0x%p)\n",
@@ -1671,7 +1679,6 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
 {
     TPepInternalLogicData* pData = (TPepInternalLogicData*)pLogicData->pvLogicContext;
 	BOOLEAN bResult, bOutputEnableChanged;
-	LARGE_INTEGER IntervalNanoseconds;
 
 #if defined(ENABLE_LOGGING) 
 	pLogicData->pLogFunc("UtPepLogicSetOutputEnable entering.  (Thread: 0x%p)\n",
@@ -1728,9 +1735,7 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetOutputEnable(
 			                 MCurrentThreadId());
 #endif
 
-		IntervalNanoseconds.QuadPart = pData->DelaySettings.nOutputEnableNanoSeconds;
-
-		if (!UtSleep(&IntervalNanoseconds))
+		if (!UtSleep(pData->DelaySettings.nOutputEnableNanoSeconds))
 		{
 #if defined(ENABLE_LOGGING) 
 			pLogicData->pLogFunc("UtPepLogicSetOutputEnable - Sleep failed.  (Thread: 0x%p)\n",
@@ -1841,5 +1846,5 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetDelays(
 #pragma endregion
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/

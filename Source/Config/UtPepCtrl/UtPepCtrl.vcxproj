@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ParallelPortPepCtrl.c" />
+    <ClCompile Include="UsbDeviceInterfaceGUID.c" />
     <ClCompile Include="UsbPepCtrl.c" />
     <ClCompile Include="UtPepCtrl.c" />
     <ClCompile Include="UtPepCtrlMain.c" />
@@ -35,6 +36,7 @@
   <ItemGroup>
     <ClInclude Include="..\UtPepCtrl.h" />
     <ClInclude Include="ParallelPortPepCtrl.h" />
+    <ClInclude Include="UsbDeviceInterfaceGUID.h" />
     <ClInclude Include="UsbPepCtrl.h" />
     <ClInclude Include="UtPepCtrlUtil.h" />
   </ItemGroup>
@@ -137,7 +139,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>UtHeap.lib;Winusb.lib;hid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;Winusb.lib;hid.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>UtPepCtrl.def</ModuleDefinitionFile>
       <EntryPointSymbol>
@@ -163,7 +165,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>UtHeap.lib;Winusb.lib;hid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UtHeap.lib;Winusb.lib;hid.lib;Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>UtPepCtrl64.def</ModuleDefinitionFile>
       <EntryPointSymbol>

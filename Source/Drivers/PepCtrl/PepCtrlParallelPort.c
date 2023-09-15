@@ -452,7 +452,6 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(
 {
     PPARALLEL_PORT_INFORMATION pParallelPortInfo;
     ULONG ulIndex;
-	LARGE_INTEGER Interval;
 
     PepCtrlLog("PepCtrlWriteParallelPort entering.  (Thread: 0x%p)\n",
 		       PsGetCurrentThread());
@@ -461,14 +460,12 @@ BOOLEAN TPEPCTRLAPI PepCtrlWriteParallelPort(
 
     pParallelPortInfo = (PPARALLEL_PORT_INFORMATION)pObject->pvObjectData;
 
-	Interval.QuadPart = ulWaitNanoSeconds;
-
     for (ulIndex = 0; ulIndex < ulDataLen; ++ulIndex)
     {
     	WRITE_PORT_UCHAR(MDataAddress(pParallelPortInfo->Controller),
                          pucData[ulIndex]);
 
-		if (!UtSleep(&Interval))
+		if (!UtSleep(ulWaitNanoSeconds))
 		{
 			PepCtrlLog("PepCtrlWriteParallelPort - Sleep failed.  (Thread: 0x%p)\n",
 				       PsGetCurrentThread());

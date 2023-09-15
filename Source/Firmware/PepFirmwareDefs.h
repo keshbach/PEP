@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2022 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepFirmwareDefs_H)
@@ -7,6 +7,8 @@
 
 #define CPepFirmwareVendorID 0x04d8
 #define CPepFirmwareProductID 0x003c
+
+#define CPepFirmware2ProductID 0x0052
 
 /* Commands */
 
@@ -29,6 +31,8 @@
 #define CPepErrorInvalidCommand 0x01
 #define CPepErrorFailed 0x02
 #define CPepErrorInvalidLength 0x03
+#define CPepErrorBusy 0x04
+#define CPepErrorInitializeData 0xFF
 
 #if defined(_MSC_VER)
 #if defined(_X86_)
@@ -70,6 +74,7 @@ typedef struct tagTUtProgramUserData
 
 typedef struct tagTUtPepCommandData
 {
+    UINT8 PacketID;
     UINT8 Command;
             
     union
@@ -82,7 +87,7 @@ typedef struct tagTUtPepCommandData
         struct tagReadData
         {
             UINT32 nAddress;
-            UINT8 nDataLen; // 0 - 63
+            UINT8 nDataLen; // 0 - 62
         } ReadData;
 
         struct tagReadUserData
@@ -101,7 +106,7 @@ typedef struct tagTUtPepCommandData
         {
             UINT32 nAddress;
             UINT8 nData[58];
-            UINT8 nDataLen; // 0 - 58
+            UINT8 nDataLen; // 0 - 57
         } ProgramData;
 
         struct tagProgramUserData
@@ -116,19 +121,20 @@ typedef struct tagTUtPepCommandData
             UINT32 nOutputEnableNanoSeconds;
         } Delays;
 
-        UINT8 Padding[63];
+        UINT8 Padding[62];
     } Data;
 } TUtPepCommandData;
 
 typedef struct tagTUtPepResponseData
 {
+    UINT8 PacketID;
     UINT8 ErrorCode;
     
     union
     {
         UINT16 Version[31];
-        UINT8 nData[63];
-        UINT8 Padding[63];
+        UINT8 nData[62];
+        UINT8 Padding[62];
     } Data;
 } TUtPepResponseData;
 
@@ -142,5 +148,5 @@ typedef struct tagTUtPepResponseData
 #endif // PepFirmwareDefs_H
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2022 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/

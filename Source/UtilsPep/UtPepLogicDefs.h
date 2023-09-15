@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepLogicDefs_H)
@@ -45,18 +45,31 @@
 #error Need to define calling convention
 #endif
 
-typedef BOOLEAN (TUTPEPLOGICAPI *TUtPepLogicReadBitPortFunc)(_In_ PVOID pvContext,
-                                                             _Out_ PBOOLEAN pbValue);
-typedef BOOLEAN (TUTPEPLOGICAPI *TUtPepLogicWritePortFunc)(_In_ PVOID pvContext,
-                                                           _In_ PUCHAR pucData,
-                                                           _In_ ULONG ulDataLen,
-	                                                       _In_ ULONG nWaitNanoSeconds);
+typedef BOOLEAN (TUTPEPLOGICAPI *TUtPepLogicReadBitPortFunc)(
+#if defined(ENABLE_DEVICE_CONTEXT)
+    _In_ PVOID pvContext,
+#endif
+    _Out_ PBOOLEAN pbValue);
+typedef BOOLEAN (TUTPEPLOGICAPI *TUtPepLogicWritePortFunc)(
+#if defined(ENABLE_DEVICE_CONTEXT)
+    _In_ PVOID pvContext,
+#endif
+    _In_ PUINT8 pnData,
+#if defined(_MSC_VER)
+    _In_ UINT32 nDataLen,
+#elif defined(__XC8) || defined(__18CXX)
+    _In_ UINT8 nDataLen,
+#else
+#error Need to define the size of ulDataLen
+#endif
+    _In_ UINT32 nWaitNanoSeconds);
 
 #if defined(ENABLE_LOGGING) 
 typedef VOID (__cdecl *TUtPepLogicLogFunc)(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
 #endif
 
 #if defined(_MSC_VER)
+#define MROM
 #if defined(_X86_)
 #pragma pack(push, 4)
 #elif defined(_AMD64_)
@@ -65,15 +78,18 @@ typedef VOID (__cdecl *TUtPepLogicLogFunc)(_In_z_ _Printf_format_string_ PCSTR p
 #error Need to specify cpu architecture to configure structure padding
 #endif
 #elif defined(__XC8) || defined(__18CXX)
+#define MROM rom
 #else
 #error Need to specify how to enable byte aligned structure padding
 #endif
 
 typedef struct tagTUtPepLogicData
 {
+#if defined(ENABLE_DEVICE_CONTEXT)
     PVOID pvDeviceContext;
-    TUtPepLogicReadBitPortFunc pReadBitPortFunc;
-    TUtPepLogicWritePortFunc pWritePortFunc;
+#endif
+    MROM TUtPepLogicReadBitPortFunc pReadBitPortFunc;
+    MROM TUtPepLogicWritePortFunc pWritePortFunc;
 #if defined(ENABLE_LOGGING) 
     TUtPepLogicLogFunc pLogFunc;
 #endif
@@ -90,5 +106,5 @@ typedef struct tagTUtPepLogicData
 #endif /* !defined(UtPepLogicDefs_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/

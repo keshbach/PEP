@@ -30,7 +30,7 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(_In_ PVOID pvContext, _Out_ PBOOLEAN pbValue);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(_In_ PVOID pvContext, _In_ PUCHAR pucData, _In_ ULONG ulDataLen, _In_ ULONG ulWaitNanoSeconds);
+static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(_In_ PVOID pvContext, _In_ PUINT8 pnData, _In_ UINT32 nDataLen, _In_ UINT32 nWaitNanoSeconds);
 
 static VOID __cdecl lPepLogicLog(_In_z_ _Printf_format_string_ PCSTR pszFormat, ...);
 
@@ -88,9 +88,9 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicReadBitPort(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
   _In_ PVOID pvContext,
-  _In_ PUCHAR pucData,
-  _In_ ULONG ulDataLen,
-  _In_ ULONG ulDelayNanoSeconds)
+  _In_ PUINT8 pnData,
+  _In_ UINT32 nDataLen,
+  _In_ UINT32 nDelayNanoSeconds)
 {
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pvContext;
 	BOOLEAN bResult;
@@ -103,7 +103,7 @@ static BOOLEAN TUTPEPLOGICAPI lPepLogicWritePort(
     PepCtrlLog("lPepLogicWritePort - Port Data pointer: 0x%p.  (Thread: 0x%p)\n",
                pPortData, PsGetCurrentThread());
 
-	bResult = pPortData->Funcs.pWritePortFunc(&pPortData->Object, pucData, ulDataLen, ulDelayNanoSeconds);
+	bResult = pPortData->Funcs.pWritePortFunc(&pPortData->Object, pnData, nDataLen, nDelayNanoSeconds);
 
 	PepCtrlLog("lPepLogicWritePort leaving.  (Thread: 0x%p)\n",
 		       PsGetCurrentThread());

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <ntddk.h>
@@ -12,16 +12,16 @@
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 BOOLEAN UTSLEEPDRIVERAPI UtSleep(
-  _In_ PLARGE_INTEGER pIntervalNanoseconds)
+  _In_ UINT32 nIntervalNanoseconds)
 {
 	NTSTATUS status;
 	LARGE_INTEGER Interval;
 
 	PAGED_CODE()
 
-	Interval.QuadPart = pIntervalNanoseconds->QuadPart / 100;
+	Interval.QuadPart = nIntervalNanoseconds / 100;
 
-	if (Interval.QuadPart * 100 < pIntervalNanoseconds->QuadPart)
+	if (Interval.QuadPart * 100 < nIntervalNanoseconds)
 	{
 		++Interval.QuadPart;
 	}
@@ -32,5 +32,5 @@ BOOLEAN UTSLEEPDRIVERAPI UtSleep(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/

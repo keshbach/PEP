@@ -2,28 +2,14 @@
 /*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
-#include <windows.h>
+#if !defined(UsbDeviceInterfaceGUID_H)
+#define UsbDeviceInterfaceGUID_H
 
-#include <Utils/UtSleep.h>
+BOOL UsbHIDDeviceInterfaceGUID(_Out_writes_(sizeof(GUID)) LPGUID pGuid);
 
-#include <Includes/UtMacros.h>
+BOOL UsbFullSpeedDeviceInterfaceGUID(_Out_writes_(sizeof(GUID)) LPGUID pGuid);
 
-BOOL UTSLEEPAPI UtSleep(
-  _In_ UINT32 nIntervalNanoseconds)
-{
-	LONGLONG IntervalMilliseconds;
-
-	IntervalMilliseconds = (LONGLONG)MNanoToMilliseconds(nIntervalNanoseconds);
-
-	if (MMilliToNanoseconds(IntervalMilliseconds) < nIntervalNanoseconds)
-	{
-		++IntervalMilliseconds;
-	}
-
-	Sleep((UINT32)IntervalMilliseconds);
-
-	return TRUE;
-}
+#endif /* UsbDeviceInterfaceGUID_H */
 
 /***************************************************************************/
 /*  Copyright (C) 2006-2023 Kevin Eshbach                                  */

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtSleepDriver_H)
@@ -8,10 +8,10 @@
 #define UTSLEEPDRIVERAPI __stdcall
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-BOOLEAN UTSLEEPDRIVERAPI UtSleep(_In_ PLARGE_INTEGER pIntervalNanoseconds);
+BOOLEAN UTSLEEPDRIVERAPI UtSleep(_In_ UINT32 nIntervalNanoseconds);
 
 #endif /* !defined(UtSleepDriver_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
