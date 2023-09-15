@@ -310,7 +310,7 @@ This script runs regresion tests on the various test pals.
                     
                     for (index = 0; index < devicesArray.length; ++index)
                     {
-                        outputPath =  devicesArray[index].outputPath;
+                        outputPath = devicesArray[index].outputPath;
                     
                         if (g_Verbose)
                         {                    
