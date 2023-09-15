@@ -3108,9 +3108,9 @@ namespace OpenZip
                         }
                         else
                         {
-                            if (s_DragTreeNode != s_DragSelectedTreeNode)
+                            if (s_DragTreeNode != null)
                             {
-                                e.Effect = System.Windows.Forms.DragDropEffects.Move;
+                                e.Effect = System.Windows.Forms.DragDropEffects.None;
                             }
                         }
                     }
