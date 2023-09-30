@@ -1,17 +1,20 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2018 Kevin Eshbach
+//  Copyright (C) 2018-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "UtPepSetup.h"
 
 #include <Includes/UtPepUtils.inl>
+#include <Includes/UtMacros.h>
 
 #include <Utils/UtHeapProcess.h>
 
 #pragma region Local Variables
 
 static HINSTANCE l_hInstance = NULL;
+
+static BYTE l_byUnicodeByteOrderMarker[] = {0xFF, 0xFE};
 
 #pragma endregion
 
@@ -94,8 +97,6 @@ BOOL UtPepSetupAppendLine(
     LARGE_INTEGER FileSize;
     DWORD dwBytesWrote;
 
-    // if have no file then add unicode indicator to beginnning
-
     hFile = ::CreateFile(pszLogFile, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
                          FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -104,9 +105,25 @@ BOOL UtPepSetupAppendLine(
         return FALSE;
     }
 
-    if (::GetFileSizeEx(hFile, &FileSize) &&
-        ::SetFilePointerEx(hFile, FileSize, NULL, FILE_BEGIN) &&
-        ::WriteFile(hFile, pszMessage, ::lstrlenW(pszMessage), &dwBytesWrote, NULL))
+    if (!::GetFileSizeEx(hFile, &FileSize))
+    {
+        ::CloseHandle(hFile);
+
+        return FALSE;
+    }
+
+    if (FileSize.QuadPart == 0)
+    {
+        if (::WriteFile(hFile, l_byUnicodeByteOrderMarker,
+                        MArrayLen(l_byUnicodeByteOrderMarker), &dwBytesWrote, NULL))
+        {
+            FileSize.QuadPart += MArrayLen(l_byUnicodeByteOrderMarker);
+        }
+    }
+
+    if (::SetFilePointerEx(hFile, FileSize, NULL, FILE_BEGIN) &&
+        ::WriteFile(hFile, pszMessage, ::lstrlenW(pszMessage) * sizeof(WCHAR),
+                    &dwBytesWrote, NULL))
     {
         bResult = TRUE;
     }
@@ -221,5 +238,5 @@ BOOL UtPepSetupIsWindows64Present()
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2018 Kevin Eshbach
+//  Copyright (C) 2018-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
