@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2018 Kevin Eshbach
+//  Copyright (C) 2014-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -148,6 +148,60 @@ static VOID lDisplayRebootFailureMessage(
         }
 
         UtPepSetupFreeString(pszMessage);
+    }
+}
+
+static VOID lParseArguments(
+  _In_ INT nTotalArgs,
+  _In_z_ LPWSTR* ppszArgs,
+  _In_ TInstallData* pInstallData,
+  _Out_writes_bytes_(sizeof(BOOL)) LPBOOL pbDisplayHelp)
+{
+    INT nArgIndex = 1;
+
+    *pbDisplayHelp = FALSE;
+
+    while (nArgIndex < nTotalArgs && *pbDisplayHelp == FALSE)
+    {
+        if (::lstrcmpi(ppszArgs[nArgIndex], CExtractMsiArgument) == 0)
+        {
+            ++nArgIndex;
+
+            if (nArgIndex < nTotalArgs)
+            {
+                pInstallData->pszMSIFile = ppszArgs[nArgIndex];
+
+                ++nArgIndex;
+            }
+            else
+            {
+                *pbDisplayHelp = TRUE;
+            }
+        }
+        else if (::lstrcmpi(ppszArgs[nArgIndex], CLogSetupArgument) == 0)
+        {
+            ++nArgIndex;
+
+            if (nArgIndex < nTotalArgs)
+            {
+                pInstallData->pszLogFile = ppszArgs[nArgIndex];
+
+                ++nArgIndex;
+            }
+            else
+            {
+                *pbDisplayHelp = TRUE;
+            }
+        }
+        else
+        {
+            *pbDisplayHelp = TRUE;
+        }
+
+        if (nArgIndex < nTotalArgs)
+        {
+            *pbDisplayHelp = TRUE;
+        }
     }
 }
 
@@ -720,7 +774,6 @@ INT PepSetupExecuteInstall(
     HANDLE hThread;
     TInstallData InstallData;
     DWORD dwThreadId, dwExitCode;
-	INT nArgIndex;
 	BOOL bDisplayHelp;
 
 	if (!IsWindows7OrGreater())
@@ -732,52 +785,9 @@ INT PepSetupExecuteInstall(
 
 	::ZeroMemory(&InstallData, sizeof(InstallData));
 
-	nArgIndex = 1;
 	bDisplayHelp = FALSE;
 
-	while (nArgIndex < nTotalArgs && bDisplayHelp == FALSE)
-	{
-		if (::lstrcmpi(ppszArgs[nArgIndex], CExtractMsiArgument) == 0)
-		{
-			++nArgIndex;
-
-			if (nArgIndex < nTotalArgs)
-			{
-                InstallData.pszMSIFile = ppszArgs[nArgIndex];
-
-				if (nArgIndex + 1 < nTotalArgs)
-				{
-					bDisplayHelp = TRUE;
-				}
-			}
-			else
-			{
-				bDisplayHelp = TRUE;
-			}
-		}
-		else if (::lstrcmpi(ppszArgs[nArgIndex], CLogSetupArgument) == 0)
-		{
-			++nArgIndex;
-
-			if (nArgIndex < nTotalArgs)
-			{
-				InstallData.pszLogFile = ppszArgs[nArgIndex];
-
-				if (nArgIndex + 1 < nTotalArgs)
-				{
-					bDisplayHelp = TRUE;
-				}
-			}
-			else
-			{
-				bDisplayHelp = TRUE;
-			}
-		}
-		else
-		{
-			bDisplayHelp = TRUE;
-		}
-	}
+    lParseArguments(nTotalArgs, ppszArgs, &InstallData, &bDisplayHelp);
 
 	if (bDisplayHelp == TRUE)
 	{
@@ -824,5 +834,5 @@ INT PepSetupExecuteInstall(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2018 Kevin Eshbach
+//  Copyright (C) 2014-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
