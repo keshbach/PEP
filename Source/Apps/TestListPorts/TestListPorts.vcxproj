@@ -125,7 +125,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
     </Link>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestListPorts" "Test List Ports Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestListPorts" "Test List Ports Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -156,7 +156,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
     </Link>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestListPorts" "Test List Ports Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestListPorts" "Test List Ports Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -191,7 +191,7 @@
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;$(PlatformTarget);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestListPorts" "Test List Ports Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestListPorts" "Test List Ports Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -226,7 +226,7 @@
       <PreprocessorDefinitions>NDEBUG;_UNICODE;UNICODE;$(PlatformTarget);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestListPorts" "Test List Ports Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.TestListPorts" "Test List Ports Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

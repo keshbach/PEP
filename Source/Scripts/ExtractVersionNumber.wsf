@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+<package>
+  <job id="Build">
+    <?job debug="true" error="true"?>
+    <runtime>
+      <description>
+        Extract Version NumberScript v1.00
+        Copyright (C) 2023 Kevin Eshbach
+        All Rights Reserved
+
+        This script extract the version number from an existing header file
+        and prints it to stdout.
+      </description>
+
+      <named name="versionFile"
+             type="string"
+             helpstring="Version file"
+             required="true" />
+      <named name="verbose"
+             type="boolean"
+             helpstring="Dump all output"
+             required="false" />
+    </runtime>
+
+    <script language="VBScript">
+      <![CDATA[
+        ' OpenTextFile IO Mode constants
+        const ForReading   = 1 ' Open a file for reading only. You can't write to this file.
+        const ForWriting   = 2
+        const ForAppending = 8 ' Open a file and write to the end of the file.
+
+        ' OpenTextFile Format constants
+        const TristateUseDefault = 2 ' Opens the file using the system default.
+        const TristateTrue       = 1 ' Opens the file as Unicode.
+        const TristateFalse      = 0 ' Opens the file as ASCII.
+
+        ' GetSpecialFolder constants
+        Const WindowsFolder   = 0
+        Const SystemFolder    = 1
+        Const TemporaryFolder = 2
+      ]]>
+    </script>
+
+    <script language="JScript">
+      <![CDATA[
+        var g_VersionFile = "";
+        var g_Verbose = false;
+
+        function parseVersionFile(versionFile)
+        {
+            var result = "";
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+            var file, lineRead, parameters;
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Parsing the version file.");
+                WScript.Echo();
+                WScript.Echo("Version File: " + versionFile);
+                WScript.Echo();
+            }
+
+            file = fso.OpenTextFile(versionFile, ForReading, false, TristateFalse);
+
+            while (!file.AtEndOfStream)
+            {
+                lineRead = file.ReadLine();
+
+                parameters = lineRead.split(/\s+CUtVersionString\s+/);
+
+                if (parameters.length > 1)
+                {
+                    result = parameters[1].replace(/\"/g, "");
+                }
+
+                if (g_Verbose)
+                {
+                    WScript.Echo("Line Read: " + lineRead);
+                }
+            }
+
+            file.Close();
+
+            return result;
+        }
+
+        function parseArgs()
+        {
+            var fso = new ActiveXObject("Scripting.FileSystemObject");
+
+            g_VersionFile = WScript.Arguments.Named.Item("versionFile");
+
+            if (WScript.Arguments.Named.Item("verbose") == "+")
+            {
+                g_Verbose = true;
+            }
+
+            if (!fso.FileExists(g_VersionFile))
+            {
+                throw new Error("The version file \"" + g_VersionFile + "\" does not exist.");
+            }
+
+            return 1;
+        }
+
+        function main()
+        {
+            var version;
+
+            if (!parseArgs())
+            {
+                WScript.Echo("Invalid command line arguments");
+
+                return 1;
+            }
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Version File: " + g_VersionFile);
+                WScript.Echo();
+            }
+
+            version = parseVersionFile(g_VersionFile);
+
+            if (g_Verbose)
+            {
+                WScript.Echo("Version: " + version);
+                WScript.Echo();
+            }
+
+            if (version != null && version != "")
+            {
+                WScript.Echo(version);
+
+                return 0;
+            }
+
+            return 1;
+        }
+
+        try
+        {
+            var result = main();
+
+            WScript.Quit(result);
+        }
+        catch (e)
+        {
+            WScript.Echo("Error Occurred");
+            WScript.Echo();
+            WScript.Echo("Name:        " + e.name);
+            WScript.Echo("Message:     " + e.message);
+            WScript.Echo("Number:      " + e.number);
+            WScript.Echo("Description: " + e.description);
+
+            WScript.Quit(1);
+        }
+      ]]>
+    </script>
+  </job>
+</package>

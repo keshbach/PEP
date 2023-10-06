@@ -66,7 +66,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.UpdateAssemblyVersionAppNet" "Update C# Assembly Version Application" "3.1.0.0" "$(PlatformName)" "$(ProjectName)" "$(SolutionDir)..\lib\$(ConfigurationName)\$(PlatformName)\$(TargetName)"</PreBuildEvent>
+    <PreBuildEvent>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.UpdateAssemblyVersionAppNet" "Update C# Assembly Version Application" "$(PlatformName)" "$(ProjectName)" "$(SolutionDir)..\lib\$(ConfigurationName)\$(PlatformName)\$(TargetName)"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

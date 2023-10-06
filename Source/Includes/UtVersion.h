@@ -2,6 +2,12 @@
 /*  Copyright (C) 2013-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
+/*
+    After updating the version number remember to run the
+    RunUpdateAssemblyVersion.bat batch file to also update the
+    version information contained in the various C# assembly files.
+ */
+
 #if !defined(UtVersion_H)
 #define UtVersion_H
 

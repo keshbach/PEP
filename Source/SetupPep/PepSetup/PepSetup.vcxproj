@@ -91,14 +91,15 @@
     <PreBuildEvent>
       <Command>call "$(SolutionDir)\PepSetupPreBuildStep.bat" "$(ConfigurationName)" "$(SolutionDir)\.."
 
-call "$(SolutionDir)..\Scripts\GenWindowsAdminManifest.bat" "KevinEshbach.PepSetup" "Pep Setup Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"
+call "$(SolutionDir)..\Scripts\GenWindowsAdminManifest.bat" "KevinEshbach.PepSetup" "Pep Setup Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"
 </Command>
     </PreBuildEvent>
     <BuildLog>
       <Path>$(IntDir)$(MSBuildProjectName).log</Path>
     </BuildLog>
     <PreLinkEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -139,14 +140,15 @@ call "$(SolutionDir)..\Scripts\GenWindowsAdminManifest.bat" "KevinEshbach.PepSet
     <PreBuildEvent>
       <Command>call "$(SolutionDir)\PepSetupPreBuildStep.bat" "$(ConfigurationName)" "$(SolutionDir)\.."
 
-call "$(SolutionDir)..\Scripts\GenWindowsAdminManifest.bat" "KevinEshbach.PepSetup" "Pep Setup Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"
+call "$(SolutionDir)..\Scripts\GenWindowsAdminManifest.bat" "KevinEshbach.PepSetup" "Pep Setup Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"
 </Command>
     </PreBuildEvent>
     <BuildLog>
       <Path>$(IntDir)$(MSBuildProjectName).log</Path>
     </BuildLog>
     <PreLinkEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>
+      </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

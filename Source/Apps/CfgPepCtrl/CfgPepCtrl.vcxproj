@@ -142,7 +142,7 @@
       </AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -176,7 +176,7 @@
       </AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -214,7 +214,7 @@
       </AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -252,7 +252,7 @@
       </AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "3.1.0.0" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
+      <Command>"$(SolutionDir)..\Scripts\GenConsoleAdminManifest.bat" "KevinEshbach.CfgPepCtrl" "Configure Pep Driver Application" "$(PlatformTarget)" "$(ProjectName)" "$(IntermediateOutputPath)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

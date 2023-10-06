@@ -133,7 +133,7 @@
     </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.RebaserAppNet" "Rebase DLL's Application" "3.1.0.0" "$(PlatformName)" "$(ProjectName)" "$(SolutionDir)..\lib\$(ConfigurationName)\$(PlatformName)\$(TargetName)"</PreBuildEvent>
+    <PreBuildEvent>"$(SolutionDir)..\Scripts\GenConsoleNonAdminManifest.bat" "KevinEshbach.RebaserAppNet" "Rebase DLL's Application" "$(PlatformName)" "$(ProjectName)" "$(SolutionDir)..\lib\$(ConfigurationName)\$(PlatformName)\$(TargetName)"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
