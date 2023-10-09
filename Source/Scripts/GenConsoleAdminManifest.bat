@@ -19,6 +19,8 @@ pushd %ScriptsPath%
 
 for /F %%i in ('cscript //NoLogo ExtractVersionNumber.wsf /versionFile:%ScriptsPath%\..\Includes\UtVersion.h') do set AssemblyVersion=%%i
 
+set AssemblyVersion=%AssemblyVersion%.0.0
+
 cscript //NoLogo GenerateManifestFile.wsf /appType:console /assemblyName:%AssemblyName% /assemblyDescription:%AssemblyDescription% /assemblyVersion:%AssemblyVersion% /processorArchitecture:%ProcessorArchitecture% /executionLevel:%ExecutionLevel% /assemblyFile:%AssemblyFile% /outputPath:%OutputPath% /verbose:+
 
 popd
