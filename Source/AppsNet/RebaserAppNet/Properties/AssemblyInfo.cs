@@ -33,8 +33,8 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.2.0.0")]
-[assembly: AssemblyFileVersion("3.2.0.0")]
+[assembly: AssemblyVersion("3.21.0.0")]
+[assembly: AssemblyFileVersion("3.21.0.0")]
 
 /***************************************************************************/
 /*  Copyright (C) 2009-2014 Kevin Eshbach                                  */
