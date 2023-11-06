@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <Includes/UtCompiler.h>
@@ -111,14 +111,23 @@ static NTSTATUS lPepCtrlIrpClose(
     TPepCtrlPortData* pPortData = (TPepCtrlPortData*)pDeviceObject->DeviceExtension;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    pDeviceObject;
-
     PAGED_CODE()
 
     PepCtrlLog("lPepCtrlIrpClose entering.  (Thread: 0x%p)\n",
 		       PsGetCurrentThread());
 
-    UtPepLogicReset(&pPortData->LogicData);
+    if (PepCtrlPlugPlayIsDevicePresent(pPortData->pvPlugPlayData))
+    {
+        PepCtrlLog("lPepCtrlIrpClose - Device present and being reset.  (Thread: 0x%p)\n",
+                   PsGetCurrentThread());
+
+        UtPepLogicReset(&pPortData->LogicData);
+    }
+    else
+    {
+        PepCtrlLog("lPepCtrlIrpClose - Device not present.  (Thread: 0x%p)\n",
+                   PsGetCurrentThread());
+    }
 
     pIrp->IoStatus.Status = Status;
     pIrp->IoStatus.Information = 0;
@@ -612,5 +621,5 @@ NTSTATUS DriverEntry(
 #pragma endregion
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
 /***************************************************************************/
