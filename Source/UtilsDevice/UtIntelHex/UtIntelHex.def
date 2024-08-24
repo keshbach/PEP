@@ -1,0 +1,19 @@
+;
+;  Copyright (C) 2006-2024 Kevin Eshbach
+;
+
+LIBRARY UtIntelHex BASE=0x20370000
+EXPORTS
+    UtIntelHexInitialize @ 1
+    UtIntelHexUninitialize @ 2
+    UtIntelHexLoadFile @ 3
+    UtIntelHexFreeData @ 4
+    UtIntelHexTotalPages @ 5
+    UtIntelHexGetPageAddress @ 6
+    UtIntelHexGetPageAddressData @ 7
+    UtIntelHexErrorLineNumber @ 8
+    UtIntelHexErrorCode @ 9
+
+;
+;  Copyright (C) 2006-2024 Kevin Eshbach
+;

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2000
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.34902.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestListPorts", "TestListPorts\TestListPorts.vcxproj", "{2E7D57DA-63D1-497B-B6C0-4177DEC8DEC2}"
 EndProject
@@ -21,6 +21,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AppsBuilder", "AppsBuilder\
 		{64DB1AC0-84CE-49B4-80DD-66476349E39D} = {64DB1AC0-84CE-49B4-80DD-66476349E39D}
 		{2E7D57DA-63D1-497B-B6C0-4177DEC8DEC2} = {2E7D57DA-63D1-497B-B6C0-4177DEC8DEC2}
 		{71E30BDB-DD3D-4ECD-88E7-C8B92AC33B3D} = {71E30BDB-DD3D-4ECD-88E7-C8B92AC33B3D}
+		{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3} = {4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}
 		{1A7208FB-A460-4C6E-A605-4CA5A34C9953} = {1A7208FB-A460-4C6E-A605-4CA5A34C9953}
 	EndProjectSection
 EndProject
@@ -39,6 +40,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PepApp", "PepApp\PepApp.vcxproj", "{28EAD231-5B6C-4D72-AD8B-FC7EB484BD5D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestAnalyze", "TestAnalyze\TestAnalyze.vcxproj", "{6B7D9D54-4A05-4410-83A2-05F5FE195C6D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestIntelHex", "TestIntelHex\TestIntelHex.vcxproj", "{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -144,6 +147,14 @@ Global
 		{6B7D9D54-4A05-4410-83A2-05F5FE195C6D}.Release|x64.Build.0 = Release|x64
 		{6B7D9D54-4A05-4410-83A2-05F5FE195C6D}.Release|x86.ActiveCfg = Release|Win32
 		{6B7D9D54-4A05-4410-83A2-05F5FE195C6D}.Release|x86.Build.0 = Release|Win32
+		{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}.Debug|x64.ActiveCfg = Debug|x64
+		{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}.Debug|x64.Build.0 = Debug|x64
+		{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}.Debug|x86.ActiveCfg = Debug|Win32
+		{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}.Debug|x86.Build.0 = Debug|Win32
+		{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}.Release|x64.ActiveCfg = Release|x64
+		{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}.Release|x64.Build.0 = Release|x64
+		{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}.Release|x86.ActiveCfg = Release|Win32
+		{4430A4E1-42F7-4D44-8E1C-0139CCD31BD3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
