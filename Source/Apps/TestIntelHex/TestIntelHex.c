@@ -12,6 +12,8 @@
 #include <Utils/UtHeapProcess.h>
 #include <Utils/UtConsole.h>
 
+#include <Apps/Includes/UtCommandLineParser.inl>
+
 #include <assert.h>
 
 static BOOL l_bQuit = FALSE;
@@ -211,6 +213,120 @@ static int lTestDump(
 	return 0;
 }
 
+static int lTestDumpToFiles(
+  LPCWSTR pszFilename,
+  LPCWSTR pszPath)
+{
+	TUtIntelHexHandle hIntelHex;
+	UINT32 nTotalPages, nAddress, nDataLen;
+	const UINT8* pData;
+	WCHAR cOutputFilename[MAX_PATH];
+	HANDLE hFile;
+	DWORD dwBytesWritten;
+
+	wprintf(L"Attempting to initialize the library.\n");
+
+	if (FALSE == UtIntelHexInitialize())
+	{
+		wprintf(L"Failed to initialize the library.\n");
+
+		return -1;
+	}
+
+	wprintf(L"Successfully initialized the library.\n");
+
+	wprintf(L"Attempting to load the hex file.\n");
+
+	hIntelHex = UtIntelHexLoadFile(pszFilename);
+
+	if (hIntelHex)
+	{
+		wprintf(L"Hex file loaded.\n");
+
+		lDumpErrorCode(hIntelHex);
+
+		wprintf(L"Attempting to retrieve the total pages.\n");
+
+		if (UtIntelHexTotalPages(hIntelHex, &nTotalPages))
+		{
+			wprintf(L"Total Pages: %d\n", nTotalPages);
+
+			for (UINT32 nPageNumber = 0; nPageNumber < nTotalPages; ++nPageNumber)
+			{
+				wprintf(L"Attempting to retrieve the address of Page Number: %d\n", nPageNumber);
+
+				if (UtIntelHexGetPageAddress(hIntelHex, nPageNumber, &nAddress))
+				{
+					wprintf(L"Page Number: %d, Address: 0x%08X\n", nPageNumber, nAddress);
+
+					wprintf(L"Attempting to retrieve the data of Page Number: %d\n", nPageNumber);
+
+					if (UtIntelHexGetPageAddressData(hIntelHex, nPageNumber, &pData, &nDataLen))
+					{
+						wprintf(L"Page Number: %d, Data Length: 0x%08X\n", nPageNumber, nDataLen);
+
+						wsprintf(cOutputFilename, L"%s\\%08X.bin", pszPath, nAddress);
+
+						hFile = CreateFile(cOutputFilename, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+							               CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+
+						if (hFile != INVALID_HANDLE_VALUE)
+						{
+							if (TRUE == WriteFile(hFile, pData, nDataLen, &dwBytesWritten, NULL))
+							{
+								wprintf(L"Data written to the file \"%s\".\n", cOutputFilename);
+							}
+							else
+							{
+								wprintf(L"Could not write to the file \"%s\".  (Error Code: 0x%08x)\n",
+                                        cOutputFilename, GetLastError());
+							}
+
+							CloseHandle(hFile);
+						}
+						else
+						{
+							wprintf(L"Could not create the file \"%s\".  (Error Code: 0x%08x)\n",
+                                    cOutputFilename, GetLastError());
+						}
+					}
+					else
+					{
+						wprintf(L"Failed to retrieve the data of Page Number: %d.\n", nPageNumber);
+					}
+				}
+				else
+				{
+					wprintf(L"Failed to retrieve the address of Page Number: %d.\n", nPageNumber);
+				}
+			}
+		}
+		else
+		{
+			wprintf(L"Failed to retrieve the total pages.\n");
+		}
+
+		UtIntelHexFreeData(hIntelHex);
+	}
+	else
+	{
+		wprintf(L"Failed to load the hex file.\n");
+	}
+
+	wprintf(L"Attempting to uninitialize the library.\n");
+
+	if (FALSE == UtIntelHexUninitialize())
+	{
+		wprintf(L"Failed to uninitialize the library.\n");
+
+		return -1;
+	}
+
+	wprintf(L"Successfully uninitialized the library.\n");
+
+	return 0;
+}
+
 static int lDisplayHelp(void)
 {
 	wprintf(L"\n");
@@ -219,29 +335,43 @@ static int lDisplayHelp(void)
 
 	wprintf(L"\n");
 	wprintf(L"TestIntelHex [\"Input File\"]\n");
+	wprintf(L"TestIntelHex [\"Input File\" \"Output Path\"]\n");
 	wprintf(L"\n");
-	wprintf(L"    \"Input File\" - Name of the file to dump\n");
+	wprintf(L"    \"Input File\"  - Name of the file to dump\n");
+	wprintf(L"    \"Output Path\" - Directory to write the pages of data to\n");
 	wprintf(L"\n");
 
 	return -1;
 }
 
-int _cdecl wmain(int argc, WCHAR* argv[])
+int __cdecl wmain(int argc, WCHAR* argv[])
 {
-	int nResult;
+	int nResult, nTotalNewArgs;
+	LPCWSTR* ppszNewArgs;
 
 	HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 
 	SetConsoleCtrlHandler(lHandlerRoutine, TRUE);
 
-	if (argc == 2)
+	UtCommandLineParserInitialize(argc, argv);
+
+	nTotalNewArgs = UtCommandLineParserGetTotalArguments();
+	ppszNewArgs = UtCommandLineParserGetArguments();
+
+	if (nTotalNewArgs == 2)
 	{
-		nResult = lTestDump(argv[1]);
+		nResult = lTestDump(ppszNewArgs[1]);
+	}
+	else if (nTotalNewArgs == 3)
+	{
+		nResult = lTestDumpToFiles(ppszNewArgs[1], ppszNewArgs[2]);
 	}
 	else
 	{
 		nResult = lDisplayHelp();
 	}
+
+	UtCommandLineParserUninitialize();
 
 	SetConsoleCtrlHandler(lHandlerRoutine, FALSE);
 
