@@ -726,7 +726,39 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
 {
     THandleData* pHandleData;
     LPBYTE pbyData;
-    DWORD dwDataLen, dwTempDataLen;
+    DWORD dwDataLen;
+
+    if (FALSE == lLoadFile(pszFile, &pbyData, &dwDataLen))
+    {
+        pHandleData = (THandleData*)UtAllocMem(sizeof(THandleData));
+
+        if (pHandleData == NULL)
+        {
+            return NULL;
+        }
+
+        ZeroMemory(pHandleData, sizeof(*pHandleData));
+
+        pHandleData->nErrorCode = UtIntelHexErrorCodeFileError;
+
+        return pHandleData;
+    }
+
+    pHandleData = UtIntelHexFromMemory(pbyData, dwDataLen);
+
+    UtFreeMem(pbyData);
+
+    return pHandleData;
+}
+
+TUtIntelHexHandle UTINTELHEXAPI UtIntelHexFromMemory(
+  LPVOID pvMemory,
+  UINT32 nMemoryLen)
+{
+    LPBYTE pbyData = (LPBYTE)pvMemory;
+    DWORD dwDataLen = nMemoryLen;
+    THandleData* pHandleData;
+    DWORD dwTempDataLen;
     LPCSTR pszDataPos, pszRecordStart, pszRecordEnd;
     UINT8 nFieldByteCount;
     UINT16 nFieldAddress;
@@ -747,13 +779,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
 
     ZeroMemory(pHandleData, sizeof(*pHandleData));
 
-    if (FALSE == lLoadFile(pszFile, &pbyData, &dwDataLen))
-    {
-        pHandleData->nErrorCode = UtIntelHexErrorCodeFileError;
-
-        return pHandleData;
-    }
-
     LastRecordType = ertUndefined;
 
     nLineNumber = 1;
@@ -767,8 +792,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
 
     if (pPageStart == NULL)
     {
-        UtFreeMem(pbyData);
-
         pHandleData->nErrorCode = UtIntelHexErrorCodeOutOfMemory;
 
         return pHandleData;
@@ -783,8 +806,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
                                        &pbyRecordData, &pHandleData->nErrorCode))
         {
             lFreePageStarts(pPageStart, nTotalPageStarts);
-
-            UtFreeMem(pbyData);
 
             return pHandleData;
         }
@@ -802,7 +823,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
                     lFreePageStarts(pPageStart, nTotalPageStarts);
 
                     UtFreeMem(pbyRecordData);
-                    UtFreeMem(pbyData);
 
                     return pHandleData;
                 }
@@ -818,7 +838,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
                     lFreePageStarts(pPageStart, nTotalPageStarts);
 
                     UtFreeMem(pbyRecordData);
-                    UtFreeMem(pbyData);
 
                     return pHandleData;
                 }
@@ -850,7 +869,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
             lFreePageStarts(pPageStart, nTotalPageStarts);
 
             UtFreeMem(pbyRecordData);
-            UtFreeMem(pbyData);
 
             return pHandleData;
         }
@@ -862,7 +880,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
             lFreePageStarts(pPageStart, nTotalPageStarts);
 
             UtFreeMem(pbyRecordData);
-            UtFreeMem(pbyData);
 
             return pHandleData;
         }
@@ -876,7 +893,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
                 lFreePageStarts(pPageStart, nTotalPageStarts);
 
                 UtFreeMem(pbyRecordData);
-                UtFreeMem(pbyData);
 
                 return pHandleData;
             }
@@ -909,7 +925,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
                 lFreePageStarts(pPageStart, nTotalPageStarts);
 
                 UtFreeMem(pbyRecordData);
-                UtFreeMem(pbyData);
 
                 return pHandleData;
             }
@@ -927,7 +942,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
                         lFreePageStarts(pPageStart, nTotalPageStarts);
 
                         UtFreeMem(pbyRecordData);
-                        UtFreeMem(pbyData);
 
                         return pHandleData;
                     }
@@ -948,7 +962,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
             lFreePageStarts(pPageStart, nTotalPageStarts);
 
             UtFreeMem(pbyRecordData);
-            UtFreeMem(pbyData);
 
             return pHandleData;
         }
@@ -960,7 +973,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
             lFreePageStarts(pPageStart, nTotalPageStarts);
 
             UtFreeMem(pbyRecordData);
-            UtFreeMem(pbyData);
 
             return pHandleData;
         }
@@ -979,8 +991,6 @@ TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(
     pHandleData = lTranslatePageStartToHandleData(pPageStart, nTotalPageStarts, pHandleData);
 
     lFreePageStarts(pPageStart, nTotalPageStarts);
-
-    UtFreeMem(pbyData);
 
     return pHandleData;
 }

@@ -30,6 +30,7 @@ MExternC BOOL UTINTELHEXAPI UtIntelHexInitialize(VOID);
 MExternC BOOL UTINTELHEXAPI UtIntelHexUninitialize(VOID);
 
 MExternC TUtIntelHexHandle UTINTELHEXAPI UtIntelHexLoadFile(LPCWSTR pszFile);
+MExternC TUtIntelHexHandle UTINTELHEXAPI UtIntelHexFromMemory(LPVOID pvMemory, UINT32 nMemoryLen);
 MExternC BOOL UTINTELHEXAPI UtIntelHexFreeData(TUtIntelHexHandle handle);
 
 MExternC BOOL UTINTELHEXAPI UtIntelHexTotalPages(TUtIntelHexHandle handle, UINT32* pnTotalPages);

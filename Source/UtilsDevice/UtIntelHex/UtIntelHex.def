@@ -7,12 +7,13 @@ EXPORTS
     UtIntelHexInitialize @ 1
     UtIntelHexUninitialize @ 2
     UtIntelHexLoadFile @ 3
-    UtIntelHexFreeData @ 4
-    UtIntelHexTotalPages @ 5
-    UtIntelHexGetPageAddress @ 6
-    UtIntelHexGetPageAddressData @ 7
-    UtIntelHexErrorLineNumber @ 8
-    UtIntelHexErrorCode @ 9
+    UtIntelHexFromMemory @ 4
+    UtIntelHexFreeData @ 5
+    UtIntelHexTotalPages @ 6
+    UtIntelHexGetPageAddress @ 7
+    UtIntelHexGetPageAddressData @ 8
+    UtIntelHexErrorLineNumber @ 9
+    UtIntelHexErrorCode @ 10
 
 ;
 ;  Copyright (C) 2006-2024 Kevin Eshbach

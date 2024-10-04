@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -11,6 +11,8 @@ namespace Pep
         public partial class ListToolsForm : System.Windows.Forms.Form
         {
             #region "Member Variables"
+            private string m_sFormLocationsRegistryKey;
+
             private System.Collections.Generic.List<TToolData> m_ToolDataList = new System.Collections.Generic.List<TToolData>();
             #endregion
 
@@ -24,6 +26,14 @@ namespace Pep
             #endregion
 
             #region "Properties"
+            public string FormLocationsRegistryKey
+            {
+                set
+                {
+                    m_sFormLocationsRegistryKey = value;
+                }
+            }
+
             public System.Collections.Generic.List<TToolData> ToolDataList
             {
                 get
@@ -197,6 +207,8 @@ namespace Pep
                 Pep.Forms.ConfigToolForm ConfigTool = new Pep.Forms.ConfigToolForm();
                 TToolData ToolData = (TToolData)ListItem.Tag;
 
+                new Common.Forms.FormLocation(ConfigTool, m_sFormLocationsRegistryKey);
+
                 ConfigTool.Description = ToolData.sDescription;
                 ConfigTool.Application = ToolData.sApplication;
                 ConfigTool.Arguments = ToolData.sArguments;
@@ -223,5 +235,5 @@ namespace Pep
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2010-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2010-2024 Kevin Eshbach                                  */
 /***************************************************************************/

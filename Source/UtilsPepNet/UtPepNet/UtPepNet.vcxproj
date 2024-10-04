@@ -270,6 +270,8 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="IntelHex.cpp">
+    <ClCompile Include="IntelHexData.cpp" />
     <ClCompile Include="PinConfig.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="Device.cpp" />
@@ -307,6 +309,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="IntelHex.h" />
+    <ClInclude Include="IntelHexData.h" />
     <ClInclude Include="PinConfig.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Device.h" />

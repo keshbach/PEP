@@ -152,6 +152,12 @@
     <Compile Include="ViewBufferForm.designer.cs">
       <DependentUpon>ViewBufferForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ViewIntelHexForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ViewIntelHexForm.Designer.cs">
+      <DependentUpon>ViewIntelHexForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="ViewPALBufferForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -193,6 +199,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ViewBufferForm.resx">
       <DependentUpon>ViewBufferForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ViewIntelHexForm.resx">
+      <DependentUpon>ViewIntelHexForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ViewPALBufferForm.resx">
       <DependentUpon>ViewPALBufferForm.cs</DependentUpon>
