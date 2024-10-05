@@ -141,7 +141,7 @@ static BOOL lDoesDipSwitchExist(
         return FALSE;
     }
 
-    if (wDimensions[0] = 0xFFFF && wDimensions[1] == 0xFFFF)
+    if (wDimensions[0] == 0xFFFF && wDimensions[1] == 0xFFFF)
     {
         return FALSE;
     }
