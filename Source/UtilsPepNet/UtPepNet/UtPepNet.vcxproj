@@ -270,7 +270,7 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="Buffer.cpp" />
-    <ClCompile Include="IntelHex.cpp">
+    <ClCompile Include="IntelHex.cpp" />
     <ClCompile Include="IntelHexData.cpp" />
     <ClCompile Include="PinConfig.cpp" />
     <ClCompile Include="Config.cpp" />
