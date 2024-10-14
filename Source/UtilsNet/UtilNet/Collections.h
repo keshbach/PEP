@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2024 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -25,7 +25,7 @@ namespace Common
         };
 
         /// <summary>
-        /// Generic string sorted list where the string uses a case-insensitive comparer.
+        /// Generic string sorted list.
         /// </summary>
 
         generic<class TValue>
@@ -33,8 +33,8 @@ namespace Common
             System::Collections::Generic::SortedList<System::String^, TValue>
         {
         public:
-            StringSortedList() :
-                System::Collections::Generic::SortedList<System::String^, TValue>(System::StringComparer::CurrentCultureIgnoreCase)
+            StringSortedList(System::Boolean bCaseSensitive) :
+                System::Collections::Generic::SortedList<System::String^, TValue>(gcnew Common::CollectionComparers::StringSortedListComparer(bCaseSensitive))
             {
             }
 
@@ -44,7 +44,8 @@ namespace Common
 
             StringSortedList<TValue>^ MakeCopy()
             {
-                StringSortedList<TValue>^ NewSortedList = gcnew StringSortedList<TValue>();
+                CollectionComparers::StringSortedListComparer^ StringSortedListComparer = (CollectionComparers::StringSortedListComparer^)this->Comparer;
+                StringSortedList<TValue>^ NewSortedList = gcnew StringSortedList<TValue>(StringSortedListComparer->CaseSensitive);
                 System::Collections::Generic::IEnumerator<System::Collections::Generic::KeyValuePair<System::String^, TValue>>^ Enum = GetEnumerator();
 
                 while (Enum->MoveNext())
@@ -195,5 +196,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2024 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

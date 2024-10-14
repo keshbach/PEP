@@ -256,6 +256,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="CollectionComparers.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="Path.cpp" />
@@ -286,6 +287,7 @@
     <None Include="UtilNet64.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CollectionComparers.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="Path.h" />
