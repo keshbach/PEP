@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <Includes/UtCompiler.h>
@@ -94,7 +94,8 @@ static TDeviceControlFuncs l_DeviceControlFuncs[] = {
     {IOCTL_PEPCTRL_DEVICE_NOTIFICATION,    &PepCtrlDeviceControl_DeviceNotification},
     {IOCTL_PEPCTRL_GET_PORT_SETTINGS,      &PepCtrlDeviceControl_GetPortSettings},
     {IOCTL_PEPCTRL_SET_PORT_SETTINGS,      &PepCtrlDeviceControl_SetPortSettings},
-    {IOCTL_PEPCTRL_SET_DELAY_SETTINGS,     &PepCtrlDeviceControl_SetDelaySettings} };
+    {IOCTL_PEPCTRL_SET_DELAY_SETTINGS,     &PepCtrlDeviceControl_SetDelaySettings},
+    {IOCTL_PEPCTRL_DEBUG_WRITE_PORT_DATA,  &PepCtrlDeviceControl_DebugWritePortData} };
 
 #pragma data_seg()
 #pragma bss_seg()
@@ -621,5 +622,5 @@ NTSTATUS DriverEntry(
 #pragma endregion
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

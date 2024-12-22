@@ -1,5 +1,5 @@
 ;
-;  Copyright (C) 2006-2021 Kevin Eshbach
+;  Copyright (C) 2006-2024 Kevin Eshbach
 ;
 
 LIBRARY UtPepCtrl BASE=0x20340000
@@ -20,7 +20,8 @@ EXPORTS
     UtPepCtrlReadUserDataWithDelay @ 14
     UtPepCtrlProgramData @ 15
     UtPepCtrlProgramUserData @ 16
+    UtPepCtrlDebugWritePortData @ 17
 
 ;
-;  Copyright (C) 2006-2021 Kevin Eshbach
+;  Copyright (C) 2006-2024 Kevin Eshbach
 ;

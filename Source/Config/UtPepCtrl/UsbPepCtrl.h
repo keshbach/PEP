@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UsbPepCtrl_H)
@@ -41,8 +41,10 @@ BOOL UsbPepCtrlProgramData(_In_ UINT nAddress, _Const_ _In_reads_(nDataLen) LPBY
 
 BOOL UsbPepCtrlProgramUserData(_Const_ _In_reads_(nProgramUserDataLen) const TUtPepCtrlProgramUserData* pProgramUserData, _In_ UINT32 nProgramUserDataLen, _Const_ _In_reads_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
 
+BOOL UsbPepCtrlDebugWritePortData(_In_ UINT8 nWritePortData);
+
 #endif /* UsbPepCtrl_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -33,6 +33,7 @@ static int lRunReadTest(int nAddress);
 static int lRunAddressTest(int nAddress);
 
 static int lRunDataTest(int nAddress);
+static int lRunDebugDataTest(int nData);
 
 static int lRunStatusTest(void);
 static int lRunDeviceChangeTest(void);
@@ -54,6 +55,7 @@ static TTestData l_TestData[] = {
     {L"program",      lRunProgramTest,      NULL},
     {L"address",      lRunAddressTest,      NULL},
     {L"data",         lRunDataTest,         NULL},
+    {L"debugdata",    lRunDebugDataTest,    NULL},
     {L"status",       NULL,                 lRunStatusTest},
     {L"devicechange", NULL,                 lRunDeviceChangeTest},
     {L"vcc5",         NULL,                 lRunVcc5Test},
@@ -418,6 +420,21 @@ EndTest:
     }
 
     return nResult;
+}
+
+static int lRunDebugDataTest(
+  int nData)
+{
+    wprintf(L"TestPepCtrl: Running the debug write port data test.\n");
+
+    if (!UtPepCtrlDebugWritePortData((UINT8)nData))
+    {
+        wprintf(L"TestPepCtrl: Could not debug write port data.\n");
+
+        return 0;
+    }
+
+    return 1;
 }
 
 static int lRunStatusTest(void)
@@ -821,6 +838,7 @@ static int lDisplayHelp(void)
     wprintf(L"            [/test devicechange]\n");
 	wprintf(L"            [/test cedelay \"Nanosecs\"]\n");
 	wprintf(L"            [/test oedelay \"Nanosecs\"]\n");
+    wprintf(L"            [/test debugdata \"Byte\"]\n");
     wprintf(L"            [/parallelport]\n");
 	wprintf(L"\n");
     wprintf(L"    Programmer Tests\n");
@@ -832,6 +850,7 @@ static int lDisplayHelp(void)
     wprintf(L"        data         - Selects the byte to output\n");
     wprintf(L"        status       - Retrieves whether the device is present or not\n");
     wprintf(L"        devicechange - Run the device change notification test\n");
+    wprintf(L"        debugdata    - Write a byte directly to the port\n");
     wprintf(L"        \"Address\"    - Address to start with/select\n");
     wprintf(L"                       (Enter 0x1f for hexadecimal or 39 for decimal)\n");
     wprintf(L"        \"Byte\"       - 8-bit value to output\n");
@@ -932,5 +951,5 @@ End:
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

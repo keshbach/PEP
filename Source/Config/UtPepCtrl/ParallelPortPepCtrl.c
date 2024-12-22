@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -279,6 +279,21 @@ static BOOL lSetOutputEnable(
 
     if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_SET_OUTPUT_ENABLE,
                          &nEnableOutputEnable, sizeof(nEnableOutputEnable),
+                         NULL, 0, &dwBytesReturned, NULL))
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static BOOL lSetDebugWritePortData(
+  _In_ UINT8 nWritePortData)
+{
+    DWORD dwBytesReturned;
+
+    if (!DeviceIoControl(l_DeviceData.hPepCtrl, IOCTL_PEPCTRL_DEBUG_WRITE_PORT_DATA,
+                         &nWritePortData, sizeof(nWritePortData),
                          NULL, 0, &dwBytesReturned, NULL))
     {
         return FALSE;
@@ -802,6 +817,17 @@ BOOL ParallelPortPepCtrlProgramUserData(
     return TRUE;
 }
 
+BOOL ParallelPortPepCtrlDebugWritePortData(
+  _In_ UINT8 nWritePortData)
+{
+    if (l_DeviceData.hPepCtrl == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    return lSetDebugWritePortData(nWritePortData);
+}
+
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

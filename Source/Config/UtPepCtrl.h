@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(UtPepCtrl_H)
@@ -136,6 +136,8 @@ MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramData(_In_ UINT nAddress, _Const_ _In_
 
 MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(_Const_ _In_reads_(nProgramUserDataLen) const TUtPepCtrlProgramUserData* pProgramUserData, _In_ UINT32 nProgramUserDataLen, _Const_ _In_reads_(nDataLen) const LPBYTE pbyData, _In_ UINT32 nDataLen);
 
+MExternC BOOL UTPEPCTRLAPI UtPepCtrlDebugWritePortData(_Const_ _In_ UINT8 nWritePortData);
+
 #if defined(_MSC_VER)
 #pragma pack(pop)
 #else
@@ -145,5 +147,5 @@ MExternC BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(_Const_ _In_reads_(nProgramU
 #endif /* UtPepCtrl_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

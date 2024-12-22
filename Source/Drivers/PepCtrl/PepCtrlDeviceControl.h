@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepCtrlDeviceControl_H)
@@ -125,8 +125,16 @@ NTSTATUS PepCtrlDeviceControl_SetDelaySettings(_In_ PIRP pIrp,
                                                _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
                                                _In_ ULONG ulOutBufLen);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS PepCtrlDeviceControl_DebugWritePortData(_In_ PIRP pIrp,
+                                                 _In_ TPepCtrlPortData* pPortData,
+                                                 _In_ const PVOID pvInBuf,
+                                                 _In_ ULONG ulInBufLen,
+                                                 _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
+                                                 _In_ ULONG ulOutBufLen);
+
 #endif /* !defined(PepCtrlDeviceControl_H) */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

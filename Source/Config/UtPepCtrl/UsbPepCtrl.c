@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -25,6 +25,8 @@
 
 #include <UtilsPep/UtPepLogicDefs.h>
 
+#include "UsbPepCtrl.h"
+
 #include "UtPepCtrlUtil.h"
 
 #include "UsbDeviceInterfaceGUID.h"
@@ -41,11 +43,6 @@
 #define CDefReceiveTimeoutMs 1000
 
 #define CDefCancelOverlappedTimeoutMs 1000
-
-#define CReadPipeID (1 | 0x80) // 0x80 - IN endpoint
-#define CWritePipeID 1
-
-#define CReceiveRetryCount 3
 
 #pragma endregion
 
@@ -72,7 +69,9 @@ typedef BOOL (__stdcall *TWinUsbFreeFunc)(_In_ WINUSB_INTERFACE_HANDLE Interface
 typedef BOOL (__stdcall *TWinUsbReadPipeFunc)(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle, _In_ UCHAR PipeID, _Out_writes_bytes_to_opt_(BufferLength, *LengthTransferred) PUCHAR Buffer, _In_ ULONG BufferLength, _Out_opt_ PULONG LengthTransferred, _In_opt_ LPOVERLAPPED Overlapped);
 typedef BOOL (__stdcall *TWinUsbWritePipeFunc)(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle, _In_ UCHAR PipeID, _In_reads_bytes_(BufferLength) PUCHAR Buffer, _In_ ULONG BufferLength, _Out_opt_ PULONG LengthTransferred, _In_opt_ LPOVERLAPPED Overlapped);
 typedef BOOL (__stdcall *TWinUsbGetOverlappedResultFunc)(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle, _In_ LPOVERLAPPED lpOverlapped, _Out_ LPDWORD lpNumberOfBytesTransferred, _In_ BOOL bWait);
-typedef BOOL (__stdcall *TWinUsb_AbortPipeFunc)(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle, _In_ UCHAR PipeID);
+typedef BOOL (__stdcall *TWinUsbAbortPipeFunc)(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle, _In_ UCHAR PipeID);
+typedef BOOL (__stdcall* TWinUsbControlTransferFunc)(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle, _In_ WINUSB_SETUP_PACKET SetupPacket, _Out_ PUCHAR Buffer, _In_ ULONG BufferLength, _Out_opt_ PULONG LengthTransferred, _In_opt_ LPOVERLAPPED Overlapped);
+typedef BOOL (__stdcall* TWinUsbQueryPipeFunc)(_In_ WINUSB_INTERFACE_HANDLE InterfaceHandle, _In_ UCHAR AlternateInterfaceNumber, _In_ UCHAR PipeIndex, _Out_ PWINUSB_PIPE_INFORMATION PipeInformation);
 
 typedef HDEVINFO (WINAPI *TSetupDiGetClassDevsFunc)(_In_opt_ CONST GUID* ClassGuid, _In_opt_ PCWSTR Enumerator, _In_opt_ HWND hwndParent, _In_ DWORD Flags);
 typedef BOOL (WINAPI *TSetupDiEnumDeviceInterfacesFunc)(_In_ HDEVINFO DeviceInfoSet, _In_opt_ PSP_DEVINFO_DATA DeviceInfoData, _In_ CONST GUID* InterfaceClassGuid, _In_ DWORD MemberIndex, _Out_ PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData);
@@ -99,7 +98,9 @@ typedef struct tagTUsbFullSpeedDeviceData {
     TWinUsbReadPipeFunc pReadPipeFunc;
     TWinUsbWritePipeFunc pWritePipeFunc;
     TWinUsbGetOverlappedResultFunc pGetOverlappedResultFunc;
-    TWinUsb_AbortPipeFunc pAbortPipeFunc;
+    TWinUsbAbortPipeFunc pAbortPipeFunc;
+    TWinUsbControlTransferFunc pControlTransferFunc;
+    TWinUsbQueryPipeFunc pQueryPipeFunc;
     WINUSB_INTERFACE_HANDLE InterfaceHandle;
 } TUsbFullSpeedDeviceData;
 
@@ -166,8 +167,6 @@ static TDeviceData l_DeviceData = {0};
 
 static TDeviceChangeData l_DeviceChangeData = {0};
 
-static UINT8 l_nCurrentPacketID = 0;
-
 #if !defined(NDEBUG)
 static INT l_nLogCount = 0;
 #endif
@@ -178,13 +177,58 @@ static INT l_nLogCount = 0;
 
 #if !defined(NDEBUG)
 
+static VOID lGetCurrentTime(
+  LPWSTR pszTime,
+  INT nTimeLen)
+{
+    SYSTEMTIME SystemTime;
+    WCHAR cHour[3];
+    WCHAR cMeridiem[3];
+    
+    GetLocalTime(&SystemTime);
+
+    if (SystemTime.wHour == 0)
+    {
+        StringCchPrintfW(cHour, MArrayLen(cHour), L"%02d", 12);
+
+        StringCchCopyW(cMeridiem, MArrayLen(cMeridiem), L"AM");
+    }
+    else if (SystemTime.wHour == 12)
+    {
+        StringCchPrintfW(cHour, MArrayLen(cHour), L"%02d", 12);
+
+        StringCchCopyW(cMeridiem, MArrayLen(cMeridiem), L"PM");
+    }
+    else if (SystemTime.wHour < 12)
+    {
+        StringCchPrintfW(cHour, MArrayLen(cHour), L"%02d", SystemTime.wHour);
+
+        StringCchCopyW(cMeridiem, MArrayLen(cMeridiem), L"AM");
+    }
+    else
+    {
+        StringCchPrintfW(cHour, MArrayLen(cHour), L"%02d", SystemTime.wHour - 12);
+
+        StringCchCopyW(cMeridiem, MArrayLen(cMeridiem), L"PM");
+    }
+
+    StringCchPrintfW(pszTime, nTimeLen, L"%d/%d/%d %s:%02d:%02d.%d %s",
+                     SystemTime.wMonth, SystemTime.wDay, SystemTime.wYear,
+                     cHour, SystemTime.wMinute, SystemTime.wSecond, SystemTime.wMilliseconds,
+                     cMeridiem);
+}
+
 static VOID lDumpVersionCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100];
+    WCHAR cTime[30], cBuffer[150];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID: #%d: Version Command\r\n",
-                     pCommandData->PacketID, l_nLogCount);
+    pCommandData;
+
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Version Command\r\n",
+                     cTime, l_nLogCount);
 
     OutputDebugStringW(cBuffer);
 }
@@ -192,10 +236,14 @@ static VOID lDumpVersionCommandData(
 static VOID lDumpResetCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100];
+    WCHAR cTime[30], cBuffer[150];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID: #%d: Reset Command\r\n",
-                     pCommandData->PacketID, l_nLogCount);
+    pCommandData;
+
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Reset Command\r\n",
+                     cTime, l_nLogCount);
 
     OutputDebugStringW(cBuffer);
 }
@@ -203,8 +251,10 @@ static VOID lDumpResetCommandData(
 static VOID lDumpSetProgrammerModeCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100], cValue[12];
+    WCHAR cTime[30], cBuffer[150], cValue[12];
     LPCWSTR pszDescription;
+
+    lGetCurrentTime(cTime, MArrayLen(cTime));
 
     switch (pCommandData->Data.nProgrammerMode)
     {
@@ -224,8 +274,8 @@ static VOID lDumpSetProgrammerModeCommandData(
             break;
     }
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID: #%d: Set Programmer Mode Command (%s)\r\n",
-                     pCommandData->PacketID, l_nLogCount, pszDescription);
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Set Programmer Mode Command (%s)\r\n",
+                     cTime, l_nLogCount, pszDescription);
 
     OutputDebugStringW(cBuffer);
 }
@@ -233,8 +283,10 @@ static VOID lDumpSetProgrammerModeCommandData(
 static VOID lDumpSetVccModeCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100], cValue[12];
+    WCHAR cTime[30], cBuffer[150], cValue[12];
     LPCWSTR pszDescription;
+
+    lGetCurrentTime(cTime, MArrayLen(cTime));
 
     switch (pCommandData->Data.nVccMode)
     {
@@ -251,8 +303,8 @@ static VOID lDumpSetVccModeCommandData(
             break;
     }
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, PacketID: #%d: Set Vcc Mode Command (%s)\r\n",
-                     pCommandData->PacketID, l_nLogCount, pszDescription);
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Set Vcc Mode Command (%s)\r\n",
+                     cTime, l_nLogCount, pszDescription);
 
     OutputDebugStringW(cBuffer);
 }
@@ -260,8 +312,10 @@ static VOID lDumpSetVccModeCommandData(
 static VOID lDumpSetPinPulseModeCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100], cValue[12];
+    WCHAR cTime[30], cBuffer[150], cValue[12];
     LPCWSTR pszDescription;
+
+    lGetCurrentTime(cTime, MArrayLen(cTime));
 
     switch (pCommandData->Data.nPinPulseMode)
     {
@@ -284,8 +338,8 @@ static VOID lDumpSetPinPulseModeCommandData(
             break;
     }
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, PacketID #%d: Set Pin Pulse Mode Command (%s)\r\n",
-                     pCommandData->PacketID, l_nLogCount, pszDescription);
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Set Pin Pulse Mode Command (%s)\r\n",
+                     cTime, l_nLogCount, pszDescription);
 
     OutputDebugStringW(cBuffer);
 }
@@ -293,8 +347,10 @@ static VOID lDumpSetPinPulseModeCommandData(
 static VOID lDumpSetVppModeCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100], cValue[12];
+    WCHAR cTime[30], cBuffer[150], cValue[12];
     LPCWSTR pszDescription;
+
+    lGetCurrentTime(cTime, MArrayLen(cTime));
 
     switch (pCommandData->Data.nVppMode)
     {
@@ -314,8 +370,8 @@ static VOID lDumpSetVppModeCommandData(
             break;
     }
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID #%d: Set Vpp Mode Command (%s)\r\n",
-                     pCommandData->PacketID, l_nLogCount, pszDescription);
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Set Vpp Mode Command (%s)\r\n",
+                     cTime, l_nLogCount, pszDescription);
 
     OutputDebugStringW(cBuffer);
 }
@@ -323,10 +379,12 @@ static VOID lDumpSetVppModeCommandData(
 static VOID lDumpReadDataCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100];
+    WCHAR cTime[30], cBuffer[200];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID #%d: Read Data Command (Address: 0x%08X, Data Len: %d)\r\n",
-                     pCommandData->PacketID,
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Read Data Command (Address: 0x%08X, Data Len: %d)\r\n",
+                     cTime,
                      l_nLogCount,
                      pCommandData->Data.ReadData.nAddress,
                      pCommandData->Data.ReadData.nDataLen);
@@ -337,10 +395,12 @@ static VOID lDumpReadDataCommandData(
 static VOID lDumpReadUserDataCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100];
+    WCHAR cTime[30], cBuffer[200];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID #%d: Read User Data Command (Data Len: %d)\r\n",
-                     pCommandData->PacketID,
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Read User Data Command (Data Len: %d)\r\n",
+                     cTime,
                      l_nLogCount,
                      pCommandData->Data.ReadUserData.nDataLen);
 
@@ -350,10 +410,12 @@ static VOID lDumpReadUserDataCommandData(
 static VOID lDumpReadUserDataWithDelayCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100];
+    WCHAR cTime[30], cBuffer[200];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID #%d: Read User Data With Delay Command (Data Len: %d)\r\n",
-                     pCommandData->PacketID,
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Read User Data With Delay Command (Data Len: %d)\r\n",
+                     cTime,
                      l_nLogCount,
                      pCommandData->Data.ReadUserDataWithDelay.nDataLen);
 
@@ -363,10 +425,12 @@ static VOID lDumpReadUserDataWithDelayCommandData(
 static VOID lDumpProgramDataCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100];
+    WCHAR cTime[30], cBuffer[200];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID #%d: Program Data Command (Data Len: %d)\r\n",
-                     pCommandData->PacketID,
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Program Data Command (Data Len: %d)\r\n",
+                     cTime,
                      l_nLogCount,
                      pCommandData->Data.ProgramData.nDataLen);
 
@@ -376,10 +440,12 @@ static VOID lDumpProgramDataCommandData(
 static VOID lDumpProgramUserDataCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100];
+    WCHAR cTime[30], cBuffer[200];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID #%d: Program User Data Command (Data Len: %d)\r\n",
-                     pCommandData->PacketID,
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Program User Data Command (Data Len: %d)\r\n",
+                     cTime,
                      l_nLogCount,
                      pCommandData->Data.ProgramUserData.nDataLen);
 
@@ -389,10 +455,12 @@ static VOID lDumpProgramUserDataCommandData(
 static VOID lDumpSetDelaysCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[150];
+    WCHAR cTime[30], cBuffer[200];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID #%d: Set Delays Command (Chip Enable Nano Seconds: %d, Output Enable Nano Seconds: %d)\r\n",
-                     pCommandData->PacketID,
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Set Delays Command (Chip Enable Nano Seconds: %d, Output Enable Nano Seconds: %d)\r\n",
+                     cTime,             
                      l_nLogCount,
                      pCommandData->Data.Delays.nChipEnableNanoSeconds,
                      pCommandData->Data.Delays.nOutputEnableNanoSeconds);
@@ -400,13 +468,30 @@ static VOID lDumpSetDelaysCommandData(
     OutputDebugStringW(cBuffer);
 }
 
+static VOID lDumpDebugWritePortDataCommand(
+  _In_ const TUtPepCommandData* pCommandData)
+{
+    WCHAR cTime[30], cBuffer[200];
+
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Debug Write Port Data Command (Write Port Data: %d)\r\n",
+                     cTime,
+                     l_nLogCount,
+                     pCommandData->Data.DebugWritePortData.nWritePortData);
+
+    OutputDebugStringW(cBuffer);
+}
+
 static VOID lDumpUnknownCommandData(
   _In_ const TUtPepCommandData* pCommandData)
 {
-    WCHAR cBuffer[100];
+    WCHAR cTime[30], cBuffer[200];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID #%d: Unknown Command (0x02%X)\r\n",
-                     pCommandData->PacketID, l_nLogCount, pCommandData->Command);
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: Unknown Command (0x02%X)\r\n",
+                     cTime, l_nLogCount, pCommandData->Command);
 
     OutputDebugStringW(cBuffer);
 }
@@ -454,17 +539,48 @@ static VOID lDumpCommandData(
         case CPepSetDelaysCommand:
             lDumpSetDelaysCommandData(pCommandData);
             break;
+        case CPepDebugWritePortDataCommand:
+            lDumpDebugWritePortDataCommand(pCommandData);
+            break;
         default:
             lDumpUnknownCommandData(pCommandData);
             break;
     }
 }
 
-static VOID lDumpResponseData(
+static VOID lDumpVersionResponseData(
   _In_ const TUtPepResponseData* pResponseData)
 {
-    WCHAR cBuffer[260], cValue[20];
+    WCHAR cBuffer[MArrayLen(pResponseData->Data.Version) + 22] = {0};
+    UINT8 nBufferIndex = 18;
+
+    StringCchCopy(cBuffer, MArrayLen(cBuffer), L"Firmware Version: ");
+
+    for (UINT8 nIndex = 0; nIndex < MArrayLen(pResponseData->Data.Version); ++nIndex)
+    {
+        if (pResponseData->Data.Version[nIndex] != 0)
+        {
+            cBuffer[nBufferIndex] = pResponseData->Data.Version[nIndex];
+
+            ++nBufferIndex;
+        }
+    }
+
+    StringCchCat(cBuffer, MArrayLen(cBuffer), L"\r\n");
+
+    OutputDebugStringW(cBuffer);
+}
+
+static VOID lDumpResponseData(
+  _In_ UINT8 nCommand,
+  _In_ const TUtPepResponseData* pResponseData)
+{
+    WCHAR cTime[30], cBuffer[300], cValue[20];
     LPCWSTR pszDescription;
+
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    ++l_nLogCount;
 
     switch (pResponseData->ErrorCode)
     {
@@ -480,9 +596,6 @@ static VOID lDumpResponseData(
         case CPepErrorInvalidLength:
             pszDescription = L"Invalid Length";
             break;
-        case CPepErrorBusy:
-            pszDescription = L"Busy";
-            break;
         case CPepErrorInitializeData:
             pszDescription = L"Initialize Data";
             break;
@@ -494,8 +607,8 @@ static VOID lDumpResponseData(
             break;
     }
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d, Packet ID #%d: Error Code Response (%s), Data (",
-                     pResponseData->PacketID, l_nLogCount, pszDescription);
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d, Packet ID #%d: Error Code Response (%s), Data (",
+                     cTime, l_nLogCount, pResponseData->PacketID, pszDescription);
 
     for (INT nIndex = 0; nIndex < MArrayLen(pResponseData->Data.nData); ++nIndex)
     {
@@ -513,47 +626,60 @@ static VOID lDumpResponseData(
     StringCchCat(cBuffer, MArrayLen(cBuffer), L")\r\n");
 
     OutputDebugStringW(cBuffer);
+
+    if (pResponseData->ErrorCode == CPepErrorSuccess)
+    {
+        switch (nCommand)
+        {
+            case CPepVersionCommand:
+                lDumpVersionResponseData(pResponseData);
+                break;
+        }
+    }
 }
 
 static VOID lDumpMessage(
   _In_ LPCWSTR pszMessage)
 {
-    WCHAR cBuffer[100];
+    WCHAR cTime[30], cBuffer[150];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl #%d: %s\r\n",
-                     l_nLogCount, pszMessage);
+    lGetCurrentTime(cTime, MArrayLen(cTime));
+
+    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - UsbPepCtrl #%d: %s\r\n",
+                     cTime, l_nLogCount, pszMessage);
 
     OutputDebugStringW(cBuffer);
 }
 
-static VOID lDumpNonMatchingPacketID(
-  _In_ const TUtPepCommandData* pCommandData,
-  _In_ const TUtPepResponseData* pResponseData)
+static VOID lDumpErrorCode(
+  _In_ LPCWSTR pszFunction,
+  _In_ DWORD dwErrorCode)
 {
     WCHAR cBuffer[100];
 
-    StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"UsbPepCtrl: Command Data Packet ID #%d does not match Response Data Packet ID #%d.\r\n",
-                     pCommandData->PacketID, pResponseData->PacketID);
+    switch (dwErrorCode)
+    {
+        case ERROR_SUCCESS:
+            StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - %s", pszFunction, L"Error Success");
+            break;
+        case ERROR_IO_PENDING:
+            StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - %s", pszFunction, L"Error IO Pending");
+            break;
+        case ERROR_OPERATION_ABORTED:
+            StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - %s", pszFunction, L"Error IO Operation Aborted");
+            break;
+        case ERROR_BAD_COMMAND:
+            StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - %s", pszFunction, L"Error Bad Command");
+            break;
+        default:
+            StringCchPrintfW(cBuffer, MArrayLen(cBuffer), L"%s - Error Code: 0x%08X", pszFunction, dwErrorCode);
+            break;
+    }
 
-    OutputDebugStringW(cBuffer);
+    lDumpMessage(cBuffer);
 }
 
 #endif
-
-static VOID lIncrementPacketID(
-  _In_ TUtPepCommandData* pCommandData)
-{
-    if (l_nCurrentPacketID < 255)
-    {
-        ++l_nCurrentPacketID;
-    }
-    else
-    {
-        l_nCurrentPacketID = 0;
-    }
-
-    pCommandData->PacketID = l_nCurrentPacketID;
-}
 
 static VOID lInitializeGuidTypeData(VOID)
 {
@@ -610,15 +736,18 @@ static BOOL lInitializeUsbFullSpeedDeviceData(
     pDeviceData->pReadPipeFunc = (TWinUsbReadPipeFunc)GetProcAddress(pDeviceData->hModule, "WinUsb_ReadPipe");
     pDeviceData->pWritePipeFunc = (TWinUsbWritePipeFunc)GetProcAddress(pDeviceData->hModule, "WinUsb_WritePipe");
     pDeviceData->pGetOverlappedResultFunc = (TWinUsbGetOverlappedResultFunc)GetProcAddress(pDeviceData->hModule, "WinUsb_GetOverlappedResult");
-    pDeviceData->pAbortPipeFunc = (TWinUsb_AbortPipeFunc)GetProcAddress(pDeviceData->hModule, "WinUsb_AbortPipe");
-
+    pDeviceData->pAbortPipeFunc = (TWinUsbAbortPipeFunc)GetProcAddress(pDeviceData->hModule, "WinUsb_AbortPipe");
+    pDeviceData->pControlTransferFunc = (TWinUsbControlTransferFunc)GetProcAddress(pDeviceData->hModule, "WinUsb_ControlTransfer");
+    pDeviceData->pQueryPipeFunc = (TWinUsbQueryPipeFunc)GetProcAddress(pDeviceData->hModule, "WinUsb_QueryPipe");
 
     if (pDeviceData->pInitializeFunc && 
         pDeviceData->pFreeFunc &&
         pDeviceData->pReadPipeFunc &&
         pDeviceData->pWritePipeFunc &&
         pDeviceData->pGetOverlappedResultFunc &&
-        pDeviceData->pAbortPipeFunc)
+        pDeviceData->pAbortPipeFunc &&
+        pDeviceData->pControlTransferFunc &&
+        pDeviceData->pQueryPipeFunc)
     {
         return TRUE;
     }
@@ -697,6 +826,69 @@ static VOID lCloseAll(VOID)
         l_DeviceData.hDeviceMutex = NULL;
     }
 }
+
+_Success_(return)
+static BOOL lVerifyPipesUsbFullSpeedDeviceData(
+  _In_ TUsbFullSpeedDeviceData* pDeviceData)
+{
+    WINUSB_PIPE_INFORMATION WritePipeInformation, ReadPipeInformation;
+
+    if (!pDeviceData->pQueryPipeFunc(pDeviceData->InterfaceHandle,
+                                     0, 0, &WritePipeInformation))
+    {
+        return FALSE;
+    }
+
+    if (WritePipeInformation.PipeType != UsbdPipeTypeBulk ||
+        WritePipeInformation.PipeId != CPepFirmwareOutEndPoint ||
+        WritePipeInformation.MaximumPacketSize != sizeof(TUtPepCommandData))
+    {
+        return FALSE;
+    }
+
+    if (!pDeviceData->pQueryPipeFunc(pDeviceData->InterfaceHandle,
+                                     0, 1, &ReadPipeInformation))
+    {
+        return FALSE;
+    }
+
+    if (ReadPipeInformation.PipeType != UsbdPipeTypeBulk ||
+        ReadPipeInformation.PipeId != CPepFirmwareInEndPoint ||
+        ReadPipeInformation.MaximumPacketSize != sizeof(TUtPepResponseData))
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+#if defined(NEED_THIS)
+static BOOL lControlTransferUsbFullSpeedDeviceData(
+  _In_ TUsbFullSpeedDeviceData* pDeviceData)
+{
+    WINUSB_SETUP_PACKET SetupPacket;
+    UCHAR Buffer[12] = { 0 };
+    ULONG ulLengthTransferred;
+
+    SetupPacket.RequestType = 0b10000010;
+    SetupPacket.Request = 0x00; // GET_STATUS
+    SetupPacket.Value = 0x00;
+    SetupPacket.Index = 0x01; // end point
+    SetupPacket.Length = 0x02;
+
+    if (pDeviceData->pControlTransferFunc(pDeviceData->InterfaceHandle, SetupPacket,
+                                           Buffer, 2, &ulLengthTransferred, NULL))
+    {
+        OutputDebugString(L"usb control transfer success\r\n");
+    }
+    else
+    {
+        OutputDebugString(L"usb control transfer failed\r\n");
+    }
+
+    return FALSE;
+}
+#endif
 
 static VOID lPushPepCtrlDeviceChange(
   _In_ HANDLE hDeviceChangeListMutex,
@@ -911,6 +1103,10 @@ static BOOL lCancelOverlapped(
 
         dwError = GetLastError();
 
+#if !defined(NDEBUG)
+        lDumpErrorCode(L"lCancelOverlapped", dwError);
+#endif
+
         switch (dwError)
         {
             case ERROR_OPERATION_ABORTED:
@@ -949,6 +1145,10 @@ static BOOL lCancelFullSpeedDeviceOverlapped(
 
         dwError = GetLastError();
 
+#if !defined(NDEBUG)
+        lDumpErrorCode(L"lCancelFullSpeedDeviceOverlapped", dwError);
+#endif
+
         switch (dwError)
         {
             case ERROR_OPERATION_ABORTED:
@@ -968,7 +1168,6 @@ static BOOL lSendFullSpeedDeviceCommand(
   _Const_ _In_ const TUsbDeviceData* pDeviceData,
   _In_ INT nSendTimeoutMs,
   _In_ INT nReceiveTimeoutMs,
-  _In_ INT nReceiveRetryCount,
   _Out_writes_bytes_(sizeof(BOOL)) LPBOOL pbWriteDataError,
   _Out_writes_bytes_(sizeof(BOOL)) LPBOOL pbReadDataError)
 {
@@ -989,10 +1188,8 @@ static BOOL lSendFullSpeedDeviceCommand(
     lDumpCommandData(&pDeviceData->pWriteOverlappedData->Data.CommandData);
 #endif
 
-    Sleep(1);
-
     if (pFullSpeedDeviceData->pWritePipeFunc(pFullSpeedDeviceData->InterfaceHandle,
-                                             CWritePipeID,
+                                             CPepFirmwareOutEndPoint,
                                              (PUCHAR)&pDeviceData->pWriteOverlappedData->Data.CommandData,
                                              sizeof(TUtPepCommandData),
                                              NULL,
@@ -1007,20 +1204,19 @@ static BOOL lSendFullSpeedDeviceCommand(
 
     dwError = GetLastError();
 
+#if !defined(NDEBUG)
+    lDumpErrorCode(L"lSendFullSpeedDeviceCommand (write pipe)", dwError);
+#endif
+
     if (dwError != ERROR_IO_PENDING)
     {
 #if !defined(NDEBUG)
         lDumpMessage(L"Write pipe did not return IO Pending error code");
 #endif
 
-        /*if (dwError == ERROR_BAD_COMMAND)
-        {
-            OutputDebugStringW(L"error bad command\r\n");
-        }*/
-
         if (lCancelFullSpeedDeviceOverlapped(&pDeviceData->pWriteOverlappedData->Overlapped,
                                              pFullSpeedDeviceData,
-                                             CWritePipeID,
+                                             CPepFirmwareOutEndPoint,
                                              CDefCancelOverlappedTimeoutMs))
         {
         }
@@ -1045,7 +1241,7 @@ static BOOL lSendFullSpeedDeviceCommand(
 
             if (lCancelFullSpeedDeviceOverlapped(&pDeviceData->pWriteOverlappedData->Overlapped,
                                                  pFullSpeedDeviceData,
-                                                 CWritePipeID,
+                                                 CPepFirmwareOutEndPoint,
                                                  CDefCancelOverlappedTimeoutMs))
             {
             }
@@ -1059,43 +1255,78 @@ static BOOL lSendFullSpeedDeviceCommand(
             break;
         case WAIT_FAILED:
             dwError = GetLastError();
+
+#if !defined(NDEBUG)
+            lDumpErrorCode(L"lSendFullSpeedDeviceCommand (write pipe wait failed)", dwError);
+#endif
             break;
     }
 
     // Wait for the data to be received
 
-    for (INT nRetryCount = 0; nRetryCount < nReceiveRetryCount; ++nRetryCount)
+    lZeroOverlapped(&pDeviceData->pReadOverlappedData->Overlapped);
+
+    if (!ResetEvent(pDeviceData->pReadOverlappedData->Overlapped.hEvent))
     {
-        lZeroOverlapped(&pDeviceData->pReadOverlappedData->Overlapped);
+        return FALSE;
+    }
 
-        if (!ResetEvent(pDeviceData->pReadOverlappedData->Overlapped.hEvent))
-        {
-            return FALSE;
-        }
-
-        Sleep(1);
-
-        if (pFullSpeedDeviceData->pReadPipeFunc(pFullSpeedDeviceData->InterfaceHandle,
-                                                CReadPipeID,
-                                                (PUCHAR)&pDeviceData->pReadOverlappedData->Data.ResponseData,
-                                                sizeof(TUtPepResponseData),
-                                                NULL,
-                                                &pDeviceData->pReadOverlappedData->Overlapped))
-        {
+    if (pFullSpeedDeviceData->pReadPipeFunc(pFullSpeedDeviceData->InterfaceHandle,
+                                            CPepFirmwareInEndPoint,
+                                            (PUCHAR)&pDeviceData->pReadOverlappedData->Data.ResponseData,
+                                            sizeof(TUtPepResponseData),
+                                            NULL,
+                                            &pDeviceData->pReadOverlappedData->Overlapped))
+    {
 #if !defined(NDEBUG)
-            lDumpMessage(L"Read pipe failed");
+        lDumpMessage(L"Read pipe failed");
 #endif
 
-            return FALSE;
+        return FALSE;
+    }
+
+    dwError = GetLastError();
+
+#if !defined(NDEBUG)
+    lDumpErrorCode(L"lSendFullSpeedDeviceCommand (read pipe)", dwError);
+#endif
+
+    if (dwError != ERROR_IO_PENDING)
+    {
+        if (lCancelFullSpeedDeviceOverlapped(&pDeviceData->pReadOverlappedData->Overlapped,
+                                             pFullSpeedDeviceData,
+                                             CPepFirmwareInEndPoint,
+                                             CDefCancelOverlappedTimeoutMs))
+        {
+        }
+        else
+        {
+            *pbReadDataError = TRUE;
         }
 
-        dwError = GetLastError();
+        return FALSE;
+    }
 
-        if (dwError != ERROR_IO_PENDING)
-        {
+    switch (WaitForSingleObject(pDeviceData->pReadOverlappedData->Overlapped.hEvent,
+                                nReceiveTimeoutMs))
+    {
+        case WAIT_OBJECT_0:
+            // Success
+
+#if !defined(NDEBUG)
+            lDumpResponseData(pDeviceData->pWriteOverlappedData->Data.CommandData.Command,
+                              &pDeviceData->pReadOverlappedData->Data.ResponseData);
+#endif
+
+            return TRUE;
+        case WAIT_TIMEOUT:
+#if !defined(NDEBUG)
+            lDumpMessage(L"Read pipe timed out");
+#endif
+
             if (lCancelFullSpeedDeviceOverlapped(&pDeviceData->pReadOverlappedData->Overlapped,
                                                  pFullSpeedDeviceData,
-                                                 CReadPipeID,
+                                                 CPepFirmwareInEndPoint,
                                                  CDefCancelOverlappedTimeoutMs))
             {
             }
@@ -1103,52 +1334,16 @@ static BOOL lSendFullSpeedDeviceCommand(
             {
                 *pbReadDataError = TRUE;
             }
-
-            return FALSE;
-        }
-
-        switch (WaitForSingleObject(pDeviceData->pReadOverlappedData->Overlapped.hEvent,
-                                    nReceiveTimeoutMs))
-        {
-            case WAIT_OBJECT_0:
-                // Success
+            break;
+        case WAIT_ABANDONED:
+            break;
+        case WAIT_FAILED:
+            dwError = GetLastError();
 
 #if !defined(NDEBUG)
-                lDumpResponseData(&pDeviceData->pReadOverlappedData->Data.ResponseData);
+            lDumpErrorCode(L"lSendFullSpeedDeviceCommand (read pipe wait failed)", dwError);
 #endif
-
-                if (pDeviceData->pReadOverlappedData->Data.ResponseData.ErrorCode != CPepErrorInitializeData)
-                {
-                    //return TRUE;
-                }
-
-                if (nRetryCount + 1 == nReceiveRetryCount)
-                {
-                    return TRUE;
-                }
-                break;
-            case WAIT_TIMEOUT:
-#if !defined(NDEBUG)
-                lDumpMessage(L"Read pipe timed out");
-#endif
-
-                if (lCancelFullSpeedDeviceOverlapped(&pDeviceData->pReadOverlappedData->Overlapped,
-                                                     pFullSpeedDeviceData,
-                                                     CReadPipeID,
-                                                     CDefCancelOverlappedTimeoutMs))
-                {
-                }
-                else
-                {
-                    *pbReadDataError = TRUE;
-                }
-                break;
-            case WAIT_ABANDONED:
-                break;
-            case WAIT_FAILED:
-                dwError = GetLastError();
-                break;
-        }
+            break;
     }
 
     return FALSE;
@@ -1216,6 +1411,10 @@ static BOOL lSendHidDeviceCommand(
 
     dwError = GetLastError();
 
+#if !defined(NDEBUG)
+    lDumpErrorCode(L"lSendHidDeviceCommand", dwError);
+#endif
+
     if (dwError != ERROR_IO_PENDING)
     {
         UtFreeMem(pbyWriteData);
@@ -1228,6 +1427,10 @@ static BOOL lSendHidDeviceCommand(
                    &dwBytesWritten, &pDeviceData->pWriteOverlappedData->Overlapped))
     {
         dwError = GetLastError();
+
+#if !defined(NDEBUG)
+        lDumpErrorCode(L"lSendHidDeviceCommand", dwError);
+#endif
 
         if (dwError != ERROR_IO_PENDING)
         {
@@ -1353,7 +1556,6 @@ static BOOL lSendDeviceCommand(
             break;
         case eUsbFullSpeedDeviceType:
             bResult = lSendFullSpeedDeviceCommand(pDeviceData, nSendTimeoutMs, nReceiveTimeoutMs,
-                                                  CReceiveRetryCount,
                                                   &bWriteDataError, &bReadDataError);
             break;
     }
@@ -1461,9 +1663,6 @@ static BOOL lGetUsbVersion()
     {
         if (pResponseData->ErrorCode == CPepErrorSuccess)
         {
-            //OutputDebugStringW((LPWSTR)&pResponseData->Data.Version);
-            //OutputDebugStringW(L"\r\n");
-
             bResult = TRUE;
         }
     }
@@ -1716,6 +1915,23 @@ static VOID lDeviceArrivalBroadcastDeviceInterface(
 
                 return;
             }
+
+            if (!lVerifyPipesUsbFullSpeedDeviceData(&pUsbDeviceData->DeviceData.UsbFullSpeedDeviceData))
+            {
+                if (!pUsbDeviceData->DeviceData.UsbFullSpeedDeviceData.pFreeFunc(
+                        pUsbDeviceData->DeviceData.UsbFullSpeedDeviceData.InterfaceHandle))
+                {
+                    // error occurred
+                }
+
+                lUninitializeUsbFullSpeedDeviceData(&pUsbDeviceData->DeviceData.UsbFullSpeedDeviceData);
+
+                ReleaseMutex(*(pUsbDeviceData->phDeviceMutex));
+
+                CloseHandle(hDevice);
+
+                return;
+            }
             break;
     }
 
@@ -1773,10 +1989,15 @@ static VOID lDeviceArrivalBroadcastDeviceInterface(
 
     pUsbDeviceData->hDevice = hDevice;
 
-    // Need to send a command to the device or else the initial command
-    // will not be executed for some odd reason.
+    if (!lGetUsbVersion())
+    {
+        // TODO: Error - How should this be handled?
+    }
 
-    lGetUsbVersion();
+
+    /*if (!UsbPepCtrlReset()) {
+        // TODO: Error - How should this be handled?
+    }*/
 
     lPushPepCtrlDeviceChange(*l_DeviceData.UsbDeviceData.phDeviceChangeListMutex,
                              l_DeviceData.UsbDeviceData.ppPepCtrlDeviceChange,
@@ -2000,6 +2221,29 @@ BOOL UsbPepCtrlInitialize(
   _In_ TUtPepCtrlDeviceChangeFunc pDeviceChangeFunc)
 {
     DWORD dwThreadId;
+#if !defined(NDEBUG)
+    UINT8 nDataLen;
+#endif
+
+#if !defined(NDEBUG)
+    nDataLen = sizeof(TUtPepCommandData);
+
+    if (nDataLen != 64)
+    {
+        OutputDebugStringW(L"TUtPepCommandData is not 64 bytes");
+
+        return FALSE;
+    }
+
+    nDataLen = sizeof(TUtPepResponseData);
+
+    if (nDataLen != 64)
+    {
+        OutputDebugStringW(L"TUtPepResponseData is not 64 bytes");
+
+        return FALSE;
+    }
+#endif
 
     lInitializeGuidTypeData();
 
@@ -2196,8 +2440,6 @@ BOOL UsbPepCtrlSetDelaySettings(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepSetDelaysCommand;
     pCommandData->Data.Delays.nChipEnableNanoSeconds = nChipEnableNanoSeconds;
     pCommandData->Data.Delays.nOutputEnableNanoSeconds = nOutputEnableNanoSeconds;
@@ -2205,20 +2447,9 @@ BOOL UsbPepCtrlSetDelaySettings(
     if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                            CDefReceiveTimeoutMs))
     {
-        if (pResponseData->PacketID == pCommandData->PacketID)
+        if (pResponseData->ErrorCode == CPepErrorSuccess)
         {
-            if (pResponseData->ErrorCode == CPepErrorSuccess)
-            {
-                bResult = TRUE;
-            }
-        }
-        else
-        {
-#if !defined(NDEBUG)
-            lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
-            bResult = FALSE;
+            bResult = TRUE;
         }
     }
 
@@ -2257,27 +2488,14 @@ BOOL UsbPepCtrlReset(VOID)
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepResetCommand;
 
     if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                            CDefReceiveTimeoutMs))
     {
-        if (pResponseData->PacketID == pCommandData->PacketID)
+        if (pResponseData->ErrorCode == CPepErrorSuccess)
         {
-            if (pResponseData->ErrorCode == CPepErrorSuccess)
-            {
-                bResult = TRUE;
-            }
-        }
-        else
-        {
-#if !defined(NDEBUG)
-            lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
-            bResult = FALSE;
+            bResult = TRUE;
         }
     }
 
@@ -2308,28 +2526,15 @@ BOOL UsbPepCtrlSetProgrammerMode(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepSetProgrammerModeCommand;
     pCommandData->Data.nProgrammerMode = nProgrammerMode;
 
     if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                            CDefReceiveTimeoutMs))
     {
-        if (pResponseData->PacketID == pCommandData->PacketID)
+        if (pResponseData->ErrorCode == CPepErrorSuccess)
         {
-            if (pResponseData->ErrorCode == CPepErrorSuccess)
-            {
-                bResult = TRUE;
-            }
-        }
-        else
-        {
-#if !defined(NDEBUG)
-            lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
-            bResult = FALSE;
+            bResult = TRUE;
         }
     }
 
@@ -2360,28 +2565,15 @@ BOOL UsbPepCtrlSetVccMode(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepSetVccModeCommand;
     pCommandData->Data.nVccMode = nVccMode;
 
     if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                            CDefReceiveTimeoutMs))
     {
-        if (pResponseData->PacketID == pCommandData->PacketID)
+        if (pResponseData->ErrorCode == CPepErrorSuccess)
         {
-            if (pResponseData->ErrorCode == CPepErrorSuccess)
-            {
-                bResult = TRUE;
-            }
-        }
-        else
-        {
-#if !defined(NDEBUG)
-            lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
-            bResult = FALSE;
+            bResult = TRUE;
         }
     }
 
@@ -2412,28 +2604,15 @@ BOOL UsbPepCtrlSetPinPulseMode(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepSetPinPulseModeCommand;
     pCommandData->Data.nPinPulseMode = nPinPulseMode;
 
     if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                            CDefReceiveTimeoutMs))
     {
-        if (pResponseData->PacketID == pCommandData->PacketID)
+        if (pResponseData->ErrorCode == CPepErrorSuccess)
         {
-            if (pResponseData->ErrorCode == CPepErrorSuccess)
-            {
-                bResult = TRUE;
-            }
-        }
-        else
-        {
-#if !defined(NDEBUG)
-            lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
-            bResult = FALSE;
+            bResult = TRUE;
         }
     }
 
@@ -2464,28 +2643,15 @@ BOOL UsbPepCtrlSetVppMode(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepSetVppModeCommand;
     pCommandData->Data.nVppMode = nVppMode;
 
     if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                            CDefReceiveTimeoutMs))
     {
-        if (pResponseData->PacketID == pCommandData->PacketID)
+        if (pResponseData->ErrorCode == CPepErrorSuccess)
         {
-            if (pResponseData->ErrorCode == CPepErrorSuccess)
-            {
-                bResult = TRUE;
-            }
-        }
-        else
-        {
-#if !defined(NDEBUG)
-            lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
-            bResult = FALSE;
+            bResult = TRUE;
         }
     }
 
@@ -2521,8 +2687,6 @@ BOOL UsbPepCtrlReadData(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepReadDataCommand;
 
     while (bResult && nIndex < nDataLen)
@@ -2540,28 +2704,17 @@ BOOL UsbPepCtrlReadData(
         if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                                CDefReceiveTimeoutMs))
         {
-            if (pResponseData->PacketID == pCommandData->PacketID)
+            if (pResponseData->ErrorCode == CPepErrorSuccess)
             {
-                if (pResponseData->ErrorCode == CPepErrorSuccess)
+                for (nResponseDataIndex = 0; nResponseDataIndex < pCommandData->Data.ReadData.nDataLen; ++nResponseDataIndex)
                 {
-                    for (nResponseDataIndex = 0; nResponseDataIndex < pCommandData->Data.ReadData.nDataLen; ++nResponseDataIndex)
-                    {
-                        *(pbyData + nIndex + nResponseDataIndex) = pResponseData->Data.nData[nResponseDataIndex];
-                    }
+                    *(pbyData + nIndex + nResponseDataIndex) = pResponseData->Data.nData[nResponseDataIndex];
+                }
 
-                    nIndex += pCommandData->Data.ReadData.nDataLen;
-                }
-                else
-                {
-                    bResult = FALSE;
-                }
+                nIndex += pCommandData->Data.ReadData.nDataLen;
             }
             else
             {
-#if !defined(NDEBUG)
-                lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
                 bResult = FALSE;
             }
         }
@@ -2607,8 +2760,6 @@ BOOL UsbPepCtrlReadUserData(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepReadUserDataCommand;
 
     while (bResult && nReadUserDataIndex < nReadUserDataLen)
@@ -2632,33 +2783,22 @@ BOOL UsbPepCtrlReadUserData(
         if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                                CDefReceiveTimeoutMs))
         {
-            if (pResponseData->PacketID == pCommandData->PacketID)
+            if (pResponseData->ErrorCode == CPepErrorSuccess)
             {
-                if (pResponseData->ErrorCode == CPepErrorSuccess)
+                for (nIndex = 0; nIndex < pCommandData->Data.ReadUserData.nDataLen; ++nIndex)
                 {
-                    for (nIndex = 0; nIndex < pCommandData->Data.ReadUserData.nDataLen; ++nIndex)
+                    if (pCommandData->Data.ReadUserData.Data[nIndex].nPerformRead)
                     {
-                        if (pCommandData->Data.ReadUserData.Data[nIndex].nPerformRead)
-                        {
-                            *(pbyData + nDataIndex) = pResponseData->Data.nData[nIndex];
+                        *(pbyData + nDataIndex) = pResponseData->Data.nData[nIndex];
 
-                            ++nDataIndex;
-                        }
-
-                        ++nReadUserDataIndex;
+                        ++nDataIndex;
                     }
-                }
-                else
-                {
-                    bResult = FALSE;
+
+                    ++nReadUserDataIndex;
                 }
             }
             else
             {
-#if !defined(NDEBUG)
-                lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
                 bResult = FALSE;
             }
         }
@@ -2704,8 +2844,6 @@ BOOL UsbPepCtrlReadUserDataWithDelay(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepReadUserDataWithDelayCommand;
 
     while (bResult && nReadUserDataWithDelayIndex < nReadUserDataWithDelayLen)
@@ -2729,33 +2867,22 @@ BOOL UsbPepCtrlReadUserDataWithDelay(
         if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                                CDefReceiveTimeoutMs))
         {
-            if (pResponseData->PacketID == pCommandData->PacketID)
+            if (pResponseData->ErrorCode == CPepErrorSuccess)
             {
-                if (pResponseData->ErrorCode == CPepErrorSuccess)
+                for (nIndex = 0; nIndex < pCommandData->Data.ReadUserDataWithDelay.nDataLen; ++nIndex)
                 {
-                    for (nIndex = 0; nIndex < pCommandData->Data.ReadUserDataWithDelay.nDataLen; ++nIndex)
+                    if (pCommandData->Data.ReadUserDataWithDelay.Data[nIndex].nPerformRead)
                     {
-                        if (pCommandData->Data.ReadUserDataWithDelay.Data[nIndex].nPerformRead)
-                        {
-                            *(pbyData + nDataIndex) = pResponseData->Data.nData[nIndex];
+                        *(pbyData + nDataIndex) = pResponseData->Data.nData[nIndex];
 
-                            ++nDataIndex;
-                        }
-
-                        ++nReadUserDataWithDelayIndex;
+                        ++nDataIndex;
                     }
-                }
-                else
-                {
-                    bResult = FALSE;
+
+                    ++nReadUserDataWithDelayIndex;
                 }
             }
             else
             {
-#if !defined(NDEBUG)
-                lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
                 bResult = FALSE;
             }
         }
@@ -2796,8 +2923,6 @@ BOOL UsbPepCtrlProgramData(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepProgramDataCommand;
     pCommandData->Data.ProgramData.nAddress = nAddress;
 
@@ -2818,25 +2943,14 @@ BOOL UsbPepCtrlProgramData(
         if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                                CDefReceiveTimeoutMs))
         {
-            if (pResponseData->PacketID == pCommandData->PacketID)
+            if (pResponseData->ErrorCode == CPepErrorSuccess)
             {
-                if (pResponseData->ErrorCode == CPepErrorSuccess)
-                {
-                    pCommandData->Data.ProgramData.nAddress += pCommandData->Data.ProgramData.nDataLen;
+                pCommandData->Data.ProgramData.nAddress += pCommandData->Data.ProgramData.nDataLen;
 
-                    nIndex += pCommandData->Data.ProgramData.nDataLen;
-                }
-                else
-                {
-                    bResult = FALSE;
-                }
+                nIndex += pCommandData->Data.ProgramData.nDataLen;
             }
             else
             {
-#if !defined(NDEBUG)
-                lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
                 bResult = FALSE;
             }
         }
@@ -2881,8 +2995,6 @@ BOOL UsbPepCtrlProgramUserData(
 
     ZeroMemory(pCommandData, sizeof(*pCommandData));
 
-    lIncrementPacketID(pCommandData);
-
     pCommandData->Command = CPepProgramUserDataCommand;
 
     while (bResult && nProgramUserDataIndex < nProgramUserDataLen)
@@ -2912,23 +3024,12 @@ BOOL UsbPepCtrlProgramUserData(
         if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
                                CDefReceiveTimeoutMs))
         {
-            if (pResponseData->PacketID == pCommandData->PacketID)
+            if (pResponseData->ErrorCode == CPepErrorSuccess)
             {
-                if (pResponseData->ErrorCode == CPepErrorSuccess)
-                {
-                    nProgramUserDataIndex += pCommandData->Data.ProgramUserData.nDataLen;
-                }
-                else
-                {
-                    bResult = FALSE;
-                }
+                nProgramUserDataIndex += pCommandData->Data.ProgramUserData.nDataLen;
             }
             else
             {
-#if !defined(NDEBUG)
-                lDumpNonMatchingPacketID(pCommandData, pResponseData);
-#endif
-
                 bResult = FALSE;
             }
         }
@@ -2943,6 +3044,45 @@ BOOL UsbPepCtrlProgramUserData(
     return bResult;
 }
 
+BOOL UsbPepCtrlDebugWritePortData(
+  _In_ UINT8 nWritePortData)
+{
+    BOOL bResult = FALSE;
+    TUtPepCommandData* pCommandData;
+    TUtPepResponseData* pResponseData;
+
+    WaitForSingleObject(l_DeviceData.hDeviceMutex, INFINITE);
+
+    if (l_DeviceData.UsbDeviceData.pWriteOverlappedData == NULL ||
+        l_DeviceData.UsbDeviceData.pReadOverlappedData == NULL)
+    {
+        ReleaseMutex(l_DeviceData.hDeviceMutex);
+
+        return FALSE;
+    }
+
+    pCommandData = &l_DeviceData.UsbDeviceData.pWriteOverlappedData->Data.CommandData;
+    pResponseData = &l_DeviceData.UsbDeviceData.pReadOverlappedData->Data.ResponseData;
+
+    ZeroMemory(pCommandData, sizeof(*pCommandData));
+
+    pCommandData->Command = CPepDebugWritePortDataCommand;
+    pCommandData->Data.DebugWritePortData.nWritePortData = nWritePortData;
+
+    if (lSendDeviceCommand(&l_DeviceData.UsbDeviceData, CDefSendTimeoutMs,
+                           CDefReceiveTimeoutMs))
+    {
+        if (pResponseData->ErrorCode == CPepErrorSuccess)
+        {
+            bResult = TRUE;
+        }
+    }
+
+    ReleaseMutex(l_DeviceData.hDeviceMutex);
+
+    return bResult;
+}
+
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

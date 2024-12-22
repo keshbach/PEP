@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -33,6 +33,7 @@ typedef BOOL (*TReadUserDataFunc)(_Const_ _In_reads_(nReadUserDataLen) const TUt
 typedef BOOL (*TReadUserDataWithDelayFunc)(_Const_ _In_reads_(nReadUserDataWithDelayLen) const TUtPepCtrlReadUserDataWithDelay* pReadUserDataWithDelay, _In_ UINT32 nReadUserDataWithDelayLen, _Out_writes_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
 typedef BOOL (*TProgramDataFunc)(_In_ UINT nAddress, _Const_ _In_reads_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
 typedef BOOL (*TProgramUserDataFunc)(_Const_ _In_reads_(nProgramUserDataLen) const TUtPepCtrlProgramUserData* pProgramUserData, _In_ UINT32 nProgramUserDataLen, _Const_ _In_reads_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
+typedef BOOL (*TDebugWritePortDataFunc)(_Const_ _In_ UINT8 nWritePortData);
 
 #pragma endregion
 
@@ -56,6 +57,7 @@ typedef struct tagTDeviceFuncs
     TReadUserDataWithDelayFunc pReadUserDataWithDelayFunc;
     TProgramDataFunc pProgramDataFunc;
     TProgramUserDataFunc pProgramUserDataFunc;
+    TDebugWritePortDataFunc pDebugWritePortDataFunc;
 } TDeviceFuncs;
 
 #pragma endregion
@@ -100,6 +102,7 @@ BOOL UTPEPCTRLAPI UtPepCtrlInitialize(
             l_DeviceFuncs.pReadUserDataWithDelayFunc = &ParallelPortPepCtrlReadUserDataWithDelay;
             l_DeviceFuncs.pProgramDataFunc = &ParallelPortPepCtrlProgramData;
             l_DeviceFuncs.pProgramUserDataFunc = &ParallelPortPepCtrlProgramUserData;
+            l_DeviceFuncs.pDebugWritePortDataFunc = &ParallelPortPepCtrlDebugWritePortData;
             break;
         case eUtPepCtrlUsbDeviceType:
             l_DeviceFuncs.pInitializeFunc = &UsbPepCtrlInitialize;
@@ -118,6 +121,7 @@ BOOL UTPEPCTRLAPI UtPepCtrlInitialize(
             l_DeviceFuncs.pReadUserDataWithDelayFunc = &UsbPepCtrlReadUserDataWithDelay;
             l_DeviceFuncs.pProgramDataFunc = &UsbPepCtrlProgramData;
             l_DeviceFuncs.pProgramUserDataFunc = &UsbPepCtrlProgramUserData;
+            l_DeviceFuncs.pDebugWritePortDataFunc = &UsbPepCtrlDebugWritePortData;
             break;
         default:
             UtUninitHeap();
@@ -455,6 +459,17 @@ BOOL UTPEPCTRLAPI UtPepCtrlProgramUserData(
     return l_DeviceFuncs.pProgramUserDataFunc(pProgramUserData, nProgramUserDataLen, pbyData, nDataLen);
 }
 
+BOOL UTPEPCTRLAPI UtPepCtrlDebugWritePortData(
+  _Const_ _In_ UINT8 nWritePortData)
+{
+    if (!l_bInitialized)
+    {
+        return FALSE;
+    }
+
+    return l_DeviceFuncs.pDebugWritePortDataFunc(nWritePortData);
+}
+
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

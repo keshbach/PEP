@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(ParallelPortPepCtrl_H)
@@ -41,8 +41,10 @@ BOOL ParallelPortPepCtrlProgramData(_In_ UINT nAddress, _Const_ _In_reads_(nData
 
 BOOL ParallelPortPepCtrlProgramUserData(_Const_ _In_reads_(nProgramUserDataLen) const TUtPepCtrlProgramUserData* pProgramUserData, _In_ UINT32 nProgramUserDataLen, _Const_ _In_reads_(nDataLen) LPBYTE pbyData, _In_ UINT32 nDataLen);
 
-#endif /* ParallelPOrtPepCtrl_H */
+BOOL ParallelPortPepCtrlDebugWritePortData(_In_ UINT8 nWritePortData);
+
+#endif /* ParallelPortPepCtrl_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

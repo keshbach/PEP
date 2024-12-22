@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepFirmwareDefs_H)
@@ -9,6 +9,15 @@
 #define CPepFirmwareProductID 0x003c
 
 #define CPepFirmware2ProductID 0x0052
+
+// From the DeviceInterfaceGUID field of the mchpwinusb.inf file
+
+#define CPepFirmwareDeviceInterfaceGuid L"58D07210-27C1-11DD-BD0B-0800200C9A66"
+
+#define CPepFirmwareEndPointNumber 1
+
+#define CPepFirmwareInEndPoint (CPepFirmwareEndPointNumber | 0x80)
+#define CPepFirmwareOutEndPoint CPepFirmwareEndPointNumber
 
 /* Commands */
 
@@ -23,7 +32,8 @@
 #define CPepReadUserDataWithDelayCommand 0x09
 #define CPepProgramDataCommand 0x0A
 #define CPepProgramUserDataCommand 0x0B
-#define CPepSetDelaysCommand 0x0E
+#define CPepSetDelaysCommand 0x0C
+#define CPepDebugWritePortDataCommand 0x81
 
 /* Error Codes */
 
@@ -31,18 +41,20 @@
 #define CPepErrorInvalidCommand 0x01
 #define CPepErrorFailed 0x02
 #define CPepErrorInvalidLength 0x03
-#define CPepErrorBusy 0x04
 #define CPepErrorInitializeData 0xFF
 
 #if defined(_MSC_VER)
 #if defined(_X86_)
+#define MPackedAttribute
 #pragma pack(push, 1)
 #elif defined(_AMD64_)
+#define MPackedAttribute
 #pragma pack(push, 1)
 #else
 #error Need to specify cpu architecture to configure structure padding
 #endif
-#elif defined(__XC8) || defined(__18CXX)
+#elif defined(__32MX250F128B__) || defined(__32MX440F256H__)
+#define MPackedAttribute __attribute__ ((packed))
 #else
 #error Need to specify how to enable byte aligned structure padding
 #endif
@@ -51,30 +63,29 @@
 //
 // All data is little endian
 
-typedef struct tagTUtReadUserData
+typedef struct MPackedAttribute tagTUtReadUserData
 {
     UINT32 nAddress;
     UINT8 nEnableOutputEnable;
     UINT8 nPerformRead;
 } TUtReadUserData;
 
-typedef struct tagTUtReadUserDataWithDelay
+typedef struct MPackedAttribute tagTUtReadUserDataWithDelay
 {
     UINT32 nAddress;
     UINT32 nDelayNanoSeconds; // Delay execute after set address and before performing a read
     UINT8 nPerformRead;
 } TUtReadUserDataWithDelay;
 
-typedef struct tagTUtProgramUserData
+typedef struct MPackedAttribute tagTUtProgramUserData
 {
     UINT32 nAddress;
     UINT8 nPerformProgram;
     UINT8 nData;
 } TUtProgramUserData;
 
-typedef struct tagTUtPepCommandData
+typedef struct MPackedAttribute tagTUtPepCommandData
 {
-    UINT8 PacketID;
     UINT8 Command;
             
     union
@@ -121,11 +132,17 @@ typedef struct tagTUtPepCommandData
             UINT32 nOutputEnableNanoSeconds;
         } Delays;
 
-        UINT8 Padding[62];
+        struct tagTDebugWritePortData
+        {
+            UINT8 nWritePortData;
+            UINT8 Padding[62];
+        } DebugWritePortData;
+
+        UINT8 Padding[63];
     } Data;
 } TUtPepCommandData;
 
-typedef struct tagTUtPepResponseData
+typedef struct MPackedAttribute tagTUtPepResponseData
 {
     UINT8 PacketID;
     UINT8 ErrorCode;
@@ -140,7 +157,7 @@ typedef struct tagTUtPepResponseData
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
-#elif defined(__XC8) || defined(__18CXX)
+#elif defined(__32MX250F128B__) || defined(__32MX440F256H__)
 #else
 #error Need to specify how to restore original structure padding
 #endif
@@ -148,5 +165,5 @@ typedef struct tagTUtPepResponseData
 #endif // PepFirmwareDefs_H
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -9,6 +9,8 @@
 #include <rpc.h>
 
 #include "UsbDeviceInterfaceGUID.h"
+
+#include <Firmware/PepFirmwareDefs.h>
 
 #pragma region "Constants"
 
@@ -72,9 +74,7 @@ BOOL UsbFullSpeedDeviceInterfaceGUID(
 
     if (pUuidFromStringFunc)
     {
-        // From the DeviceInterfaceGUID field of the mchpwinusb.inf file
-
-        if (S_OK == pUuidFromStringFunc(L"58D07210-27C1-11DD-BD0B-0800200C9A66", pGuid))
+        if (S_OK == pUuidFromStringFunc(CPepFirmwareDeviceInterfaceGuid, pGuid))
         {
             bResult = TRUE;
         }
@@ -86,5 +86,5 @@ BOOL UsbFullSpeedDeviceInterfaceGUID(
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

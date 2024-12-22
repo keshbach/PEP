@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if defined(BUILD_USER_LIB)
@@ -14,7 +14,7 @@
 
 #include <Utils/UtHeapDriver.h>
 #include <Utils/UtSleepDriver.h>
-#elif defined(__XC8) || defined(__18CXX)
+#elif defined(__32MX250F128B__) || defined(__32MX440F256H__)
 #include "UtPortTypeDefs.h"
 #include "UtSleepFirmware.h"
 #else
@@ -48,8 +48,8 @@
 	3      Sets address lines A4-A7
 	4      Sets address lines A8-A11
 	5      Shift in address lines A12-A19 and set the Vpp voltage to either +12VDC, +21VDC or +25VDC
-	6
-	7
+	6      LED's and Vpp
+	7      Programmer
 
 
 	Data is read from the programmer one bit through the busy bit of the status register.
@@ -120,7 +120,7 @@
 #define MCurrentThreadId() (UINT_PTR)GetCurrentThreadId()
 #elif defined(BUILD_DRIVER_LIB)
 #define MCurrentThreadId() PsGetCurrentThread()
-#elif defined(__XC8)
+#elif defined(__32MX250F128B__) || defined(__32MX440F256H__)
 #else
 #error Unsupported configuration
 #endif
@@ -183,7 +183,7 @@
 #else
 #error Need to specify cpu architecture to configure structure padding
 #endif
-#elif defined(__XC8) || defined(__18CXX)
+#elif defined(__32MX250F128B__) || defined(__32MX440F256H__)
 #else
 #error Need to specify how to enable byte aligned structure padding
 #endif
@@ -212,15 +212,14 @@ typedef struct tagTPepInternalLogicData
 
 #if defined(_MSC_VER)
 #pragma pack(pop)
-#elif defined(__XC8) || defined(__18CXX)
+#elif defined(__32MX250F128B__) || defined(__32MX440F256H__)
 #else
 #error Need to specify how to restore original structure padding
 #endif
 
 #pragma endregion
 
-#if defined(__XC8) || defined(__18CXX)
-#pragma udata PepLogicDataSectionName
+#if defined(__32MX250F128B__) || defined(__32MX440F256H__)
 static TPepInternalLogicData l_InternalLogicData;
 #endif
 
@@ -299,10 +298,6 @@ static BOOLEAN lInitDelaySettings(_In_ TPepInternalLogicData* pInternalData);
 #pragma alloc_text (PAGE, UtPepLogicSetDelays)
 #endif // #if defined(ALLOC_PRAGMA)
 #endif // #if defined(BUILD_DRIVER_LIB)
-
-#if defined(__XC8) || defined(__18CXX)
-#pragma code
-#endif
 
 /*
   Local Functions
@@ -1065,8 +1060,10 @@ PVOID TUTPEPLOGICAPI UtPepLogicAllocLogicContext(VOID)
     pLogicData = (TPepInternalLogicData*)UtAllocMem(sizeof(TPepInternalLogicData));
 #elif defined(BUILD_DRIVER_LIB)
     pLogicData = (TPepInternalLogicData*)UtAllocPagedMem(sizeof(TPepInternalLogicData));
-#elif defined(__XC8) || defined(__18CXX)
+#elif defined(__32MX250F128B__) || (__32MX440F256H__)
     pLogicData = &l_InternalLogicData;
+#else
+#error Unknown device configuration
 #endif
 
     pLogicData->nLastAddress = 0xFFFFFFFF;
@@ -1090,7 +1087,9 @@ VOID TUTPEPLOGICAPI UtPepLogicFreeLogicContext(
     UtFreeMem(pvLogicContext);
 #elif defined(BUILD_DRIVER_LIB)
     UtFreePagedMem(pvLogicContext);
-#elif defined(__XC8)
+#elif defined(__32MX250F128B__) || defined(__32MX440F256H__)
+#else
+#error Unsupported configuration
 #endif
 }
 
@@ -1846,5 +1845,5 @@ BOOLEAN TUTPEPLOGICAPI UtPepLogicSetDelays(
 #pragma endregion
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

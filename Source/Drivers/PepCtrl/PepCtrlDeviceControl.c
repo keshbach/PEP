@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <Includes/UtCompiler.h>
@@ -79,6 +79,7 @@ static IO_WORKITEM_ROUTINE lDeviceControlCancelWorkItem;
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_GetPortSettings)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetPortSettings)
 #pragma alloc_text (PAGE, PepCtrlDeviceControl_SetDelaySettings)
+#pragma alloc_text (PAGE, PepCtrlDeviceControl_DebugWritePortData)
 #endif
 
 #pragma region "Local Functions"
@@ -1255,6 +1256,76 @@ NTSTATUS PepCtrlDeviceControl_SetDelaySettings(
 	return Status;
 }
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS PepCtrlDeviceControl_DebugWritePortData(
+  _In_ PIRP pIrp,
+  _In_ TPepCtrlPortData* pPortData,
+  _In_ const PVOID pvInBuf,
+  _In_ ULONG ulInBufLen,
+  _Out_writes_(ulOutBufLen) PVOID pvOutBuf,
+  _In_ ULONG ulOutBufLen)
+{
+	NTSTATUS Status = STATUS_UNSUCCESSFUL;
+	UCHAR* pcData;
+
+	pIrp;
+	pvOutBuf;
+	ulOutBufLen;
+
+	PepCtrlLog("PepCtrlDeviceControl_DebugWritePortData entering.  (Thread: 0x%p)\n",
+               PsGetCurrentThread());
+
+	PAGED_CODE()
+
+    if (ulInBufLen < sizeof(UCHAR))
+	{
+		Status = STATUS_BUFFER_TOO_SMALL;
+
+		pIrp->IoStatus.Status = Status;
+
+		IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+		PepCtrlLog("PepCtrlDeviceControl_DebugWritePortData leaving.  (Buffer too small)  (Thread: 0x%p)\n",
+                   PsGetCurrentThread());
+
+		return Status;
+	}
+
+	if (ulInBufLen > sizeof(UCHAR))
+	{
+		Status = STATUS_ARRAY_BOUNDS_EXCEEDED;
+
+		pIrp->IoStatus.Status = Status;
+
+		IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+		PepCtrlLog("PepCtrlDeviceControl_DebugWritePortData leaving.  (Buffer too large)  (Thread: 0x%p)\n",
+                   PsGetCurrentThread());
+
+		return Status;
+	}
+
+	pcData = (UCHAR*)pvInBuf;
+
+	if (pPortData->Funcs.pWritePortFunc(&pPortData->Object, pcData, sizeof(UCHAR), 0))
+	{
+		Status = STATUS_SUCCESS;
+	}
+	else
+	{
+		Status = STATUS_UNSUCCESSFUL;
+	}
+
+	pIrp->IoStatus.Status = Status;
+
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+
+	PepCtrlLog("PepCtrlDeviceControl_DebugWritePortData leaving.  (Thread: 0x%p)\n",
+               PsGetCurrentThread());
+
+	return Status;
+}
+
 /***************************************************************************/
-/*  Copyright (C) 2006-2020 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
