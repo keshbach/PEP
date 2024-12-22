@@ -12,6 +12,8 @@ namespace Pep.Forms
         private string m_sFormLocationsRegistryKey;
 
         private string m_sFileName = null;
+
+        private byte[] m_byData = null;
         #endregion
 
         #region "Properties"
@@ -25,13 +27,16 @@ namespace Pep.Forms
 
         public string FileName
         {
-            get
-            {
-                return m_sFileName;
-            }
             set
             {
                 m_sFileName = value;
+            }
+        }
+        public byte[] Data
+        {
+            set
+            {
+                m_byData = value;
             }
         }
         #endregion
@@ -49,48 +54,53 @@ namespace Pep.Forms
             Pep.Programmer.IntelHexData IntelHexData = null;
             string sErrorMessage = null;
             System.Windows.Forms.ListViewItem ListItem;
+            bool bResult;
 
             Common.Debug.Thread.IsUIThread();
 
             if (m_sFileName != null)
             {
-                if (Pep.Programmer.IntelHex.LoadIntelHexFile(m_sFileName, ref IntelHexData, ref sErrorMessage))
-                {
-                    listViewPages.BeginUpdate();
-
-                    for (uint nPage = 0; nPage < IntelHexData.TotalPages; ++nPage)
-                    {
-                        ListItem = new System.Windows.Forms.ListViewItem(string.Format("{0}", nPage + 1));
-
-                        ListItem.Tag = IntelHexData.PageData(nPage);
-
-                        listViewPages.Items.Add(ListItem);
-
-                        ListItem.SubItems.Add(String.Format("0x{0:X8} - 0x{1:X8}",
-                                                            IntelHexData.PageAddress(nPage),
-                                                            IntelHexData.PageAddress(nPage) + (IntelHexData.PageData(nPage).Length - 1)));
-                    }
-
-                    listViewPages.AutosizeColumns();
-                    listViewPages.EndUpdate();
-
-                    buttonView.Enabled = false;
-                }
-                else
-                {
-                    buttonView.Enabled = false;
-                    listViewPages.Enabled = false;
-
-                    RunOnUIThreadNoWait(() =>
-                    {
-                        Common.Forms.MessageBox.Show(sErrorMessage,
-                                                     System.Windows.Forms.MessageBoxButtons.OK,
-                                                     System.Windows.Forms.MessageBoxIcon.Information);
-                    });
-                }
+                bResult = Pep.Programmer.IntelHex.LoadIntelHexFile(m_sFileName, ref IntelHexData, ref sErrorMessage);
             }
             else
             {
+                bResult = Pep.Programmer.IntelHex.IntelHexFromMemory(m_byData, ref IntelHexData, ref sErrorMessage);
+            }
+
+            if (bResult)
+            {
+                listViewPages.BeginUpdate();
+
+                for (uint nPage = 0; nPage < IntelHexData.TotalPages; ++nPage)
+                {
+                    ListItem = new System.Windows.Forms.ListViewItem(string.Format("{0}", nPage + 1));
+
+                    ListItem.Tag = IntelHexData.PageData(nPage);
+
+                    listViewPages.Items.Add(ListItem);
+
+                    ListItem.SubItems.Add(String.Format("0x{0:X8} - 0x{1:X8}",
+                                                        IntelHexData.PageAddress(nPage),
+                                                        IntelHexData.PageAddress(nPage) + (IntelHexData.PageData(nPage).Length - 1)));
+                }
+
+                listViewPages.AutosizeColumns();
+                listViewPages.EndUpdate();
+
+                buttonView.Enabled = false;
+            }
+            else
+            {
+                buttonView.Enabled = false;
+                listViewPages.Enabled = false;
+
+                RunOnUIThreadNoWait(() =>
+                {
+                    Common.Forms.MessageBox.Show(this,
+                                                 sErrorMessage,
+                                                 System.Windows.Forms.MessageBoxButtons.OK,
+                                                 System.Windows.Forms.MessageBoxIcon.Information);
+                });
             }
         }
 
@@ -140,6 +150,7 @@ namespace Pep.Forms
             new Common.Forms.FormLocation(ViewBuffer, m_sFormLocationsRegistryKey);
 
             ViewBuffer.Buffer = byPageData;
+            ViewBuffer.ReadOnlyMode = true;
 
             ViewBuffer.ShowDialog(this);
 

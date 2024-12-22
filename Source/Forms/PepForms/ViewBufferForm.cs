@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -34,6 +34,7 @@ namespace Pep
                 new TOrganizationData("Word Little Endian", Pep.Forms.BufferViewer.EDataOrganization.WordLittleEndian)};
 
             private byte[] m_byBuffer = null;
+            private bool m_bReadOnlyMode = false;
             #endregion
 
             #region "Properties"
@@ -51,6 +52,14 @@ namespace Pep
                     {
                         m_byBuffer[nIndex] = value[nIndex];
                     }
+                }
+            }
+
+            public bool ReadOnlyMode
+            {
+                set
+                {
+                    m_bReadOnlyMode = value;
                 }
             }
             #endregion
@@ -79,6 +88,13 @@ namespace Pep
                 bufferViewer.Buffer = m_byBuffer;
 
                 bufferViewer.EndUpdate();
+
+                if (m_bReadOnlyMode)
+                {
+                    buttonFill.Visible = false;
+                    buttonOK.Visible = false;
+                    buttonCancel.Text = "&Close";
+                }
             }
 
             private void comboBoxOrganization_SelectedIndexChanged(object sender, EventArgs e)
@@ -110,5 +126,5 @@ namespace Pep
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2019 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
