@@ -57,9 +57,10 @@ BOOL UsbHIDDeviceInterfaceGUID(
 }
 
 BOOL UsbFullSpeedDeviceInterfaceGUID(
-   _Out_writes_(sizeof(GUID)) LPGUID pGuid)
+  _Out_writes_(sizeof(GUID)) LPGUID pGuid)
 {
     BOOL bResult = FALSE;
+    WCHAR cPepFirmwareDeviceInterfaceGuid[] = { CPepFirmwareDeviceInterfaceGuid, 0 };
     HMODULE hModule = LoadLibraryW(CRpcLibrary);
     TUuidFromString pUuidFromStringFunc;
 
@@ -74,7 +75,7 @@ BOOL UsbFullSpeedDeviceInterfaceGUID(
 
     if (pUuidFromStringFunc)
     {
-        if (S_OK == pUuidFromStringFunc(CPepFirmwareDeviceInterfaceGuid, pGuid))
+        if (S_OK == pUuidFromStringFunc(cPepFirmwareDeviceInterfaceGuid, pGuid))
         {
             bResult = TRUE;
         }

@@ -36,6 +36,9 @@ static INT l_nLptPortDeviceInfoCount = 0;
 static TDeviceInfo* l_pUsbPrintPortDeviceInfo = NULL;
 static INT l_nUsbPrintPortDeviceInfoCount = 0;
 
+static TDeviceInfo* l_pUsbHIDPortDeviceInfo = NULL;
+static INT l_nUsbHIDPortDeviceInfoCount = 0;
+
 static TDeviceInfo* l_pUsbPortDeviceInfo = NULL;
 static INT l_nUsbPortDeviceInfoCount = 0;
 
@@ -267,7 +270,7 @@ static BOOL lEnumDeviceInterface(
     return TRUE;
 }
 
-static BOOL lIsUsbDevice(
+static BOOL lIsUsbHidDevice(
   _In_z_ LPCWSTR pszDevicePath)
 {
     HANDLE hDevice;
@@ -288,8 +291,8 @@ static BOOL lIsUsbDevice(
 
     if (HidD_GetAttributes(hDevice, &Attributes))
     {
-        if (Attributes.VendorID == CPepFirmwareVendorID &&
-            Attributes.ProductID == CPepFirmwareProductID)
+        if (Attributes.VendorID == CMicrochipFirmwareVendorID &&
+            Attributes.ProductID == CMicrochipHIDFirmwareProductID)
         {
             bResult = TRUE;
         }
@@ -300,7 +303,7 @@ static BOOL lIsUsbDevice(
     return bResult;
 }
 
-static BOOL lEnumUsbDeviceInterface(
+static BOOL lEnumUsbHidDeviceInterface(
   _In_ LPGUID pInterfaceGuid,
   _Out_ TDeviceInfo** ppDeviceInfo,
   _Out_writes_bytes_(sizeof(INT)) LPINT pnDeviceInfoCount)
@@ -354,7 +357,7 @@ static BOOL lEnumUsbDeviceInterface(
             return FALSE;
         }
 
-        if (lIsUsbDevice(pDeviceInterfaceDetailData->DevicePath))
+        if (lIsUsbHidDevice(pDeviceInterfaceDetailData->DevicePath))
         {
             if (*pnDeviceInfoCount > 0)
             {
@@ -426,9 +429,14 @@ static VOID lFixParallelPortDeviceInfo(
 
 BOOL UTLISTPORTSAPI UtListPortsInitialize(VOID)
 {
+    WCHAR cPepFirmwareDeviceInterfaceGuid[] = { CPepFirmwareDeviceInterfaceGuid, 0 };
+
     GUID InterfaceGuid;
 
-    if (l_pLptPortDeviceInfo || l_pUsbPrintPortDeviceInfo || l_pUsbPortDeviceInfo)
+    if (l_pLptPortDeviceInfo ||
+        l_pUsbPrintPortDeviceInfo ||
+        l_pUsbHIDPortDeviceInfo ||
+        l_pUsbPortDeviceInfo)
     {
         return TRUE;
     }
@@ -462,8 +470,23 @@ BOOL UTLISTPORTSAPI UtListPortsInitialize(VOID)
 
     HidD_GetHidGuid(&InterfaceGuid);
 
-    if (!lEnumUsbDeviceInterface(&InterfaceGuid, &l_pUsbPortDeviceInfo,
-                                 &l_nUsbPortDeviceInfoCount))
+    if (!lEnumUsbHidDeviceInterface(&InterfaceGuid, &l_pUsbHIDPortDeviceInfo,
+                                    &l_nUsbHIDPortDeviceInfoCount))
+    {
+        UtListPortsUninitialize();
+
+        return FALSE;
+    }
+
+    if (S_OK != UuidFromStringW(cPepFirmwareDeviceInterfaceGuid, &InterfaceGuid))
+    {
+        UtListPortsUninitialize();
+
+        return FALSE;
+    }
+
+    if (!lEnumDeviceInterface(&InterfaceGuid, &l_pUsbPortDeviceInfo,
+                              &l_nUsbPortDeviceInfoCount))
     {
         UtListPortsUninitialize();
 
@@ -489,6 +512,14 @@ BOOL UTLISTPORTSAPI UtListPortsUninitialize(VOID)
 
         l_pUsbPrintPortDeviceInfo = NULL;
         l_nUsbPrintPortDeviceInfoCount = 0;
+    }
+
+    if (l_pUsbHIDPortDeviceInfo)
+    {
+        lFreeDeviceInfos(l_pUsbHIDPortDeviceInfo, l_nUsbHIDPortDeviceInfoCount);
+
+        l_pUsbHIDPortDeviceInfo = NULL;
+        l_nUsbHIDPortDeviceInfoCount = 0;
     }
 
     if (l_pUsbPortDeviceInfo)
@@ -555,6 +586,32 @@ BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(
     }
 
     pDeviceInfo = &l_pUsbPrintPortDeviceInfo[nIndex];
+
+    return lGetPortData(pDeviceInfo, nPortData, pszData, pnDataLen);
+}
+
+BOOL UTLISTPORTSAPI UtListPortsGetUsbHIDPortCount(
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnCount)
+{
+    *pnCount = l_nUsbHIDPortDeviceInfoCount;
+
+    return TRUE;
+}
+
+BOOL UTLISTPORTSAPI UtListPortsGetUsbHIDPortData(
+  _In_ INT nIndex,
+  _In_ INT nPortData,
+  _Out_writes_z_(*pnDataLen) LPWSTR pszData,
+  _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen)
+{
+    TDeviceInfo* pDeviceInfo;
+
+    if (nIndex >= l_nUsbHIDPortDeviceInfoCount)
+    {
+        return FALSE;
+    }
+
+    pDeviceInfo = &l_pUsbHIDPortDeviceInfo[nIndex];
 
     return lGetPortData(pDeviceInfo, nPortData, pszData, pnDataLen);
 }

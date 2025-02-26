@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #include <stdio.h>
@@ -277,9 +277,12 @@ static int lReadDevice(
     UtConsolePrintDipSwitches(Device.bDipSwitches,
                               MArrayLen(Device.bDipSwitches));
 
-    wprintf(L"Press the \"Enter\" key to continue.\n");
+    if (!UtCommandLineParserGetNoUserInteractionConfiguration())
+    {
+        wprintf(L"Press the \"Enter\" key to continue.\n");
 
-    _getch();
+        _getch();
+    }
 
     if (UtCommandLineParserGetUseParallelPortConfiguration())
     {
@@ -301,7 +304,7 @@ static int lReadDevice(
         goto EndPepDevicesUninit;
     }
 
-    wprintf(L"Calling UtPepCtrlReset\n");
+    /*wprintf(L"Calling UtPepCtrlReset\n");
 
     if (FALSE == UtPepCtrlReset())
     {
@@ -310,10 +313,13 @@ static int lReadDevice(
         goto EndPepCtrlUninit;
     }
 
-    wprintf(L"Please insert the device.\n");
-    wprintf(L"Press the \"Enter\" key to continue.\n");
+    if (!UtCommandLineParserGetNoUserInteractionConfiguration())
+    {
+        wprintf(L"Please insert the device.\n");
+        wprintf(L"Press the \"Enter\" key to continue.\n");
 
-    _getch();
+        _getch();
+    }*/
 
     wprintf(L"Initializing the device\n");
 
@@ -463,9 +469,12 @@ static int lProgramDevice(
     UtConsolePrintDipSwitches(Device.bDipSwitches,
                               MArrayLen(Device.bDipSwitches));
 
-    wprintf(L"Press the \"Enter\" key to continue.\n");
+    if (!UtCommandLineParserGetNoUserInteractionConfiguration())
+    {
+        wprintf(L"Press the \"Enter\" key to continue.\n");
 
-    _getch();
+        _getch();
+    }
 
     if (UtCommandLineParserGetUseParallelPortConfiguration())
     {
@@ -658,9 +667,12 @@ static int lVerifyDevice(
     UtConsolePrintDipSwitches(Device.bDipSwitches,
                               MArrayLen(Device.bDipSwitches));
 
-    wprintf(L"Press the \"Enter\" key to continue.\n");
+    if (!UtCommandLineParserGetNoUserInteractionConfiguration())
+    {
+        wprintf(L"Press the \"Enter\" key to continue.\n");
 
-    _getch();
+        _getch();
+    }
 
     if (UtCommandLineParserGetUseParallelPortConfiguration())
     {
@@ -805,7 +817,8 @@ static int lDisplayHelp(void)
     wprintf(L"        \"Input File\"  - Name of the file to read the data from\n");
     wprintf(L"\n");
     wprintf(L"    Configuration\n");
-    wprintf(L"    /parallelport     - Use the parallel port instead of USB\n");
+    wprintf(L"    /nouserinteraction - Disable user interaction\n");
+    wprintf(L"    /parallelport      - Use the parallel port instead of USB\n");
     wprintf(L"\n");
 
     return -1;
@@ -857,5 +870,5 @@ int __cdecl wmain (int argc, WCHAR* argv[])
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
 /***************************************************************************/

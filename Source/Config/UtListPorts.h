@@ -27,6 +27,8 @@ MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortCount(_Out_writes_bytes_(sizeo
 MExternC BOOL UTLISTPORTSAPI UtListPortsGetLptPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_writes_z_(*pnDataLen) LPWSTR pszData, _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen);
 MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortCount(_Out_writes_bytes_(sizeof(INT)) LPINT pnCount);
 MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPrintPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_writes_z_(*pnDataLen) LPWSTR pszData, _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbHIDPortCount(_Out_writes_bytes_(sizeof(INT)) LPINT pnCount);
+MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbHIDPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_writes_z_(*pnDataLen) LPWSTR pszData, _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen);
 MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPortCount(_Out_writes_bytes_(sizeof(INT)) LPINT pnCount);
 MExternC BOOL UTLISTPORTSAPI UtListPortsGetUsbPortData(_In_ INT nIndex, _In_ INT nPortData, _Out_writes_z_(*pnDataLen) LPWSTR pszData, _Out_writes_bytes_(sizeof(INT)) LPINT pnDataLen);
 

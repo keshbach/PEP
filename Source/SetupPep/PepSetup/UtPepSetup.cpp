@@ -230,11 +230,6 @@ BOOL UtPepSetupGenerateTempDirectoryName(
     return UtGenerateTempDirectoryName(pszPath, nPathLen);
 }
 
-BOOL UtPepSetupIsWindows64Present()
-{
-    return UtIsWindows64Present();
-}
-
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////

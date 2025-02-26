@@ -1,15 +1,10 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2014 Kevin Eshbach
+//  Copyright (C) 2014-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
-static HMODULE l_hModule = NULL;
-
-HMODULE UtGetInstance(VOID)
-{
-    return l_hModule;
-}
+#include "UtPepCustomActions.h"
 
 BOOL APIENTRY DllMain(
   HMODULE hModule,
@@ -21,7 +16,7 @@ BOOL APIENTRY DllMain(
     switch (ulReason)
     {
         case DLL_PROCESS_ATTACH:
-            l_hModule = hModule;
+            UtPepCustomActionsSetModule(hModule);
 
             DisableThreadLibraryCalls(hModule);
             break;
@@ -35,5 +30,5 @@ BOOL APIENTRY DllMain(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2014 Kevin Eshbach
+//  Copyright (C) 2014-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

@@ -1,12 +1,15 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2019 Kevin Eshbach
+//  Copyright (C) 2014-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"
 
+#include "UtPepCustomActions.h"
+
 #include <SetupPep/Includes/UtPepUtils.inl>
 
+#include <Includes/UtMacros.h>
 #include <Includes/UtExtractResource.inl>
 
 #include <Config/UtPepCtrlCfg.h>
@@ -56,8 +59,6 @@ static HMODULE l_hUtPepCtrl = NULL;
 
 #pragma endregion
 
-HMODULE UtGetInstance(VOID);
-
 #pragma region Local Functions
 
 static BOOL lWriteMsiLogMessage(
@@ -69,7 +70,7 @@ static BOOL lWriteMsiLogMessage(
     LPWSTR pszNewMessage;
     DWORD dwNewMessageLen;
 
-    dwNewMessageLen = lstrlen(CLogMessagePrefix) + lstrlen(pszMessage) + 1;
+    dwNewMessageLen = lstrlenW(CLogMessagePrefix) + lstrlenW(pszMessage) + 1;
 
 	pszNewMessage = (LPWSTR)UtAllocMem(dwNewMessageLen * sizeof(WCHAR));
 
@@ -179,7 +180,7 @@ static TCustomActionData* lAllocCustomActionData(
 
 	// Extract product path
 
-	nDataLen = ::lstrlen(pszCustomActionDataValue) + 1;
+	nDataLen = ::lstrlenW(pszCustomActionDataValue) + 1;
 
 	pCustomActionData->pszProductPath = (LPTSTR)UtAllocMem(nDataLen * sizeof(TCHAR));
 
@@ -191,7 +192,7 @@ static TCustomActionData* lAllocCustomActionData(
 		return NULL;
 	}
 
-	::StringCchCopy(pCustomActionData->pszProductPath, nDataLen, pszCustomActionDataValue);
+	::StringCchCopyW(pCustomActionData->pszProductPath, nDataLen, pszCustomActionDataValue);
 
 	return pCustomActionData;
 }
@@ -282,7 +283,7 @@ static BOOL lInitialize(
 
     lWriteMsiLogMessage(hInstall, L"Generating a temporary path");
 
-    if (!UtGenerateTempDirectoryName(l_cTempPath, sizeof(l_cTempPath) / sizeof(l_cTempPath[0])))
+    if (!UtGenerateTempDirectoryName(l_cTempPath, MArrayLen(l_cTempPath)))
     {
         lWriteMsiLogMessage(hInstall, L"Could not generate a temporary path");
 
@@ -293,7 +294,7 @@ static BOOL lInitialize(
 
     lWriteMsiLogMessage(hInstall, L"Creating the temporary path");
 
-    if (!::CreateDirectory(l_cTempPath, NULL))
+    if (!::CreateDirectoryW(l_cTempPath, NULL))
     {
         lWriteMsiLogMessage(hInstall, L"Could not create the temporary path");
 
@@ -304,11 +305,11 @@ static BOOL lInitialize(
 
     lWriteMsiLogMessage(hInstall, L"Extracting the UtPepCtrl.dll file");
 
-    ::PathCombine(l_cUtPepCtrlDllFileName, l_cTempPath, CUtPepCtrlCfgDllFileName);
+    ::PathCombineW(l_cUtPepCtrlDllFileName, l_cTempPath, CUtPepCtrlCfgDllFileName);
 
     lWriteMsiLogMessage(hInstall, l_cUtPepCtrlDllFileName);
 
-    if (!UtExtractResource(UtGetInstance(), RT_BINARY, IDR_UTPEPCTRLCFGDLL, l_cUtPepCtrlDllFileName))
+    if (!UtExtractResource(UtPepCustomActionsGetModule(), RT_BINARY, IDR_UTPEPCTRLCFGDLL, l_cUtPepCtrlDllFileName))
     {
         lWriteMsiLogMessage(hInstall, L"UtPepCtrl.dll file could not be extracted");
 
@@ -319,7 +320,7 @@ static BOOL lInitialize(
 
     lWriteMsiLogMessage(hInstall, L"Loading the UtPepCtrl.dll file");
 
-    l_hUtPepCtrl = ::LoadLibrary(l_cUtPepCtrlDllFileName);
+    l_hUtPepCtrl = ::LoadLibraryW(l_cUtPepCtrlDllFileName);
 
     if (l_hUtPepCtrl == NULL)
     {
@@ -382,7 +383,7 @@ static BOOL lCreateDriverDirectory(
 	lWriteMsiLogMessage(l_hInstall, L"lCreateDriverDirectory");
 	lWriteMsiLogMessage(l_hInstall, pszDriverPath);
 
-	if (!::CreateDirectory(pszDriverPath, NULL))
+	if (!::CreateDirectoryW(pszDriverPath, NULL))
 	{
 		lWriteMsiLogMessage(l_hInstall, L"Could not create the driver directory");
 
@@ -401,7 +402,7 @@ static BOOL lRemoveDriverDirectory(
 	lWriteMsiLogMessage(l_hInstall, L"lRemoveDriverDirectory");
 	lWriteMsiLogMessage(l_hInstall, pszDriverPath);
 
-	if (!::RemoveDirectory(pszDriverPath))
+	if (!::RemoveDirectoryW(pszDriverPath))
 	{
 		lWriteMsiLogMessage(l_hInstall, L"Could not delete the driver directory");
 
@@ -419,8 +420,7 @@ static BOOL lCreateDriverFile(
 	lWriteMsiLogMessage(l_hInstall, L"lCreateDriverFile");
 	lWriteMsiLogMessage(l_hInstall, pszDriverFile);
 
-	if (!UtExtractResource(UtGetInstance(), RT_BINARY,
-                           UtIsWindows64Present() ? IDR_PEPCTRLSYS64 : IDR_PEPCTRLSYS,
+	if (!UtExtractResource(UtPepCustomActionsGetModule(), RT_BINARY, IDR_PEPCTRLSYS,
                            pszDriverFile))
 	{
 		lWriteMsiLogMessage(l_hInstall, L"Could not extract the PepCtrl.sys driver file");
@@ -439,7 +439,7 @@ static BOOL lRemoveDriverFile(
     lWriteMsiLogMessage(l_hInstall, L"lRemoveDriverFile");
 	lWriteMsiLogMessage(l_hInstall, pszDriverFile);
 
-    if (!::DeleteFile(pszDriverFile))
+    if (!::DeleteFileW(pszDriverFile))
     {
         lWriteMsiLogMessage(l_hInstall, L"Could not delete the driver file");
 
@@ -461,14 +461,14 @@ static BOOL lInstallDriver(
 
     lWriteMsiLogMessage(l_hInstall, L"lInstallDriver");
 
-	::PathCombine(cDriverPath, pszProductPath, CDriverPathName);
+	::PathCombineW(cDriverPath, pszProductPath, CDriverPathName);
 
 	if (!lCreateDriverDirectory(cDriverPath))
 	{
 		return FALSE;
 	}
 
-	::PathCombine(cDriverFile, cDriverPath, CPepCtrlSysFileName);
+	::PathCombineW(cDriverFile, cDriverPath, CPepCtrlSysFileName);
 
 	if (!lCreateDriverFile(cDriverFile))
 	{
@@ -546,8 +546,8 @@ static BOOL lRemoveDriver(
         return FALSE;
     }
 
-	::PathCombine(cDriverPath, pszProductPath, CDriverPathName);
-	::PathCombine(cDriverFile, cDriverPath, CPepCtrlSysFileName);
+	::PathCombineW(cDriverPath, pszProductPath, CDriverPathName);
+	::PathCombineW(cDriverFile, cDriverPath, CPepCtrlSysFileName);
 
 	if (!lRemoveDriverFile(cDriverFile))
 	{
@@ -750,5 +750,5 @@ UINT __stdcall RemoveRollbackDriverCustomAction(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2014-2019 Kevin Eshbach
+//  Copyright (C) 2014-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

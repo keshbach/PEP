@@ -47,26 +47,11 @@ static BOOL lInstallNetFramework(
   _Out_writes_bytes_(sizeof(BOOL)) LPBOOL pbInstallFramework)
 {
     BOOL bResult = FALSE;
-    LPCWSTR pszSubKey;
+    LPCWSTR pszSubKey = L"SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full";
     HKEY hKey;
     LSTATUS Status;
 
     *pbInstallFramework = FALSE;
-
-#if defined(WIN32)
-    if (UtPepSetupIsWindows64Present())
-    {
-        pszSubKey = L"SOFTWARE\\Wow6432Node\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full";
-    }
-    else
-    {
-        pszSubKey = L"SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full";
-    }
-#elif defined(WIN64)
-    pszSubKey = L"SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full";
-#else
-#error Unsupported architecture
-#endif
 
     Status = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, pszSubKey, 0, KEY_READ | KEY_WOW64_64KEY, &hKey);
 

@@ -29,12 +29,14 @@ typedef struct tagTTestData
 static int lRunAllTest(void);
 static int lRunLptTest(void);
 static int lRunUsbPrintTest(void);
+static int lRunUsbHIDTest(void);
 static int lRunUsbTest(void);
 
 static TTestData l_TestData[] = {
     {L"all",      lRunAllTest},
     {L"lpt",      lRunLptTest},
     {L"usbprint", lRunUsbPrintTest},
+    {L"usbhid",   lRunUsbHIDTest},
     {L"usb",      lRunUsbTest},
     {NULL,        NULL} };
 
@@ -92,6 +94,11 @@ static int lRunAllTest(void)
     if (nResult)
     {
         nResult = lRunUsbPrintTest();
+    }
+
+    if (nResult)
+    {
+        nResult = lRunUsbHIDTest();
     }
 
     if (nResult)
@@ -226,6 +233,68 @@ static int lRunUsbPrintTest(void)
     return 1;
 }
 
+static int lRunUsbHIDTest(void)
+{
+    BOOL bQuit;
+    INT nCount, nIndex, nDataIndex, nDataLen;
+    LPWSTR pszData;
+
+    wprintf(L"TestListPorts: Running the list usb hid port test.\n");
+
+    if (!UtListPortsGetUsbHIDPortCount(&nCount))
+    {
+        wprintf(L"TestListPorts: Could not retrieve the usb hid port count.\n");
+
+        return 0;
+    }
+
+    wprintf(L"\n");
+
+    for (nIndex = 0; nIndex < nCount; ++nIndex)
+    {
+        bQuit = FALSE;
+        nDataIndex = 0;
+
+        while (bQuit == FALSE)
+        {
+            pszData = NULL;
+
+            if (!UtListPortsGetUsbHIDPortData(nIndex, l_PortData[nDataIndex].nPortData,
+                                              NULL, &nDataLen))
+            {
+                wprintf(L"TestListPorts: Could not retrieve the required buffer size.\n");
+
+                return 0;
+            }
+
+            pszData = (LPWSTR)UtAllocMem(nDataLen);
+
+            if (!UtListPortsGetUsbHIDPortData(nIndex, l_PortData[nDataIndex].nPortData,
+                                              pszData, &nDataLen))
+            {
+                wprintf(L"TestListPorts: Could not retrieve the data.\n");
+
+                return 0;
+            }
+
+            wprintf(l_PortData[nDataIndex].pszPortDataString, pszData);
+
+            UtFreeMem(pszData);
+
+            ++nDataIndex;
+
+            if (l_PortData[nDataIndex].pszPortDataString == NULL)
+            {
+                bQuit = TRUE;
+            }
+        }
+
+        wprintf(L"\n");
+    }
+
+    return 1;
+}
+
 static int lRunUsbTest(void)
 {
     BOOL bQuit;
@@ -301,6 +370,7 @@ static int lDisplayHelp(void)
     wprintf(L"        all      - List all lpt and usb printer ports\n");
     wprintf(L"        lpt      - List lpt printer ports\n");
     wprintf(L"        usbprint - List USB printer ports\n");
+    wprintf(L"        usbhid   - List USB HID ports\n");
     wprintf(L"        usb      - List USB ports\n");
     wprintf(L"\n");
 

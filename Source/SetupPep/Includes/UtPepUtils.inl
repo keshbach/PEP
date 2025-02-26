@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2013-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2013-2023 Kevin Eshbach                                  */
 /***************************************************************************/
 
 static BOOL UtGenerateTempDirectoryName(
@@ -23,20 +23,6 @@ static BOOL UtGenerateTempDirectoryName(
     return FALSE;
 }
 
-static BOOL UtIsWindows64Present()
-{
-    SYSTEM_INFO SystemInfo;
-
-    ::GetNativeSystemInfo(&SystemInfo);
-
-    if (SystemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
-    {
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 /***************************************************************************/
-/*  Copyright (C) 2013-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2013-2023 Kevin Eshbach                                  */
 /***************************************************************************/

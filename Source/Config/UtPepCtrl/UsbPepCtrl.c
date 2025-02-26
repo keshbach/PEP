@@ -1003,8 +1003,8 @@ static HANDLE lOpenHidDevice(
 
     if (pGetAttributesFunc(hDevice, &Attributes))
     {
-        if (Attributes.VendorID == CPepFirmwareVendorID &&
-            Attributes.ProductID == CPepFirmwareProductID)
+        if (Attributes.VendorID == CMicrochipFirmwareVendorID &&
+            Attributes.ProductID == CMicrochipHIDFirmwareProductID)
         {
             FreeLibrary(hModule);
 
@@ -1993,7 +1993,6 @@ static VOID lDeviceArrivalBroadcastDeviceInterface(
     {
         // TODO: Error - How should this be handled?
     }
-
 
     /*if (!UsbPepCtrlReset()) {
         // TODO: Error - How should this be handled?

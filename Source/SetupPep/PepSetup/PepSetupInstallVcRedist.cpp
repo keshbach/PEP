@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2019 Kevin Eshbach
+//  Copyright (C) 2018-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -19,15 +19,15 @@
 
 // Visual Studio Redistributable definitions
 
-#if _MSC_VER != 1929
+#if _MSC_VER != 1943
 #error Check if Visual Studio Redistributable needs to be changed.
 #endif
 
 #define CVisualStudioVersionSubKeyName L"14.0"
 
 #define CVisualStudioRedistMajorVersion 14
-#define CVisualStudioRedistMinorVersion 29
-#define CVisualStudioRedistBuildVersion 30038
+#define CVisualStudioRedistMinorVersion 42
+#define CVisualStudioRedistBuildVersion 34438
 #define CVisualStudioRedistReleaseBuildVersion 0
 
 // Visual Studio Redistributable Command Line Arguments definitions
@@ -146,14 +146,7 @@ static BOOL lInstallVisualStudioRedist(
 
     *pbInstallRedist = FALSE;
 
-    if (UtPepSetupIsWindows64Present())
-    {
-        ::StringCchCopyW(cSubKey, MArrayLen(cSubKey), L"SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\");
-    }
-    else
-    {
-        ::StringCchCopyW(cSubKey, MArrayLen(cSubKey), L"SOFTWARE\\Microsoft\\VisualStudio\\");
-    }
+    ::StringCchCopyW(cSubKey, MArrayLen(cSubKey), L"SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\");
 
     ::StringCchCatW(cSubKey, MArrayLen(cSubKey), CVisualStudioVersionSubKeyName);
     ::StringCchCatW(cSubKey, MArrayLen(cSubKey), L"\\VC\\Runtimes\\x86");
@@ -261,10 +254,10 @@ BOOL PepSetupInstallVisualStudioRedist(
             UtPepSetupFreeString(pszMessage);
         }
 
-        ::PathCombine(cTempLogFile, PepSetupGetTempPath(), CVCRedistLogFileName);
+        ::PathCombineW(cTempLogFile, PepSetupGetTempPath(), CVCRedistLogFileName);
 
-        nCommandLineLen = ::lstrlen(CVisualStudioRedistCommandLineArgs);
-        nCommandLineLen += ::lstrlen(cTempLogFile);
+        nCommandLineLen = ::lstrlenW(CVisualStudioRedistCommandLineArgs);
+        nCommandLineLen += ::lstrlenW(cTempLogFile);
         nCommandLineLen += 3;
 
         pszCommandLine = (LPWSTR)UtAllocMem(nCommandLineLen * sizeof(WCHAR));
@@ -291,9 +284,9 @@ BOOL PepSetupInstallVisualStudioRedist(
 
         StartupInfo.cb = sizeof(StartupInfo);
 
-        if (::CreateProcess(PepSetupGetVcRedistFile(), pszCommandLine, NULL, NULL,
-                            FALSE, 0, NULL, NULL, &StartupInfo,
-                            &ProcessInformation))
+        if (::CreateProcessW(PepSetupGetVcRedistFile(), pszCommandLine, NULL, NULL,
+                             FALSE, 0, NULL, NULL, &StartupInfo,
+                             &ProcessInformation))
         {
             ::WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
 
@@ -317,7 +310,7 @@ BOOL PepSetupInstallVisualStudioRedist(
             UtPepSetupAppendLine(pszLogFile, L"**** End Visual Studio Redistributable Install Log ****\r\n");
         }
 
-        ::DeleteFile(cTempLogFile);
+        ::DeleteFileW(cTempLogFile);
     }
     else
     {
@@ -337,5 +330,5 @@ BOOL PepSetupInstallVisualStudioRedist(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2019 Kevin Eshbach
+//  Copyright (C) 2018-2023 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

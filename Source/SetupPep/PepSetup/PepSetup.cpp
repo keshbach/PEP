@@ -36,6 +36,14 @@
 
 #define CPepSetupAppRunningMutexName L"PepSetupAppRunningMutex"
 
+// Windows 10 20H2 (No 32-bit edition after this.)
+
+#define CWindowsMajorVersion 10
+#define CWindowsMinorVersion 0
+#define CWindowsBuildNumber 19042
+#define CWindowsServicePackMajor 0
+#define CWindowsServicePackMinor 0
+
 #pragma endregion
 
 #pragma region Enumerations
@@ -58,7 +66,7 @@ typedef struct tagTInstallData
 {
     HINSTANCE hInstance;
     LPCWSTR pszMSIFile;
-	LPCWSTR pszLogFile;
+    LPCWSTR pszLogFile;
 } TInstallData;
 
 #pragma endregion
@@ -70,6 +78,38 @@ static HANDLE l_hAppRunningMutex = NULL;
 #pragma endregion
 
 #pragma region Local Functions
+
+static BOOL lIsWindows10_20H2OrGreater()
+{
+    OSVERSIONINFOEXW VersionInfo;
+    DWORDLONG dwlConditionMask;
+
+    VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
+    VersionInfo.dwMajorVersion = CWindowsMajorVersion;
+    VersionInfo.dwMinorVersion = CWindowsMinorVersion;
+    VersionInfo.dwBuildNumber = CWindowsBuildNumber;
+    VersionInfo.wServicePackMajor = CWindowsServicePackMajor;
+    VersionInfo.wServicePackMinor = CWindowsServicePackMinor;
+
+    dwlConditionMask = ::VerSetConditionMask(
+                           ::VerSetConditionMask(
+                               ::VerSetConditionMask(
+                                   ::VerSetConditionMask(
+                                       0,
+                                       VER_MAJORVERSION,
+                                       VER_GREATER_EQUAL),
+                                   VER_MINORVERSION,
+                                   VER_GREATER_EQUAL),
+                               VER_BUILDNUMBER,
+                               VER_GREATER_EQUAL),
+                           VER_SERVICEPACKMAJOR,
+                           VER_GREATER_EQUAL);
+
+    return ::VerifyVersionInfo(&VersionInfo,
+                               VER_MAJORVERSION | VER_MINORVERSION |
+                                   VER_BUILDNUMBER | VER_SERVICEPACKMAJOR,
+                               dwlConditionMask);
+}
 
 static void lDisplayUnsupportedOS()
 {
@@ -776,7 +816,7 @@ INT PepSetupExecuteInstall(
     DWORD dwThreadId, dwExitCode;
 	BOOL bDisplayHelp;
 
-	if (!IsWindows7OrGreater())
+    if (!lIsWindows10_20H2OrGreater())
 	{
 		lDisplayUnsupportedOS();
 

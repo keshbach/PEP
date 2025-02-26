@@ -10,8 +10,10 @@ EXPORTS
     UtListPortsGetLptPortData @ 4
     UtListPortsGetUsbPrintPortCount @ 5
     UtListPortsGetUsbPrintPortData @ 6
-    UtListPortsGetUsbPortCount @ 7
-    UtListPortsGetUsbPortData @ 8
+    UtListPortsGetUsbHIDPortCount @ 7
+    UtListPortsGetUsbHIDPortData @ 8
+    UtListPortsGetUsbPortCount @ 9
+    UtListPortsGetUsbPortData @ 10
 
 ;
 ;  Copyright (C) 2007-2021 Kevin Eshbach

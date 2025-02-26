@@ -1,0 +1,31 @@
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2018-2023 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////
+
+#include "stdafx.h"
+#include "UtPepCustomActions.h"
+
+#pragma region Local Variables
+
+static HMODULE l_hModule = NULL;
+
+#pragma endregion
+
+#pragma region Public Functions
+
+VOID UtPepCustomActionsSetModule(
+  _In_ HMODULE hModule)
+{
+    l_hModule = hModule;
+}
+
+HMODULE UtPepCustomActionsGetModule(VOID)
+{
+    return l_hModule;
+}
+
+#pragma endregion
+
+/////////////////////////////////////////////////////////////////////////////
+//  Copyright (C) 2018-2023 Kevin Eshbach
+/////////////////////////////////////////////////////////////////////////////

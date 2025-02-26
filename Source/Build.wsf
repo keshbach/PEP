@@ -5,7 +5,7 @@
     <runtime>
       <description>
         Build Script v1.01
-        Copyright (C) 2018-2021 Kevin Eshbach
+        Copyright (C) 2018-2024 Kevin Eshbach
         All Rights Reserved
 
         This script builds the debug and release configuration for x86 and x64.
@@ -50,7 +50,7 @@
         x86
     </resource>
 
-    <resource id="VcVarsAllFile">C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat</resource>
+    <resource id="VcVarsAllFile">C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat</resource>
 
     <script language="VBScript">
       <![CDATA[

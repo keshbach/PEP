@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2018-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2018-2024 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if defined(_MANAGED)
@@ -9,6 +9,7 @@
 static LPWSTR* l_ppszCommandLineArgs = NULL;
 static INT l_nTotalCommandLineArgs = 0;
 static BOOL l_bUseParallelPortConfiguration = FALSE;
+static BOOL l_bNoUserInteractionConfiguration = FALSE;
 
 #pragma region Functions
 
@@ -20,15 +21,19 @@ static BOOL UtCommandLineParserInitialize(
 
     for (INT nIndex = 0; nIndex < argc; ++nIndex)
     {
-        if (lstrcmpi(argv[nIndex], L"/parallelport") != 0)
+        if (lstrcmpi(argv[nIndex], L"/parallelport") == 0)
+        {
+            l_bUseParallelPortConfiguration = TRUE;
+        }
+        else if (lstrcmpi(argv[nIndex], L"/nouserinteraction") == 0)
+        {
+            l_bNoUserInteractionConfiguration = TRUE;
+        }
+        else
         {
             l_ppszCommandLineArgs[l_nTotalCommandLineArgs] = (LPWSTR)argv[nIndex];
 
             ++l_nTotalCommandLineArgs;
-        }
-        else
-        {
-            l_bUseParallelPortConfiguration = TRUE;
         }
     }
 
@@ -43,6 +48,11 @@ static VOID UtCommandLineParserUninitialize(VOID)
 static BOOL UtCommandLineParserGetUseParallelPortConfiguration(VOID)
 {
     return l_bUseParallelPortConfiguration;
+}
+
+static BOOL UtCommandLineParserGetNoUserInteractionConfiguration(VOID)
+{
+    return l_bNoUserInteractionConfiguration;
 }
 
 static LPCWSTR* UtCommandLineParserGetArguments(VOID)
@@ -62,5 +72,5 @@ static INT UtCommandLineParserGetTotalArguments(VOID)
 #endif
 
 /***************************************************************************/
-/*  Copyright (C) 2018-2021 Kevin Eshbach                                  */
+/*  Copyright (C) 2018-2024 Kevin Eshbach                                  */
 /***************************************************************************/
