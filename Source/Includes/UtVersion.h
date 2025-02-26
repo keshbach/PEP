@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2013-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2013-2025 Kevin Eshbach                                  */
 /***************************************************************************/
 
 /*
@@ -16,10 +16,10 @@
 
 #define CUtVersionString "3.21"
 
-#define CUtCopyrightString L"Copyright © 2006-2023 Kevin Eshbach. All rights reserved."
+#define CUtCopyrightString L"Copyright © 2006-2025 Kevin Eshbach. All rights reserved."
 
 #endif /* end of UtVersion_H */
 
 /***************************************************************************/
-/*  Copyright (C) 2013-2023 Kevin Eshbach                                  */
+/*  Copyright (C) 2013-2025 Kevin Eshbach                                  */
 /***************************************************************************/
