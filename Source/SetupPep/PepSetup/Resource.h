@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by PepCustomActions.rc
+// Used by PepSetup.rc
 
 #define RT_BINARY 100
 
