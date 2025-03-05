@@ -7,6 +7,7 @@
 
 #include "UtPepCustomActions.h"
 
+#if defined(ENABLE_DRIVER_CUSTOM_ACTION)
 #include <SetupPep/Includes/UtPepUtils.inl>
 
 #include <Includes/UtMacros.h>
@@ -15,6 +16,9 @@
 #include <Config/UtPepCtrlCfg.h>
 
 #include <Utils/UtHeap.h>
+#endif
+
+#if defined(ENABLE_DRIVER_CUSTOM_ACTION)
 
 #pragma region Constants
 
@@ -564,6 +568,8 @@ static BOOL lRemoveDriver(
 
 #pragma endregion
 
+#endif
+
 #pragma region Exported Function
 
 extern "C"
@@ -572,12 +578,16 @@ extern "C"
 UINT __stdcall InstallDriverCustomAction(
   __in MSIHANDLE hInstall)
 {
-	if (UtInitHeap())
+#if defined(ENABLE_DRIVER_CUSTOM_ACTION)
+    if (UtInitHeap())
 	{
 		lWriteMsiLogMessage(hInstall, L"InstallDriverCustomAction");
 
 		UtUninitHeap();
-	}	
+	}
+#else
+    hInstall;
+#endif
 
     return ERROR_SUCCESS;
 }
@@ -585,7 +595,8 @@ UINT __stdcall InstallDriverCustomAction(
 UINT __stdcall InstallCommitDriverCustomAction(
   __in MSIHANDLE hInstall)
 {
-	TCustomActionData* pCustomActionData;
+#if defined(ENABLE_DRIVER_CUSTOM_ACTION)
+    TCustomActionData* pCustomActionData;
 
 	if (!UtInitHeap())
 	{
@@ -641,6 +652,9 @@ UINT __stdcall InstallCommitDriverCustomAction(
     }
 
 	UtUninitHeap();
+#else
+    hInstall;
+#endif
 
     return ERROR_SUCCESS;
 }
@@ -648,12 +662,16 @@ UINT __stdcall InstallCommitDriverCustomAction(
 UINT __stdcall InstallRollbackDriverCustomAction(
   __in MSIHANDLE hInstall)
 {
+#if defined(ENABLE_DRIVER_CUSTOM_ACTION)
 	if (UtInitHeap())
 	{
 		lWriteMsiLogMessage(hInstall, L"InstallRollbackDriverCustomAction");
 
 		UtUninitHeap();
 	}
+#else
+    hInstall;
+#endif
 
     return ERROR_SUCCESS;
 }
@@ -661,12 +679,16 @@ UINT __stdcall InstallRollbackDriverCustomAction(
 UINT __stdcall RemoveDriverCustomAction(
   __in MSIHANDLE hInstall)
 {
-	if (UtInitHeap())
+#if defined(ENABLE_DRIVER_CUSTOM_ACTION)
+    if (UtInitHeap())
 	{
 		lWriteMsiLogMessage(hInstall, L"RemoveDriverCustomAction");
 
 		UtUninitHeap();
 	}
+#else
+    hInstall;
+#endif
 
     return ERROR_SUCCESS;
 }
@@ -674,7 +696,8 @@ UINT __stdcall RemoveDriverCustomAction(
 UINT __stdcall RemoveCommitDriverCustomAction(
   __in MSIHANDLE hInstall)
 {
-	TCustomActionData* pCustomActionData;
+#if defined(ENABLE_DRIVER_CUSTOM_ACTION)
+    TCustomActionData* pCustomActionData;
 
 	if (!UtInitHeap())
 	{
@@ -728,6 +751,9 @@ UINT __stdcall RemoveCommitDriverCustomAction(
     }
 
 	UtUninitHeap();
+#else
+    hInstall;
+#endif
 
     return ERROR_SUCCESS;
 }
@@ -735,12 +761,16 @@ UINT __stdcall RemoveCommitDriverCustomAction(
 UINT __stdcall RemoveRollbackDriverCustomAction(
   __in MSIHANDLE hInstall)
 {
+#if defined(ENABLE_DRIVER_CUSTOM_ACTION)
 	if (UtInitHeap())
 	{
 	    lWriteMsiLogMessage(hInstall, L"RemoveRollbackDriverCustomAction");
 
 		UtUninitHeap();
     }
+#else
+    hInstall;
+#endif
 
     return ERROR_SUCCESS;
 }
