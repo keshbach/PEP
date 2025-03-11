@@ -219,10 +219,13 @@
     <Content Include="Resources\NewProject_16x.png" />
     <Content Include="Resources\OpenFile_16x.png" />
     <Content Include="Resources\OpenProject_16x.png" />
+    <Content Include="Resources\ProgramDevice_16x.png" />
+    <Content Include="Resources\ReadDevice_16x.png" />
     <Content Include="Resources\SaveAs_16x.png" />
     <Content Include="Resources\SaveLogAs_16x.png" />
     <Content Include="Resources\Buffer_16x.png" />
     <Content Include="Resources\Settings_16x.png" />
+    <Content Include="Resources\VerifyDevice_16x.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
