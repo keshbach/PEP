@@ -75,6 +75,7 @@
       82S13x_and_74S287_Adapter_Schematics.pdf
       MB831000_Adapter_Schematic.pdf
       PROM24_Adapter_Schematic.pdf
+      2364_ADAPTER_SCHEMATIC.pdf
     </resource>
     
     <script language="JScript" src="CreateCabFile.js" />
@@ -353,6 +354,11 @@
             }
             
             database = installer.OpenDatabase(msiFile, msiOpenDatabaseModeCreate);
+
+            if (g_Verbose) {
+                WScript.Echo("MSI database file successfully created.");
+                WScript.Echo();
+            }
             
             while (!filesCollection.atEnd())
             {
@@ -363,6 +369,12 @@
                 }
 
                 database.Import(templatePath, filesCollection.item().Name)
+
+                if (g_Verbose)
+                {
+                    WScript.Echo("Finished importing the table file: " + filesCollection.item().Path);
+                    WScript.Echo();
+                }
 
                 filesCollection.moveNext();
             }

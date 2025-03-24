@@ -274,6 +274,32 @@ static LPCWSTR l_psz2758PinNames[] = {
 	CDevicePin_Address8,
 	CDevicePin_Vcc };
 
+static LPCWSTR l_psz2364PinNames[] = {
+    CDevicePin_Address7,
+    CDevicePin_Address6,
+    CDevicePin_Address5,
+    CDevicePin_Address4,
+    CDevicePin_Address3,
+    CDevicePin_Address2,
+    CDevicePin_Address1,
+    CDevicePin_Address0,
+    CDevicePin_Data0,
+    CDevicePin_Data1,
+    CDevicePin_Data2,
+    CDevicePin_Ground,
+    CDevicePin_Data3,
+    CDevicePin_Data4,
+    CDevicePin_Data5,
+    CDevicePin_Data6,
+    CDevicePin_Data7,
+    CDevicePin_Address11,
+    CDevicePin_Address10,
+    CDevicePin_LowChipSelect,
+    CDevicePin_Address12,
+    CDevicePin_Address9,
+    CDevicePin_Address8,
+    CDevicePin_Vcc };
+
 DEVICES_BEGIN
     DEVICE_DATA_BEGIN(1702)
         DEVICE_EPROM
@@ -671,6 +697,27 @@ DEVICES_BEGIN
             DEVICE_ROM_VPP_12dot75VDC
             DEVICE_ROM_READ_FUNC(lGenericReadDevicePinPulse4Mode)
             DEVICE_ROM_PROGRAM_FUNC(lGenericProgramDevice)
+            DEVICE_ROM_VERIFY_FUNC(lGenericVerifyDevicePinPulse4Mode)
+        DEVICE_ROM_DATA_END
+    DEVICE_DATA_END
+    DEVICE_DATA_BEGIN(2364)
+        DEVICE_EPROM
+        DEVICE_DIP_PACKAGE
+        DEVICE_PINCOUNT(24)
+        DEVICE_PINNAMES(l_psz2364PinNames)
+        DEVICE_ADAPTER("Part# KE2364")
+        DEVICE_MESSAGE_NONE
+        DEVICE_DIPSWITCHES(FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE)
+        DEVICE_CHIP_ENABLE_NANO_SECS(450)
+        DEVICE_OUTPUT_ENABLE_NANO_SECS_NONE
+        DEVICE_INIT_FUNC(lGenericInit)
+        DEVICE_UNINIT_FUNC(lGenericUninit)
+        DEVICE_ROM_DATA_BEGIN
+            DEVICE_ROM_SIZE(0x2000)
+            DEVICE_ROM_BITSPERVALUE(8)
+            DEVICE_ROM_VPP_NOTSUPPORTED
+            DEVICE_ROM_READ_FUNC(lGenericReadDevicePinPulse4Mode)
+            DEVICE_ROM_PROGRAM_FUNC_NONE
             DEVICE_ROM_VERIFY_FUNC(lGenericVerifyDevicePinPulse4Mode)
         DEVICE_ROM_DATA_END
     DEVICE_DATA_END
