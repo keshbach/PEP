@@ -208,6 +208,35 @@ System::Boolean Common::Forms::ImageManager::AddFileExtensionSmallImage(
     return bResult;
 }
 
+System::Boolean Common::Forms::ImageManager::CopyFileSmallImageToToolbar(
+  System::String^ sImageName)
+{
+    System::Drawing::Image^ Image;
+
+    if (s_FileSmallImageList == nullptr || sImageName->Length == 0)
+    {
+        System::Diagnostics::Debug::Assert(false);
+
+        return false;
+    }
+
+    if (-1 == s_FileSmallImageList->Images->IndexOfKey(sImageName))
+    {
+        return false;
+    }
+
+    if (-1 != s_ToolbarSmallImageList->Images->IndexOfKey(sImageName))
+    {
+        return true;
+    }
+
+    Image = s_FileSmallImageList->Images[sImageName];
+
+    s_ToolbarSmallImageList->Images->Add(sImageName, (System::Drawing::Image^)Image->Clone());
+
+    return true;
+}
+
 System::Boolean Common::Forms::ImageManager::AddToolbarSmallImages(
   System::Resources::ResourceManager^ ResourceManager)
 {

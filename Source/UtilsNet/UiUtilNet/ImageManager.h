@@ -64,6 +64,8 @@ namespace Common
             static System::Boolean AddFileExtensionSmallImage(System::String^ sFileExtension,
                                                               System::String^ sImageName);
 
+            static System::Boolean CopyFileSmallImageToToolbar(System::String^ sImageName);
+
             static System::Boolean AddToolbarSmallImages(System::Resources::ResourceManager^ ResourceManager);
 
             static System::String^ GenerateToolbarImageKey(System::Resources::ResourceManager^ ResourceManager,
