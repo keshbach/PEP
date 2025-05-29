@@ -203,7 +203,7 @@ System::Boolean Pep::Programmer::IntelHex::LoadIntelHexFile(
 
 		sErrorMessage = gcnew System::String(L"Out of memory error.");
 
-		return true;
+		return false;
 	}
 
 	pIntelHexErrorCodeFunc(IntelHexHandle, &nIntelHexErrorCode);
