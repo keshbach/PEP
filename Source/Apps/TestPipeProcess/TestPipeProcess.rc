@@ -1,0 +1,78 @@
+/***************************************************************************/
+/*  Copyright (C) 2019-2024 Kevin Eshbach                                  */
+/***************************************************************************/
+
+#include <windows.h>
+
+#include <Includes/UtVersion.h>
+
+/* Manifest File */
+
+#define IDR_MANIFEST 1
+
+#if defined(NDEBUG)
+
+#if defined(x86)
+IDR_MANIFEST RT_MANIFEST "../../lib/Release/x86/TestPipeProcess/TestPipeProcess.manifest"
+#elif defined(x64)
+IDR_MANIFEST RT_MANIFEST "../../lib/Release/x64/TestPipeProcess/TestPipeProcess.manifest"
+#else
+#error Unsupported architecture
+#endif
+#else
+
+#if defined(x86)
+IDR_MANIFEST RT_MANIFEST "../../lib/Debug/x86/TestPipeProcess/TestPipeProcess.manifest"
+#elif defined(x64)
+IDR_MANIFEST RT_MANIFEST "../../lib/Debug/x64/TestPipeProcess/TestPipeProcess.manifest"
+#else
+#error Unsupported architecture
+#endif
+
+#endif
+
+#ifdef RC_INVOKED
+
+#if DBG
+#define VER_DBG VS_FF_DEBUG
+#else
+#define VER_DBG 0
+#endif
+
+/* Version Information */
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    CUtMajorVersion, CUtMinorVersion, 0, 0
+PRODUCTVERSION CUtMajorVersion, CUtMinorVersion, 0, 0
+FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+FILEFLAGS      VER_DBG
+FILEOS         VOS_NT
+FILETYPE       VFT_APP
+FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments",         "Test Pipe Process v" CUtVersionString
+            VALUE "CompanyName",      "Kevin Eshbach"
+            VALUE "FileDescription",  "Test Pipe Process"
+            VALUE "FileVersion",      CUtVersionString
+            VALUE "InternalName",     "TestPipeProcess.exe"
+            VALUE "LegalCopyright",   CUtCopyrightString
+            VALUE "OriginalFilename", "TestPipeProcess.exe"
+            VALUE "ProductName",      "Test Pipe Process v" CUtVersionString
+            VALUE "ProductVersion",   "v" CUtVersionString
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 0x04b0
+    END
+END
+
+#endif /* end of RC_INVOKED */
+
+/***************************************************************************/
+/*  Copyright (C) 2019-2024 Kevin Eshbach                                  */
+/***************************************************************************/

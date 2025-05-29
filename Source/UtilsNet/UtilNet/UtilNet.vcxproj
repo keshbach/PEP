@@ -261,7 +261,6 @@
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="Path.cpp" />
-    <ClCompile Include="Process.cpp" />
     <ClCompile Include="Registry.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -292,7 +291,6 @@
     <ClInclude Include="Debug.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="Path.h" />
-    <ClInclude Include="Process.h" />
     <ClInclude Include="Registry.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />

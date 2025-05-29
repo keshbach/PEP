@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2014-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2025 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if defined(_MANAGED)
@@ -50,7 +50,7 @@ static BOOL UtExtractResource(
         return FALSE;
     }
 
-    if (FALSE == WriteFile(hFile, pvResData, ::SizeofResource(hModule, hResource),
+    if (FALSE == WriteFile(hFile, pvResData, SizeofResource(hModule, hResource),
                              &dwBytesWrote, NULL))
     {
         CloseHandle(hFile);
@@ -72,5 +72,5 @@ static BOOL UtExtractResource(
 #endif
 
 /***************************************************************************/
-/*  Copyright (C) 2014-2018 Kevin Eshbach                                  */
+/*  Copyright (C) 2014-2025 Kevin Eshbach                                  */
 /***************************************************************************/

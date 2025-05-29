@@ -267,6 +267,9 @@
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
     </Reference>
+    <Reference Include="UtilNet">
+      <HintPath>$(SolutionDir)..\bin\$(Configuration)\$(PlatformTarget)\UtilNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
@@ -279,6 +282,7 @@
     <ClCompile Include="Devices.cpp" />
     <ClCompile Include="PALData.cpp" />
     <ClCompile Include="PinConfigValues.cpp" />
+    <ClCompile Include="PipeProcess.cpp" />
     <ClCompile Include="Plugin.cpp" />
     <ClCompile Include="RAMData.cpp" />
     <ClCompile Include="ROMData.cpp" />
@@ -312,6 +316,7 @@
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="IntelHex.h" />
     <ClInclude Include="IntelHexData.h" />
+    <ClInclude Include="IPipeProcess.h" />
     <ClInclude Include="PinConfig.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="Device.h" />
@@ -320,6 +325,7 @@
     <ClInclude Include="IDeviceChange.h" />
     <ClInclude Include="PALData.h" />
     <ClInclude Include="PinConfigValues.h" />
+    <ClInclude Include="PipeProcess.h" />
     <ClInclude Include="Plugin.h" />
     <ClInclude Include="RAMData.h" />
     <ClInclude Include="resource.h" />

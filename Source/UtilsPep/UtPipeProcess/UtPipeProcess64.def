@@ -1,0 +1,17 @@
+;
+;  Copyright (C) 2008-2025 Kevin Eshbach
+;
+
+LIBRARY UtPipeProcess BASE=0x400430000
+EXPORTS
+    UtPipeProcessInitialize
+    UtPipeProcessUninitialize
+    UtPipeProcessLaunch
+    UtPipeProcessPostData
+    UtPipeProcessCancel
+    UtPipeProcessTerminate
+    UtPipeProcessClose
+
+;
+;  Copyright (C) 2008-2025 Kevin Eshbach
+;
