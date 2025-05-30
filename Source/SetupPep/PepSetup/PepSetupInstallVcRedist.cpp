@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2023 Kevin Eshbach
+//  Copyright (C) 2018-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -26,9 +26,9 @@
 #define CVisualStudioVersionSubKeyName L"14.0"
 
 #define CVisualStudioRedistMajorVersion 14
-#define CVisualStudioRedistMinorVersion 42
-#define CVisualStudioRedistBuildVersion 34438
-#define CVisualStudioRedistReleaseBuildVersion 0
+#define CVisualStudioRedistMinorVersion 44
+#define CVisualStudioRedistBuildVersion 35112
+#define CVisualStudioRedistReleaseBuildVersion 1
 
 // Visual Studio Redistributable Command Line Arguments definitions
 
@@ -330,5 +330,5 @@ BOOL PepSetupInstallVisualStudioRedist(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2018-2023 Kevin Eshbach
+//  Copyright (C) 2018-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
