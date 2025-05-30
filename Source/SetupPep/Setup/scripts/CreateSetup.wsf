@@ -5,7 +5,7 @@
     <runtime>
       <description>
         Create PEP Setup File Script v1.00
-        Copyright (C) 2014-2024 Kevin Eshbach
+        Copyright (C) 2014-2025 Kevin Eshbach
         All Rights Reserved
 
         This script creates the setup file for the application.
@@ -46,6 +46,7 @@
         UtPepCtrlCfg.dll
         UtPepDevices.dll
         UtPepNet.dll
+        UtPipeProcess.dll
         ZipNet.dll
     </resource>
 
