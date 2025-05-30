@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include <windows.h>
@@ -7,27 +7,6 @@
 #include <Includes/UtVersion.h>
 
 #include "resource.h"
-
-#if defined(NDEBUG)
-
-#if defined(x86)
-IDE_CONSOLEHELPER RT_EXECUTABLE "../../bin/Release/x86/ConsoleHelper.exe"
-#elif defined(x64)
-IDE_CONSOLEHELPER RT_EXECUTABLE "../../bin/Release/x64/ConsoleHelper.exe"
-#else
-#error Unsupported architecture
-#endif
-#else
-
-#if defined(x86)
-IDE_CONSOLEHELPER RT_EXECUTABLE "../../bin/Debug/x86/ConsoleHelper.exe"
-#elif defined(x64)
-IDE_CONSOLEHELPER RT_EXECUTABLE "../../bin/Debug/x64/ConsoleHelper.exe"
-#else
-#error Unsupported architecture
-#endif
-
-#endif
 
 #ifdef RC_INVOKED
 
@@ -75,5 +54,5 @@ END
 #endif /* end of RC_INVOKED */
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2014 Kevin Eshbach
+//  Copyright (C) 2006-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
