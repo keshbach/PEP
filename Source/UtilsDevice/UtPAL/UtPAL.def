@@ -2,7 +2,7 @@
 ;  Copyright (C) 2008-2020 Kevin Eshbach
 ;
 
-LIBRARY UtPAL BASE=0x20310000
+LIBRARY UtPAL BASE=0x20360000
 EXPORTS
     UtPALInitialize @ 1
     UtPALUninitialize @ 2

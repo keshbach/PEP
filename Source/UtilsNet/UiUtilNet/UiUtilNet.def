@@ -2,7 +2,7 @@
 ;  Copyright (C) 2007-2017 Kevin Eshbach
 ;
 
-LIBRARY UiUtilNet BASE=0x200d0000
+LIBRARY UiUtilNet BASE=0x200f0000
 
 ;
 ;  Copyright (C) 2007-2017 Kevin Eshbach

@@ -2,7 +2,7 @@
 ;  Copyright (C) 2007-2007 Kevin Eshbach
 ;
 
-LIBRARY Ut24PinSramDevices BASE=0x20180000
+LIBRARY Ut24PinSramDevices BASE=0x201b0000
 EXPORTS
     GetDeviceCount @ 1
     GetDevice @ 2

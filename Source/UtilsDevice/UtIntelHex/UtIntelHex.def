@@ -2,7 +2,7 @@
 ;  Copyright (C) 2006-2024 Kevin Eshbach
 ;
 
-LIBRARY UtIntelHex BASE=0x20370000
+LIBRARY UtIntelHex BASE=0x20240000
 EXPORTS
     UtIntelHexInitialize @ 1
     UtIntelHexUninitialize @ 2

@@ -2,7 +2,7 @@
 ;  Copyright (C) 2007-2014 Kevin Eshbach
 ;
 
-LIBRARY UtilNet BASE=0x201f0000
+LIBRARY UtilNet BASE=0x20220000
 
 ;
 ;  Copyright (C) 2007-2014 Kevin Eshbach
