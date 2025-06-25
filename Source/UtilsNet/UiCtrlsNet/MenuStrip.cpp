@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2009-2020 Kevin Eshbach
+//  Copyright (C) 2009-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -49,6 +49,11 @@ void Common::Forms::MenuStrip::DisableAllItems(
             ToolStripItemState->ToolStripItem->Enabled = false;
         }
     }
+}
+
+void Common::Forms::MenuStrip::RefreshToolStripItemsImageList()
+{
+    UpdateToolStripItemsImageList(this->ImageList, this->Items);
 }
 
 Common::Forms::MenuStrip::~MenuStrip()
@@ -147,5 +152,5 @@ System::Boolean Common::Forms::MenuStrip::IsToolStripItemInArray(
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2009-2020 Kevin Eshbach
+//  Copyright (C) 2009-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

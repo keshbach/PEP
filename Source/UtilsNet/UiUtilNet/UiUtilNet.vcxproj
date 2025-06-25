@@ -308,6 +308,7 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="FormLocation.h" />
     <ClInclude Include="IFormLocation.h" />
+    <ClInclude Include="IUpdateToolStripItems.h" />
     <ClInclude Include="MyApplicationContext.h" />
     <ClInclude Include="ImageManager.h" />
     <ClInclude Include="IProcessMessage.h" />

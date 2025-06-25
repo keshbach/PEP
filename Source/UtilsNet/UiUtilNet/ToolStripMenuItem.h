@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -40,6 +40,9 @@ namespace Common
             /// </summary>
             ~ToolStripMenuItem();
 
+		protected:
+			virtual void OnEnabledChanged(System::EventArgs^ e) override;
+
 		private:
 			System::String^ m_sHelpText;
         };
@@ -47,5 +50,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2020 Kevin Eshbach
+//  Copyright (C) 2006-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

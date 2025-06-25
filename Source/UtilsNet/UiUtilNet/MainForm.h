@@ -1,10 +1,11 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2022 Kevin Eshbach
+//  Copyright (C) 2006-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "IProcessMessage.h"
+#include "IUpdateToolStripItems.h"
 
 namespace Common
 {
@@ -15,7 +16,8 @@ namespace Common
         /// </summary>
 
         public ref class MainForm : public System::Windows::Forms::Form,
-                                    public Common::Forms::IProcessMessage
+                                    public Common::Forms::IProcessMessage,
+                                    public Common::Forms::IUpdateToolStripItems
         {
         public:
             MainForm();
@@ -61,25 +63,36 @@ namespace Common
             void RunOnUIThreadWait(System::Action^ Action);
             void RunOnUIThreadNoWait(System::Action^ Action);
 
+            void InitToolStripItems(System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem, System::Windows::Forms::ToolStrip^ ToolStrip);
+            void UninitToolStripItems(System::Windows::Forms::ToolStrip^ ToolStrip);
+
+            void InitContextMenuItems(System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem, System::Windows::Forms::ContextMenuStrip^ ContextMenuStrip);
+            void UninitContextMenuItems(System::Windows::Forms::ContextMenuStrip^ ContextMenuStrip);
+
         public:
             // IProcessMessage overrides
             virtual void ProcessKeyDown(System::Windows::Forms::Control^ control, System::Int32 nVirtKey, System::Int32 nData);
 			virtual void ProcessKeyUp(System::Windows::Forms::Control^ control, System::Int32 nVirtKey, System::Int32 nData);
 			virtual void ProcessMouseMove(System::Windows::Forms::Control^ control, System::Int32 nXPos, System::Int32 nYPos);
 
+        public:
+            //IUpdateToolStripItems overrides
+            virtual void UpdateToolStripItems(Common::Forms::ToolStripMenuItem^ ToolStripMenuItem);
+
 		protected:
 			// Form overrides
 			virtual void OnLoad(System::EventArgs^ e) override;
 
         private:
+            void RefreshMenuHelp(System::Windows::Forms::Control^ parentControl);
             void CreateMenuStatusStrip();
             void DestroyMenuStatusStrip();
 			void ShowStatusLabelHelp(System::Windows::Forms::ToolStripItem^ ToolStripItem);
-            System::Windows::Forms::StatusStrip^ FindStatusStrip();
 
-			void EnumMenuStrip(System::Windows::Forms::MenuStrip^ MenuStrip);
+            void EnumMenuStrip(System::Windows::Forms::MenuStrip^ MenuStrip);
 			void EnumContextMenuStrip(System::Windows::Forms::ContextMenuStrip^ ContextMenuStrip);
 			void EnumToolStripDropDownItem(System::Windows::Forms::ToolStripDropDownItem^ ToolStripDropDownItem);
+            void EnumToolStripContainer(System::Windows::Forms::ToolStripContainer^ ToolStripContainer);
 
 			void ClearMenus();
 
@@ -114,10 +127,13 @@ namespace Common
 			System::Windows::Forms::Timer^ m_Timer;
 
 			System::Drawing::Point^ m_LastMousePoint;
-		};
+
+            System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Windows::Forms::ToolStripItem^>^ m_ToolStripItemDict;
+            System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Windows::Forms::ToolStripItem^>^ m_ContextMenuToolStripItemDict;
+        };
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2022 Kevin Eshbach
+//  Copyright (C) 2006-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

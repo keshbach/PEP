@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2022 Kevin Eshbach
+//  Copyright (C) 2006-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -7,8 +7,6 @@
 #include "MainForm.h"
 
 #include "Application.h"
-
-#include "ToolStripMenuItem.h"
 
 #include "Includes/UtTemplates.h"
 
@@ -69,6 +67,255 @@ static BOOL lDestroyTaskbarList3(
 
 #pragma managed
 
+static System::Windows::Forms::StatusStrip^ lFindStatusStrip(
+  System::Windows::Forms::Control^ ParentControl)
+{
+	System::Windows::Forms::StatusStrip^ StatusStrip;
+	System::Windows::Forms::ToolStripContainer^ ToolStripContainer;
+
+	for each(System::Windows::Forms::Control^ control in ParentControl->Controls)
+	{
+		if (IsInstance<System::Windows::Forms::StatusStrip^>(control))
+		{
+			return dynamic_cast<System::Windows::Forms::StatusStrip^>(control);
+		}
+		else if (IsInstance<System::Windows::Forms::ToolStripContainer^>(control))
+		{
+			ToolStripContainer = (System::Windows::Forms::ToolStripContainer^)control;
+
+			StatusStrip = lFindStatusStrip(ToolStripContainer);
+
+			if (StatusStrip != nullptr)
+			{
+				return StatusStrip;
+			}
+		}
+		else
+		{
+			StatusStrip = lFindStatusStrip(control);
+
+			if (StatusStrip != nullptr)
+			{
+				return StatusStrip;
+			}
+		}
+	}
+	
+	return nullptr;
+}
+
+static System::String^ lTranslateKey(
+	System::Windows::Forms::Keys Keys)
+{
+	System::Int32 nKey = (System::Int32)Keys;
+
+	nKey &= ~(System::Int32)System::Windows::Forms::Keys::Control;
+	nKey &= ~(System::Int32)System::Windows::Forms::Keys::Alt;
+	nKey &= ~(System::Int32)System::Windows::Forms::Keys::Shift;
+
+	if (nKey >= L'A' && nKey <= L'Z')
+	{
+		return ((System::Windows::Forms::Keys)nKey).ToString();
+	}
+
+	switch ((System::Windows::Forms::Keys)nKey)
+	{
+		case System::Windows::Forms::Keys::Delete:
+			return L"Del";
+	}
+
+	return ((System::Windows::Forms::Keys)nKey).ToString();
+}
+
+static System::String^ lGenerateToolTipText(
+  System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem)
+{
+	System::Text::StringBuilder^ sb = gcnew System::Text::StringBuilder();
+	System::Int32 nIndex = 0;
+
+	while (nIndex < ToolStripMenuItem->Text->Length)
+	{
+		if (ToolStripMenuItem->Text[nIndex] != L'&')
+		{
+			sb->Append(ToolStripMenuItem->Text[nIndex]);
+
+			++nIndex;
+		}
+		else
+		{
+			if (nIndex + 1 < ToolStripMenuItem->Text->Length)
+			{
+				if (ToolStripMenuItem->Text[nIndex + 1] != L'&')
+				{
+					++nIndex;
+				}
+				else
+				{
+					sb->Append(ToolStripMenuItem->Text[nIndex]);
+
+					nIndex += 2;
+				}
+			}
+			else
+			{
+				sb->Append(ToolStripMenuItem->Text[nIndex]);
+
+				++nIndex;
+			}
+		}
+	}
+
+	if (ToolStripMenuItem->ShowShortcutKeys)
+	{
+		if (ToolStripMenuItem->ShortcutKeys != System::Windows::Forms::Keys::None)
+		{
+			sb->Append(L" (");
+
+			if ((System::Int32)ToolStripMenuItem->ShortcutKeys & (System::Int32)System::Windows::Forms::Keys::Control)
+			{
+				sb->Append(L"Ctrl+");
+			}
+
+			if ((System::Int32)ToolStripMenuItem->ShortcutKeys & (System::Int32)System::Windows::Forms::Keys::Shift)
+			{
+				sb->Append(L"Shift+");
+			}
+
+			if ((System::Int32)ToolStripMenuItem->ShortcutKeys & (System::Int32)System::Windows::Forms::Keys::Alt)
+			{
+				sb->Append(L"Alt+");
+			}
+
+			sb->Append(lTranslateKey(ToolStripMenuItem->ShortcutKeys));
+			sb->Append(L")");
+		}
+		else if (!System::String::IsNullOrEmpty(ToolStripMenuItem->ShortcutKeyDisplayString))
+		{
+			sb->Append(L" (");
+			sb->Append(ToolStripMenuItem->ShortcutKeyDisplayString);
+			sb->Append(L")");
+		}
+	}
+
+	return sb->ToString();
+}
+
+static void lRemoveExtraneousSeparators(
+  System::Windows::Forms::ToolStrip^ ToolStrip)
+{
+	System::Boolean bQuit = false;
+	System::Int32 nIndex = 1;
+
+	// Delete beginning separators
+
+	while (ToolStrip->Items->Count > 0 && !bQuit)
+	{
+		if (IsInstance<System::Windows::Forms::ToolStripSeparator^>(ToolStrip->Items[0]))
+		{
+			ToolStrip->Items->RemoveAt(0);
+		}
+		else
+		{
+			bQuit = true;
+		}
+	}
+
+	// Delete ending separators
+
+	bQuit = false;
+
+	while (ToolStrip->Items->Count > 0 && !bQuit)
+	{
+		if (IsInstance<System::Windows::Forms::ToolStripSeparator^>(ToolStrip->Items[ToolStrip->Items->Count - 1]))
+		{
+			ToolStrip->Items->RemoveAt(ToolStrip->Items->Count - 1);
+		}
+		else
+		{
+			bQuit = true;
+		}
+	}
+
+	// Delete duplicate separators
+
+	while (nIndex < ToolStrip->Items->Count)
+	{
+		if (IsInstance<System::Windows::Forms::ToolStripSeparator^>(ToolStrip->Items[nIndex]))
+		{
+			if (nIndex + 1 < ToolStrip->Items->Count)
+			{
+				if (IsInstance<System::Windows::Forms::ToolStripSeparator^>(ToolStrip->Items[nIndex + 1]))
+				{
+					ToolStrip->Items->RemoveAt(nIndex);
+
+					++nIndex;
+				}
+				else
+				{
+					++nIndex;
+				}
+			}
+			else
+			{
+				++nIndex;
+			}
+		}
+		else
+		{
+			++nIndex;
+		}
+	}
+}
+
+static System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Windows::Forms::ToolStripItem^>^ lRemoveToolStripItemFromToolStripItemDict(
+  System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Windows::Forms::ToolStripItem^>^ ToolStripItemDict,
+  System::Collections::Generic::List<System::Windows::Forms::ToolStripItem^>^ ToolStripItemList)
+{
+	System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Windows::Forms::ToolStripItem^>^ UpdatedToolStripItemDict = gcnew System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Windows::Forms::ToolStripItem^>();
+	System::Collections::IDictionaryEnumerator^ Enumerator = ToolStripItemDict->GetEnumerator();
+
+	while (Enumerator->MoveNext())
+	{
+		if (!ToolStripItemList->Contains((System::Windows::Forms::ToolStripItem^)Enumerator->Value))
+		{
+			UpdatedToolStripItemDict->Add((System::Windows::Forms::ToolStripItem^)Enumerator->Key,
+                                          (System::Windows::Forms::ToolStripItem^)Enumerator->Value);
+		}
+	}
+
+	return UpdatedToolStripItemDict;
+}
+
+static System::Reflection::FieldInfo^ lGetEventsField()
+{
+	System::Type^ ComponentType = System::ComponentModel::Component::typeid;
+
+	return ComponentType->GetField("events",
+                                   System::Reflection::BindingFlags::NonPublic |
+                                   System::Reflection::BindingFlags::Instance |
+                                   System::Reflection::BindingFlags::GetField);
+}
+
+static void lCopyEventHandlers(
+  System::Windows::Forms::ToolStripItem^ SourceToolStripItem,
+  System::Windows::Forms::ToolStripItem^ DestToolStripItem)
+{
+	System::Reflection::FieldInfo^ FieldInfo = lGetEventsField();
+	System::ComponentModel::EventHandlerList^ EventHandlerList;
+
+	EventHandlerList = (System::ComponentModel::EventHandlerList^)FieldInfo->GetValue(SourceToolStripItem);
+
+	FieldInfo->SetValue(DestToolStripItem, EventHandlerList);
+}
+
+static void lClearEventHandlers(
+  System::Windows::Forms::ToolStripItem^ ToolStripItem)
+{
+	System::Reflection::FieldInfo^ FieldInfo = lGetEventsField();
+
+	FieldInfo->SetValue(ToolStripItem, nullptr);
+}
+
 #pragma endregion
 
 #pragma region "Constructor"
@@ -93,6 +340,9 @@ Common::Forms::MainForm::MainForm()
 	m_nMenuOpenedCount = 0;
 
 	m_LastMousePoint = gcnew System::Drawing::Point();
+
+	m_ToolStripItemDict = gcnew System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Windows::Forms::ToolStripItem^>();
+	m_ContextMenuToolStripItemDict = gcnew System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Windows::Forms::ToolStripItem^>();
 
 	m_Timer = gcnew System::Windows::Forms::Timer;
 
@@ -181,34 +431,9 @@ System::Boolean Common::Forms::MainForm::EndTaskbarListProgressBar()
 
 void Common::Forms::MainForm::RefreshMenuHelp()
 {
-	System::Windows::Forms::MenuStrip^ MenuStrip;
-	System::Windows::Forms::TextBox^ TextBox;
-
 	ClearMenus();
 
-	for each (System::Windows::Forms::Control^ control in this->Controls)
-	{
-		if (IsInstance<System::Windows::Forms::MenuStrip^>(control))
-		{
-			MenuStrip = (System::Windows::Forms::MenuStrip^)control;
-
-			EnumMenuStrip(MenuStrip);
-		}
-		else if (IsInstance<System::Windows::Forms::TextBox^>(control))
-		{
-			TextBox = (System::Windows::Forms::TextBox^)control;
-
-			if (TextBox->ContextMenuStrip != nullptr)
-			{
-				TextBox->ContextMenuStrip->Opened += gcnew System::EventHandler(this, &Common::Forms::MainForm::ContextMenuOpened);
-				TextBox->ContextMenuStrip->Closed += gcnew System::Windows::Forms::ToolStripDropDownClosedEventHandler(this, &Common::Forms::MainForm::ContextMenuClosed);
-
-				m_ContextMenuStripList->Add(TextBox->ContextMenuStrip);
-
-				EnumContextMenuStrip(TextBox->ContextMenuStrip);
-			}
-		}
-	}
+	RefreshMenuHelp(this);
 }
 
 void Common::Forms::MainForm::RunOnUIThreadWait(
@@ -221,6 +446,151 @@ void Common::Forms::MainForm::RunOnUIThreadNoWait(
 	System::Action^ Action)
 {
 	this->BeginInvoke(Action);
+}
+
+void Common::Forms::MainForm::InitToolStripItems(
+  System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem,
+  System::Windows::Forms::ToolStrip^ ToolStrip)
+{
+	System::Windows::Forms::ToolStripButton^ ToolStripButton;
+	System::Windows::Forms::ToolStripSeparator^ ToolStripSeparator;
+
+	//Common::Debug::Thread::IsUIThread();
+
+	for each (System::Windows::Forms::ToolStripItem^ ToolStripItem in ToolStripMenuItem->DropDownItems)
+	{
+		if (IsInstance<System::Windows::Forms::ToolStripMenuItem^>(ToolStripItem))
+		{
+			if (!System::String::IsNullOrEmpty(ToolStripItem->ImageKey))
+			{
+				ToolStripMenuItem = (System::Windows::Forms::ToolStripMenuItem^)ToolStripItem;
+
+				ToolStripButton = gcnew System::Windows::Forms::ToolStripButton();
+
+				ToolStripButton->Name = ToolStripItem->Name->Replace("menuItem", "toolStripButton");
+				ToolStripButton->ImageKey = ToolStripItem->ImageKey;
+				ToolStripButton->Enabled = ToolStripItem->Enabled;
+				ToolStripButton->ToolTipText = lGenerateToolTipText(ToolStripMenuItem);
+
+				lCopyEventHandlers(ToolStripItem, ToolStripButton);
+
+				ToolStrip->Items->Add(ToolStripButton);
+
+				m_ToolStripItemDict->Add(ToolStripItem, ToolStripButton);
+			}
+		}
+		else if (IsInstance<System::Windows::Forms::ToolStripSeparator^>(ToolStripItem))
+		{
+			ToolStripSeparator = gcnew System::Windows::Forms::ToolStripSeparator();
+
+			ToolStripSeparator->Name = ToolStripItem->Name;
+
+			ToolStrip->Items->Add(ToolStripSeparator);
+		}
+		else
+		{
+			System::Diagnostics::Debug::Assert(false, "Unsupported ToolStripItem");
+		}
+	}
+
+	lRemoveExtraneousSeparators(ToolStrip);
+}
+
+void Common::Forms::MainForm::UninitToolStripItems(
+  System::Windows::Forms::ToolStrip^ ToolStrip)
+{
+	System::Collections::Generic::List<System::Windows::Forms::ToolStripItem^>^ ToolStripItemList = gcnew System::Collections::Generic::List<System::Windows::Forms::ToolStripItem^>();
+	System::Windows::Forms::ToolStripButton^ ToolStripButton;
+
+	//Common::Debug::Thread::IsUIThread();
+
+	for each(System::Windows::Forms::ToolStripItem^ ToolStripItem in ToolStrip->Items)
+	{
+		if (IsInstance<System::Windows::Forms::ToolStripButton^>(ToolStripItem))
+		{
+			ToolStripButton = (System::Windows::Forms::ToolStripButton^)ToolStripItem;
+
+			lClearEventHandlers(ToolStripItem);
+
+			ToolStripItemList->Add(ToolStripButton);
+		}
+	}
+
+	m_ToolStripItemDict = lRemoveToolStripItemFromToolStripItemDict(m_ToolStripItemDict,
+                                                                    ToolStripItemList);
+
+	ToolStrip->Items->Clear();
+}
+
+void Common::Forms::MainForm::InitContextMenuItems(
+  System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem,
+  System::Windows::Forms::ContextMenuStrip^ ContextMenuStrip)
+{
+	Common::Forms::ToolStripMenuItem^ ContextToolStripMenuItem;
+	System::Windows::Forms::ToolStripSeparator^ ToolStripSeparator;
+
+	//Common::Debug::Thread::IsUIThread();
+
+	for each (System::Windows::Forms::ToolStripItem^ ToolStripItem in ToolStripMenuItem->DropDownItems)
+	{
+		if (IsInstance<Common::Forms::ToolStripMenuItem^>(ToolStripItem))
+		{
+			ContextToolStripMenuItem = gcnew Common::Forms::ToolStripMenuItem();
+
+			ContextToolStripMenuItem->Name = ToolStripItem->Name->Replace("menuItem", "contextMenuItem");
+			ContextToolStripMenuItem->Text = ToolStripItem->Text;
+			ContextToolStripMenuItem->ImageKey = ToolStripItem->ImageKey;
+			ContextToolStripMenuItem->Enabled = ToolStripItem->Enabled;
+			ContextToolStripMenuItem->HelpText = ((Common::Forms::ToolStripMenuItem^)ToolStripItem)->HelpText;
+
+			lCopyEventHandlers(ToolStripItem, ContextToolStripMenuItem);
+
+			ContextMenuStrip->Items->Add(ContextToolStripMenuItem);
+
+			m_ContextMenuToolStripItemDict->Add(ToolStripItem,
+				                                ContextToolStripMenuItem);
+		}
+		else if (IsInstance<System::Windows::Forms::ToolStripSeparator^>(ToolStripItem))
+		{
+			ToolStripSeparator = gcnew System::Windows::Forms::ToolStripSeparator();
+
+			ToolStripSeparator->Name = ToolStripItem->Name;
+
+			ContextMenuStrip->Items->Add(ToolStripSeparator);
+		}
+		else
+		{
+			System::Diagnostics::Debug::Assert(false, "Unsupported ToolStripItem");
+		}
+	}
+
+	lRemoveExtraneousSeparators(ContextMenuStrip);
+}
+
+void Common::Forms::MainForm::UninitContextMenuItems(
+  System::Windows::Forms::ContextMenuStrip^ ContextMenuStrip)
+{
+	System::Collections::Generic::List<System::Windows::Forms::ToolStripItem^>^ ToolStripItemList = gcnew System::Collections::Generic::List<System::Windows::Forms::ToolStripItem^>();
+	Common::Forms::ToolStripMenuItem^ ContextToolStripMenuItem;
+
+	//Common::Debug::Thread::IsUIThread();
+
+	for each(System::Windows::Forms::ToolStripItem^ ToolStripItem in ContextMenuStrip->Items)
+	{
+		if (IsInstance<Common::Forms::ToolStripMenuItem^>(ToolStripItem))
+		{
+			ContextToolStripMenuItem = (Common::Forms::ToolStripMenuItem^)ToolStripItem;
+
+			lClearEventHandlers(ToolStripItem);
+
+			ToolStripItemList->Add(ContextToolStripMenuItem);
+		}
+	}
+
+	m_ToolStripItemDict = lRemoveToolStripItemFromToolStripItemDict(m_ContextMenuToolStripItemDict,
+                                                                    ToolStripItemList);
+
+	ContextMenuStrip->Items->Clear();
 }
 
 #pragma region "IProcessMessage"
@@ -311,6 +681,30 @@ void Common::Forms::MainForm::ProcessMouseMove(
 
 #pragma endregion
 
+#pragma region "IUpdateToolStripItems"
+
+void Common::Forms::MainForm::UpdateToolStripItems(
+	Common::Forms::ToolStripMenuItem^ ToolStripMenuItem)
+{
+	System::Windows::Forms::ToolStripItem^ ToolStripItem;
+
+	if (m_ToolStripItemDict->ContainsKey(ToolStripMenuItem))
+	{
+		ToolStripItem = m_ToolStripItemDict[ToolStripMenuItem];
+
+		ToolStripItem->Enabled = ToolStripMenuItem->Enabled;
+	}
+
+	if (m_ContextMenuToolStripItemDict->ContainsKey(ToolStripMenuItem))
+	{
+		ToolStripItem = m_ContextMenuToolStripItemDict[ToolStripMenuItem];
+
+		ToolStripItem->Enabled = ToolStripMenuItem->Enabled;
+	}
+}
+
+#pragma endregion
+
 #pragma region "Form Overrides"
 
 void Common::Forms::MainForm::OnLoad(
@@ -325,13 +719,50 @@ void Common::Forms::MainForm::OnLoad(
 
 #pragma region "Internal Helpers"
 
+void Common::Forms::MainForm::RefreshMenuHelp(
+  System::Windows::Forms::Control^ parentControl)
+{
+	System::Windows::Forms::MenuStrip^ MenuStrip;
+	System::Windows::Forms::TextBox^ TextBox;
+	System::Windows::Forms::ToolStripContainer^ ToolStripContainer;
+
+	for each (System::Windows::Forms::Control^ control in parentControl->Controls)
+	{
+		if (IsInstance<System::Windows::Forms::MenuStrip^>(control))
+		{
+			MenuStrip = (System::Windows::Forms::MenuStrip^)control;
+
+			EnumMenuStrip(MenuStrip);
+		}
+		else if (IsInstance<System::Windows::Forms::TextBox^>(control))
+		{
+			TextBox = (System::Windows::Forms::TextBox^)control;
+
+			if (TextBox->ContextMenuStrip != nullptr)
+			{
+				TextBox->ContextMenuStrip->Opened += gcnew System::EventHandler(this, &Common::Forms::MainForm::ContextMenuOpened);
+				TextBox->ContextMenuStrip->Closed += gcnew System::Windows::Forms::ToolStripDropDownClosedEventHandler(this, &Common::Forms::MainForm::ContextMenuClosed);
+
+				m_ContextMenuStripList->Add(TextBox->ContextMenuStrip);
+
+				EnumContextMenuStrip(TextBox->ContextMenuStrip);
+			}
+		}
+		else if (IsInstance<System::Windows::Forms::ToolStripContainer^>(control)) {
+			ToolStripContainer = (System::Windows::Forms::ToolStripContainer^)control;
+
+			EnumToolStripContainer(ToolStripContainer);
+		}
+	}
+}
+
 void Common::Forms::MainForm::CreateMenuStatusStrip()
 {
     if (m_bFindStatusStrip)
     {
         m_bFindStatusStrip = false;
 
-        m_StatusStrip = FindStatusStrip();
+        m_StatusStrip = lFindStatusStrip(this);
     }
 
     if (m_StatusStrip == nullptr || m_ToolStripStatusLabelHelp != nullptr)
@@ -408,19 +839,6 @@ void Common::Forms::MainForm::ShowStatusLabelHelp(
     m_ToolStripStatusLabelHelp->Text = HelpText;
 }
 
-System::Windows::Forms::StatusStrip^ Common::Forms::MainForm::FindStatusStrip()
-{
-    for each (System::Windows::Forms::Control^ control in this->Controls)
-    {
-        if (IsInstance<System::Windows::Forms::StatusStrip^>(control))
-        {
-            return dynamic_cast<System::Windows::Forms::StatusStrip^>(control);
-        }
-    }
-
-    return nullptr;
-}
-
 void Common::Forms::MainForm::EnumMenuStrip(
   System::Windows::Forms::MenuStrip^ MenuStrip)
 {
@@ -487,6 +905,15 @@ void Common::Forms::MainForm::EnumToolStripDropDownItem(
 				EnumToolStripDropDownItem(ChildToolStripDropDownItem);
 			}
 		}
+	}
+}
+
+void Common::Forms::MainForm::EnumToolStripContainer(
+  System::Windows::Forms::ToolStripContainer^ ToolStripContainer)
+{
+	for each(System::Windows::Forms::Control^ Control in ToolStripContainer->Controls)
+	{
+		RefreshMenuHelp(Control);
 	}
 }
 
@@ -628,5 +1055,5 @@ void Common::Forms::MainForm::TimerTick(
 #pragma endregion
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2006-2022 Kevin Eshbach
+//  Copyright (C) 2006-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

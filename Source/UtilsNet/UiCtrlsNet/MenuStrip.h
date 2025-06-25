@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2009-2018 Kevin Eshbach
+//  Copyright (C) 2009-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -14,28 +14,6 @@ namespace Common
 
         public ref class MenuStrip : System::Windows::Forms::MenuStrip
         {
-        public:
-            /// <summary>
-            /// Gets or sets the image list that contains the image displayed on a System.Windows.Forms.ToolStrip
-            /// item and updates any children with the image list during a set.
-            /// </summary>
-
-            [System::ComponentModel::BrowsableAttribute(false)]
-            property System::Windows::Forms::ImageList^ ImageList
-            {
-                System::Windows::Forms::ImageList^ get() new
-                {
-                    return System::Windows::Forms::MenuStrip::ImageList;
-                }
-
-                void set(System::Windows::Forms::ImageList^ value) new
-                {
-                    System::Windows::Forms::MenuStrip::ImageList = value;
-
-                    UpdateToolStripItemsImageList(value, this->Items);
-                }
-            }
-
         public:
             MenuStrip();
 
@@ -56,6 +34,13 @@ namespace Common
             /// </summary>
 
             void DisableAllItems(array<System::Windows::Forms::ToolStripItem^>^ ExcludedItemsArray);
+
+            /// <summary>
+            /// Refresh the ImageList of all the ToolStripItem children from the
+            /// MenuStrip's ImageLIst.
+            /// </summary>
+
+            void RefreshToolStripItemsImageList();
 
         protected:
             /// <summary>
@@ -99,5 +84,5 @@ namespace Common
 }
 
 /////////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2009-2018 Kevin Eshbach
+//  Copyright (C) 2009-2025 Kevin Eshbach
 /////////////////////////////////////////////////////////////////////////////

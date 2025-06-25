@@ -280,6 +280,8 @@
     <ClCompile Include="TemplateInstantiator.cpp" />
     <ClCompile Include="ListViewComboBoxEditEventArgs.cpp" />
     <ClCompile Include="MaskedTextBox.cpp" />
+    <ClCompile Include="TextBoxMessages.cpp" />
+    <ClCompile Include="TextBoxMessagesTextSelectedEventArgs.cpp" />
     <ClCompile Include="TextBoxTimer.cpp" />
     <ClCompile Include="ToolStrip.cpp" />
     <ClCompile Include="TreeNodeAscendingSorter.cpp" />
@@ -334,6 +336,8 @@
     <ClInclude Include="ITextBoxKeyPress.h" />
     <ClInclude Include="ListViewLabelEditPasteEventArgs.h" />
     <ClInclude Include="NativeEdit.h" />
+    <ClInclude Include="TextBoxMessages.h" />
+    <ClInclude Include="TextBoxMessagesTextSelectedEventArgs.h" />
     <ClInclude Include="ToolStripItemGroupImpl.h" />
     <ClInclude Include="ListViewComboBoxEditEventArgs.h" />
     <ClInclude Include="MaskedTextBox.h" />
