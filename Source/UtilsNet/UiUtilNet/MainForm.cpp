@@ -8,7 +8,28 @@
 
 #include "Application.h"
 
+#include "ToolStripComparer.h"
+
 #include "Includes/UtTemplates.h"
+
+#pragma region "Constants"
+
+#define CLeftToolStripPanel L"LeftToolStripPanel"
+#define CTopToolStripPanel L"TopToolStripPanel"
+#define CRightToolStripPanel L"RightToolStripPanel"
+#define CBottomToolStripPanel L"BottomToolStripPanel"
+
+#define CToolStripCount L"ToolStripCount"
+
+#pragma endregion
+
+#pragma region "Macros"
+
+#define MToolStripRegistryName(index) System::String::Format(L"Name{0}", index)
+#define MToolStripRegistryX(index) System::String::Format(L"X{0}", index)
+#define MToolStripRegistryY(index) System::String::Format(L"Y{0}", index)
+
+#pragma endregion
 
 #pragma region "Local Functions"
 
@@ -67,6 +88,50 @@ static BOOL lDestroyTaskbarList3(
 
 #pragma managed
 
+static System::Boolean lIsControlPresent(
+  array<System::Windows::Forms::Control^>^ Controls,
+  System::Windows::Forms::Control^ Control)
+{
+	for each (System::Windows::Forms::Control^ TempControl in Controls)
+	{
+		if (TempControl == Control)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static System::Windows::Forms::ToolStripContainer^ lFindToolStripContainer(
+  System::Windows::Forms::Control^ ParentControl)
+{
+	for each (System::Windows::Forms::Control^ Control in ParentControl->Controls)
+	{
+		if (Control->GetType() == System::Windows::Forms::ToolStripContainer::typeid)
+		{
+			return (System::Windows::Forms::ToolStripContainer^)Control;
+		}
+	}
+
+	return nullptr;
+}
+
+static System::Windows::Forms::ToolStrip^ lFindToolStripByName(
+  System::Collections::Generic::List<System::Windows::Forms::ToolStrip^>^ ToolStripList,
+  System::String^ sName)
+{
+	for each (System::Windows::Forms::ToolStrip^ ToolStrip in ToolStripList)
+	{
+		if (ToolStrip->Name->Equals(sName))
+		{
+			return ToolStrip;
+		}
+	}
+
+	return nullptr;
+}
+
 static System::Windows::Forms::StatusStrip^ lFindStatusStrip(
   System::Windows::Forms::Control^ ParentControl)
 {
@@ -105,7 +170,7 @@ static System::Windows::Forms::StatusStrip^ lFindStatusStrip(
 }
 
 static System::String^ lTranslateKey(
-	System::Windows::Forms::Keys Keys)
+  System::Windows::Forms::Keys Keys)
 {
 	System::Int32 nKey = (System::Int32)Keys;
 
@@ -314,6 +379,133 @@ static void lClearEventHandlers(
 	System::Reflection::FieldInfo^ FieldInfo = lGetEventsField();
 
 	FieldInfo->SetValue(ToolStripItem, nullptr);
+}
+
+static System::Collections::Generic::Dictionary<System::String^, System::Windows::Forms::ToolStripPanel^>^ lCreateToolStripPanelDict(
+  System::Windows::Forms::ToolStripContainer^ ToolStripContainer)
+{
+	System::Collections::Generic::Dictionary<System::String^, System::Windows::Forms::ToolStripPanel^>^ ToolStripPanelDict = gcnew System::Collections::Generic::Dictionary<System::String^, System::Windows::Forms::ToolStripPanel^>();
+
+	ToolStripPanelDict->Add(CLeftToolStripPanel, ToolStripContainer->LeftToolStripPanel);
+	ToolStripPanelDict->Add(CTopToolStripPanel, ToolStripContainer->TopToolStripPanel);
+	ToolStripPanelDict->Add(CRightToolStripPanel, ToolStripContainer->RightToolStripPanel);
+	ToolStripPanelDict->Add(CBottomToolStripPanel, ToolStripContainer->BottomToolStripPanel);
+
+	return ToolStripPanelDict;
+}
+
+static void lForceToolStripsIntoSingleRow(
+  System::Windows::Forms::ToolStripPanel^ ToolStripPanel)
+{
+	System::Collections::Generic::List<System::Windows::Forms::ToolStrip^>^ ToolStripList = gcnew System::Collections::Generic::List<System::Windows::Forms::ToolStrip^>();
+	System::Int32 nRow = System::Int32::MaxValue;
+
+	for each (System::Windows::Forms::Control^ Control in ToolStripPanel->Controls)
+	{
+		if (Control->GetType() == System::Windows::Forms::ToolStrip::typeid)
+		{
+			ToolStripList->Add((System::Windows::Forms::ToolStrip^)Control);
+		}
+	}
+
+	ToolStripList->Sort(gcnew Common::Forms::ToolStripComparer());
+
+	for each (System::Windows::Forms::ToolStrip^ ToolStrip in ToolStripList)
+	{
+		for (System::Int32 nIndex = 0; nIndex < ToolStripPanel->Rows->Length; ++nIndex)
+		{
+			if (lIsControlPresent(ToolStripPanel->Rows[nIndex]->Controls, ToolStrip))
+			{
+				if (nIndex < nRow)
+				{
+					nRow = nIndex;
+
+					break;
+				}
+			}
+		}
+
+		ToolStripPanel->Controls->Remove(ToolStrip);
+	}
+
+	for (System::Int32 nIndex = ToolStripList->Count - 1; nIndex >= 0; --nIndex)
+	{
+		ToolStripPanel->Join(ToolStripList[nIndex], nRow);
+	}
+}
+
+static void lSaveToolStripPanel(
+  Microsoft::Win32::RegistryKey^ RegKey,
+  System::Windows::Forms::ToolStripPanel^ ToolStripPanel)
+{
+	System::Int32 nControlIndex = 0;
+
+	for each (System::Windows::Forms::ToolStripPanelRow^ ToolStripPanelRow in ToolStripPanel->Rows)
+	{
+		for each (System::Windows::Forms::Control^ Control in ToolStripPanelRow->Controls)
+		{
+			try
+			{
+				RegKey->SetValue(MToolStripRegistryName(nControlIndex), Control->Name);
+				RegKey->SetValue(MToolStripRegistryX(nControlIndex), Control->Bounds.X);
+				RegKey->SetValue(MToolStripRegistryY(nControlIndex), Control->Bounds.Y);
+
+				++nControlIndex;
+			}
+			catch (System::Exception^)
+			{
+			}
+		}
+	}
+
+	RegKey->SetValue(CToolStripCount, nControlIndex);
+}
+
+static void lRestoreToolStripPanel(
+  Microsoft::Win32::RegistryKey^ RegKey,
+  System::Collections::Generic::List<System::Windows::Forms::ToolStrip^>^ ToolStripList,
+  System::Windows::Forms::ToolStripPanel^ ToolStripPanel)
+{
+	System::Int32 nTotalControls;
+	System::String^ sName;
+	System::Int32 nX, nY;
+	System::Windows::Forms::ToolStrip^ ToolStrip;
+
+	try
+	{
+		nTotalControls = (System::Int32)RegKey->GetValue(CToolStripCount);
+	}
+	catch (System::Exception^)
+	{
+		nTotalControls = 0;
+	}
+
+	for (System::Int32 nIndex = 0; nIndex < nTotalControls; ++nIndex)
+	{
+		sName = nullptr;
+
+		try
+		{
+			nX = (System::Int32)RegKey->GetValue(MToolStripRegistryX(nIndex));
+			nY = (System::Int32)RegKey->GetValue(MToolStripRegistryY(nIndex));
+			sName = (System::String^)RegKey->GetValue(MToolStripRegistryName(nIndex));
+		}
+		catch (System::Exception^)
+		{
+		}
+
+		if (sName != nullptr)
+		{
+			ToolStrip = lFindToolStripByName(ToolStripList, sName);
+
+			if (ToolStrip != nullptr)
+			{
+				ToolStripList->Remove(ToolStrip);
+
+				ToolStripPanel->Join(ToolStrip, nX, nY);
+			}
+		}
+	}
 }
 
 #pragma endregion
@@ -593,6 +785,23 @@ void Common::Forms::MainForm::UninitContextMenuItems(
 	ContextMenuStrip->Items->Clear();
 }
 
+System::Boolean Common::Forms::MainForm::ForceToolStripsIntoSingleRow()
+{
+	System::Windows::Forms::ToolStripContainer^ ToolStripContainer = lFindToolStripContainer(this);
+
+	if (ToolStripContainer == nullptr)
+	{
+		return false;
+	}
+
+	lForceToolStripsIntoSingleRow(ToolStripContainer->LeftToolStripPanel);
+	lForceToolStripsIntoSingleRow(ToolStripContainer->TopToolStripPanel);
+	lForceToolStripsIntoSingleRow(ToolStripContainer->RightToolStripPanel);
+	lForceToolStripsIntoSingleRow(ToolStripContainer->BottomToolStripPanel);
+
+	return true;
+}
+
 #pragma region "IProcessMessage"
 
 void Common::Forms::MainForm::ProcessKeyDown(
@@ -684,7 +893,7 @@ void Common::Forms::MainForm::ProcessMouseMove(
 #pragma region "IUpdateToolStripItems"
 
 void Common::Forms::MainForm::UpdateToolStripItems(
-	Common::Forms::ToolStripMenuItem^ ToolStripMenuItem)
+  Common::Forms::ToolStripMenuItem^ ToolStripMenuItem)
 {
 	System::Windows::Forms::ToolStripItem^ ToolStripItem;
 
@@ -700,6 +909,114 @@ void Common::Forms::MainForm::UpdateToolStripItems(
 		ToolStripItem = m_ContextMenuToolStripItemDict[ToolStripMenuItem];
 
 		ToolStripItem->Enabled = ToolStripMenuItem->Enabled;
+	}
+}
+
+#pragma endregion
+
+#pragma region "IUpdateToolStripItems"
+
+void Common::Forms::MainForm::OnFormLocationSaved(
+  Microsoft::Win32::RegistryKey^ RegKey)
+{
+	System::Windows::Forms::ToolStripContainer^ ToolStripContainer = lFindToolStripContainer(this);
+	System::Collections::Generic::Dictionary<System::String^, System::Windows::Forms::ToolStripPanel^>^ ToolStripPanelDict;
+	Microsoft::Win32::RegistryKey^ TempRegKey;
+	System::Collections::Generic::IEnumerator<System::Collections::Generic::KeyValuePair<System::String^, System::Windows::Forms::ToolStripPanel^>>^ Enumerator;
+
+	if (ToolStripContainer != nullptr)
+	{
+		ToolStripPanelDict = lCreateToolStripPanelDict(ToolStripContainer);
+
+		Enumerator = ToolStripPanelDict->GetEnumerator();
+
+		while (Enumerator->MoveNext())
+		{
+			TempRegKey = nullptr;
+
+			try
+			{
+				TempRegKey = RegKey->CreateSubKey(Enumerator->Current.Key, true);
+			}
+			catch (System::Exception^)
+			{
+			}
+
+			if (TempRegKey != nullptr)
+			{
+				lSaveToolStripPanel(TempRegKey, Enumerator->Current.Value);
+
+				TempRegKey->Close();
+			}
+		}
+	}
+}
+
+void Common::Forms::MainForm::OnFormLocationRestored(
+  Microsoft::Win32::RegistryKey^ RegKey)
+{
+	System::Windows::Forms::ToolStripContainer^ ToolStripContainer = lFindToolStripContainer(this);
+	System::Collections::Generic::List<System::Windows::Forms::ToolStrip^>^ ToolStripList;
+	System::Collections::Generic::Dictionary<System::String^, System::Windows::Forms::ToolStripPanel^>^ ToolStripPanelDict;
+	Microsoft::Win32::RegistryKey^ TempRegKey;
+	System::Collections::Generic::IEnumerator<System::Collections::Generic::KeyValuePair<System::String^, System::Windows::Forms::ToolStripPanel^>>^ Enumerator;
+
+	if (ToolStripContainer != nullptr)
+	{
+		ToolStripPanelDict = lCreateToolStripPanelDict(ToolStripContainer);
+		ToolStripList = gcnew System::Collections::Generic::List<System::Windows::Forms::ToolStrip^>();
+
+		Enumerator = ToolStripPanelDict->GetEnumerator();
+
+		while (Enumerator->MoveNext())
+		{
+			TempRegKey = nullptr;
+
+			try
+			{
+				TempRegKey = RegKey->OpenSubKey(Enumerator->Current.Key, false);
+			}
+			catch (System::Exception^)
+			{
+			}
+
+			if (TempRegKey != nullptr)
+			{
+				TempRegKey->Close();
+
+				for each (System::Windows::Forms::Control^ Control in Enumerator->Current.Value->Controls)
+				{
+					ToolStripList->Add((System::Windows::Forms::ToolStrip^)Control);
+				}
+			}
+		}
+
+		for each (System::Windows::Forms::ToolStrip^ ToolStrip in ToolStripList)
+		{
+			ToolStripContainer->ContentPanel->Controls->Add(ToolStrip);
+		}
+
+		Enumerator = ToolStripPanelDict->GetEnumerator();
+
+		while (Enumerator->MoveNext())
+		{
+			TempRegKey = nullptr;
+
+			try
+			{
+				TempRegKey = RegKey->OpenSubKey(Enumerator->Current.Key, false);
+			}
+			catch (System::Exception^)
+			{
+			}
+
+			if (TempRegKey != nullptr)
+			{
+				lRestoreToolStripPanel(TempRegKey, ToolStripList, Enumerator->Current.Value);
+
+				TempRegKey->Close();
+			}
+		}
 	}
 }
 

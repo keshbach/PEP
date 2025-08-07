@@ -286,6 +286,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="ToolbarImageKey.cpp" />
+    <ClCompile Include="ToolStripComparer.cpp" />
     <ClCompile Include="ToolStripMenuItem.cpp" />
     <ClCompile Include="UiUtilNetDllMain.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -319,6 +320,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="ToolbarImageKey.h" />
+    <ClInclude Include="ToolStripComparer.h" />
     <ClInclude Include="ToolStripMenuItem.h" />
     <ClInclude Include="Utility.h" />
     <ClInclude Include="WaitCursor.h" />

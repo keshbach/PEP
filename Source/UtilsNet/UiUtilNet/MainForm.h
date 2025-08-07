@@ -6,6 +6,7 @@
 
 #include "IProcessMessage.h"
 #include "IUpdateToolStripItems.h"
+#include "IFormLocation.h"
 
 namespace Common
 {
@@ -17,7 +18,8 @@ namespace Common
 
         public ref class MainForm : public System::Windows::Forms::Form,
                                     public Common::Forms::IProcessMessage,
-                                    public Common::Forms::IUpdateToolStripItems
+                                    public Common::Forms::IUpdateToolStripItems,
+                                    public Common::Forms::IFormLocation
         {
         public:
             MainForm();
@@ -69,6 +71,8 @@ namespace Common
             void InitContextMenuItems(System::Windows::Forms::ToolStripMenuItem^ ToolStripMenuItem, System::Windows::Forms::ContextMenuStrip^ ContextMenuStrip);
             void UninitContextMenuItems(System::Windows::Forms::ContextMenuStrip^ ContextMenuStrip);
 
+            System::Boolean ForceToolStripsIntoSingleRow();
+
         public:
             // IProcessMessage overrides
             virtual void ProcessKeyDown(System::Windows::Forms::Control^ control, System::Int32 nVirtKey, System::Int32 nData);
@@ -76,8 +80,13 @@ namespace Common
 			virtual void ProcessMouseMove(System::Windows::Forms::Control^ control, System::Int32 nXPos, System::Int32 nYPos);
 
         public:
-            //IUpdateToolStripItems overrides
+            // IUpdateToolStripItems overrides
             virtual void UpdateToolStripItems(Common::Forms::ToolStripMenuItem^ ToolStripMenuItem);
+
+        public:
+            // IFormLocation overrides
+            virtual void OnFormLocationSaved(Microsoft::Win32::RegistryKey^ RegKey);
+            virtual void OnFormLocationRestored(Microsoft::Win32::RegistryKey^ RegKey);
 
 		protected:
 			// Form overrides
