@@ -936,7 +936,8 @@ void Common::Forms::MainForm::OnFormLocationSaved(
 
 			try
 			{
-				TempRegKey = RegKey->CreateSubKey(Enumerator->Current.Key, true);
+				TempRegKey = RegKey->CreateSubKey(Enumerator->Current.Key,
+                                                  Microsoft::Win32::RegistryKeyPermissionCheck::ReadWriteSubTree);
 			}
 			catch (System::Exception^)
 			{
