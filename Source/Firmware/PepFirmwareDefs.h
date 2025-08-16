@@ -1,22 +1,18 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2025 Kevin Eshbach                                  */
 /***************************************************************************/
 
 #if !defined(PepFirmwareDefs_H)
 #define PepFirmwareDefs_H
 
-#define CMicrochipFirmwareVendorID 0x04d8
+#define CMicrochipFirmwareVendorID 0x04D8
+#define CPidCodesGithubFirmwareVendorID 0x1209
 
-#define CMicrochipHIDFirmwareProductID 0x003c
+#define CMicrochipHIDFirmwareProductID 0x003C
 #define CMicrochipWinUSBFirmwareProductID 0x0052
+#define CPidCodesGithubWinUSBFirmwareProductID 0xF666
 
-// From the DeviceInterfaceGUID field of the mchpwinusb.inf file
-
-//#define CMicrochipFirmwareDeviceInterfaceGuid L"58D07210-27C1-11DD-BD0B-0800200C9A66"
-#define CPepFirmwareDeviceInterfaceGuid '5', '8', 'D', '0', '7', '2', '1', '0', '-', '2', '7', 'C', '1', '-', '1', '1', 'D', 'D', '-', 'B', 'D', '0', 'B', '-', '0', '8', '0', '0', '2', '0', '0', 'C', '9', 'A', '6', '6'
-
-// my generated guid
-//#define CPepFirmwareDeviceInterfaceGuid '1', 'C', 'D', 'E', '9', '5', 'B', 'C', '-', '7', 'F', '0', 'A', '-', '4', 'F', '2', '3', '-', '8', 'B', 'E', 'F', '-', 'C', '1', 'C', '3', 'F', 'D', '4', '9', 'B', 'D', 'A', 'D'
+#define CPepFirmwareDeviceInterfaceGuid '1', 'C', 'D', 'E', '9', '5', 'B', 'C', '-', '7', 'F', '0', 'A', '-', '4', 'F', '2', '3', '-', '8', 'B', 'E', 'F', '-', 'C', '1', 'C', '3', 'F', 'D', '4', '9', 'B', 'D', 'A', 'D'
 
 #define CPepFirmwareEndPointNumber 1
 
@@ -169,5 +165,5 @@ typedef struct MPackedAttribute tagTUtPepResponseData
 #endif // PepFirmwareDefs_H
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2025 Kevin Eshbach                                  */
 /***************************************************************************/

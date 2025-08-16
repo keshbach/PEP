@@ -19,20 +19,20 @@ typedef struct __attribute__ ((packed)) tagTUsbStringDescriptorCodePage {
 
 /* Device Descriptor */
 ROM TUsbDeviceDescriptor g_DeviceDescriptor = {
-    sizeof(g_DeviceDescriptor),        // Size of this descriptor in bytes
-    USB_DESCRIPTOR_DEVICE,             // DEVICE descriptor type
-    0x0200,                            // USB Spec Release Number in BCD format
-    0x00,                              // Class Code
-    0x00,                              // Subclass code
-    0x00,                              // Protocol code
-    USB_EP0_BUFF_SIZE,                 // Max packet size for EP0, see usb_config.h
-    CMicrochipFirmwareVendorID,        // Vendor ID: Microchip
-    CMicrochipWinUSBFirmwareProductID, // Product ID: WinUSB
-    0x0000,                            // Device release number in BCD format
-    0x01,                              // Manufacturer string index
-    0x02,                              // Product string index
-    0x00,                              // Device serial number string index
-    0x01                               // Number of possible configurations
+    sizeof(g_DeviceDescriptor),             // Size of this descriptor in bytes
+    USB_DESCRIPTOR_DEVICE,                  // DEVICE descriptor type
+    0x0200,                                 // USB Spec Release Number in BCD format
+    0x00,                                   // Class Code
+    0x00,                                   // Subclass code
+    0x00,                                   // Protocol code
+    USB_EP0_BUFF_SIZE,                      // Max packet size for EP0, see usb_config.h
+    CPidCodesGithubFirmwareVendorID,        // Vendor ID: pidcodes.github.com
+    CPidCodesGithubWinUSBFirmwareProductID, // Product ID: pidcodes.github.com WinUSB
+    0x0000,                                 // Device release number in BCD format
+    0x01,                                   // Manufacturer string index
+    0x02,                                   // Product string index
+    0x00,                                   // Device serial number string index
+    0x01                                    // Number of possible configurations
 };
 
 static ROM TDescriptorData l_ConfigDescriptor = {
