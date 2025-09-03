@@ -63,6 +63,16 @@ namespace Pep.Forms.Resources {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap BinaryFile_16x {
+            get {
+                object obj = ResourceManager.GetObject("BinaryFile_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Buffer_16x {
             get {
                 object obj = ResourceManager.GetObject("Buffer_16x", resourceCulture);
@@ -86,6 +96,16 @@ namespace Pep.Forms.Resources {
         internal static System.Drawing.Bitmap CloseProject_16x {
             get {
                 object obj = ResourceManager.GetObject("CloseProject_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ConfigureDevice_16x {
+            get {
+                object obj = ResourceManager.GetObject("ConfigureDevice_16x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
