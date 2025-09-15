@@ -118,6 +118,24 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="BinaryFile_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>BinaryFile_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BufferTestAll_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>BufferTestAll_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BufferTestEmpty_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>BufferTestEmpty_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BufferTestOverdump_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>BufferTestOverdump_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BufferTestStuckBits_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>BufferTestStuckBits_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="BufferTestZip_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>BufferTestZip_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Buffer_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Buffer_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -126,6 +144,9 @@
   </data>
   <data name="CloseProject_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>CloseProject_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ConfigureDevice_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>ConfigureDevice_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DemoText" xml:space="preserve">
     <value>Demo</value>
@@ -144,6 +165,9 @@
   </data>
   <data name="Device_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Device_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FillBuffer_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>FillBuffer_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MainFormText" xml:space="preserve">
     <value>Device Programmer</value>

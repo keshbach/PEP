@@ -83,6 +83,56 @@ namespace Pep.Forms.Resources {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap BufferTestAll_16x {
+            get {
+                object obj = ResourceManager.GetObject("BufferTestAll_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap BufferTestEmpty_16x {
+            get {
+                object obj = ResourceManager.GetObject("BufferTestEmpty_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap BufferTestOverdump_16x {
+            get {
+                object obj = ResourceManager.GetObject("BufferTestOverdump_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap BufferTestStuckBits_16x {
+            get {
+                object obj = ResourceManager.GetObject("BufferTestStuckBits_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap BufferTestZip_16x {
+            get {
+                object obj = ResourceManager.GetObject("BufferTestZip_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Cancel_16x {
             get {
                 object obj = ResourceManager.GetObject("Cancel_16x", resourceCulture);
@@ -165,6 +215,16 @@ namespace Pep.Forms.Resources {
         internal static System.Drawing.Bitmap DeviceTypeFolderOpened_16x {
             get {
                 object obj = ResourceManager.GetObject("DeviceTypeFolderOpened_16x", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap FillBuffer_16x {
+            get {
+                object obj = ResourceManager.GetObject("FillBuffer_16x", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -209,13 +209,21 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="Resources\BinaryFile_16x.png" />
+    <Content Include="Resources\BufferTestAll_16x.png" />
+    <Content Include="Resources\BufferTestEmpty_16x.png" />
+    <Content Include="Resources\BufferTestOverdump_16x.png" />
+    <Content Include="Resources\BufferTestStuckBits_16x.png" />
+    <Content Include="Resources\BufferTestZip_16x.png" />
     <Content Include="Resources\Cancel_16x.png" />
     <Content Include="Resources\CloseProject_16x.png" />
+    <Content Include="Resources\ConfigureDevice_16x.png" />
     <Content Include="Resources\DevicePackageFolderClosed_16x.png" />
     <Content Include="Resources\DevicePackageFolderOpened_16x.png" />
     <Content Include="Resources\DeviceTypeFolderClosed_16x.png" />
     <Content Include="Resources\DeviceTypeFolderOpened_16x.png" />
     <Content Include="Resources\Device_16x.png" />
+    <Content Include="Resources\FillBuffer_16x.png" />
     <Content Include="Resources\NewProject_16x.png" />
     <Content Include="Resources\OpenFile_16x.png" />
     <Content Include="Resources\OpenProject_16x.png" />
