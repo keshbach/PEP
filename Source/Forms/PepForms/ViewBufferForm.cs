@@ -1,5 +1,5 @@
 /***************************************************************************/
-/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2025 Kevin Eshbach                                  */
 /***************************************************************************/
 
 using System;
@@ -74,6 +74,8 @@ namespace Pep
             #region "Event Handlers"
             private void ViewBufferForm_Load(object sender, EventArgs e)
             {
+                Common.Debug.Thread.IsUIThread();
+
                 for (System.Int32 nIndex = 0; nIndex < m_DataOrganization.Length; ++nIndex)
                 {
                     comboBoxOrganization.Items.Add(m_DataOrganization[nIndex].sName);
@@ -95,16 +97,30 @@ namespace Pep
                     buttonOK.Visible = false;
                     buttonCancel.Text = "&Close";
                 }
+
+                buttonFill.ImageList = Common.Forms.ImageManager.ToolbarSmallImageList;
+                buttonFill.ImageKey = Common.Forms.ImageManager.GenerateToolbarImageKey(Pep.Forms.Resources.Resources.ResourceManager, "FillBuffer_16x");
+            }
+
+            private void ViewBufferForm_FormClosed(object sender, System.Windows.Forms.FormClosedEventArgs e)
+            {
+                Common.Debug.Thread.IsUIThread();
+
+                buttonFill.ImageList = null;
             }
 
             private void comboBoxOrganization_SelectedIndexChanged(object sender, EventArgs e)
             {
+                Common.Debug.Thread.IsUIThread();
+
                 bufferViewer.DataOrganization = m_DataOrganization[comboBoxOrganization.SelectedIndex].DataOrganization;
             }
 
             private void buttonFill_Click(object sender, EventArgs e)
             {
                 Pep.Forms.FillBufferForm FillBuffer = new Pep.Forms.FillBufferForm();
+
+                Common.Debug.Thread.IsUIThread();
 
                 if (FillBuffer.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
@@ -126,5 +142,5 @@ namespace Pep
 }
 
 /***************************************************************************/
-/*  Copyright (C) 2006-2024 Kevin Eshbach                                  */
+/*  Copyright (C) 2006-2025 Kevin Eshbach                                  */
 /***************************************************************************/
