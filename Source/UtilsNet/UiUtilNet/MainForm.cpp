@@ -802,6 +802,18 @@ System::Boolean Common::Forms::MainForm::ForceToolStripsIntoSingleRow()
 	return true;
 }
 
+void Common::Forms::MainForm::OnMenuStatusStripShown(
+  Common::Forms::MenuStatusStripEventArgs^ e)
+{
+	MenuStatusStripShown(this, e);
+}
+
+void Common::Forms::MainForm::OnMenuStatusStripClosed(
+  Common::Forms::MenuStatusStripEventArgs^ e)
+{
+	MenuStatusStripClosed(this, e);
+}
+
 #pragma region "IProcessMessage"
 
 void Common::Forms::MainForm::ProcessKeyDown(
@@ -1093,6 +1105,8 @@ void Common::Forms::MainForm::CreateMenuStatusStrip()
     m_ToolStripStatusLabelHelp->Name = L"toolStripMenuStripStatusLabel";
 
     m_StatusStrip->Items->Add(m_ToolStripStatusLabelHelp);
+
+	OnMenuStatusStripShown(gcnew Common::Forms::MenuStatusStripEventArgs(m_StatusStrip));
 }
 
 void Common::Forms::MainForm::DestroyMenuStatusStrip()
@@ -1120,7 +1134,9 @@ void Common::Forms::MainForm::DestroyMenuStatusStrip()
         delete m_ToolStripItemVisibleDict;
 
         m_ToolStripItemVisibleDict = nullptr;
-    }
+
+		OnMenuStatusStripClosed(gcnew Common::Forms::MenuStatusStripEventArgs(m_StatusStrip));
+	}
 }
 
 void Common::Forms::MainForm::ShowStatusLabelHelp(

@@ -8,6 +8,8 @@
 #include "IUpdateToolStripItems.h"
 #include "IFormLocation.h"
 
+#include "MenuStatusStripEventArgs.h"
+
 namespace Common
 {
     namespace Forms
@@ -21,6 +23,18 @@ namespace Common
                                     public Common::Forms::IUpdateToolStripItems,
                                     public Common::Forms::IFormLocation
         {
+        // Main Form Events
+        public:
+            delegate void MenuStatusStripShownHandler(System::Object^ sender, Common::Forms::MenuStatusStripEventArgs^ e);
+            [System::ComponentModel::Description("Occurs when the Menu Status Strip has been shown."),
+                System::ComponentModel::Category("Behavior")]
+            event MenuStatusStripShownHandler^ MenuStatusStripShown;
+
+            delegate void MenuStatusStripClosedHandler(System::Object^ sender, Common::Forms::MenuStatusStripEventArgs^ e);
+            [System::ComponentModel::Description("Occurs when the Menu Status Strip has been closed."),
+                System::ComponentModel::Category("Behavior")]
+            event MenuStatusStripClosedHandler^ MenuStatusStripClosed;
+
         public:
             MainForm();
 
@@ -73,6 +87,9 @@ namespace Common
 
             System::Boolean ForceToolStripsIntoSingleRow();
 
+            void OnMenuStatusStripShown(Common::Forms::MenuStatusStripEventArgs^ e);
+            void OnMenuStatusStripClosed(Common::Forms::MenuStatusStripEventArgs^ e);
+
         public:
             // IProcessMessage overrides
             virtual void ProcessKeyDown(System::Windows::Forms::Control^ control, System::Int32 nVirtKey, System::Int32 nData);
@@ -121,6 +138,7 @@ namespace Common
             ULONGLONG m_nProgressBarTotal;
             System::Windows::Forms::Control^ m_SelectedControl;
             System::Windows::Forms::StatusStrip^ m_StatusStrip;
+            System::String^ m_sStatusStripActiveGroup;
             System::Windows::Forms::ToolStripStatusLabel^ m_ToolStripStatusLabelHelp;
             System::Boolean m_bFindStatusStrip;
             System::Collections::Generic::Dictionary<System::Windows::Forms::ToolStripItem^, System::Boolean>^ m_ToolStripItemVisibleDict;

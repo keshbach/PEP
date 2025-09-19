@@ -272,6 +272,7 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="FormLocation.cpp" />
+    <ClCompile Include="MenuStatusStripEventArgs.cpp" />
     <ClCompile Include="MyApplicationContext.cpp" />
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="ImageManager.cpp" />
@@ -310,6 +311,7 @@
     <ClInclude Include="FormLocation.h" />
     <ClInclude Include="IFormLocation.h" />
     <ClInclude Include="IUpdateToolStripItems.h" />
+    <ClInclude Include="MenuStatusStripEventArgs.h" />
     <ClInclude Include="MyApplicationContext.h" />
     <ClInclude Include="ImageManager.h" />
     <ClInclude Include="IProcessMessage.h" />
