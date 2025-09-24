@@ -9,6 +9,8 @@ Copyright (C) 2006-2025 Kevin Eshbach
 - Microsoft Windows 10 or Windows 11
 - USB to EPROM+ adapter based on the Microchip PIC32MX250F128B is required.
 
+![USB To Eprom+ Adapter Image](https://github.com/keshbach/PCB123/blob/master/USB%20To%20EPROM%2B%20Adapter/PIC32MX250F128B/USB%20to%20EPROM%2B%20Adapter%20Image.png)
+
 The PCB layout and schematics for the USB adapter are located on GitHub in the [USB to EPROM+ Adapter](https://github.com/keshbach/PCB123/tree/master/USB%20To%20EPROM%2B%20Adapter/PIC32MX250F128B) repository.
 
 ## Building App (and Tools)
