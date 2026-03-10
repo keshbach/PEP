@@ -101,6 +101,8 @@ namespace Pep
 
                 checkedListBoxFilter.EndUpdate();
 
+                OnCheckedListBoxFilterCheckStateChange(0, ECheckState.Checked);
+
                 RegKey = Common.Registry.CreateCurrentUserRegKey(m_sRegistryKey);
 
                 if (RegKey != null)
@@ -188,31 +190,7 @@ namespace Pep
 
             private void checkedListBoxFilter_CheckStateChange(object sender, CheckStateChangedEventArgs e)
             {
-                if (e.Index == 0)
-                {
-                    if (e.CheckState == ECheckState.Checked)
-                    {
-                        checkedListBoxFilter.BeginUpdate();
-
-                        for (int nIndex = 1; nIndex < checkedListBoxFilter.Items.Count; ++nIndex)
-                        {
-                            checkedListBoxFilter.Items[nIndex].CheckState = ECheckState.Checked;
-                        }
-
-                        checkedListBoxFilter.EndUpdate();
-
-                        BeginInvoke(m_DelegateRefreshDevices, new object[] { });
-                    }
-                }
-                else
-                {
-                    if (e.CheckState == ECheckState.Unchecked)
-                    {
-                        checkedListBoxFilter.Items[0].CheckState = ECheckState.Unchecked;
-                    }
-
-                    BeginInvoke(m_DelegateRefreshDevices, new object[] { });
-                }
+                OnCheckedListBoxFilterCheckStateChange(e.Index, e.CheckState);
             }
 
             private void buttonOK_Click(object sender, EventArgs e)
@@ -437,6 +415,37 @@ namespace Pep
             private void OnRefreshDevices()
             {
                 RefreshDevices();
+            }
+
+            private void OnCheckedListBoxFilterCheckStateChange(
+                int nIndex, 
+                ECheckState CheckState)
+            {
+                if (nIndex == 0)
+                {
+                    if (CheckState == ECheckState.Checked)
+                    {
+                        checkedListBoxFilter.BeginUpdate();
+
+                        for (int nTempIndex = 1; nTempIndex < checkedListBoxFilter.Items.Count; ++nTempIndex)
+                        {
+                            checkedListBoxFilter.Items[nTempIndex].CheckState = ECheckState.Checked;
+                        }
+
+                        checkedListBoxFilter.EndUpdate();
+
+                        BeginInvoke(m_DelegateRefreshDevices, new object[] { });
+                    }
+                }
+                else
+                {
+                    if (CheckState == ECheckState.Unchecked)
+                    {
+                        checkedListBoxFilter.Items[0].CheckState = ECheckState.Unchecked;
+                    }
+
+                    BeginInvoke(m_DelegateRefreshDevices, new object[] { });
+                }
             }
 
             private static System.String FormatDevicePinCount(
