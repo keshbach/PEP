@@ -7,6 +7,7 @@ Copyright (C) 2006-2026 Kevin Eshbach
 ## Requirements
 
 - Microsoft Windows 10 or Windows 11
+- Microsoft .NET Framework v4.7.2
 - USB to EPROM+ adapter based on the Microchip PIC32MX250F128B is required.
 
 ![USB To Eprom+ Adapter Image](https://github.com/keshbach/PCB123/blob/master/USB%20To%20EPROM%2B%20Adapter/PIC32MX250F128B/USB%20to%20EPROM%2B%20Adapter%20Image.png)
