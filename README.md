@@ -2,7 +2,7 @@
 
 Unofficial Windows application for the EPROM+ System from Andromeda Research Labs
 
-Copyright (C) 2006-2025 Kevin Eshbach  
+Copyright (C) 2006-2026 Kevin Eshbach  
 
 ## Requirements
 
@@ -30,3 +30,4 @@ The PCB layout and schematics for the USB adapter are located on GitHub in the [
 ## Programming Languages
 
 The application is a combination of C, Managed C++ and C#.
+
