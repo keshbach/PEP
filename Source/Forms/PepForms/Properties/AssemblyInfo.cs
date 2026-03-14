@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Kevin Eshbach")]
 [assembly: AssemblyProduct("PepForms")]
-[assembly: AssemblyCopyright("Copyright © 2006-2023 Kevin Eshbach. All rights reserved.")]
+[assembly: AssemblyCopyright("Copyright © 2006-2026 Kevin Eshbach. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
