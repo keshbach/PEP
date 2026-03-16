@@ -31,7 +31,7 @@
 // Command Line Arguments definitions
 
 #define CPluginsArgument L"/plugins"
-#define CDisableDPIArgument L"/disabledpi"
+#define CDPIAwareArgument L"/dpiaware"
 #define CParallelPortArgument L"/parallelport"
 
 #pragma endregion
@@ -624,7 +624,7 @@ INT PepAppExecute(
 	HANDLE hThread;
 	DWORD dwThreadId, dwExitCode;
 	INT nArgIndex;
-	BOOL bDisableDPI, bUseParallelPort, bDisplayHelp;
+	BOOL bDPIAware, bUseParallelPort, bDisplayHelp;
 
 	if (!IsWindows7OrGreater())
 	{
@@ -638,7 +638,7 @@ INT PepAppExecute(
 	::ZeroMemory(pPepAppData, sizeof(TPepAppData));
 
 	nArgIndex = 1;
-	bDisableDPI = FALSE;
+	bDPIAware = FALSE;
 	bUseParallelPort = FALSE;
 	bDisplayHelp = FALSE;
 
@@ -659,9 +659,9 @@ INT PepAppExecute(
 				bDisplayHelp = TRUE;
 			}
 		}
-		else if (::lstrcmpi(ppszArgs[nArgIndex], CDisableDPIArgument) == 0)
+		else if (::lstrcmpi(ppszArgs[nArgIndex], CDPIAwareArgument) == 0)
 		{
-			bDisableDPI = TRUE;
+			bDPIAware = TRUE;
 
 			++nArgIndex;
 		}
@@ -686,7 +686,7 @@ INT PepAppExecute(
 		return 1;
 	}
 
-	if (bDisableDPI == FALSE)
+	if (bDPIAware == TRUE)
 	{
 		lEnableDPIAwareness();
 	}
