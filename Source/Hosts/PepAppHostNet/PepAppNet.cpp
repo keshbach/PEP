@@ -21,12 +21,40 @@
 
 #pragma endregion
 
+static System::Boolean lReset(void)
+{
+    System::Boolean bResult = false;
+    Microsoft::Win32::RegistryKey^ RegKey = Common::Registry::OpenCurrentUserRegKey(CRegistryKey, true);
+
+    if (RegKey == nullptr)
+    {
+        return true;
+    }
+
+    try
+    {
+        for each(System::String ^ sSubKeyName in RegKey->GetSubKeyNames())
+        {
+            RegKey->DeleteSubKeyTree(sSubKeyName);
+        }
+
+        bResult = true;
+    }
+    finally
+    {
+        RegKey->Close();
+    }
+
+    return bResult;
+}
+
 Pep::Application::Startup::Startup()
 {
 }
 
 System::UInt32 Pep::Application::Startup::Execute(
-  System::Boolean bUseParallelPort)
+  System::Boolean bUseParallelPort,
+  System::Boolean bReset)
 {
 	System::String^ sFormLocationsRegistryKey = System::String::Format(L"{0}\\{1}", CRegistryKey, CFormLocationsName);
     Pep::Programmer::Config::EDeviceType DeviceType = Pep::Programmer::Config::EDeviceType::USB;
@@ -35,6 +63,11 @@ System::UInt32 Pep::Application::Startup::Execute(
     if (bUseParallelPort)
     {
         DeviceType = Pep::Programmer::Config::EDeviceType::ParallelPort;
+    }
+
+    if (bReset)
+    {
+        return lReset() ? 0 : 1;
     }
 
 	if (!Common::IO::TempFileManager::Initialize())

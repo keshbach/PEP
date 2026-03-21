@@ -12,8 +12,10 @@ static VOID lExecutePepApp(
   _In_ TPepAppHostData* pPepAppHostData)
 {
     Pep::Application::Startup^ Startup = gcnew Pep::Application::Startup();
+    System::Boolean bUseParallelPort = pPepAppHostData->bUseParallelPort ? true : false;
+    System::Boolean bReset = pPepAppHostData->bReset ? true : false;
 
-    pPepAppHostData->dwExitCode = Startup->Execute(pPepAppHostData->bUseParallelPort);
+    pPepAppHostData->dwExitCode = Startup->Execute(bUseParallelPort, bReset);
 }
 
 extern "C"

@@ -400,6 +400,7 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostUninitialize(VOID)
 
 MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
   _In_ BOOL bUseParallelPort,
+  _In_ BOOL bReset,
   _Out_ LPDWORD pdwExitCode)
 {
     DWORD dwAppDomainId = 0;
@@ -412,6 +413,7 @@ MExternC BOOL PEPAPPHOSTAPI PepAppHostExecute(
 	}
 
     l_PepAppHostData.bUseParallelPort = bUseParallelPort;
+    l_PepAppHostData.bReset = bReset;
 
     l_PepAppHostRuntimeData.pCLRRuntimeHost->GetCurrentAppDomainId(&dwAppDomainId);
 

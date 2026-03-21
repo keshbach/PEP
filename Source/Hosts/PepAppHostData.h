@@ -20,6 +20,7 @@
 typedef struct tagTPepAppHostData
 {
     BOOL bUseParallelPort;
+    BOOL bReset;
     DWORD dwExitCode;
 } TPepAppHostData;
 

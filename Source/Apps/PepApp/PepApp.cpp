@@ -33,6 +33,7 @@
 #define CPluginsArgument L"/plugins"
 #define CDPIAwareArgument L"/dpiaware"
 #define CParallelPortArgument L"/parallelport"
+#define CResetArgument L"/reset"
 
 #pragma endregion
 
@@ -46,7 +47,7 @@ typedef BOOL (WINAPI* TSetProcessDpiAwarenessContext)(DPI_AWARENESS_CONTEXT valu
 
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostInitializeFunc)(VOID);
 typedef BOOL (PEPAPPHOSTAPI* TPepAppHostUninitializeFunc)(VOID);
-typedef BOOL (PEPAPPHOSTAPI* TPepAppHostExecuteFunc)(_In_ BOOL bUseParallelPort, _Out_ LPDWORD pdwExitCode);
+typedef BOOL (PEPAPPHOSTAPI* TPepAppHostExecuteFunc)(_In_ BOOL bUseParallelPort, _In_ BOOL bReset, _Out_ LPDWORD pdwExitCode);
 
 typedef VOID (STDAPICALLTYPE *TPathRemoveExtensionWFunc)(_Inout_ LPWSTR pszPath);
 typedef BOOL (STDAPICALLTYPE *TPathRemoveFileSpecWFunc)(_Inout_ LPWSTR pszPath);
@@ -624,7 +625,7 @@ INT PepAppExecute(
 	HANDLE hThread;
 	DWORD dwThreadId, dwExitCode;
 	INT nArgIndex;
-	BOOL bDPIAware, bUseParallelPort, bDisplayHelp;
+	BOOL bDPIAware, bUseParallelPort, bReset, bDisplayHelp;
 
 	if (!IsWindows7OrGreater())
 	{
@@ -640,6 +641,7 @@ INT PepAppExecute(
 	nArgIndex = 1;
 	bDPIAware = FALSE;
 	bUseParallelPort = FALSE;
+	bReset = FALSE;
 	bDisplayHelp = FALSE;
 
 	while (nArgIndex < nTotalArgs && bDisplayHelp == FALSE)
@@ -671,7 +673,13 @@ INT PepAppExecute(
 
 			++nArgIndex;
 		}
-		else 
+		else if (::lstrcmpi(ppszArgs[nArgIndex], CResetArgument) == 0)
+		{
+			bReset = TRUE;
+
+			++nArgIndex;
+		}
+		else
 		{
 			bDisplayHelp = TRUE;
 		}
@@ -680,6 +688,8 @@ INT PepAppExecute(
 	if (bDisplayHelp == TRUE)
 	{
 		UtFreeMem(pPepAppData);
+
+		lEnableDPIAwareness();
 
 		lDisplayCommandLineHelp();
 
@@ -734,7 +744,7 @@ INT PepAppExecute(
 		return 1;
     }
 
-    pPepAppData->AppHostModuleData.pExecute(bUseParallelPort, &dwExitCode);
+    pPepAppData->AppHostModuleData.pExecute(bUseParallelPort, bReset, &dwExitCode);
 
 	pPepAppData->CtrlsModuleData.pUninitialize();
 	pPepAppData->DeviceModuleData.pUninitialize();
